@@ -121,6 +121,12 @@ RECORDS = [
     {"pcode": "6258490", "src": "KZM(프리미엄 코펠 L 최대 3.3L)", "m": {"capacity_l": 3.3}},
     {"pcode": "16413551", "src": "Uniflame(콜메 667118 외솥 800ml)", "m": {"capacity_l": 0.8}},
     {"pcode": "67509569", "src": "Nitecore(NU25 UL 공식 45g)", "m": {"weight_min": 45}},
+    # 65R 침낭 충전량(대부분 진짜한계, 프리미엄 다운만 회수)
+    {"pcode": "73889717", "src": "S2S(Spark 7C Reg 850FP down fill 150g 공식)", "m": {"fill_weight": 150}},
+    # 66R 버너 화력(대부분 진짜한계, 이와타니 공식 kcal만)
+    {"pcode": "18951833", "src": "Iwatani(야키마루II CB-SLG-2 900kcal/h 공식)", "m": {"power_output": 900}},
+    {"pcode": "18932918", "src": "Iwatani(아부리야II CB-ABR-2 2000kcal/h 공식)", "m": {"power_output": 2000}},
+    {"pcode": "13092032", "src": "Iwatani(야키마루 CB-SLG-1 900kcal/h 공식)", "m": {"power_output": 900}},
 ]
 
 
