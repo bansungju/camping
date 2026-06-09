@@ -103,6 +103,24 @@ RECORDS = [
     {"pcode": "6172381", "src": "S2S(Alpha Pot Set 2.2, 메인팟 2.7L)", "m": {"capacity_l": 2.7}},  # 코펠 용량
     {"pcode": "98767709", "src": "Naturehike(BE400 코튼 다운필 400g)", "m": {"fill_weight": 400}}, # 침낭 충전량
     {"pcode": "17127422", "src": "Jackery(Explorer 1000, 다나와 278400mAh)", "m": {"capacity_mah": 278400}},
+    # 64R 회수 — 코펠 용량(프리미엄/수입 브랜드 공식, 세트=최대팟) + 랜턴 무게
+    {"pcode": "12147014", "src": "Keith(Ti6012 최대팟 800ml)", "m": {"capacity_l": 0.8}},
+    {"pcode": "16424489", "src": "Keith(Ti6014 최대팟 1200ml)", "m": {"capacity_l": 1.2}},
+    {"pcode": "12147164", "src": "Keith(Ti6017 최대팟 1250ml)", "m": {"capacity_l": 1.25}},
+    {"pcode": "16417913", "src": "Keith(Ti6053 최대팟 680ml)", "m": {"capacity_l": 0.68}},
+    {"pcode": "16418432", "src": "Keith(Ti5329 런치박스 1.2L)", "m": {"capacity_l": 1.2}},
+    {"pcode": "10045167", "src": "Soto(SOD-501 최대팟 1.8L)", "m": {"capacity_l": 1.8}},
+    {"pcode": "15379799", "src": "S2S(Alpha 2.1 최대팟 2.7L)", "m": {"capacity_l": 2.7}},
+    {"pcode": "7347643", "src": "S2S(Sigma 2.1 단일팟 1.9L)", "m": {"capacity_l": 1.9}},
+    {"pcode": "77622659", "src": "S2S(Detour 5pc 3L팟)", "m": {"capacity_l": 3.0}},
+    {"pcode": "14098100", "src": "Stanley(Base Camp 19p 메인 3.5L)", "m": {"capacity_l": 3.5}},
+    {"pcode": "1423325", "src": "MSR(Reactor Stove Pot 2.5L 제품명)", "m": {"capacity_l": 2.5}},
+    {"pcode": "31681526", "src": "SnowPeak(Kettle No.1 CS-068 900ml)", "m": {"capacity_l": 0.9}},
+    {"pcode": "31457159", "src": "SnowPeak(SCS-004T 최대팟 830ml)", "m": {"capacity_l": 0.83}},
+    {"pcode": "6258475", "src": "KZM(프리미엄 코펠 XL 최대 5.5L)", "m": {"capacity_l": 5.5}},
+    {"pcode": "6258490", "src": "KZM(프리미엄 코펠 L 최대 3.3L)", "m": {"capacity_l": 3.3}},
+    {"pcode": "16413551", "src": "Uniflame(콜메 667118 외솥 800ml)", "m": {"capacity_l": 0.8}},
+    {"pcode": "67509569", "src": "Nitecore(NU25 UL 공식 45g)", "m": {"weight_min": 45}},
 ]
 
 
