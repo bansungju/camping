@@ -117,8 +117,17 @@ def render(con, rows):
         for cell, rate in _star_rate_pairs(r):
             if rate < GOOD:
                 weak.append((r["cat"], cell, rate))
+    # 63R 데이터부족 정직성 감사: '회수불가(구조적 미공개)'와 '회수가능(미수집)'을 구분.
+    #   웹/판매처에 값이 있는데 아직 안 모은 것은 '회수불가'라 하면 거짓 — 정직하게 분리.
+    RECOVERABLE = {("랜턴", "최소무게"), ("코펠", "용량"), ("침낭", "충전량")}  # 웹확인 회수가능
     for cat, cell, rate in sorted(weak, key=lambda x: x[2]):
-        kind = "미공개(회수불가)" if rate < WEAK else "부분결측"
+        metric_lab = cell.split("(")[0]
+        if (cat, metric_lab) in RECOVERABLE:
+            kind = "미수집(회수가능·웹확인, 진행중)"
+        elif rate < WEAK:
+            kind = "구조적 미공개(회수불가)"
+        else:
+            kind = "부분결측"
         out.append(f"| {cat} | {cell} | {rate}% | {kind} |")
 
     out.append("\n## 구조적 신뢰장치 (적대루프 18R 산물)\n")

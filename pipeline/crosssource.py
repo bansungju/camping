@@ -98,6 +98,11 @@ RECORDS = [
     {"pcode": "3674523", "src": "SnowPeak(Yaen Cooker 1500=1.5L)", "m": {"capacity_l": 1.5}},
     # 기준확정(confirm=덮어쓰기): 무게=최소무게로 통일 (다나와 패킹무게 교체)
     {"pcode": "10429362", "src": "BigAgnes(Copper Spur HV UL2 min 1247g)", "weight": "1247g", "confirm": True},
+    # 데이터부족 정직성감사(63R) 회수 — 웹/제조사 확인된 거짓 한계분
+    {"pcode": "67509575", "src": "Nitecore(NU25 UL 공식 45g)", "m": {"weight_min": 45}},        # 랜턴 무게
+    {"pcode": "6172381", "src": "S2S(Alpha Pot Set 2.2, 메인팟 2.7L)", "m": {"capacity_l": 2.7}},  # 코펠 용량
+    {"pcode": "98767709", "src": "Naturehike(BE400 코튼 다운필 400g)", "m": {"fill_weight": 400}}, # 침낭 충전량
+    {"pcode": "17127422", "src": "Jackery(Explorer 1000, 다나와 278400mAh)", "m": {"capacity_mah": 278400}},
 ]
 
 
