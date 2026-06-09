@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 로컬 서버/스크린샷/임시
+*.log
+.playwright-mcp/
+site/.playwright-mcp/
+*.png
+.DS_Store
+
+# 구 테스트 DB (현 산출물은 camping_tents500.db만)
+camping.db
+camping_auto.db
