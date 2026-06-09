@@ -122,6 +122,26 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .ftag.on{background:var(--accent);color:#0b1220;border-color:var(--accent);font-weight:600}
 .ftag i{font-style:normal;opacity:.6;font-size:11px}
 .ftag.on i{opacity:.8}
+/* 범위 입력 */
+.frng{width:80px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  padding:5px 8px;border-radius:7px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.frng:focus{outline:none;border-color:var(--accent)}
+.rsep{color:var(--faint);font-size:12px}
+.runit{color:var(--faint);font-size:11px;min-width:30px}
+/* 셀렉트(브랜드 더보기·정렬) */
+.fsel{background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:12.5px;
+  padding:5px 8px;border-radius:7px;max-width:210px}
+.fsel:focus{outline:none;border-color:var(--accent)}
+.fchk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.fchk input{accent-color:var(--accent)}
+/* 활성 필터 요약 칩 */
+.activefilters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.activefilters:empty{display:none}
+.achip{font-size:12px;padding:4px 9px;border-radius:7px;border:1px solid var(--accent);
+  background:var(--card2);color:var(--accent);cursor:pointer}
+.achip:hover{background:var(--accent);color:#0b1220}
+.achip.clear{border-color:var(--line);color:var(--muted)}
+.achip.clear:hover{background:var(--card);color:var(--txt)}
 
 /* 모바일 반응형 — 하드코딩 sticky offset 충돌 제거 */
 @media (max-width:640px){
