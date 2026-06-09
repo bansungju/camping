@@ -111,7 +111,7 @@ def parse_lumens(raw):
     """밝기 → lm. '단계/모드/레벨'(밝기단계)·'lux/cp'(다른단위)면 None(루멘 아님)."""
     if not raw:
         return None
-    s = raw.lower()
+    s = raw.lower().replace(",", "")   # 천단위 콤마 제거(20,000→20000)
     if any(x in s for x in ("단계", "모드", "레벨", "lux", "럭스", "cp", "촉광")):
         return None
     m = re.search(r"(\d*\.?\d+)\s*(?:lm|루멘|lumen)?", s)
@@ -147,7 +147,8 @@ def packed_volume_cm3(raw):
     """수납크기 -> 부피. 'Φ12 x 45'(원통) 또는 '32x19x8.5'(박스)."""
     if not raw:
         return None
-    s = raw.lower().replace("×", "x").replace("*", "x")
+    s = raw.lower().replace("×", "x").replace("*", "x").replace(",", "")  # 콤마 제거
+    s = re.sub(r"\[[^\]]*\]", "", s)            # provenance 주석([REI/…(모델 2)]) 제거 → 모델숫자 누출 차단
     nums = [float(n) for n in re.findall(r"\d*\.?\d+", s)]
     if "φ" in s or "지름" in s or "diam" in s:  # 원통
         if len(nums) >= 2:

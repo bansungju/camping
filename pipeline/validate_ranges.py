@@ -517,6 +517,13 @@ def validate_db(con):
                   (SELECT category_id FROM products WHERE id=?) LIMIT 1),'implausible',?)""",
                 (pid, pid, f"floor raw '{raw}'=치수아닌 범위값 → 면적 근거없음 격리"))
             hard_flagged.append(("floor_area", "", val, raw))
+
+    # is_primary 정합: 같은 (product,metric)에 valid=1 행이 있으면 valid=0 행의 is_primary 강등.
+    #   (크로스소스 보정 시 옛 valid=0 행이 is_primary=1로 남아 중복되던 것 정리) 멱등.
+    con.execute("""UPDATE product_spec_values SET is_primary=0
+        WHERE is_primary=1 AND valid=0 AND EXISTS(
+          SELECT 1 FROM product_spec_values v2 WHERE v2.product_id=product_spec_values.product_id
+            AND v2.metric_id=product_spec_values.metric_id AND v2.valid=1 AND v2.is_primary=1)""")
     con.commit()
     P.recompute_ratings(con)
     con.commit()

@@ -168,15 +168,17 @@ def ingest_row(con, row):
     return {"got": sorted(got), "price": price}
 
 
-_HANDHELD_KW = ("헤드", "손전등", "후레쉬", "플래시", "플래쉬", "헤드램프", "헤드랜턴")
+# 핸드헬드(점광원) 키워드 — 소문자 비교. EDC/펜/키체인 손전등 포함.
+_HANDHELD_KW = ("헤드", "손전등", "후레쉬", "플래시", "플래쉬", "헤드램프", "헤드랜턴",
+                "키체인", "edc", "pen", "펜라이트", "zoom")
 
 
 def _form_segment(con, cid, name):
-    """랜턴 광원형태 세그먼트: 면조명 랜턴 vs 핸드헬드(손전등/헤드랜턴).
+    """랜턴 광원형태 세그먼트: 면조명 랜턴 vs 핸드헬드(손전등/헤드랜턴/EDC/펜/키체인).
     점광원 밝기는 면조명과 비교축이 달라 같은 풀서 랭킹하면 불공정 → 분리(제외 아님).
     랜턴 외 카테고리는 항상 'main'(스코프 불변)."""
     cat = con.execute("SELECT name_ko FROM categories WHERE id=?", (cid,)).fetchone()
-    if cat and cat[0] == "랜턴" and name and any(k in name for k in _HANDHELD_KW):
+    if cat and cat[0] == "랜턴" and name and any(k in name.lower() for k in _HANDHELD_KW):
         return "handheld"
     return "main"
 

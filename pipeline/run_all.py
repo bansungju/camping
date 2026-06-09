@@ -178,6 +178,11 @@ def main():
     #   별점은 recompute_ratings(순위백분위·star_eligible·세그)가 단일 진실원.
     P.recompute_ratings(con)
     con.execute("DROP TABLE IF EXISTS catalog_scores")  # 구 평행엔진 잔재 제거
+    con.execute("DROP VIEW IF EXISTS v_verified_specs")  # 구 스키마(model_year/confidence) stale 뷰 제거
+    con.execute("DROP VIEW IF EXISTS v_value_badge")     # 코드 미사용 orphan 뷰(옛 source라벨) 제거
+    # sources 라벨을 실제 source_id 사용과 일치(옛 시드 교정): src3=다나와상세파생, src4=외부크로스소스
+    con.execute("UPDATE sources SET name='다나와상세(파생)' WHERE id=3 AND name<>'다나와상세(파생)'")
+    con.execute("UPDATE sources SET name='외부 크로스소스(REI/제조사)' WHERE id=4 AND name<>'외부 크로스소스(REI/제조사)'")
     con.commit()
     con.close()
 

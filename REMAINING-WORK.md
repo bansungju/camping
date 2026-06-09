@@ -7,10 +7,8 @@
 
 ## A. 데이터 — 적대루프 잔여 (우선순위 순)
 
-### A1. packed_volume 파서 견고화 (잠복 — 데이터 무영향이나 깨지기 쉬움)
-- `normalize.py:packed_volume_cm3`에 **천단위 콤마 제거 누락** (parse_dims_cm·thickness는 53R서 고침, packed만 남음). 현재 콤마 가진 packed raw 0건이라 미발현.
-- raw 끝 **모델명 숫자 누출**: `(MSR Elixir 2)`의 '2'가 `re.findall`에 잡혀 박스/원통 분기 오진입 가능. 현재 저장값은 정상이나 라이브 파서 취약.
-- 조치: `packed_volume_cm3`에 `.replace(",", "")` + 괄호 주석 제거 후 치수 파싱.
+### A1. packed_volume 파서 견고화 — ✅ 완료(55R)
+- `packed_volume_cm3` 콤마제거+주석([...]) 제거, `parse_lumens` 콤마제거. 모델숫자 누출/콤마 회귀위험 차단. 저장값 불변·멱등 확인.
 
 ### A2. 폴/액세서리 오분류 (타프 카테고리에 폴이 섞임)
 - DAC·3000ADJ 등 **텐트/타프 폴**이 타프로 분류돼 floor_area에 폴 길이 범위('180-210cm')가 들어감 → 54R floor 범위가드가 격리했으나 **제품 자체가 카탈로그에 부적격**.

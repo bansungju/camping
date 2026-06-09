@@ -200,3 +200,8 @@
 ## [의심사이클 50→보완] 1건 — RESOLVED (49R 값정렬의 null 부작용)
 1. RESOLVED null 정렬위치: 49R 값정렬 도입시 va=null?-Infinity라 asc에서 데이터부족 맨위로. lower_better 기본정렬(asc)인 랜턴은 무게 56%(31행) null이 1위부터 깔림, cooler 20행·wagon 3행. → 비교함수에서 null 분리처리(va==null→1, vb==null→-1) 정렬방향무관 항상 맨아래. 검증: 랜턴 asc 상위 100~119g·desc 상위 1.13kg, 양방향 데이터부족 하위31행. 
 ※부작용: 49R(별점→값정렬)의 엣지케이스를 50R이 잡음(floor진자·canonical모집단과 동일 패턴). 그외 49R수정 부작용(화살표·esc·g/kg·모바일·3중필터)·DB잔여·멱등 전부 수렴.
+
+## [의심사이클 55] — 새 의심 없음(데이터 수렴) + 잠복 파서 하드닝(A1)
+데이터: A1 packed_volume·신규 콤마(lumens/power/water)·A2 폴오분류·fill/comfort 전수 → 저장값 전부 정상, 새 데이터오류 0(수렴). packed 저장값(엘릭서2 11576)은 모델숫자누출 이전 클린계산이라 정확.
+선제 하드닝(회귀방지): packed_volume_cm3 콤마제거+주석[...]제거(모델숫자'2'누출차단), parse_lumens 콤마제거. 검증: lumens '20,000'→20000, packed '51x17[…(MSR Elixir 2)]'→11576. self-test통과·저장값불변·멱등. REMAINING-WORK A1 closed.
+※A2 폴오분류는 오류아님 확인(타프'스킨/메인폴세트'=완제변형, floor 폴길이누출 無, 수납파생 floor 83건중 81 기격리).

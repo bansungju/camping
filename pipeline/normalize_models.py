@@ -23,19 +23,30 @@ COLORS = {
     "그린", "다크그린", "라이트그린", "카키", "그린카키", "다크카키", "라이트카키", "올리브",
     "레드", "옐로우", "오렌지", "블루", "오션블루", "스카이블루", "네이비", "퍼플", "핑크",
     "민트", "머스타드", "카멜", "버건디", "그레이톤", "샌드모스",
+    # 57R 추가(누락 색상): 같은 SKU가 색상만 달라 분리되던 것 통합
+    "모카", "크림", "실버", "골드", "스톤", "라일락", "로즈쿼츠", "코발트", "잉크", "초코",
+    "파우더", "코요테탄", "올리브탄", "레이븐그레이", "올리브그레이", "블루그린", "딥카키",
+    "문화이트", "비비드오렌지", "라벤더", "버리디안", "씨커그린", "체크그린",
     "black", "white", "gray", "grey", "green", "khaki", "red", "blue", "navy", "olive", "sand",
 }
 NOISE = {"해외구매", "정품", "국내정품", "당일발송", "당일출고", "신형", "구형"}
+# 색상어 뒤에 오면 그 색상어를 스펙수식어로 보고 보호(떼지 않음): '실버 코팅'·'골드 에디션'
+_SPEC_AFTER_COLOR = {"코팅", "프레임", "스텐", "스테인리스", "에디션", "코어", "도장", "라이트"}
 
 
 def canonicalize(name):
     """반환: (대표모델명, 변형라벨). 괄호색상·색상토큰·노이즈 제거."""
     s = re.sub(r"\(([^)]*)\)", lambda m: " " if _is_variant_paren(m.group(1)) else m.group(0), name)
+    toks = s.split()
     kept, variant = [], []
-    for tok in s.split():
+    for i, tok in enumerate(toks):
         t = tok.strip(",./|").lower()
         raw = tok.strip(",./|")
-        if raw in COLORS or t in COLORS or raw in NOISE:
+        # 색상어가 스펙수식어(코팅/프레임 등) 앞이면 색상 아님 → 보호('실버 코팅'·'골드 에디션').
+        nxt = (toks[i + 1].strip(",./|") if i + 1 < len(toks) else "")
+        if nxt in _SPEC_AFTER_COLOR and (raw in COLORS or t in COLORS):
+            kept.append(raw)
+        elif raw in COLORS or t in COLORS or raw in NOISE:
             variant.append(raw)
         else:
             kept.append(raw)
