@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>카테고리 비교 — 캠핑기어 정직비교</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="index.html"><b>캠핑기어</b> 정직비교</a>
+  <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
+</div></header>
+
+<!-- 카테고리 직접 이동 네비 -->
+<nav class="catnav-wrap"><div class="wrap"><div id="catnav" class="catnav"></div></div></nav>
+
+<main class="wrap">
+  <div class="crumb"><a href="index.html">홈</a> › <span id="crumbName">…</span></div>
+  <h1 id="title">불러오는 중…</h1>
+  <p class="lead" id="lead"></p>
+  <div class="note" id="limitNote" style="display:none"></div>
+
+  <!-- 필터 태그 바 -->
+  <div class="filterbar" id="filters"></div>
+
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="이 카테고리에서 브랜드·모델 검색">
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="tablewrap"><table>
+    <thead><tr id="head"></tr></thead>
+    <tbody id="body"></tbody>
+  </table></div>
+
+  <div id="legend" style="margin-top:24px"></div>
+</main>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script src="app.js"></script>
+<script>renderCategory();</script>
+</body>
+</html>
