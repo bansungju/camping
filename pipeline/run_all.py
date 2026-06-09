@@ -170,6 +170,14 @@ def main():
     sh("column_fixes.py")
 
     con = sqlite3.connect(DB)
+    # 의자/테이블 멀티팩(N개/N팩=동일품 묶음) 제외: 가격이 N배라 단품과 비교 시 오인 + 이중등록.
+    #   ('세트 N종'·N구·N룸·N인은 스펙/제품이라 제외 안 함) 멱등.
+    import re as _re
+    for pid, mn in con.execute("""SELECT p.id, p.model_name FROM products p JOIN categories c ON c.id=p.category_id
+            WHERE c.name_ko IN ('의자','테이블') AND p.curation_status<>'rejected'""").fetchall():
+        if _re.search(r"(?<!\d)[2-9]\s*개(?!월| ?세트)", mn or "") or _re.search(r"(?<!\d)[2-9]\s*팩", mn or ""):
+            con.execute("UPDATE products SET curation_status='rejected' WHERE id=?", (pid,))
+    con.commit()
     print("[승격] 카테고리별 완비 → verified")
     v = promote_all(con)
     print(f"   verified {v}종")

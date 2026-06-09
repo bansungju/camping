@@ -115,8 +115,10 @@ async function renderCategory() {
   try { d = await getJSON(`data/${slug}.json`); }
   catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
-  STATE = { data: d, q: rawQ.toLowerCase(), cap: "", brand: "", minStar: 0, sortKey: null, sortAsc: false,
-            dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])) };
+  STATE = { data: d, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
+            sortKey: null, sortAsc: false,
+            dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])),
+            unit: Object.fromEntries(d.metrics.map(m => [m.key, m.unit])) };
   renderCatNav(slug);
 
   document.getElementById("crumbName").textContent = d.name;
@@ -144,37 +146,144 @@ async function renderCategory() {
   draw();
 }
 
-/* 필터 태그 바 (카테고리 상단) */
+/* 필터 바 (카테고리 상단) — 범위·멀티브랜드·정렬·품질 */
 function buildFilters(d, star) {
   const bar = document.getElementById("filters");
+  const ms = d.models;
+  const num = (arr) => arr.filter(v => v != null);
   const parts = [];
-  // 인원
-  const caps = [...new Set(d.models.map(x => x.capacity).filter(x => x != null))].sort((a, b) => a - b);
+
+  // 인원 (단일 선택)
+  const caps = [...new Set(ms.map(x => x.capacity).filter(x => x != null))].sort((a, b) => a - b);
   if (caps.length) {
     parts.push(`<div class="fgrp"><span class="flab">인원</span>` +
-      `<button class="ftag on" data-f="cap" data-v="">전체</button>` +
-      caps.map(c => `<button class="ftag" data-f="cap" data-v="${c}">${c}인</button>`).join("") + `</div>`);
+      `<button class="ftag on" data-cap="">전체</button>` +
+      caps.map(c => `<button class="ftag" data-cap="${c}">${c}인</button>`).join("") + `</div>`);
   }
-  // 별점 임계 (주력 지표)
-  parts.push(`<div class="fgrp"><span class="flab">별점</span>` +
-    [0, 3, 4, 4.5].map(s => `<button class="ftag${s === 0 ? " on" : ""}" data-f="star" data-v="${s}">${s === 0 ? "전체" : "★" + s + "+"}</button>`).join("") + `</div>`);
-  // 브랜드 (상위 빈도)
+
+  // 가격 범위
+  const prices = num(ms.map(m => m.price_min));
+  if (prices.length) {
+    const lo = Math.min(...prices), hi = Math.max(...prices);
+    parts.push(`<div class="fgrp"><span class="flab">가격</span>
+      <input class="frng" type="number" data-rng="price" data-b="min" placeholder="${lo.toLocaleString()}" inputmode="numeric">
+      <span class="rsep">~</span>
+      <input class="frng" type="number" data-rng="price" data-b="max" placeholder="${hi.toLocaleString()}" inputmode="numeric">
+      <span class="runit">원</span></div>`);
+  }
+
+  // 스펙 범위 (각 ★지표) — 무게는 kg환산 안내
+  star.forEach(m => {
+    const vals = num(ms.map(x => x.specs[m.key] && x.specs[m.key].value));
+    if (vals.length < 2) return;
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const u = m.unit || "";
+    const hint = (u === "g") ? "g(1000↑kg)" : u;
+    parts.push(`<div class="fgrp"><span class="flab">${m.label}</span>
+      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="min" placeholder="${+lo.toFixed(1)}" inputmode="decimal">
+      <span class="rsep">~</span>
+      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="max" placeholder="${+hi.toFixed(1)}" inputmode="decimal">
+      <span class="runit">${hint}</span></div>`);
+  });
+
+  // 브랜드 멀티선택 + 전체 드롭다운
   const bc = {};
-  d.models.forEach(m => bc[m.brand] = (bc[m.brand] || 0) + 1);
-  const topBrands = Object.entries(bc).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  ms.forEach(m => bc[m.brand] = (bc[m.brand] || 0) + 1);
+  const sorted = Object.entries(bc).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, 12);
   parts.push(`<div class="fgrp"><span class="flab">브랜드</span>` +
-    `<button class="ftag on" data-f="brand" data-v="">전체</button>` +
-    topBrands.map(([b, n]) => `<button class="ftag" data-f="brand" data-v="${b}">${b} <i>${n}</i></button>`).join("") + `</div>`);
+    top.map(([b, n]) => `<button class="ftag" data-brand="${esc(b)}">${esc(b)} <i>${n}</i></button>`).join("") +
+    (sorted.length > 12 ? `<select class="fsel" data-brandsel>
+       <option value="">＋ 브랜드 (${sorted.length})</option>` +
+      sorted.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n})</option>`).join("") + `</select>` : "") + `</div>`);
+
+  // 정렬 + 품질
+  parts.push(`<div class="fgrp"><span class="flab">정렬</span>
+    <select class="fsel" data-sort>
+      <option value="">기본(주력지표)</option>
+      <option value="value">가성비순(별점/가격)</option>
+      <option value="price_min">가격 낮은순</option>
+      ${star.map(m => `<option value="spec:${m.key}">${m.label} ${m.direction === 'higher_better' ? '높은' : '좋은'}순</option>`).join("")}
+    </select>
+    <label class="fchk"><input type="checkbox" data-qx> 데이터부족 제외</label></div>`);
+
   bar.innerHTML = parts.join("");
-  bar.querySelectorAll(".ftag").forEach(btn => btn.onclick = () => {
-    const f = btn.dataset.f;
-    bar.querySelectorAll(`.ftag[data-f="${f}"]`).forEach(b => b.classList.remove("on"));
-    btn.classList.add("on");
-    if (f === "cap") STATE.cap = btn.dataset.v;
-    if (f === "brand") STATE.brand = btn.dataset.v;
-    if (f === "star") STATE.minStar = +btn.dataset.v;
+
+  // 인원
+  bar.querySelectorAll("[data-cap]").forEach(btn => btn.onclick = () => {
+    bar.querySelectorAll("[data-cap]").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on"); STATE.cap = btn.dataset.cap; draw();
+  });
+  // 브랜드 멀티(칩 토글)
+  bar.querySelectorAll("[data-brand]").forEach(btn => btn.onclick = () => {
+    const b = btn.dataset.brand;
+    if (STATE.brands.has(b)) { STATE.brands.delete(b); btn.classList.remove("on"); }
+    else { STATE.brands.add(b); btn.classList.add("on"); }
     draw();
   });
+  // 브랜드 드롭다운(추가)
+  const bsel = bar.querySelector("[data-brandsel]");
+  if (bsel) bsel.onchange = e => { if (e.target.value) { STATE.brands.add(e.target.value); e.target.value = ""; draw(); } };
+  // 범위 입력
+  bar.querySelectorAll(".frng").forEach(inp => inp.oninput = () => {
+    const key = inp.dataset.rng, b = inp.dataset.b, v = inp.value.trim();
+    STATE.range[key] = STATE.range[key] || {};
+    if (v === "") delete STATE.range[key][b]; else STATE.range[key][b] = parseFloat(v);
+    if (!Object.keys(STATE.range[key]).length) delete STATE.range[key];
+    draw();
+  });
+  // 정렬 셀렉트
+  const ssel = bar.querySelector("[data-sort]");
+  if (ssel) ssel.onchange = e => {
+    const v = e.target.value;
+    if (!v) { STATE.sortKey = "spec:" + (star[0] && star[0].key); STATE.sortAsc = defaultAsc(STATE.sortKey); }
+    else if (v === "value") { STATE.sortKey = "value"; STATE.sortAsc = false; }
+    else { STATE.sortKey = v; STATE.sortAsc = defaultAsc(v); }
+    draw();
+  };
+  // 품질 토글
+  const qx = bar.querySelector("[data-qx]");
+  if (qx) qx.onchange = e => { STATE.qExclude = e.target.checked; draw(); };
+}
+
+// 활성 필터 요약 칩(개별 해제) + 전체해제
+function renderActiveFilters() {
+  const el = document.getElementById("activefilters");
+  if (!el) return;
+  const chips = [];
+  if (STATE.cap) chips.push([`인원 ${STATE.cap}인`, () => { STATE.cap = ""; }]);
+  STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
+  Object.entries(STATE.range).forEach(([k, r]) => {
+    const lab = k === "price" ? "가격" : (STATE.data.metrics.find(m => m.key === k) || {}).label || k;
+    const u = k === "price" ? "원" : (STATE.unit[k] || "");
+    const txt = `${lab} ${r.min != null ? r.min : ""}~${r.max != null ? r.max : ""}${u}`;
+    chips.push([txt, () => delete STATE.range[k]]);
+  });
+  if (STATE.qExclude) chips.push(["데이터부족 제외", () => { STATE.qExclude = false; }]);
+  if (STATE.q) chips.push([`"${STATE.q}"`, () => { STATE.q = ""; document.getElementById("q").value = ""; }]);
+  el.innerHTML = chips.length
+    ? chips.map((c, i) => `<button class="achip" data-ai="${i}">${esc(c[0])} ✕</button>`).join("") +
+      `<button class="achip clear" data-clear>전체 해제</button>`
+    : "";
+  el._chips = chips;
+  el.querySelectorAll(".achip[data-ai]").forEach(b => b.onclick = () => { chips[+b.dataset.ai][1](); syncFilterUI(); draw(); });
+  const cl = el.querySelector("[data-clear]");
+  if (cl) cl.onclick = () => {
+    STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
+    document.getElementById("q").value = ""; syncFilterUI(); draw();
+  };
+}
+
+// 칩/입력 UI를 STATE에 동기화(활성칩에서 해제 시 컨트롤도 반영)
+function syncFilterUI() {
+  const bar = document.getElementById("filters");
+  bar.querySelectorAll("[data-cap]").forEach(b => b.classList.toggle("on", b.dataset.cap === STATE.cap));
+  bar.querySelectorAll("[data-brand]").forEach(b => b.classList.toggle("on", STATE.brands.has(b.dataset.brand)));
+  bar.querySelectorAll(".frng").forEach(inp => {
+    const r = STATE.range[inp.dataset.rng];
+    inp.value = (r && r[inp.dataset.b] != null) ? r[inp.dataset.b] : "";
+  });
+  const qx = bar.querySelector("[data-qx]"); if (qx) qx.checked = STATE.qExclude;
 }
 
 function buildHead(d, star) {
@@ -195,7 +304,23 @@ function buildHead(d, star) {
 function cellVal(m, key) {
   // 스펙 컬럼은 표시되는 '값'으로 정렬(별점 아님) → 클릭한 컬럼이 단조 정렬돼 직관적.
   if (key.startsWith("spec:")) { const s = m.specs[key.slice(5)]; return s ? s.value : null; }
+  if (key === "value") {   // 가성비 = 주력지표 별점 / 가격(만원)
+    const pk = STATE.data.metrics.filter(x => x.is_star)[0];
+    const s = pk && m.specs[pk.key];
+    if (!s || s.stars == null || !m.price_min) return null;
+    return s.stars / (m.price_min / 10000);
+  }
   return m[key];
+}
+// 모델이 범위 필터를 통과하나 (price + 각 스펙)
+function passRange(m) {
+  for (const [key, r] of Object.entries(STATE.range)) {
+    const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
+    if (v == null) return false;                 // 값 없으면 범위 못 만족
+    if (r.min != null && v < r.min) return false;
+    if (r.max != null && v > r.max) return false;
+  }
+  return true;
 }
 // 컬럼 기본 정렬방향: 스펙은 '좋은 것 먼저'(낮을수록좋음→오름차순), 가격=싼것먼저(asc), 그외 asc
 function defaultAsc(key) {
@@ -205,14 +330,16 @@ function defaultAsc(key) {
 
 function draw() {
   const d = STATE.data, star = d.metrics.filter(m => m.is_star);
-  const primary = star[0] && star[0].key;
+  renderActiveFilters();
   let rows = d.models.filter(m =>
     (!STATE.cap || String(m.capacity) === STATE.cap) &&
-    (!STATE.brand || m.brand === STATE.brand) &&
+    (!STATE.brands.size || STATE.brands.has(m.brand)) &&
     (!STATE.q || (m.brand + " " + m.model).toLowerCase().includes(STATE.q)) &&
-    (!STATE.minStar || (m.specs[primary] && m.specs[primary].stars >= STATE.minStar)));
+    passRange(m));
 
   const k = STATE.sortKey, asc = STATE.sortAsc;
+  // 품질: '데이터부족 제외' → 정렬 기준 값이 없는 모델 숨김
+  if (STATE.qExclude) rows = rows.filter(m => cellVal(m, k) != null);
   rows.sort((a, b) => {
     let va = cellVal(a, k), vb = cellVal(b, k);
     if (typeof va === "string" || typeof vb === "string")
