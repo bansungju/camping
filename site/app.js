@@ -1569,7 +1569,7 @@ async function renderCommunity() {
     btn.onclick = () => {
       document.querySelectorAll(".log-sort-btn").forEach(b => b.classList.remove("on"));
       btn.classList.add("on");
-      renderLogFeed(btn.dataset.sort);
+      renderLogFeed(btn.dataset.sort, _logFeedTag);
     };
   });
 
@@ -1634,19 +1634,39 @@ async function renderBestGear() {
   }
 }
 
-async function renderLogFeed(sortMode = "latest") {
+let _logFeedTag = null;
+let _logFeedSort = "latest";
+
+async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
+  _logFeedTag = filterTag;
+  _logFeedSort = sortMode;
   const el = document.getElementById("comm-logs-list");
   if (!el) return;
+
+  const tagFilterBar = document.getElementById("comm-tag-filter-bar");
+  if (tagFilterBar) {
+    if (filterTag) {
+      tagFilterBar.innerHTML = `<span style="font-size:12px;color:var(--muted)">태그 필터:</span> <span class="log-tag" style="font-size:12px">#${esc(filterTag)}</span> <button id="tag-filter-clear" style="border:none;background:none;font-size:12px;color:var(--muted);cursor:pointer;padding:2px 4px">✕ 해제</button>`;
+      tagFilterBar.style.display = "flex";
+      const clrBtn = tagFilterBar.querySelector("#tag-filter-clear");
+      if (clrBtn) clrBtn.onclick = () => renderLogFeed(sortMode, null);
+    } else {
+      tagFilterBar.style.display = "none";
+    }
+  }
+
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
     const { supabase } = await import("./supabaseClient.js");
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
-    const { data: posts, error } = await supabase
+    let query = supabase
       .from("posts")
       .select("id, title, content, tags, created_at, user_id, image_url, likes, comment_count, gear_set_snapshot, profiles(nickname)")
       .eq("is_public", true)
       .order(orderCol, { ascending: false })
-      .limit(20);
+      .limit(50);
+    if (filterTag) query = query.contains("tags", [filterTag]);
+    const { data: posts, error } = await query;
     if (error) throw error;
     if (!posts || posts.length === 0) {
       el.innerHTML = `
@@ -1660,7 +1680,7 @@ async function renderLogFeed(sortMode = "latest") {
     el.innerHTML = posts.map((p, i) => {
       const nick = p.profiles?.nickname || "익명";
       const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-      const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
+      const tagHtml = (p.tags || []).slice(0, 4).map(t => `<button type="button" class="log-tag log-tag-btn" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
       const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
       const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
       const gs = p.gear_set_snapshot;
@@ -1689,6 +1709,9 @@ async function renderLogFeed(sortMode = "latest") {
       const p = posts[+card.dataset.li];
       card.onclick = () => openLogDetail(p);
       card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLogDetail(p); } };
+    });
+    el.querySelectorAll(".log-tag-btn").forEach(btn => {
+      btn.onclick = e => { e.stopPropagation(); renderLogFeed(_logFeedSort || "latest", btn.dataset.tag); };
     });
     el.querySelectorAll(".log-like-btn").forEach(btn => {
       btn.onclick = async e => {

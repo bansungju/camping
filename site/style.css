@@ -389,6 +389,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .my-log-del,.my-log-edit{border:0;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
 .my-log-del:hover{color:#e5484d}
 .my-log-edit:hover{color:var(--accent)}
+.log-tag-btn{border:none;cursor:pointer;background:var(--line,#e8ede6);color:var(--accent);font-size:11px;padding:3px 8px;border-radius:20px}
+.log-tag-btn:hover{background:var(--accent);color:#fff}
 .log-set-badge{font-size:12px;color:var(--accent);margin-top:6px;padding:3px 8px;border:1px solid var(--accent);border-radius:20px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .log-set-item{font-size:12px;background:var(--bg2,var(--line));border-radius:4px;padding:2px 6px;color:var(--fg)}
 .log-detail-box{max-width:440px;width:100%;padding:24px;max-height:85vh;overflow-y:auto}
