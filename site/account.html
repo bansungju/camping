@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>내 정보 — 캠핑기어 정직비교</title>
+<meta name="description" content="로그인·회원가입 (준비중)">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="캠핑기어">
+<link rel="stylesheet" href="style.css?v=2854fc3e">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="index.html"><b>캠핑기어</b> 정직비교</a>
+  <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
+</div></header>
+
+<main class="wrap">
+  <h1 style="margin-top:22px">내 정보</h1>
+
+  <!-- 찜한 상품(로그인 없이 이 기기에 저장) -->
+  <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+  <div id="wishlist" class="plist"></div>
+
+  <!-- 로그인 준비중 -->
+  <div class="coming" style="margin-top:34px">
+    <div class="ce">👤</div>
+    <h1>로그인</h1>
+    <p>로그인·회원가입 기능을 준비하고 있어요.</p>
+    <span class="cbadge">준비중 · 미리보기</span>
+    <form class="cform" onsubmit="return false">
+      <div>
+        <label for="email">이메일</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="off" disabled>
+      </div>
+      <div>
+        <label for="pw">비밀번호</label>
+        <input id="pw" type="password" placeholder="••••••••" autocomplete="off" disabled>
+      </div>
+      <button class="cbtn" type="submit" disabled>로그인 (준비중)</button>
+    </form>
+    <div class="cfoot">로그인하면 찜 목록을 여러 기기에서 동기화할 수 있게 준비 중이에요. 지금은 이 기기에만 저장돼요.</div>
+  </div>
+</main>
+
+<footer><div class="wrap">측정값 기반 정직비교 · 찜은 이 기기에 저장 · 계정 기능 준비중.</div></footer>
+
+<script src="app.js?v=2c06ed8c"></script>
+<script>renderAccount();</script>
+</body>
+</html>
