@@ -3,6 +3,32 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
+
+// PWA 설치 유도 배너
+let _pwaPrompt = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  const banner = document.getElementById("pwa-banner");
+  if (!banner || localStorage.getItem("pwa-dismissed")) return;
+  banner.innerHTML = `<div class="pwa-banner-inner">
+    <span class="pwa-banner-ico">🌲</span>
+    <span class="pwa-banner-msg">장비의 숲을 홈 화면에 추가하면 더 빠르게 열려요</span>
+    <button type="button" class="pwa-install-btn">설치</button>
+    <button type="button" class="pwa-dismiss-btn" aria-label="닫기">✕</button>
+  </div>`;
+  banner.style.display = "block";
+  banner.querySelector(".pwa-install-btn").onclick = async () => {
+    _pwaPrompt.prompt();
+    const { outcome } = await _pwaPrompt.userChoice;
+    if (outcome === "accepted") localStorage.setItem("pwa-dismissed", "1");
+    banner.style.display = "none";
+  };
+  banner.querySelector(".pwa-dismiss-btn").onclick = () => {
+    localStorage.setItem("pwa-dismissed", "1");
+    banner.style.display = "none";
+  };
+});
 const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
 /* 운영자 모드: ?ops=1 로 켜면(localStorage 영속) 신뢰등급·값배지·데이터한계가 보인다.
