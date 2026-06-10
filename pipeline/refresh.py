@@ -32,6 +32,7 @@ sys.path.insert(0, HERE)
 import harvest_tents as HT
 import multicat as M
 import pipeline as P
+import danawa as D
 
 TENT_QUERIES = ["백패킹텐트", "텐트", "초경량텐트", "돔텐트"]
 DTFMT = "%Y-%m-%d %H:%M:%S"
@@ -163,7 +164,7 @@ def main():
                         else:
                             R["skipped"] += 1
                 con.commit()
-                time.sleep(0.4)
+                D.polite_sleep(0.8, 1.2)   # 지터(고정 간격 = 봇 지문)
             print(f"  [{label} · {q}] 누적 신규 {len(R['new'])} / 변동 {len(R['changed'])} / 스캔 {R['scanned']}")
 
     # 단종 후보 = on_sale 인데 이번 검색에 한 번도 안 잡힌 pcode (참고용)

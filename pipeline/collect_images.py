@@ -68,7 +68,7 @@ def collect(con, cat, limit, sleep):
             con.commit()
         except Exception:
             err += 1  # NULL 유지 → 다음 회차 재시도
-        time.sleep(sleep)
+        danawa.polite_sleep(sleep, sleep)   # sleep ~ 2*sleep 지터(고정 간격 = 봇 지문)
     print(f"[{cat}] 완료: 이미지 {ok} · 없음 {none} · 오류(재시도) {err}")
     return ok, none, err
 

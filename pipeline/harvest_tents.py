@@ -39,8 +39,9 @@ REQ = ["weight_min", "water_head", "floor_area"]
 def fetch_page(query, page):
     url = ("https://search.danawa.com/dsearch.php?query=" + urllib.parse.quote(query) +
            f"&page={page}&limit=40&sort=saveDESC")
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    return urllib.request.urlopen(req, timeout=25).read().decode("utf-8", "ignore")
+    D.robots_advisory(url)   # 호스트당 1회 robots 허용여부·Crawl-delay 출력
+    # 공용 HTTP 계층(헤더·세션쿠키·백오프) 사용. 메인에서 검색 들어온 것처럼 Referer 부여.
+    return D.http_get(url, referer="https://www.danawa.com/", timeout=25)
 
 
 def parse_results(html):
@@ -202,7 +203,7 @@ def main():
                     new += 1
             con.commit()
             print(f"  [{q.strip()} p{page}] +{new}  (누적 ok={stats['ok']})")
-            time.sleep(0.5)
+            D.polite_sleep(0.8, 1.2)   # 고정 간격 대신 지터(봇 지문 제거 + 서버 정중)
 
     P.recompute_ratings(con)
     con.commit()

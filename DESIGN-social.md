@@ -2080,3 +2080,643 @@ DROP TRIGGER IF EXISTS trg_comment_content ON comments;
 CREATE TRIGGER trg_comment_content BEFORE INSERT OR UPDATE ON comments
   FOR EACH ROW EXECUTE FUNCTION check_body_content();
 ```
+
+---
+
+## 26. 결정 로그 — 루프16 (2026-06-10) — 서브에이전트 적대 검토 16차
+
+서브에이전트 5개 구멍 발굴 → 전부 결정 완료.
+
+| # | 카테고리 | 결정 |
+|---|---|---|
+| L16-1 | legal | 탈퇴 전 "내 데이터 내보내기" Edge Function `export-my-data` 추가. 탈퇴 플로우에 "내보내기 → 확인 → 삭제" 순서 노출 |
+| L16-2 | schema | `reviews.user_id` ON DELETE SET NULL. `comments.user_id` ON DELETE SET NULL. `likes.user_id` ON DELETE CASCADE. FK 명세 확정 |
+| L16-3 | legal/infra | `site/privacy.html` 신설 필수 — 카카오 비즈앱 심사·구글 OAuth 프로덕션 게시의 **선행 요건**. PIPA §30 필수 항목 포함 |
+| L16-4 | ux | 다중 탭 stale: `visibilitychange` 이벤트에서 like_count + 본인 좋아요 여부 재조회. Realtime 미사용 원칙 유지 |
+| L16-5 | ux/ops | 닉네임 변경 = 기존 게시글 소급 적용 **의도된 동작**으로 명시. 변경 시 "모든 과거 활동에 반영됩니다" 안내 문구 추가 |
+
+### 코드·스키마 보완 사항 (루프16 반영)
+
+#### L16-1: `export-my-data` Edge Function
+
+```ts
+// supabase/functions/export-my-data/index.ts
+serve(async (req) => {
+  const { data: { user } } = await supabase.auth.getUser(
+    req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
+  )
+  if (!user) return new Response('Unauthorized', { status: 401 })
+
+  const uid = user.id
+  const [reviews, posts, comments, likes] = await Promise.all([
+    supabase.from('reviews').select('*').eq('user_id', uid),
+    supabase.from('posts').select('*').eq('user_id', uid).is('deleted_at', null),
+    supabase.from('comments').select('*').eq('user_id', uid).is('deleted_at', null),
+    supabase.from('likes').select('post_id, created_at').eq('user_id', uid),
+  ])
+
+  const exportData = {
+    exported_at: new Date().toISOString(),
+    user_id: uid,
+    reviews: reviews.data ?? [],
+    posts: posts.data ?? [],
+    comments: comments.data ?? [],
+    liked_posts: likes.data ?? [],
+  }
+
+  return new Response(JSON.stringify(exportData, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': 'attachment; filename="my-camfit-data.json"',
+    }
+  })
+})
+```
+
+탈퇴 플로우 UX: "① 내 데이터 내보내기 (선택)" → 다운로드 → "② 계정 삭제" 순서로 UI 배치.
+
+#### L16-2: FK `ON DELETE` 명세 확정
+
+```sql
+-- reviews.user_id: 탈퇴 시 NULL화 (리뷰 내용 보존, 작성자 익명화)
+CREATE TABLE reviews (
+  user_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  -- ...
+);
+
+-- comments.user_id: 탈퇴 시 NULL화 (댓글 내용 보존)
+CREATE TABLE comments (
+  user_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  -- ...
+);
+
+-- likes.user_id: 탈퇴 시 CASCADE 삭제 (좋아요는 작성자 없이 의미 없음)
+CREATE TABLE likes (
+  post_id uuid REFERENCES posts(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  PRIMARY KEY (post_id, user_id)
+);
+
+-- posts.user_id: 탈퇴 시 NULL화 (게시글 보존, 작성자 익명화)
+CREATE TABLE posts (
+  user_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  -- ...
+);
+```
+
+`profiles(id)` ON DELETE CASCADE → `auth.users` 삭제 시 연쇄. reviews/posts/comments user_id는 SET NULL이므로 행 삭제 없이 익명화.
+
+#### L16-3: `site/privacy.html` 필수 항목 (PIPA §30)
+
+```html
+<!-- site/privacy.html — S1 착수 전 배포 필수 -->
+<!-- 카카오 비즈앱 심사 URL: https://[USER].github.io/[REPO]/site/privacy.html -->
+<h1>개인정보 처리방침</h1>
+<h2>1. 수집 항목</h2>
+<p>이메일 주소, 닉네임, 소셜 프로필 이미지 URL (카카오·구글 OAuth 제공)</p>
+<h2>2. 수집 및 이용 목적</h2>
+<p>회원 식별, UGC(리뷰·게시글) 작성 및 관리</p>
+<h2>3. 보유 및 이용 기간</h2>
+<p>회원 탈퇴 시까지. 탈퇴 즉시 삭제 (관련 법령 보존 의무 없음)</p>
+<h2>4. 제3자 제공</h2>
+<p>원칙적으로 제공하지 않음. 단, 카카오·구글 OAuth 인증에 한해 해당 플랫폼 정책 적용</p>
+<h2>5. 문의</h2>
+<p>이메일: [관리자 이메일]</p>
+```
+
+#### L16-4: `visibilitychange` stale 재조회
+
+```js
+// 게시글 상세 페이지 — 탭 복귀 시 경량 재조회
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && currentPostId) {
+    const [{ data: post }, { data: myLike }] = await Promise.all([
+      supabase.from('posts').select('like_count').eq('id', currentPostId).single(),
+      supabase.from('likes').select('post_id')
+        .eq('post_id', currentPostId).eq('user_id', currentUser?.id ?? '').maybeSingle()
+    ])
+    if (post) updateLikeUI(post.like_count, !!myLike)
+  }
+})
+// Realtime 미사용 원칙 유지 — 탭 복귀 시 1회 재조회로 stale 해소
+```
+
+#### L16-5: 닉네임 변경 소급 적용 안내
+
+```js
+// 닉네임 변경 모달 — 소급 적용 안내 문구
+// "닉네임 변경 시 과거에 작성한 모든 리뷰·게시글에도 새 닉네임이 표시됩니다."
+// "30일 쿨다운 적용: 변경 후 30일 이내 재변경 불가"
+```
+
+JOIN 기반 display = 탈퇴 시 NULL 처리와 자동 일치. 비정규화(`posts.author_nickname`) 미채택 이유: 탈퇴 시 전체 UPDATE 폭발 방지. admin은 `profiles.nickname_changed_at` + `reports` 조회로 신고 회피 패턴 추적 가능.
+
+---
+
+## 27. 결정 로그 — 루프17 (2026-06-10) — 서브에이전트 적대 검토 17차
+
+서브에이전트 5개 구멍 발굴 → 전부 결정 완료.
+
+| # | 카테고리 | 결정 |
+|---|---|---|
+| L17-1 | security | reviews/comments/likes rate limit: DB 트리거 + `rate_limit_log` 테이블. 외부 의존 없음 |
+| L17-2 | storage | Storage 버킷 RLS 정책 명시: `avatars`(public read/owner write), `review-images`(public read/owner insert/admin-owner delete) |
+| L17-3 | moderation | 닉네임 금지어 필터: `profiles` BEFORE INSERT/UPDATE 트리거로 비속어 배열 검사 |
+| L17-4 | arch | Realtime 미사용 원칙 명시: V1에서 Supabase Realtime 구독 전면 금지. 모든 테이블 Realtime 비활성화 |
+| L17-5 | auth | 재가입 플로우: soft-delete된 계정 동일 OAuth로 재가입 시 30일 쿨다운 + 새 profile 생성 (기존 콘텐츠 재연결 없음) |
+
+### 코드·스키마 보완 사항 (루프17 반영)
+
+#### L17-1: reviews/comments/likes Rate Limit (DB 트리거)
+
+```sql
+-- rate_limit_log: 행위 카운팅용 (TTL: pg_cron으로 1시간 후 삭제)
+CREATE TABLE rate_limit_log (
+  user_id uuid NOT NULL,
+  action text NOT NULL,  -- 'review', 'comment', 'like'
+  ts timestamptz DEFAULT now()
+);
+CREATE INDEX ON rate_limit_log(user_id, action, ts);
+
+-- reviews: 60초 내 3건 제한
+CREATE OR REPLACE FUNCTION check_review_rate_limit() RETURNS trigger AS $$
+BEGIN
+  IF (SELECT COUNT(*) FROM rate_limit_log
+      WHERE user_id = NEW.user_id AND action = 'review'
+        AND ts > now() - interval '60 seconds') >= 3 THEN
+    RAISE EXCEPTION 'rate_limit_exceeded: review';
+  END IF;
+  INSERT INTO rate_limit_log(user_id, action) VALUES (NEW.user_id, 'review');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_review_rate_limit BEFORE INSERT ON reviews
+  FOR EACH ROW EXECUTE FUNCTION check_review_rate_limit();
+
+-- comments: 60초 내 10건 제한
+CREATE OR REPLACE FUNCTION check_comment_rate_limit() RETURNS trigger AS $$
+BEGIN
+  IF (SELECT COUNT(*) FROM rate_limit_log
+      WHERE user_id = NEW.user_id AND action = 'comment'
+        AND ts > now() - interval '60 seconds') >= 10 THEN
+    RAISE EXCEPTION 'rate_limit_exceeded: comment';
+  END IF;
+  INSERT INTO rate_limit_log(user_id, action) VALUES (NEW.user_id, 'comment');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_comment_rate_limit BEFORE INSERT ON comments
+  FOR EACH ROW EXECUTE FUNCTION check_comment_rate_limit();
+
+-- likes: 60초 내 20건 제한
+CREATE OR REPLACE FUNCTION check_like_rate_limit() RETURNS trigger AS $$
+BEGIN
+  IF (SELECT COUNT(*) FROM rate_limit_log
+      WHERE user_id = NEW.user_id AND action = 'like'
+        AND ts > now() - interval '60 seconds') >= 20 THEN
+    RAISE EXCEPTION 'rate_limit_exceeded: like';
+  END IF;
+  INSERT INTO rate_limit_log(user_id, action) VALUES (NEW.user_id, 'like');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_like_rate_limit BEFORE INSERT ON likes
+  FOR EACH ROW EXECUTE FUNCTION check_like_rate_limit();
+
+-- pg_cron: 1시간 이상 된 rate_limit_log 행 정리
+SELECT cron.schedule('0 * * * *', $$
+  DELETE FROM rate_limit_log WHERE ts < now() - interval '1 hour';
+$$);
+```
+
+#### L17-2: Storage 버킷 RLS 정책
+
+```sql
+-- Supabase Dashboard: Storage → Buckets → Policy 설정
+-- avatars 버킷 (공개 읽기, 본인만 업로드/삭제)
+CREATE POLICY "avatars_public_read" ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "avatars_owner_insert" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "avatars_owner_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- review-images 버킷 (공개 읽기, 본인 업로드, 본인+admin 삭제)
+CREATE POLICY "review_images_public_read" ON storage.objects FOR SELECT
+  USING (bucket_id = 'review-images');
+
+CREATE POLICY "review_images_owner_insert" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'review-images' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "review_images_owner_admin_delete" ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'review-images' AND (
+      auth.uid()::text = (storage.foldername(name))[1]
+      OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    )
+  );
+```
+
+파일 경로 규칙: `{bucket}/{user_id}/{uuid}.webp` — foldername[1] = user_id로 소유권 검증.
+
+#### L17-3: 닉네임 금지어 필터
+
+```sql
+CREATE OR REPLACE FUNCTION check_nickname_content() RETURNS trigger AS $$
+DECLARE
+  term text;
+  blocked text[] := ARRAY['씨발','개새끼','병신','fuck','shit','admin','운영자','관리자'];
+BEGIN
+  FOREACH term IN ARRAY blocked LOOP
+    IF lower(coalesce(NEW.nickname,'')) LIKE '%' || term || '%' THEN
+      RAISE EXCEPTION 'nickname_policy_violation';
+    END IF;
+  END LOOP;
+  -- 닉네임 형식: 2-20자, 특수문자 금지 (한글/영문/숫자/언더스코어만 허용)
+  IF NEW.nickname !~ '^[가-힣a-zA-Z0-9_]{2,20}$' THEN
+    RAISE EXCEPTION 'nickname_format_invalid';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_nickname_content BEFORE INSERT OR UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION check_nickname_content();
+```
+
+#### L17-4: Realtime 미사용 원칙
+
+```
+V1 정책: Supabase Realtime 구독 전면 미사용.
+- 모든 실시간성 UX는 visibilitychange + 명시적 사용자 액션으로 처리
+- Supabase Dashboard: Database → Replication → "Source" OFF (모든 테이블)
+- 이유: likes SELECT RLS가 "본인 행만"인 상태에서 Realtime broadcast 활성화 시
+  타인의 like 이벤트가 채널을 통해 노출될 수 있는 보안 경계 불일치 방지
+- V2에서 Realtime 도입 시 별도 채널 RLS 정책 설계 후 재검토
+```
+
+#### L17-5: 재가입(Soft-Delete 계정 동일 OAuth 재시도) 플로우
+
+```sql
+-- handle_new_user 트리거 개정: soft-delete 계정 재가입 처리
+CREATE OR REPLACE FUNCTION handle_new_user() RETURNS trigger AS $$
+DECLARE
+  existing_profile profiles%ROWTYPE;
+BEGIN
+  SELECT * INTO existing_profile FROM profiles WHERE id = NEW.id;
+
+  -- 이미 profiles 행 있음 (재가입 아닌 정상 중복 호출) → skip
+  IF FOUND AND existing_profile.deleted_at IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- soft-delete된 계정 재가입 시도: 30일 쿨다운 확인
+  IF FOUND AND existing_profile.deleted_at IS NOT NULL THEN
+    IF existing_profile.deleted_at > now() - interval '30 days' THEN
+      -- auth.users에서도 삭제 (재가입 차단)
+      DELETE FROM auth.users WHERE id = NEW.id;
+      RAISE EXCEPTION 'account_deleted_cooldown: 탈퇴 후 30일 이내 재가입 불가';
+    END IF;
+    -- 30일 경과: 기존 행 삭제 후 새 프로필 생성 (기존 콘텐츠 재연결 없음)
+    DELETE FROM profiles WHERE id = NEW.id;
+  END IF;
+
+  -- 신규 프로필 생성
+  INSERT INTO profiles(id, nickname, avatar_url)
+  VALUES (
+    NEW.id,
+    coalesce(NEW.raw_user_meta_data->>'name', '사용자_' || left(NEW.id::text, 8)),
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+> 재가입 정책: 탈퇴 후 30일 쿨다운. 재가입 시 새 profile 생성 — 기존 reviews/posts의 user_id(NULL화된 상태) 재연결 없음. 콘텐츠는 익명으로 계속 존재.
+
+
+---
+
+## 28. 결정 로그 — 루프18 (2026-06-10) — 서브에이전트 적대 검토 18차
+
+서브에이전트 5개 구멍 발굴 → 전부 결정 완료.
+
+| # | 카테고리 | 결정 |
+|---|---|---|
+| L18-1 | security | `delete_account_atomic()` SECURITY DEFINER + GRANT EXECUTE TO service_role만. 내부 `auth.uid() = p_user_id` 검증 필수 |
+| L18-2 | security | `get_posts_popular()` p_period 입력값 검증: 허용 목록 외 값 → RAISE EXCEPTION |
+| L18-3 | ux/perf | `export-my-data`: `reviews.deleted_at IS NULL` 필터 추가 + 1일 5회 rate limit (rate_limit_log 재사용) |
+| L18-4 | schema | `comments.deleted_at timestamptz` 컬럼 누락 → `ALTER TABLE comments ADD COLUMN deleted_at timestamptz` 추가 |
+| L18-5 | auth | `handle_new_user()` 닉네임 초기화 = NULL 강제 (소셜 실명 유입 차단). avatar_url만 소셜에서 가져옴 |
+
+### 코드·스키마 보완 사항 (루프18 반영)
+
+#### L18-1: `delete_account_atomic()` 권한 제어
+
+```sql
+-- SECURITY DEFINER: service_role 권한으로 실행
+-- GRANT는 service_role에만 — anon/authenticated 호출 불가
+CREATE OR REPLACE FUNCTION delete_account_atomic(p_user_id uuid)
+RETURNS void AS $$
+BEGIN
+  -- 호출자 검증: Edge Function이 JWT로 인증한 user_id와 일치해야 함
+  IF auth.uid() IS DISTINCT FROM p_user_id THEN
+    RAISE EXCEPTION 'unauthorized';
+  END IF;
+  -- soft-delete 처리
+  UPDATE profiles SET deleted_at = now() WHERE id = p_user_id;
+  UPDATE posts SET deleted_at = now() WHERE user_id = p_user_id AND deleted_at IS NULL;
+  -- reviews/comments user_id는 auth.users 삭제(CASCADE) 시 SET NULL 처리됨
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 권한 명시적 제어
+REVOKE EXECUTE ON FUNCTION delete_account_atomic(uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION delete_account_atomic(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION delete_account_atomic(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION delete_account_atomic(uuid) TO service_role;
+```
+
+#### L18-2: `get_posts_popular()` p_period 검증
+
+```sql
+CREATE OR REPLACE FUNCTION get_posts_popular(
+  p_period text DEFAULT 'all',
+  -- cursor params ...
+) RETURNS ...
+AS $$
+BEGIN
+  -- 입력값 검증: 허용 목록 외 RAISE
+  IF p_period NOT IN ('all', 'week', 'month') THEN
+    RAISE EXCEPTION 'invalid_period: must be all, week, or month';
+  END IF;
+  -- ... 나머지 로직
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### L18-3: `export-my-data` soft-delete 필터 + rate limit
+
+```ts
+// deleted_at IS NULL 필터 추가
+const [reviews, posts, comments, likes] = await Promise.all([
+  supabase.from('reviews').select('*').eq('user_id', uid).is('deleted_at', null),
+  supabase.from('posts').select('*').eq('user_id', uid).is('deleted_at', null),
+  supabase.from('comments').select('*').eq('user_id', uid).is('deleted_at', null),
+  supabase.from('likes').select('post_id, created_at').eq('user_id', uid),
+])
+```
+
+```sql
+-- export rate limit: 1일 5회
+CREATE OR REPLACE FUNCTION check_export_rate_limit(p_user_id uuid) RETURNS void AS $$
+BEGIN
+  IF (SELECT COUNT(*) FROM rate_limit_log
+      WHERE user_id = p_user_id AND action = 'export'
+        AND ts > now() - interval '24 hours') >= 5 THEN
+    RAISE EXCEPTION 'rate_limit_exceeded: export';
+  END IF;
+  INSERT INTO rate_limit_log(user_id, action) VALUES (p_user_id, 'export');
+END;
+$$ LANGUAGE plpgsql;
+-- export-my-data Edge Function 진입 시 이 함수 호출
+```
+
+#### L18-4: `comments.deleted_at` 컬럼 추가
+
+```sql
+ALTER TABLE comments ADD COLUMN deleted_at timestamptz;
+
+-- 조회 RLS: deleted_at IS NULL 조건 추가
+CREATE POLICY "comments_select_public" ON comments
+  FOR SELECT TO anon, authenticated
+  USING (deleted_at IS NULL AND hidden = false);
+
+-- 소프트 삭제 RPC (delete_account_atomic과 별개로, 유저가 직접 댓글 삭제 시)
+UPDATE comments SET deleted_at = now() WHERE id = $1 AND user_id = auth.uid();
+```
+
+#### L18-5: `handle_new_user()` 닉네임 NULL 강제
+
+```sql
+CREATE OR REPLACE FUNCTION handle_new_user() RETURNS trigger AS $$
+DECLARE
+  existing_profile profiles%ROWTYPE;
+BEGIN
+  -- ... (L17-5 재가입 로직 포함)
+  INSERT INTO profiles(id, nickname, avatar_url)
+  VALUES (
+    NEW.id,
+    NULL,  -- 닉네임은 무조건 NULL: 소셜 실명 유입 차단 (실명공개 방지 원칙)
+    NEW.raw_user_meta_data->>'avatar_url'  -- avatar만 소셜에서 가져옴
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- 첫 로그인 후 initAuth()에서 nickname IS NULL 감지 → 닉네임 설정 모달 강제 표시
+```
+
+> 실명 공개 방지 원칙: `full_name`, `name`, `preferred_username` 등 소셜 제공 실명 필드 **전부 무시**. 닉네임은 사용자가 직접 설정. avatar_url만 허용(사진은 실명 아님).
+
+---
+
+## 29. 결정 로그 — 루프19 (2026-06-10) — 서브에이전트 적대 검토 19차 (최종)
+
+서브에이전트 5개 구멍 발굴 → 전부 결정 완료. 이번으로 설계 루프 종료.
+
+| # | 카테고리 | 결정 |
+|---|---|---|
+| L19-1 | integrity | `update_like_count()` 트리거: `post.deleted_at IS NOT NULL` 시 RETURN NULL (탈퇴 CASCADE 시 음수 방지) |
+| L19-2 | schema | `post_history` 테이블 DDL 정의 (review_history 패턴 동일 적용) |
+| L19-3 | moderation | `auto_hide_on_reports()`: deleted_at IS NULL 조건 추가 + 소프트삭제 대상에 신고 INSERT 차단 트리거 |
+| L19-4 | security | `rate_limit_log.action` CHECK 제약 추가 + `check_export_rate_limit()` SECURITY INVOKER 명시 + RLS: authenticated 본인 행 DELETE 금지 |
+| L19-5 | ux | 클라이언트 공통 에러 핸들러: Supabase `P0001` 커스텀 예외 → 사용자 친화 메시지 매핑 함수 |
+
+### 코드·스키마 보완 사항 (루프19 반영)
+
+#### L19-1: `update_like_count()` 트리거 소프트삭제 건너뜀
+
+```sql
+CREATE OR REPLACE FUNCTION update_like_count() RETURNS trigger AS $$
+DECLARE post_deleted bool;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    SELECT (deleted_at IS NOT NULL) INTO post_deleted FROM posts WHERE id = NEW.post_id;
+    IF NOT post_deleted THEN
+      UPDATE posts SET like_count = like_count + 1 WHERE id = NEW.post_id;
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    SELECT (deleted_at IS NOT NULL) INTO post_deleted FROM posts WHERE id = OLD.post_id;
+    IF NOT post_deleted THEN
+      UPDATE posts SET like_count = GREATEST(0, like_count - 1) WHERE id = OLD.post_id;
+    END IF;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+-- comment_count 트리거(L7-5)와 동일한 패턴 적용
+```
+
+#### L19-2: `post_history` 테이블 DDL
+
+```sql
+CREATE TABLE post_history (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id      uuid NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  old_title    text,
+  old_body     text,
+  edited_at    timestamptz DEFAULT now(),
+  editor_id    uuid REFERENCES profiles(id) ON DELETE SET NULL
+);
+ALTER TABLE post_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "post_history_no_direct_insert" ON post_history FOR INSERT WITH CHECK (false);
+CREATE POLICY "post_history_owner_select" ON post_history FOR SELECT
+  USING (editor_id = auth.uid() OR
+         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- posts UPDATE 시 이력 삽입 트리거
+CREATE OR REPLACE FUNCTION save_post_history() RETURNS trigger AS $$
+BEGIN
+  IF NEW.body IS DISTINCT FROM OLD.body OR NEW.title IS DISTINCT FROM OLD.title THEN
+    INSERT INTO post_history(post_id, old_title, old_body, editor_id)
+    VALUES (OLD.id, OLD.title, OLD.body, auth.uid());
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_post_history AFTER UPDATE ON posts
+  FOR EACH ROW EXECUTE FUNCTION save_post_history();
+
+-- pg_cron: post_history 최대 10건 유지 (trim)
+CREATE OR REPLACE FUNCTION trim_post_history() RETURNS trigger AS $$
+BEGIN
+  DELETE FROM post_history WHERE id IN (
+    SELECT id FROM post_history WHERE post_id = NEW.post_id
+    ORDER BY edited_at DESC OFFSET 10
+  );
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_trim_post_history AFTER INSERT ON post_history
+  FOR EACH ROW EXECUTE FUNCTION trim_post_history();
+```
+
+#### L19-3: `auto_hide_on_reports()` + 소프트삭제 대상 신고 차단
+
+```sql
+-- auto_hide: deleted_at IS NULL 조건 추가
+CREATE OR REPLACE FUNCTION auto_hide_on_reports() RETURNS trigger AS $$
+DECLARE threshold int := 5;
+BEGIN
+  IF (SELECT COUNT(*) FROM reports
+      WHERE target_type = NEW.target_type AND target_id = NEW.target_id
+        AND status = 'pending') >= threshold THEN
+    CASE NEW.target_type
+      WHEN 'post' THEN
+        UPDATE posts SET hidden = true
+          WHERE id = NEW.target_id AND deleted_at IS NULL;
+      WHEN 'review' THEN
+        UPDATE reviews SET hidden = true
+          WHERE id = NEW.target_id AND deleted_at IS NULL;
+      WHEN 'comment' THEN
+        UPDATE comments SET hidden = true
+          WHERE id = NEW.target_id AND deleted_at IS NULL;
+    END CASE;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 소프트삭제된 대상에 신고 INSERT 차단
+CREATE OR REPLACE FUNCTION check_report_target_alive() RETURNS trigger AS $$
+BEGIN
+  IF NEW.target_type = 'post' AND
+     (SELECT deleted_at FROM posts WHERE id = NEW.target_id) IS NOT NULL THEN
+    RAISE EXCEPTION 'report_target_deleted';
+  END IF;
+  IF NEW.target_type = 'comment' AND
+     (SELECT deleted_at FROM comments WHERE id = NEW.target_id) IS NOT NULL THEN
+    RAISE EXCEPTION 'report_target_deleted';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_report_target_alive BEFORE INSERT ON reports
+  FOR EACH ROW EXECUTE FUNCTION check_report_target_alive();
+```
+
+#### L19-4: `rate_limit_log` 보완
+
+```sql
+-- action CHECK 제약 추가
+ALTER TABLE rate_limit_log
+  ADD CONSTRAINT chk_action
+  CHECK (action IN ('review', 'comment', 'like', 'export', 'post'));
+
+-- RLS: authenticated 사용자가 자신의 행을 직접 DELETE하지 못하도록 차단
+ALTER TABLE rate_limit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "rate_limit_log_no_user_delete" ON rate_limit_log
+  FOR DELETE TO authenticated USING (false);
+-- pg_cron(service_role)만 DELETE 가능
+
+-- check_export_rate_limit() SECURITY 명시
+CREATE OR REPLACE FUNCTION check_export_rate_limit(p_user_id uuid)
+RETURNS void AS $$
+BEGIN
+  IF (SELECT COUNT(*) FROM rate_limit_log
+      WHERE user_id = p_user_id AND action = 'export'
+        AND ts > now() - interval '24 hours') >= 5 THEN
+    RAISE EXCEPTION 'rate_limit_exceeded: export';
+  END IF;
+  INSERT INTO rate_limit_log(user_id, action) VALUES (p_user_id, 'export');
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER;  -- service_role JWT로 호출됨
+```
+
+#### L19-5: 클라이언트 공통 에러 핸들러
+
+```js
+// utils/supabaseError.js — Supabase PostgreSQL 트리거 커스텀 예외 매핑
+const ERROR_MESSAGES = {
+  'rate_limit_exceeded: review':  '잠시 후 다시 시도해주세요 (리뷰는 1분에 3건 제한)',
+  'rate_limit_exceeded: comment': '잠시 후 다시 시도해주세요 (댓글은 1분에 10건 제한)',
+  'rate_limit_exceeded: like':    '잠시 후 다시 시도해주세요',
+  'rate_limit_exceeded: post':    '잠시 후 다시 시도해주세요',
+  'rate_limit_exceeded: export':  '데이터 내보내기는 하루 5회까지 가능합니다',
+  'account_too_new: review requires 24h account age':
+    '리뷰는 가입 후 24시간이 지나야 작성할 수 있습니다',
+  'content_policy_violation':     '금지된 표현이 포함되어 있습니다',
+  'nickname_policy_violation':    '사용할 수 없는 닉네임입니다',
+  'nickname_format_invalid':      '닉네임은 2~20자 (한글/영문/숫자/_)만 사용 가능합니다',
+  'account_deleted_cooldown':     '탈퇴 후 30일 이내에는 재가입할 수 없습니다',
+  'report_target_deleted':        '이미 삭제된 게시물입니다',
+  'invalid_period':               '올바르지 않은 검색 조건입니다',
+  'unauthorized':                '권한이 없습니다',
+}
+
+export function getErrorMessage(error) {
+  if (!error) return null
+  // Supabase Postgrest error: { code: 'P0001', message: '...' }
+  // error.message에 RAISE EXCEPTION 문자열이 담김
+  const msg = error.message ?? ''
+  for (const [key, label] of Object.entries(ERROR_MESSAGES)) {
+    if (msg.includes(key)) return label
+  }
+  return '오류가 발생했습니다. 잠시 후 다시 시도해주세요'
+}
+
+// 사용 예시
+const { error } = await supabase.from('reviews').insert({ ... })
+if (error) showToast(getErrorMessage(error))
+
+// global unhandledrejection: Supabase는 reject가 아닌 resolved { error }를 반환하므로
+// 실제 catch 대상은 네트워크 실패, Edge Function 500 등
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled rejection:', e.reason)
+  showToast('네트워크 오류가 발생했습니다')
+})
+```

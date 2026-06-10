@@ -92,7 +92,7 @@ def main():
         wt = f"{w:.0f}g" if w else "무게?"
         print(f"  +{f}스펙  {name[:36]} ({wt})")
         con.commit()
-        time.sleep(0.35)
+        D.polite_sleep(0.6, 1.0)   # 지터(고정 간격 = 봇 지문)
 
     P.recompute_ratings(con)
     con.commit()
