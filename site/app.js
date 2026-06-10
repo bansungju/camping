@@ -503,6 +503,44 @@ function buildFilters(d, star) {
       </div></div>`);
   });
 
+  // 카테고리별 핵심 스펙 추가 슬라이더
+  const EXTRA_SPECS = {
+    "backpacking-tent": [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+    "auto-tent":        [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+    "other-tent":       [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+    "tarp":             [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+    "sleeping-bag":     [{key:"comfort_temp",label:"쾌적온도",unit:"°C"},{key:"fill_weight",label:"다운충전량",unit:"g"}],
+    "mat":              [{key:"r_value",label:"R값",unit:""},{key:"thickness",label:"두께",unit:"mm"}],
+    "lantern":          [{key:"brightness",label:"밝기",unit:"lm"},{key:"runtime",label:"사용시간",unit:"h"}],
+    "burner":           [{key:"power_output",label:"출력",unit:"W"}],
+    "powerbank":        [{key:"capacity_mah",label:"용량",unit:"mAh"},{key:"power_output",label:"출력",unit:"W"}],
+    "cooler":           [{key:"capacity_l",label:"용량",unit:"L"}],
+    "cookware":         [{key:"capacity_l",label:"용량",unit:"L"}],
+    "chair":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+    "table":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+    "cot":              [{key:"max_load",label:"최대하중",unit:"kg"}],
+    "wagon":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+  };
+  const starKeys = new Set(star.map(m => m.key));
+  const extraMeta = (EXTRA_SPECS[d.slug] || []).filter(em => !starKeys.has(em.key));
+  extraMeta.forEach(em => {
+    const vals = num(ms.map(x => x.specs[em.key] && x.specs[em.key].value));
+    if (vals.length < 2) return;
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const step = +((hi - lo) / 100).toFixed(2) || 0.1;
+    const fmt = v => (+v).toFixed(step < 1 ? 1 : 0) + (em.unit ? " " + em.unit : "");
+    parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${em.label}</span>
+      <div class="dslider" data-rng="${em.key}" data-lo="${lo}" data-hi="${hi}" data-step="${step}" data-unit="${em.unit}">
+        <div class="dslider-track"><div class="dslider-fill"></div></div>
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max">
+        <div class="dslider-labels">
+          <span class="dsl-val" data-b="min">${fmt(lo)}</span>
+          <span class="dsl-val" data-b="max">${fmt(hi)}</span>
+        </div>
+      </div></div>`);
+  });
+
   // 브랜드 멀티선택 + 전체 드롭다운
   const bc = {};
   ms.forEach(m => bc[m.brand] = (bc[m.brand] || 0) + 1);
