@@ -1481,6 +1481,17 @@ async function renderCommunity() {
   renderLogFeed();
 }
 
+function _isPostLiked(pid) {
+  try { return JSON.parse(localStorage.getItem("post_likes") || "[]").includes(pid) } catch { return false }
+}
+function _setPostLiked(pid, on) {
+  try {
+    let arr = JSON.parse(localStorage.getItem("post_likes") || "[]");
+    arr = on ? [...new Set([...arr, pid])] : arr.filter(x => x !== pid);
+    localStorage.setItem("post_likes", JSON.stringify(arr));
+  } catch {}
+}
+
 async function renderBestGear() {
   const el = document.getElementById("comm-best-list");
   if (!el) return;
@@ -1535,7 +1546,7 @@ async function renderLogFeed() {
     const { supabase } = await import("./supabaseClient.js");
     const { data: posts, error } = await supabase
       .from("posts")
-      .select("id, title, content, tags, created_at, user_id, image_url, profiles(nickname)")
+      .select("id, title, content, tags, created_at, user_id, image_url, likes, profiles(nickname)")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -1555,6 +1566,8 @@ async function renderLogFeed() {
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
       const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
       const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
+      const liked = _isPostLiked(p.id);
+      const likeCount = p.likes || 0;
       return `<div class="log-card" role="button" tabindex="0" data-li="${i}" style="cursor:pointer">
         ${imgHtml}
         <div class="log-card-head">
@@ -1564,12 +1577,41 @@ async function renderLogFeed() {
         <div class="log-title">${esc(p.title)}</div>
         <div class="log-preview">${esc(preview)}${p.content.length > 80 ? "…" : ""}</div>
         ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
+        <div class="log-card-foot">
+          <button type="button" class="log-like-btn${liked ? " on" : ""}" data-pid="${esc(p.id)}" data-liked="${liked ? "1" : "0"}" aria-label="좋아요">
+            ${liked ? "♥" : "♡"} <span class="log-like-cnt">${likeCount}</span>
+          </button>
+        </div>
       </div>`;
     }).join("");
     el.querySelectorAll(".log-card").forEach(card => {
       const p = posts[+card.dataset.li];
       card.onclick = () => openLogDetail(p);
       card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLogDetail(p); } };
+    });
+    el.querySelectorAll(".log-like-btn").forEach(btn => {
+      btn.onclick = async e => {
+        e.stopPropagation();
+        const pid = btn.dataset.pid;
+        const wasLiked = btn.dataset.liked === "1";
+        const cntEl = btn.querySelector(".log-like-cnt");
+        const cur = parseInt(cntEl.textContent, 10) || 0;
+        if (wasLiked) {
+          _setPostLiked(pid, false);
+          btn.dataset.liked = "0";
+          btn.classList.remove("on");
+          btn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span>`;
+          const { supabase } = await import("./supabaseClient.js");
+          await supabase.rpc("decrement_post_likes", { post_id: pid });
+        } else {
+          _setPostLiked(pid, true);
+          btn.dataset.liked = "1";
+          btn.classList.add("on");
+          btn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span>`;
+          const { supabase } = await import("./supabaseClient.js");
+          await supabase.rpc("increment_post_likes", { post_id: pid });
+        }
+      };
     });
   } catch (e) {
     el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">로그를 불러오지 못했어요.</div>`;
@@ -1598,11 +1640,39 @@ function openLogDetail(p) {
     ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
     <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
     ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
+    <div class="log-card-foot" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+      <button type="button" class="log-like-btn${_isPostLiked(p.id) ? " on" : ""}" id="detail-like-btn" data-pid="${esc(p.id)}" data-liked="${_isPostLiked(p.id) ? "1" : "0"}">
+        ${_isPostLiked(p.id) ? "♥" : "♡"} <span class="log-like-cnt">${p.likes || 0}</span> 좋아요
+      </button>
+    </div>
   </div>`;
   modal.classList.add("on");
   const close = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
+  const likeBtn = modal.querySelector("#detail-like-btn");
+  if (likeBtn) {
+    likeBtn.onclick = async e => {
+      e.stopPropagation();
+      const pid = likeBtn.dataset.pid;
+      const wasLiked = likeBtn.dataset.liked === "1";
+      const cntEl = likeBtn.querySelector(".log-like-cnt");
+      const cur = parseInt(cntEl.textContent, 10) || 0;
+      if (wasLiked) {
+        _setPostLiked(pid, false);
+        likeBtn.dataset.liked = "0"; likeBtn.classList.remove("on");
+        likeBtn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span> 좋아요`;
+        const { supabase } = await import("./supabaseClient.js");
+        await supabase.rpc("decrement_post_likes", { post_id: pid });
+      } else {
+        _setPostLiked(pid, true);
+        likeBtn.dataset.liked = "1"; likeBtn.classList.add("on");
+        likeBtn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span> 좋아요`;
+        const { supabase } = await import("./supabaseClient.js");
+        await supabase.rpc("increment_post_likes", { post_id: pid });
+      }
+    };
+  }
   const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
 }
