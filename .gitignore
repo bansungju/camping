@@ -15,3 +15,17 @@ site/.playwright-mcp/
 # 구 테스트 DB (현 산출물은 camping_tents500.db만)
 camping.db
 camping_auto.db
+
+# 환경변수 / 시크릿 — 절대 커밋 금지
+.env
+.env.*
+*.env
+cf_token.txt
+
+# 파이프라인 shadow DB (배포 전 임시)
+camping_shadow.db
+camping_shadow.db-wal
+camping_shadow.db-shm
+
+# 백업 폴더
+camping_backup/
