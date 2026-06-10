@@ -71,6 +71,15 @@
     <h2 class="sec" id="sec-sets">🎒 내 세트 <span class="nd" id="setscount"></span></h2>
     <div id="setslist" class="plist"></div>
   </div>
+
+  <!-- 내 로그 (Supabase posts) -->
+  <div id="logs-section" style="margin-top:32px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h2 class="sec" id="sec-logs" style="margin:0">📝 내 로그 <span class="nd" id="logscount"></span></h2>
+      <a class="achip clear" href="community.html" style="font-size:12px;padding:5px 10px">+ 새 로그</a>
+    </div>
+    <div id="my-logs-list"></div>
+  </div>
 </main>
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
@@ -236,6 +245,7 @@ if (params.get('auth_error')) {
 }
 
 await initAuth(async (user, event) => {
+  window._accUser = user || null
   if (!user) {
     renderLogin()
     if (typeof renderAccount === 'function') renderAccount()

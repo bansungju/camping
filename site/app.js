@@ -1201,6 +1201,45 @@ function renderAccount() {
     }
   }
 
+  // 내 로그 섹션 (로그인 사용자만)
+  const logsSec = document.getElementById("logs-section");
+  const myLogsList = document.getElementById("my-logs-list");
+  if (logsSec && myLogsList) {
+    const userId = window._accUser?.id;
+    if (userId) {
+      logsSec.style.display = "block";
+      myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
+      import("./supabaseClient.js").then(async ({ supabase }) => {
+        const { data: posts } = await supabase
+          .from("posts")
+          .select("id, title, content, tags, created_at, is_public")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        const logsCnt = document.getElementById("logscount");
+        if (!posts || posts.length === 0) {
+          logsSec.style.display = "none";
+          if (emptyEl && !hasAny) emptyEl.style.display = "block";
+          return;
+        }
+        if (logsCnt) logsCnt.textContent = `${posts.length}개`;
+        myLogsList.innerHTML = posts.map(p => {
+          const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+          const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
+          const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
+          return `<div class="my-log-card">
+            <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
+            <div class="log-title">${esc(p.title)}</div>
+            <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
+            ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
+          </div>`;
+        }).join("");
+      }).catch(() => { logsSec.style.display = "none"; });
+    } else {
+      logsSec.style.display = "none";
+    }
+  }
+
   // 찜 섹션
   const wishSec = document.getElementById("wish-section");
   const wishEl = document.getElementById("wishlist");
