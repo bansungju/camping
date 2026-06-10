@@ -241,8 +241,11 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .recent-row{display:flex;gap:12px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:thin;margin-bottom:14px}
 .recent-row::-webkit-scrollbar{height:5px}
 .recent-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
-.recard{flex:0 0 auto;width:130px;background:var(--card);border:1px solid var(--line);border-radius:13px;
-  padding:10px;box-shadow:var(--shadow);transition:.15s ease}
+.recard-wrap{flex:0 0 auto;width:130px;position:relative}
+.recard-setadd{position:absolute;top:6px;right:6px;width:22px;height:22px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;opacity:.85}
+.recard-setadd:hover{opacity:1;transform:scale(1.1)}
+.recard{width:100%;background:var(--card);border:1px solid var(--line);border-radius:13px;
+  padding:10px;box-shadow:var(--shadow);transition:.15s ease;display:block}
 .recard:hover{transform:translateY(-2px);box-shadow:var(--shadow-h)}
 .recard-thumb{width:100%;aspect-ratio:1;border-radius:9px;object-fit:contain;background:#fafafa;border:1px solid var(--line)}
 .recard-noimg{width:100%;aspect-ratio:1;border-radius:9px;display:flex;align-items:center;justify-content:center;
