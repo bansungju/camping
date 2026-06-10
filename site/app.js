@@ -1864,6 +1864,50 @@ function renderAccount() {
       }
       saveSets(arr); renderAccount();
     });
+
+    // 세트 카드 클릭 → 아이템 상세 모달 (무게·예산 내역)
+    setsEl.querySelectorAll(".acc-set").forEach(card => {
+      card.onclick = () => {
+        const si = +card.dataset.si;
+        const s = sets[si];
+        if (!s) return;
+        const tw = totalWeight(s.items);
+        const tp = totalPrice(s.items);
+        const rows = s.items.map(x => {
+          const w = x.weight_g != null ? fmtWeight(x.weight_g * (x.qty || 1)) : "—";
+          const p = x.p != null ? won(x.p * (x.qty || 1)) : "—";
+          const qty = (x.qty || 1) > 1 ? ` ×${x.qty}` : "";
+          return `<tr>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px">${esc(x.b || "")} ${esc(x.m || "")}${qty}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${w}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--accent)">${p}</td>
+          </tr>`;
+        }).join("");
+        let modal = document.getElementById("set-detail-modal");
+        if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+        modal.innerHTML = `<div class="pmbox" style="max-width:480px;width:100%;padding:20px">
+          <button class="pmx" aria-label="닫기">✕</button>
+          <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
+              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
+              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr>
+              <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
+              <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtWeight(tw) : "—"}</td>
+              <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tp ? won(tp) : "—"}</td>
+            </tr></tfoot>
+          </table>
+        </div>`;
+        modal.classList.add("on");
+        modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
+        modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+      };
+    });
   }
 
   // 탭 레이블에 카운트 뱃지 업데이트
