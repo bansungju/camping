@@ -552,3 +552,13 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pwa-dismiss-btn{border:none;background:none;color:rgba(255,255,255,0.7);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0}
 .acc-set-share{border:none;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
 .acc-set-share:hover{color:var(--accent)}
+/* 모바일 하단 내비게이션 바 */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;background:var(--card);border-top:1px solid var(--line);height:56px;safe-area-inset-bottom:env(safe-area-inset-bottom)}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .bottom-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(56px + env(safe-area-inset-bottom))}
+}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);padding:6px 0;transition:color .15s}
+.bnav-item.on{color:var(--accent)}
+.bnav-icon{font-size:20px;line-height:1}
+.bnav-label{font-size:10px;font-weight:600;line-height:1}
+@media(min-width:640px){.bottom-nav{display:none}}

@@ -1478,6 +1478,7 @@ function renderAccount() {
             .from("posts")
             .select("id, title, content, tags, created_at, is_public")
             .eq("user_id", userId)
+            .is("deleted_at", null)
             .order("created_at", { ascending: false })
             .limit(10);
           const logsCnt = document.getElementById("logscount");
@@ -2302,4 +2303,37 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     } catch { /* 잘못된 파라미터 무시 */ }
   }
+
+  // 모바일 하단 내비게이션 바 (동적 삽입)
+  (function insertBottomNav() {
+    const path = location.pathname;
+    const isItem = path.includes("/item/");
+    if (isItem) return;  // 상세 페이지는 네비 불필요
+
+    const tabs = [
+      { href: "/index.html",       icon: "🏕",  label: "홈",    match: ["/", "/index.html"] },
+      { href: "/category.html",    icon: "🔍",  label: "탐색",  match: ["/category", "/brand", "/recommend"] },
+      { href: "/community.html",   icon: "👥",  label: "커뮤",  match: ["/community"] },
+      { href: "/account.html",     icon: "👤",  label: "마이",  match: ["/account"] },
+    ];
+
+    const nav = document.createElement("nav");
+    nav.className = "bottom-nav";
+    nav.setAttribute("aria-label", "주 내비게이션");
+    nav.innerHTML = tabs.map(t => {
+      const active = t.match.some(m => path === m || path.startsWith(m + "?") || (m !== "/" && path.includes(m)));
+      return `<a class="bnav-item${active ? " on" : ""}" href="${t.href}" aria-current="${active ? "page" : "false"}">
+        <span class="bnav-icon">${t.icon}</span>
+        <span class="bnav-label">${t.label}</span>
+      </a>`;
+    }).join("");
+    document.body.appendChild(nav);
+
+    // 내비 높이만큼 main/footer에 padding-bottom 확보
+    const pb = "64px";
+    const main = document.querySelector("main");
+    const footer = document.querySelector("footer");
+    if (main) main.style.paddingBottom = pb;
+    if (footer) footer.style.paddingBottom = pb;
+  })();
 });
