@@ -53,7 +53,7 @@ const PERSONAS = [
       { cat: "chair", metric: "weight_min", label: "경량 의자" },
     ] },
   { key: "auto", emoji: "🚙", name: "오토 / 맥시멀", tagline: "차로 싣고, 집처럼 편하게",
-    note: "공간·용량·스펙이 큰 순 (무게 무관)",
+    note: "공간·용량·스펙이 큰 순 (무게 무관) · 스펙 상위일수록 가격이 높은 경향",
     picks: [
       { cat: "auto-tent", metric: "floor_area", label: "넓은 거실형 텐트" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
@@ -62,12 +62,14 @@ const PERSONAS = [
       { cat: "powerbank", metric: "capacity_mah", label: "대용량 파워뱅크" },
     ] },
   { key: "family", emoji: "👨‍👩‍👧‍👦", name: "4인 가족", tagline: "안전하게, 넉넉하게",
-    note: "4인 이상 · 넓고(공간분리) 방수 좋은 순 · ‘신속설치’는 측정값이 없어 미반영",
+    note: "4인 이상 · 넓고(공간분리) 방수 좋은 순 · ‘신속설치’는 측정값이 없어 미반영 · 스펙 상위는 고가 경향",
     picks: [
       { cat: "auto-tent", metric: "floor_area", filter: m => m.capacity != null && m.capacity >= 4, label: "4인+ 넓은 텐트" },
       { cat: "auto-tent", metric: "water_head", filter: m => m.capacity != null && m.capacity >= 4, label: "방수 좋은 텐트 (우천 안전)" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
-      { cat: "sleeping-bag", metric: "comfort_temp", label: "따뜻한 침낭" },
+      // 가족 3~4계절 기준: -20℃ 미만 극지 동계백은 과스펙·고가라 제외(따뜻한 순)
+      { cat: "sleeping-bag", metric: "comfort_temp",
+        filter: m => m.specs.comfort_temp && m.specs.comfort_temp.value >= -20, label: "따뜻한 침낭 (3계절~겨울)" },
     ] },
 ];
 
@@ -670,11 +672,13 @@ async function renderRecommend() {
     const more = `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
     const cards = rows.map(m => {
       const s = m.specs[pick.metric];
+      const starHtml = s.stars != null ? " " + stars(s.stars) : "";   // 별점 없으면 외톨이 '—' 대신 생략
+      const opsBadge = (OPS && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
       return `<a class="rcard" href="category.html?cat=${pick.cat}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
         <div class="ricon" style="background:${catTint(d.name)}">${catIcon(d.name)}</div>
-        <div class="rb">${esc(m.brand)}</div>
+        <div class="rb">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}</div>
         <div class="rm">${esc(m.model)}</div>
-        <div class="rs"><b>${esc(mt.label)} ${fmtVal(s.value, mt.unit)}</b> ${stars(s.stars)}</div>
+        <div class="rs"><b>${esc(mt.label)} ${fmtVal(s.value, mt.unit)}</b>${starHtml}${opsBadge}</div>
         <div class="rp">${won(m.price_min)}</div>
       </a>`;
     }).join("");
