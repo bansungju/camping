@@ -706,7 +706,48 @@ function buildFilters(d, star) {
     </select>
     <label class="fchk" title="정렬 중인 항목의 값이 없는 제품을 숨깁니다"><input type="checkbox" data-qx> 스펙값 있는 것만</label></div>`);
 
+  // 필터 프리셋 칩 (경량/저가/가족형)
+  const weightMeta = star.find(m => (m.unit || "") === "g");
+  const weightVals = weightMeta ? num(ms.map(x => x.specs[weightMeta.key] && x.specs[weightMeta.key].value)) : [];
+  const priceVals = num(ms.map(m => m.price_min));
+  const hasCap4 = ms.some(m => m.capacity != null && m.capacity >= 4);
+  const presets = [];
+  if (weightVals.length >= 3) {
+    const sorted = [...weightVals].sort((a, b) => a - b);
+    const p33 = sorted[Math.floor(sorted.length * 0.33)];
+    presets.push({ label: "🪶 경량 우선", fn: () => {
+      const kg = +(p33 / 1000).toFixed(1);
+      STATE.range[weightMeta.key] = { max: kg };
+      syncFilterUI(); draw();
+    }});
+  }
+  if (priceVals.length >= 3) {
+    const sorted = [...priceVals].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length * 0.5)];
+    presets.push({ label: "💰 저가 우선", fn: () => {
+      STATE.range.price = { max: median };
+      syncFilterUI(); draw();
+    }});
+  }
+  if (hasCap4) presets.push({ label: "👨‍👩‍👧 가족형", fn: () => { STATE.cap = "4"; syncFilterUI(); draw(); } });
+
+  if (presets.length) {
+    parts.unshift(`<div class="fgrp fgrp-preset"><span class="flab">빠른 설정</span>` +
+      presets.map((p, i) => `<button type="button" class="ftag fpre" data-pi="${i}">${esc(p.label)}</button>`).join("") +
+      `</div>`);
+  }
+
   bar.innerHTML = parts.join("");
+
+  // 프리셋 클릭 핸들러
+  if (presets.length) {
+    bar.querySelectorAll(".fpre").forEach(b => b.onclick = () => {
+      presets[+b.dataset.pi].fn();
+      bar.querySelectorAll(".fpre").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+    });
+  }
+
   // 모바일: 필터바 기본접기+토글(첫 화면에 표 노출). 71R: 라벨을 실제 상태서 동기화 + 폭전환 대응
   if (!document.getElementById("filtoggle")) {
     bar.insertAdjacentHTML("beforebegin",
