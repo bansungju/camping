@@ -689,15 +689,18 @@ async function renderRecommend() {
       if (pick.rankBy === "value") return (s.stars != null && m.price_min) ? s.stars / (m.price_min / 10000) : -Infinity;
       return lower ? -s.value : s.value;
     };
-    rows.sort((a, b) => score(b) - score(a));
+    // 점수 동점이면 가격 오름차순(고가 임의혼입 방지). target/value 동점다발에 특히 중요
+    rows.sort((a, b) => (score(b) - score(a)) ||
+      ((a.price_min == null ? Infinity : a.price_min) - (b.price_min == null ? Infinity : b.price_min)));
     rows = rows.slice(0, 4);
     if (!rows.length) return "";
+    const showStars = pick.target == null && pick.rankBy !== "value";  // 정렬축과 별점이 일치할 때만 별점 표시
     const more = pick.rankBy === "value"
       ? `category.html?cat=${pick.cat}&sort=value`
       : `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
     const cards = rows.map(m => {
       const s = m.specs[pick.metric];
-      const starHtml = s.stars != null ? " " + stars(s.stars) : "";   // 별점 없으면 외톨이 '—' 대신 생략
+      const starHtml = (showStars && s.stars != null) ? " " + stars(s.stars) : "";   // 가성비·목표 정렬엔 별점 숨김(축 불일치)
       const opsBadge = (OPS && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
       return `<a class="rcard" href="category.html?cat=${pick.cat}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
         <div class="ricon" style="background:${catTint(d.name)}">${catIcon(d.name)}</div>
