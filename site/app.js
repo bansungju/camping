@@ -1578,9 +1578,23 @@ function renderAccount() {
         </div>
         <div class="pli-side">
           <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
+          <button type="button" class="acc-set-share" data-si="${si}" aria-label="링크 복사" title="공유 링크 복사">🔗</button>
           <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
         </div></div>`
     ).join("");
+    setsEl.querySelectorAll(".acc-set-share").forEach(b => b.onclick = e => {
+      e.stopPropagation();
+      const s = getSets()[+b.dataset.si];
+      if (!s) return;
+      try {
+        const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null })) };
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+        const url = `${location.origin}/account.html?view-set=${encoded}`;
+        navigator.clipboard.writeText(url).then(() => {
+          b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
+        }).catch(() => { prompt("링크를 복사해 주세요:", url); });
+      } catch { alert("링크 생성에 실패했어요."); }
+    });
     setsEl.querySelectorAll(".acc-set-del").forEach(b => b.onclick = e => {
       e.stopPropagation();
       const arr = getSets();
@@ -2101,4 +2115,39 @@ function openLogModal() {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("comm-best-list")) renderCommunity();
+
+  // 공유 세트 URL 처리 (?view-set=BASE64)
+  const vsParam = new URLSearchParams(location.search).get("view-set");
+  if (vsParam && document.getElementById("acc-section")) {
+    try {
+      const s = JSON.parse(decodeURIComponent(escape(atob(vsParam))));
+      const modal = document.createElement("div");
+      modal.className = "pmodal on";
+      modal.style.zIndex = "300";
+      const tw = (s.items || []).reduce((acc, x) => x.weight_g != null ? acc + x.weight_g * (x.qty || 1) : acc, 0);
+      const wTxt = tw > 0 ? (tw >= 1000 ? `${(tw / 1000).toFixed(1)}kg` : `${tw}g`) : "";
+      const itemsHtml = (s.items || []).map(x =>
+        `<div class="cmt-row"><div class="cmt-body">${esc(`${x.b || ""} ${x.m || ""}`.trim())}${x.qty > 1 ? ` ×${x.qty}` : ""}${x.weight_g ? ` <span style="color:var(--muted);font-size:11px">${x.weight_g >= 1000 ? (x.weight_g / 1000).toFixed(1) + "kg" : x.weight_g + "g"}</span>` : ""}</div></div>`
+      ).join("");
+      modal.innerHTML = `<div class="pmbox" style="max-width:400px;width:100%;padding:24px">
+        <button class="pmx">✕</button>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">공유된 세트</div>
+        <h2 style="font-size:18px;font-weight:700;margin:0 0 6px">${esc(s.name || "세트")}</h2>
+        ${wTxt ? `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">총 무게 ${wTxt}</div>` : ""}
+        <div style="margin-bottom:16px">${itemsHtml || '<div style="color:var(--muted);font-size:13px">장비 없음</div>'}</div>
+        <button type="button" class="achip" id="vs-import-btn" style="width:100%;justify-content:center">내 세트에 추가 (로그인 필요)</button>
+      </div>`;
+      document.body.appendChild(modal);
+      const close = () => { modal.remove(); history.replaceState(null, "", location.pathname); };
+      modal.onclick = e => { if (e.target === modal) close(); };
+      modal.querySelector(".pmx").onclick = close;
+      modal.querySelector("#vs-import-btn").onclick = () => {
+        const arr = getSets();
+        const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null })) };
+        arr.push(newSet); saveSets(arr);
+        close();
+        alert("세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");
+      };
+    } catch { /* 잘못된 파라미터 무시 */ }
+  }
 });

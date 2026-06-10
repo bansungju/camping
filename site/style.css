@@ -515,3 +515,5 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pwa-install-btn{border:1.5px solid #fff;background:transparent;color:#fff;border-radius:20px;padding:5px 14px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:500}
 .pwa-install-btn:hover{background:rgba(255,255,255,0.15)}
 .pwa-dismiss-btn{border:none;background:none;color:rgba(255,255,255,0.7);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0}
+.acc-set-share{border:none;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
+.acc-set-share:hover{color:var(--accent)}
