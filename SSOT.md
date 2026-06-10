@@ -70,6 +70,16 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.camping.cloudflared.
 launchctl list | grep camping   # 3줄 나오면 성공
 ```
 
+## 5-1. Auto git pull (서버 동기화)
+
+- **`com.camping.autopull`** LaunchAgent가 **5분(StartInterval 300s)마다** `launchdaemons/auto-pull.sh` 실행.
+- 동작: `git fetch` → `git merge --ff-only origin/main`. 변경 파일에 따라 **해당 서비스만** 재시작:
+  - `backend/*` 변경 → `launchctl kickstart -k .../com.camping.api`
+  - `requirements.txt` 변경 → `.venv/bin/pip install -r` 후 api 재시작
+  - `Caddyfile` 변경 → caddy 재시작
+- **서버는 받기만 함**: 로컬 커밋/수정으로 ff-only 불가하면 강제하지 않고 로그만 남김(`/tmp/camping-autopull.log`) → 수동 개입. 즉 서버에서 직접 커밋 만들지 말 것.
+- 로그: `tail -f /tmp/camping-autopull.log`
+
 ## 6. 시크릿 정책 (중요)
 
 - **CF 터널 토큰은 git에 절대 커밋 금지.** `launchdaemons/com.camping.cloudflared.plist`는 `.gitignore`됨. 커밋되는 건 `*.template`(placeholder `__CF_TUNNEL_TOKEN__`)뿐.
@@ -92,7 +102,9 @@ launchctl list | grep camping   # 3줄 나오면 성공
 - [x] ~~LaunchAgents 등록 시 `5: Input/output error`~~ — 해결(2026-06-10). 실제 원인은 ① 옛-토큰 cloudflared가 KeepAlive로 재기동(GOTCHA #9) ② 고아 uvicorn이 8000 점유로 api 크래시 루프(GOTCHA #10). 3개 모두 launchd 관리 정상. 재bootstrap 시엔 `bootout` 먼저(GOTCHA #1).
 - [x] ~~CF 토큰 rotate~~ — 완료(2026-06-10), §6 참고.
 - [x] ~~`sudo pmset -a sleep 0 disksleep 0` (Mac mini 잠자기 방지)~~ — 이미 적용됨(2026-06-10 확인): `SleepDisabled 1`, `sleep 0`, `disksleep 0`. `pmset -g custom`에도 박혀 재부팅 유지.
-- [ ] 재부팅 후 자동복구 검증 (LaunchAgents 3개 + 헬스체크)
+- [ ] **재부팅 후 자동복구 검증** — `com.camping.bootverify` 에이전트가 부팅 시 1회 자동 헬스체크해 `/tmp/camping-boot-verify.log`에 기록(uptime으로 전/후 구분). 재부팅: Mac mini에서 `sudo reboot`. 검증 후 정리: `launchctl bootout gui/$(id -u)/com.camping.bootverify && rm ~/Library/LaunchAgents/com.camping.bootverify.plist`
 
-### 멱등 재설치 스크립트
-`launchdaemons/install-agents.sh` — bootout 후 재bootstrap, 진단 출력. cloudflared는 토큰 채운 실제 plist 선행 필요(§6).
+### 스크립트 (launchdaemons/)
+- `install-agents.sh` — api/caddy/cloudflared 멱등 재설치(bootout 후 재bootstrap). cloudflared는 토큰 채운 실제 plist 선행 필요(§6).
+- `auto-pull.sh` + `com.camping.autopull.plist` — 5분 polling git pull (§5-1).
+- `boot-verify.sh` + `com.camping.bootverify.plist` — 재부팅 자동복구 검증(1회용, 검증 후 제거).
