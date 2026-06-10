@@ -1482,7 +1482,7 @@ async function renderLogFeed() {
     const { supabase } = await import("./supabaseClient.js");
     const { data: posts, error } = await supabase
       .from("posts")
-      .select("id, title, content, tags, created_at, user_id, profiles(nickname)")
+      .select("id, title, content, tags, created_at, user_id, image_url, profiles(nickname)")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -1501,7 +1501,9 @@ async function renderLogFeed() {
       const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
       const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
+      const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
       return `<div class="log-card" role="button" tabindex="0" data-li="${i}" style="cursor:pointer">
+        ${imgHtml}
         <div class="log-card-head">
           <span class="log-nick">${esc(nick)}</span>
           <span class="log-date">${dt}</span>
@@ -1540,6 +1542,7 @@ function openLogDetail(p) {
       <span class="log-date">${dt}</span>
     </div>
     <h2 style="font-size:18px;font-weight:700;margin:0 0 12px;line-height:1.4">${esc(p.title)}</h2>
+    ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
     <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
     ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
   </div>`;
@@ -1592,6 +1595,13 @@ function openLogModal() {
         </div>
         ${tagSuggestions.length ? `<div class="lf-tag-sug">${tagSuggestions.map(t => `<button type="button" class="lf-sug-chip" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : ""}
       </div>
+      <div class="lf-field">
+        <label class="lf-label" for="lf-img">사진 <span class="lf-hint">선택 · 최대 5MB</span></label>
+        <input id="lf-img" type="file" accept="image/*" style="font-size:13px;width:100%">
+        <div id="lf-img-preview" style="margin-top:8px;display:none">
+          <img id="lf-img-thumb" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:cover">
+        </div>
+      </div>
       <div class="lf-field" style="display:flex;align-items:center;gap:10px">
         <input id="lf-public" type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
         <label for="lf-public" style="font-size:13px;cursor:pointer">공개 로그로 등록 (비공개 시 나만 볼 수 있어요)</label>
@@ -1635,6 +1645,20 @@ function openLogModal() {
   const form = body.querySelector("#log-form");
   const errEl = body.querySelector("#lf-err");
   const submitBtn = body.querySelector("#lf-submit");
+  const imgInput = body.querySelector("#lf-img");
+  const imgPreview = body.querySelector("#lf-img-preview");
+  const imgThumb = body.querySelector("#lf-img-thumb");
+
+  imgInput.addEventListener("change", () => {
+    const file = imgInput.files[0];
+    if (!file) { imgPreview.style.display = "none"; return; }
+    if (file.size > 5 * 1024 * 1024) {
+      errEl.textContent = "사진은 5MB 이하만 가능해요."; errEl.style.display = "";
+      imgInput.value = ""; imgPreview.style.display = "none"; return;
+    }
+    imgThumb.src = URL.createObjectURL(file);
+    imgPreview.style.display = "";
+  });
 
   form.onsubmit = async e => {
     e.preventDefault();
@@ -1648,9 +1672,20 @@ function openLogModal() {
     submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
     try {
       const { supabase } = await import("./supabaseClient.js");
+      let image_url = null;
+      const imgFile = imgInput.files[0];
+      if (imgFile) {
+        const ext = imgFile.name.split(".").pop().toLowerCase() || "jpg";
+        const path = `${window._commUser.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("post-images").upload(path, imgFile, { upsert: false });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(path);
+        image_url = urlData?.publicUrl ?? null;
+      }
       const { error } = await supabase.from("posts").insert({
         user_id: window._commUser.id, title, content,
-        tags, is_public
+        tags, is_public, image_url
       });
       if (error) throw error;
       modal.classList.remove("on");

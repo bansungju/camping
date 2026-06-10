@@ -359,6 +359,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .lf-submit:disabled{opacity:.5;cursor:not-allowed}
 /* 로그 피드 카드 */
 .log-card{padding:14px 0;border-bottom:1px solid var(--border)}
+.log-card-img{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block}
 .log-card:last-child{border-bottom:none}
 .log-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .log-nick{font-size:12px;font-weight:600;color:var(--accent)}
