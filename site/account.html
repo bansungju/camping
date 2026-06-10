@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>내 정보 — 장비의 숲</title>
-<meta name="description" content="로그인·회원가입 (준비중)">
+<meta name="description" content="구글 로그인·찜 목록 동기화">
 <link rel="canonical" href="https://gear-forest.com/account.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="장비의 숲">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="내 정보 — 장비의 숲">
-<meta property="og:description" content="로그인·회원가입 (준비중)">
+<meta property="og:description" content="구글 로그인·찜 목록 동기화">
 <meta property="og:url" content="https://gear-forest.com/account.html">
 <meta property="og:image" content="https://gear-forest.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="내 정보 — 장비의 숲">
-<meta name="twitter:description" content="로그인·회원가입 (준비중)">
+<meta name="twitter:description" content="구글 로그인·찜 목록 동기화">
 <meta name="twitter:image" content="https://gear-forest.com/og-image.png">
 <meta name="theme-color" content="#2f7a4e">
 <link rel="manifest" href="manifest.webmanifest">
@@ -38,29 +38,112 @@
 <main class="wrap">
   <h1 style="margin-top:22px">내 정보</h1>
 
-  <!-- 찜한 상품(로그인 없이 이 기기에 저장) -->
-  <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
-  <div id="wishlist" class="plist"></div>
+  <!-- 찜한 상품(로그인 시에만 표시) -->
+  <div id="wish-section" hidden>
+    <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+    <div id="wishlist" class="plist"></div>
+  </div>
 
   <!-- 로그인 / 내 계정 -->
   <div id="auth-section" style="margin-top:34px"></div>
 </main>
 
-<footer><div class="wrap">측정값 기반 정직비교 · 찜은 이 기기에 저장 · 계정 기능 준비중.</div></footer>
+<footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
 <script src="app.js?v=df140e15"></script>
-<script>renderAccount();</script>
 <script type="module">
-import { initAuth, signInWithOAuth, signOut, getErrorMessage } from './supabaseClient.js'
+import {
+  initAuth, signInWithOAuth, signOut, getErrorMessage,
+  getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
+  loadRemoteWishlist, saveRemoteWishlist, mergeWishlists
+} from './supabaseClient.js'
 
 const section = document.getElementById('auth-section')
 
+// 로컬 찜 헬퍼(app.js의 localStorage "wish"와 동일 포맷)
+const localWish = {
+  get() { try { return JSON.parse(localStorage.getItem('wish') || '[]') } catch { return [] } },
+  set(a) { localStorage.setItem('wish', JSON.stringify(a)) }
+}
+
+// 로그인 직후 1회: 로컬↔원격 찜 병합 → 양쪽 저장 → 이후 변경은 onWishChange로 원격 반영
+async function syncWishlistOnLogin() {
+  const remote = await loadRemoteWishlist()
+  if (remote === null) return                 // 네트워크/권한 실패 시 로컬 유지(비파괴)
+  const merged = mergeWishlists(localWish.get(), remote)
+  localWish.set(merged)
+  if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
+  window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
+  if (typeof renderAccount === 'function') renderAccount()        // 병합본으로 다시 그림
+}
+
+// 최초 로그인(또는 닉네임 미설정) 시 강제 닉네임 설정 모달. 소셜 실명 노출 차단.
+function renderNicknameModal() {
+  window.onWishChange = null
+  section.innerHTML = `
+    <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
+      <div style="font-size:40px;margin-bottom:12px">🌲</div>
+      <h2 style="margin:0 0 8px;font-size:19px">닉네임을 정해주세요</h2>
+      <p style="color:var(--muted);font-size:13.5px;margin:0 0 20px">커뮤니티·리뷰에 표시될 이름이에요. 실명·이메일은 공개되지 않습니다.</p>
+      <input id="nick-input" type="text" maxlength="20" autocomplete="off" placeholder="2~20자 · 한글/영문/숫자/_"
+        style="width:100%;padding:12px;border-radius:8px;border:1.5px solid var(--line);font-size:15px;box-sizing:border-box">
+      <p id="nick-hint" style="font-size:12.5px;margin:8px 2px 0;text-align:left;min-height:16px;color:var(--muted)"></p>
+      <button id="nick-save" disabled style="
+        margin-top:14px;width:100%;padding:12px;border-radius:8px;border:none;
+        background:var(--brand,#2f7a4e);color:#fff;cursor:pointer;font-size:15px;font-weight:600;opacity:.5">
+        시작하기
+      </button>
+    </div>`
+
+  const input = document.getElementById('nick-input')
+  const hint  = document.getElementById('nick-hint')
+  const save  = document.getElementById('nick-save')
+  let debounce, lastChecked = null
+
+  const setHint = (msg, ok) => { hint.textContent = msg; hint.style.color = ok ? '#2f7a4e' : '#e53e3e' }
+  const enable  = (on) => { save.disabled = !on; save.style.opacity = on ? '1' : '.5' }
+
+  input.addEventListener('input', () => {
+    const v = input.value.trim()
+    enable(false); lastChecked = null
+    clearTimeout(debounce)
+    if (!v) { hint.textContent = ''; return }
+    if (!NICKNAME_RE.test(v)) { setHint('2~20자, 한글/영문/숫자/_ 만 가능해요', false); return }
+    setHint('확인 중…', true); hint.style.color = 'var(--muted)'
+    debounce = setTimeout(async () => {
+      const ok = await isNicknameAvailable(v)
+      if (input.value.trim() !== v) return          // 그새 바뀜
+      if (ok === null) { setHint('확인 실패 — 그래도 시도해볼 수 있어요', false); enable(true); lastChecked = v }
+      else if (ok)     { setHint('사용 가능한 닉네임이에요 ✓', true); enable(true); lastChecked = v }
+      else             { setHint('이미 사용 중인 닉네임이에요', false) }
+    }, 320)
+  })
+
+  save.addEventListener('click', async () => {
+    const v = input.value.trim()
+    if (!NICKNAME_RE.test(v)) return
+    enable(false); save.textContent = '저장 중…'
+    const { error } = await setNickname(v)
+    if (error) {
+      setHint(getErrorMessage(error), false)
+      save.textContent = '시작하기'; enable(true)
+      return
+    }
+    const profile = await getProfile()
+    renderProfile(profile)
+    syncWishlistOnLogin()
+  })
+
+  setTimeout(() => input.focus(), 50)
+}
+
 function renderLogin() {
+  window.onWishChange = null   // 로그아웃 상태에선 원격 동기화 안 함
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
       <div style="font-size:48px;margin-bottom:16px">🌲</div>
       <h2 style="margin:0 0 8px;font-size:20px">장비의 숲 로그인</h2>
-      <p style="color:var(--muted);font-size:14px;margin:0 0 28px">로그인하면 찜 목록을 여러 기기에서 동기화할 수 있어요.</p>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 28px">로그인하면 찜한 상품을 모아 보고 여러 기기에서 동기화할 수 있어요.</p>
       <button id="btn-google" style="
         width:100%;padding:13px;border-radius:8px;border:1.5px solid #e0e0e0;
         background:#fff;cursor:pointer;font-size:15px;font-weight:600;
@@ -75,28 +158,31 @@ function renderLogin() {
   document.getElementById('btn-google').addEventListener('click', async () => {
     const btn = document.getElementById('btn-google')
     btn.disabled = true
-    btn.textContent = '로그인 중…'
+    btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
     const { error } = await signInWithOAuth('google')
     if (error) {
       document.getElementById('auth-error').textContent = getErrorMessage(error)
       document.getElementById('auth-error').style.display = 'block'
       btn.disabled = false
-      btn.textContent = 'Google로 로그인'
+      btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.6A14.7 14.7 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.5 13.3A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.4 0-11.8-3.7-13.6-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Google로 로그인`
     }
   })
 }
 
-function renderProfile(user) {
-  const nickname = user.user_metadata?.nickname ?? user.email ?? '사용자'
+function renderProfile(profile) {
+  // 닉네임은 profiles 테이블이 단일 진실. 실명/이메일을 표시명으로 쓰지 않는다.
+  const nickname = profile?.nickname ?? '사용자'
+  const avatar = profile?.avatar_url
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;padding:24px 0">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
-        ${user.user_metadata?.avatar_url
-          ? `<img src="${user.user_metadata.avatar_url}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`
+        ${avatar
+          ? `<img src="${esc(avatar)}" referrerpolicy="no-referrer" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`
           : `<div style="width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px">🙂</div>`}
         <div>
-          <div style="font-weight:700;font-size:16px">${nickname}</div>
-          <div style="color:var(--muted);font-size:13px">${user.email ?? ''}</div>
+          <div style="font-weight:700;font-size:16px">${esc(nickname)}</div>
+          <div style="color:var(--muted);font-size:13px">${esc(profile?.email ?? '')}</div>
         </div>
       </div>
       <button id="btn-signout" style="
@@ -118,9 +204,31 @@ if (params.get('auth_error')) {
   setTimeout(() => renderLogin(), 2000)
 }
 
-await initAuth((user, event) => {
-  if (user) renderProfile(user)
-  else renderLogin()
+await initAuth(async (user, event) => {
+  const wishSection = document.getElementById('wish-section')
+  if (!user) {
+    if (wishSection) wishSection.hidden = true
+    renderLogin()
+    return
+  }
+  // 로그인됨 — profiles에서 닉네임 확인
+  const profile = await getProfile()
+  if (!profile || !profile.nickname) {
+    // 최초 로그인(또는 닉네임 미설정): 찜 표시 전에 닉네임부터 강제
+    if (wishSection) wishSection.hidden = true
+    renderNicknameModal()
+    return
+  }
+  if (wishSection) wishSection.hidden = false
+  renderAccount()
+  renderProfile(profile)
+  // 실제 로그인 이벤트(SIGNED_IN)일 때만 찜 동기화. 페이지 새로고침(INITIAL)에서는
+  // onWishChange 훅만 등록하여 중복 동기화 방지.
+  if (event === 'SIGNED_IN') {
+    syncWishlistOnLogin()
+  } else {
+    window.onWishChange = (items) => { saveRemoteWishlist(items) }
+  }
 })
 </script>
 </body>
