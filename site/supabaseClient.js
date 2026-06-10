@@ -36,6 +36,166 @@ export async function getUser() {
   return user
 }
 
+// ── Profile (닉네임은 profiles 테이블이 단일 진실. auth 메타데이터의 실명 사용 금지) ──
+export async function getProfile() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nickname, avatar_url, role, created_at')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (error) { console.error('getProfile', error); return null }
+  // 트리거(handle_new_user)가 만든 행이 복제 지연 등으로 아직 없으면 null
+  return data ? { ...data, email: user.email } : { id: user.id, nickname: null, avatar_url: user.user_metadata?.avatar_url ?? null, email: user.email }
+}
+
+export const NICKNAME_RE = /^[가-힣a-zA-Z0-9_]{2,20}$/
+
+// 닉네임 사용 가능 여부(중복 검사). true=사용가능
+export async function isNicknameAvailable(nickname) {
+  const { count, error } = await supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('nickname', nickname)
+  if (error) { console.error('isNicknameAvailable', error); return null }
+  return count === 0
+}
+
+// 닉네임 설정/변경. 형식·금지어·중복(23505)·쿨다운은 DB 트리거가 최종 검증.
+export async function setNickname(nickname) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('profiles').update({ nickname }).eq('id', user.id)
+}
+
+// ── 찜(위시리스트) 동기화 ──────────────────────────────────────────────────
+export async function loadRemoteWishlist() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from('wishlists').select('items').eq('user_id', user.id).maybeSingle()
+  if (error) { console.error('loadRemoteWishlist', error); return null }
+  return Array.isArray(data?.items) ? data.items : []
+}
+
+export async function saveRemoteWishlist(items) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('wishlists')
+    .upsert({ user_id: user.id, items }, { onConflict: 'user_id' })
+}
+
+// 로컬·원격 찜을 key 기준 합집합(원격 항목의 가격/이미지 등은 로컬 최신값 우선)
+export function mergeWishlists(local = [], remote = []) {
+  const byKey = new Map()
+  for (const it of remote) if (it && it.key) byKey.set(it.key, it)
+  for (const it of local)  if (it && it.key) byKey.set(it.key, it)  // 로컬 우선
+  return Array.from(byKey.values()).slice(0, 500)
+}
+
+// ── 커뮤니티: posts / comments / likes ─────────────────────────────────────
+// 닉네임/아바타는 profiles 조인(공개 RLS). image_urls 등은 `*`로 받아 컬럼
+// 부재(마이그레이션 005 미적용) 시에도 글 목록이 깨지지 않게 한다.
+// posts↔profiles 임베드는 경로가 둘(user_id FK, likes 다대다)이라 FK를 명시해야 함(PGRST201 방지)
+const POST_SELECT = '*, author:profiles!posts_user_id_fkey(nickname, avatar_url)'
+
+export async function listPosts({ limit = 20, before = null } = {}) {
+  let q = supabase.from('posts').select(POST_SELECT)
+    .order('created_at', { ascending: false }).limit(limit)
+  if (before) q = q.lt('created_at', before)
+  const { data, error } = await q
+  if (error) { console.error('listPosts', error); return { error } }
+  return { data: data ?? [] }
+}
+
+export async function getPost(id) {
+  const { data, error } = await supabase.from('posts').select(POST_SELECT)
+    .eq('id', id).maybeSingle()
+  if (error) { console.error('getPost', error); return { error } }
+  return { data }
+}
+
+export async function createPost({ title, body, image_urls, product_pcodes }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  const row = { user_id: user.id, title, body }
+  if (Array.isArray(image_urls) && image_urls.length) row.image_urls = image_urls
+  if (Array.isArray(product_pcodes) && product_pcodes.length) row.product_pcodes = product_pcodes
+  return supabase.from('posts').insert(row).select(POST_SELECT).maybeSingle()
+}
+
+export async function deletePost(id) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  // 소프트 삭제(본인 글만 — RLS update_own이 강제)
+  return supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+}
+
+export async function listComments(postId) {
+  const { data, error } = await supabase.from('comments')
+    .select('*, author:profiles!comments_user_id_fkey(nickname, avatar_url)')
+    .eq('post_id', postId).order('created_at', { ascending: true })
+  if (error) { console.error('listComments', error); return { error } }
+  return { data: data ?? [] }
+}
+
+export async function createComment({ post_id, body, parent_id = null }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('comments')
+    .insert({ post_id, user_id: user.id, body, parent_id })
+    .select('*, author:profiles!comments_user_id_fkey(nickname, avatar_url)').maybeSingle()
+}
+
+// 현재 사용자가 좋아요한 post id 집합(보이는 게시글 한정). likes RLS: 본인 것만 조회 가능.
+export async function getMyLikes(postIds) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || !postIds?.length) return new Set()
+  const { data, error } = await supabase.from('likes')
+    .select('post_id').eq('user_id', user.id).in('post_id', postIds)
+  if (error) { console.error('getMyLikes', error); return new Set() }
+  return new Set((data ?? []).map(r => r.post_id))
+}
+
+// 좋아요 토글. 반환: { liked } 또는 { error }
+export async function toggleLike(postId, liked) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  if (liked) {
+    const { error } = await supabase.from('likes').delete()
+      .eq('post_id', postId).eq('user_id', user.id)
+    return error ? { error } : { liked: false }
+  }
+  const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: user.id })
+  return error ? { error } : { liked: true }
+}
+
+export async function reportContent({ target_type, target_id, reason }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('reports').insert({ reporter_id: user.id, target_type, target_id, reason })
+}
+
+// ── 사진 업로드(review-images 버킷 재사용. 경로: {user_id}/{uuid}.{ext}) ────
+const IMG_BUCKET = 'review-images'
+const MAX_IMG_BYTES = 5 * 1024 * 1024
+
+export async function uploadImage(file) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  if (!file.type?.startsWith('image/')) return { error: { message: '이미지 파일만 업로드할 수 있습니다' } }
+  if (file.size > MAX_IMG_BYTES) return { error: { message: '이미지는 5MB 이하만 가능합니다' } }
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  const uuid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2))
+  const path = `${user.id}/${uuid}.${ext}`
+  const { error } = await supabase.storage.from(IMG_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false })
+  if (error) { console.error('uploadImage', error); return { error } }
+  const { data } = supabase.storage.from(IMG_BUCKET).getPublicUrl(path)
+  return { url: data.publicUrl }
+}
+
 // ── localStorage (incognito fallback) ────────────────────────────────────
 export const safeLocalStorage = {
   getItem(key) {
@@ -63,6 +223,7 @@ const ERROR_MAP = {
   'content_policy_violation':      '금지된 표현이 포함되어 있습니다',
   'nickname_policy_violation':     '사용할 수 없는 닉네임입니다',
   'nickname_format_invalid':       '닉네임은 2~20자 (한글/영문/숫자/_)만 사용 가능합니다',
+  'nickname_cooldown':             '닉네임은 변경 후 30일이 지나야 다시 바꿀 수 있습니다',
   'account_deleted_cooldown':      '탈퇴 후 30일 이내에는 재가입할 수 없습니다',
   'report_target_deleted':         '이미 삭제된 게시물입니다',
   'unauthorized':                  '권한이 없습니다',
@@ -70,6 +231,8 @@ const ERROR_MAP = {
 
 export function getErrorMessage(error) {
   if (!error) return null
+  // Postgres unique violation(닉네임 중복 등)
+  if (error.code === '23505') return '이미 사용 중인 닉네임입니다'
   const msg = error.message ?? ''
   for (const [key, label] of Object.entries(ERROR_MAP)) {
     if (msg.includes(key)) return label
