@@ -511,8 +511,22 @@ async function renderCategory() {
 
   document.getElementById("crumbName").textContent = d.name;
   document.title = `${d.name} 비교 — 장비의 숲`;
+  const shareUrl = `https://gear-forest.com/category/${slug}`;
+  const shareTitle = `${d.name} 비교 — 장비의 숲`;
   document.getElementById("title").innerHTML =
-    `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`;
+    `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`
+    + `<button class="share-btn" id="share-btn" aria-label="공유">🔗</button>`;
+  document.getElementById("share-btn").onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: shareTitle, url: shareUrl }); return; } catch (_) {}
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      const btn = document.getElementById("share-btn");
+      btn.textContent = "✓"; btn.style.color = "var(--accent)";
+      setTimeout(() => { btn.textContent = "🔗"; btn.style.color = ""; }, 2000);
+    } catch (_) {}
+  };
   document.getElementById("lead").innerHTML =
     `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
