@@ -1399,12 +1399,12 @@ async function renderLogFeed() {
         </div>`;
       return;
     }
-    el.innerHTML = posts.map(p => {
+    el.innerHTML = posts.map((p, i) => {
       const nick = p.profiles?.nickname || "익명";
       const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
       const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
-      return `<div class="log-card">
+      return `<div class="log-card" role="button" tabindex="0" data-li="${i}" style="cursor:pointer">
         <div class="log-card-head">
           <span class="log-nick">${esc(nick)}</span>
           <span class="log-date">${dt}</span>
@@ -1414,9 +1414,44 @@ async function renderLogFeed() {
         ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
       </div>`;
     }).join("");
+    el.querySelectorAll(".log-card").forEach(card => {
+      const p = posts[+card.dataset.li];
+      card.onclick = () => openLogDetail(p);
+      card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLogDetail(p); } };
+    });
   } catch (e) {
     el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">로그를 불러오지 못했어요.</div>`;
   }
+}
+
+function openLogDetail(p) {
+  let modal = document.getElementById("log-detail-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "log-detail-modal";
+    modal.className = "pmodal";
+    document.body.appendChild(modal);
+  }
+  const nick = p.profiles?.nickname || "익명";
+  const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+  const tagHtml = (p.tags || []).map(t => `<span class="log-tag" style="font-size:12px;padding:3px 10px">${esc(t)}</span>`).join("");
+  const body = (p.content || "").replace(/\n/g, "<br>");
+  modal.innerHTML = `<div class="pmbox log-detail-box" role="dialog" aria-modal="true">
+    <button class="pmx" aria-label="닫기">✕</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span class="log-nick" style="font-size:14px">${esc(nick)}</span>
+      <span class="log-date">${dt}</span>
+    </div>
+    <h2 style="font-size:18px;font-weight:700;margin:0 0 12px;line-height:1.4">${esc(p.title)}</h2>
+    <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
+    ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
+  </div>`;
+  modal.classList.add("on");
+  const close = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").onclick = close;
+  const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  document.addEventListener("keydown", onKey);
 }
 
 function openLogModal() {
