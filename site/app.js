@@ -1362,28 +1362,34 @@ async function renderHotSection(categories) {
   const listEl = document.getElementById("hot-list");
   if (!sec || !listEl) return;
 
-  let hotSlugs = HOT_FALLBACK;
+  // RPC로 최근 7일 클릭 TOP-8 개별 장비 집계
   try {
     const { supabase } = await import("./supabaseClient.js");
-    const since = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
-    const { data } = await supabase
-      .from("click_events")
-      .select("slug")
-      .gte("created_at", since);
+    const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 8 });
     if (data && data.length >= 3) {
-      const counts = {};
-      data.forEach(r => { counts[r.slug] = (counts[r.slug] || 0) + 1; });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-      const catMap = Object.fromEntries((categories || []).map(c => [c.slug, c.name]));
-      hotSlugs = sorted.map(([slug, cnt]) => ({ slug, name: catMap[slug] || slug, cnt }));
+      listEl.innerHTML = data.map(h => {
+        const catName = (categories || []).find(c => c.slug === h.cat)?.name || h.cat;
+        const tint = catTint(catName);
+        const icon = catIcon(catName);
+        return `<a class="hot-item" href="category/${h.cat}?brands=${encodeURIComponent(h.brand)}&q=${encodeURIComponent(h.model)}">
+          <div class="hot-item-icon" style="background:${tint}">${icon}</div>
+          <div class="hot-item-info">
+            <div class="hot-item-brand">${esc(h.brand)}</div>
+            <div class="hot-item-model">${esc(h.model)}</div>
+          </div>
+          <div class="hot-item-cnt">${h.clicks}회</div>
+        </a>`;
+      }).join("");
+      sec.style.display = "block";
+      return;
     }
   } catch (_) {}
 
-  listEl.innerHTML = hotSlugs.map(h =>
+  // fallback: 카테고리 chip
+  listEl.innerHTML = HOT_FALLBACK.map(h =>
     `<a class="hot-chip" href="category/${h.slug}">
-      <span class="hot-icon">${catIcon(h.name || h.slug)}</span>
-      <span class="hot-name">${esc(h.name || h.slug)}</span>
-      ${h.cnt ? `<span class="hot-cnt">${h.cnt}회</span>` : ""}
+      <span class="hot-icon">${catIcon(h.name)}</span>
+      <span class="hot-name">${esc(h.name)}</span>
     </a>`
   ).join("");
   sec.style.display = "block";
