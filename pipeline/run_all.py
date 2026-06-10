@@ -200,6 +200,9 @@ def main():
     print("[사이트] verified 모델 → site/data/*.json")
     sh("export_site.py")
 
+    print("[캐시버스팅] app.js 해시 → HTML ?v= 스탬프")
+    sh("stamp_version.py")
+
     print("\n■ 완료. (채우기=graph_full.py / 크로스소스=crosssource.py 는 별도 단계)")
 
 
