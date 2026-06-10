@@ -29,3 +29,6 @@ camping_shadow.db-shm
 
 # 백업 폴더
 camping_backup/
+
+# 이미지: pipeline이 로컬 생성, git 불필요 (122MB)
+site/images/
