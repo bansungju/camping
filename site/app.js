@@ -532,8 +532,10 @@ async function renderBrand() {
   const renderChips = (filter = "") => {
     const f = filter.toLowerCase();
     const show = sortedBrands.filter(([b]) => !f || b.toLowerCase().includes(f)).slice(0, 40);
-    blist.innerHTML = show.map(([b, n]) =>
-      `<button class="achip${b === (params.get("b") || "") ? "" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("");
+    blist.innerHTML = show.length
+      ? show.map(([b, n]) =>
+          `<button class="achip${b === (params.get("b") || "") ? "" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("")
+      : `<span class="nd">"${esc(filter)}" 브랜드 없음 · 철자를 확인하세요</span>`;
     blist.querySelectorAll("[data-b]").forEach(btn => btn.onclick = () => {
       const nb = btn.dataset.b;
       history.replaceState(null, "", "?b=" + encodeURIComponent(nb));
