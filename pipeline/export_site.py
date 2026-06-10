@@ -93,7 +93,8 @@ def export(con, outdir):
                 "price_min": pr[0] if pr else None, "price_max": pr[1] if pr else None,
                 "specs": specs,
             })
-            search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap})
+            search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap,
+                                 "p": pr[0] if pr else None})
 
         data = {"name": cat, "slug": slug, "grade": grade_by_cat.get(cat, "—"),
                 "count": len(models), "verified": nv, "metrics": metrics, "models": models}

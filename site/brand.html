@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>카테고리 비교 — 캠핑기어 정직비교</title>
+<title>브랜드 전체보기 — 캠핑기어 정직비교</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,33 +16,23 @@
 <nav class="catnav-wrap"><div class="wrap"><div id="catnav" class="catnav"></div></div></nav>
 
 <main class="wrap">
-  <div class="crumb"><a href="index.html">홈</a> › <span id="crumbName">…</span></div>
+  <div class="crumb"><a href="index.html">홈</a> › <span>브랜드</span> › <span id="crumbName">…</span></div>
   <h1 id="title">불러오는 중…</h1>
   <p class="lead" id="lead"></p>
-  <div class="note" id="limitNote" style="display:none"></div>
 
-  <!-- 필터 바 -->
-  <div class="filterbar" id="filters"></div>
-
+  <!-- 다른 브랜드로 전환 -->
   <div class="toolbar">
-    <input id="q" type="search" placeholder="이 카테고리에서 브랜드·모델 검색">
+    <input id="bq" type="search" placeholder="다른 브랜드 검색 (예: 헬리녹스, 코베아)">
     <span class="count" id="count"></span>
   </div>
+  <div class="activefilters" id="brandlist"></div>
 
-  <!-- 활성 필터 요약 칩 -->
-  <div class="activefilters" id="activefilters"></div>
-
-  <div class="tablewrap"><table>
-    <thead><tr id="head"></tr></thead>
-    <tbody id="body"></tbody>
-  </table></div>
-
-  <div id="legend" style="margin-top:24px"></div>
+  <div id="sections"></div>
 </main>
 
 <footer><div class="wrap" id="foot"></div></footer>
 
 <script src="app.js?v=70"></script>
-<script>renderCategory();</script>
+<script>renderBrand();</script>
 </body>
 </html>

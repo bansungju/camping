@@ -93,13 +93,21 @@ async function setupHomeSearch() {
   const run = () => {
     const q = inp.value.trim().toLowerCase();
     if (q.length < 1) { box.innerHTML = ""; box.style.display = "none"; return; }
+    // 브랜드 단위 매치(가로지르기) — "헬리녹스 전체 39개 →"를 상단에
+    const bcount = {};
+    idx.forEach(x => { if (x.b.toLowerCase().includes(q)) bcount[x.b] = (bcount[x.b] || 0) + 1; });
+    const brandHits = Object.entries(bcount).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const hits = idx.filter(x => (x.b + " " + x.m).toLowerCase().includes(q)).slice(0, 30);
     box.style.display = "block";
-    box.innerHTML = hits.length ? hits.map(x =>
+    const brandHtml = brandHits.map(([b, n]) =>
+      `<a class="sres sbrand" href="brand.html?b=${encodeURIComponent(b)}">
+         <span class="sb">${esc(b)}</span> <b>전체 ${n}개</b> 모아보기
+         <span class="scat">브랜드 →</span></a>`).join("");
+    box.innerHTML = (brandHtml || "") + (hits.length ? hits.map(x =>
       `<a class="sres" href="category.html?cat=${x.s}&q=${encodeURIComponent(x.m)}">
          <span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}
          <span class="scat">${esc(x.c)}</span></a>`).join("")
-      : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`;
+      : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
   };
   inp.oninput = run;
   inp.onfocus = run;
@@ -428,4 +436,65 @@ function draw() {
   document.getElementById("foot").innerHTML =
     `컬럼 클릭=그 값으로 정렬(스펙은 좋은 것 먼저) · 별점=세그먼트 내 순위백분위(중앙값 ★3) · ` +
     `가격=국내가 우선 · 무게 1kg↑는 kg 표기 · 측정값만.`;
+}
+
+/* ---------- 브랜드 가로지르기 (전 카테고리 한 브랜드 모아보기) ---------- */
+async function renderBrand() {
+  renderCatNav("");
+  let idx;
+  try { idx = await getJSON("data/search.json"); }
+  catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
+  const params = new URLSearchParams(location.search);
+  const bname = params.get("b") || "";
+
+  // 브랜드 목록(제품수순) — 칩으로 빠른 전환
+  const bcount = {};
+  idx.forEach(x => bcount[x.b] = (bcount[x.b] || 0) + 1);
+  const sortedBrands = Object.entries(bcount).sort((a, b) => b[1] - a[1]);
+
+  const draw = (bn) => {
+    const rows = idx.filter(x => x.b === bn);
+    document.getElementById("crumbName").textContent = bn || "선택";
+    document.title = `${bn} 전체보기 — 캠핑기어 정직비교`;
+    document.getElementById("title").innerHTML = bn ? `${esc(bn)} <span class="nd" style="font-size:15px">전 카테고리</span>` : "브랜드를 선택하세요";
+    document.getElementById("count").textContent = bn ? `${rows.length}개 모델` : "";
+    // 카테고리별 그룹
+    const byCat = {};
+    rows.forEach(x => { (byCat[x.s] = byCat[x.s] || { name: x.c, slug: x.s, items: [] }).items.push(x); });
+    const cats = Object.values(byCat).sort((a, b) => b.items.length - a.items.length);
+    document.getElementById("lead").innerHTML = bn
+      ? `<b>${rows.length}개</b> 모델 · ${cats.length}개 카테고리에 분포. 카테고리 제목을 누르면 그 카테고리에서 <b>${esc(bn)}</b>만 필터된 비교표로 이동.`
+      : "왼쪽 목록에서 브랜드를 고르거나 위에서 검색하세요.";
+    document.getElementById("sections").innerHTML = cats.map(c => `
+      <h2 class="sec" style="margin-top:24px">
+        <a href="category.html?cat=${c.slug}&brands=${encodeURIComponent(bn)}" style="color:var(--accent)">
+          ${esc(c.name)} <span class="nd">${c.items.length}개 ›</span></a></h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>모델</th><th>인원</th><th>최저가</th></tr></thead>
+        <tbody>${c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x => `
+          <tr><td class="model"><a href="category.html?cat=${x.s}&q=${encodeURIComponent(x.m)}"><b>${esc(x.m)}</b></a></td>
+            <td>${x.cap != null ? x.cap + "인" : "—"}</td>
+            <td class="price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</td></tr>`).join("")}
+        </tbody></table></div>`).join("") ||
+      `<p class="nd">해당 브랜드 제품이 없습니다.</p>`;
+  };
+
+  // 브랜드 전환 칩
+  const blist = document.getElementById("brandlist");
+  const renderChips = (filter = "") => {
+    const f = filter.toLowerCase();
+    const show = sortedBrands.filter(([b]) => !f || b.toLowerCase().includes(f)).slice(0, 40);
+    blist.innerHTML = show.map(([b, n]) =>
+      `<button class="achip${b === (params.get("b") || "") ? "" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("");
+    blist.querySelectorAll("[data-b]").forEach(btn => btn.onclick = () => {
+      const nb = btn.dataset.b;
+      history.replaceState(null, "", "?b=" + encodeURIComponent(nb));
+      params.set("b", nb); draw(nb); renderChips(document.getElementById("bq").value.trim());
+    });
+  };
+  document.getElementById("bq").oninput = e => renderChips(e.target.value.trim());
+
+  draw(bname);
+  renderChips();
+  document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음.`;
 }
