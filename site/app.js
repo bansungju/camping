@@ -4,7 +4,25 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
-const gradeBadge = g => `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>`;
+
+/* 운영자 모드: ?ops=1 로 켜면(localStorage 영속) 신뢰등급·값배지·데이터한계가 보인다.
+   기본(사용자)은 깔끔하게 별점·스펙만. ?ops=0 으로 끈다. */
+(() => {
+  const v = new URLSearchParams(location.search).get("ops");
+  if (v === "1") localStorage.setItem("ops", "1");
+  else if (v === "0") localStorage.removeItem("ops");
+})();
+const OPS = localStorage.getItem("ops") === "1";
+
+/* 카테고리 아이콘(이미지 수집 전 단계: 이모지 타일) */
+const CAT_ICON = {
+  "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "기타텐트": "⛺", "침낭": "🛌", "매트": "🧘",
+  "의자": "🪑", "랜턴": "🔦", "아이스박스": "🧊", "버너": "🔥", "타프": "⛱️",
+  "테이블": "🪵", "야전침대": "🛏️", "코펠": "🍳", "웨건": "🛒", "화로대": "🔥", "파워뱅크": "🔋",
+};
+const catIcon = name => CAT_ICON[name] || "🏕️";
+
+const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
 const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>'
   : (a === b ? won(a) : `${won(a)}~${won(b)}`);
@@ -58,7 +76,7 @@ async function renderCatNav(activeSlug) {
     const m = await getJSON("data/manifest.json");
     el.innerHTML = m.categories.map(c =>
       `<a class="navchip${c.slug === activeSlug ? " on" : ""}" href="category.html?cat=${c.slug}"
-         title="${c.name} · ${c.grade}">${c.name}<i>${GRADE_CLASS[c.grade] || ""}</i></a>`).join("");
+         title="${c.name}"><span class="ni">${catIcon(c.name)}</span>${c.name}${OPS ? `<i>${GRADE_CLASS[c.grade] || ""}</i>` : ""}</a>`).join("");
   } catch (e) { /* noop */ }
 }
 
@@ -68,25 +86,28 @@ async function renderHub() {
   try { m = await getJSON("data/manifest.json"); }
   catch (e) { document.getElementById("lead").textContent = "데이터를 불러오지 못했습니다. (로컬서버 필요)"; return; }
   document.getElementById("lead").innerHTML =
-    `검증된 <b>${m.total_verified.toLocaleString()}개</b> 제품 · ${m.categories.length}개 카테고리 · 기준일 ${m.generated}`;
+    `<b>${m.total_verified.toLocaleString()}개</b> 제품 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
 
-  document.getElementById("legend").innerHTML = GRADE_LEGEND;
+  document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
 
   const grid = document.getElementById("grid");
   grid.innerHTML = m.categories.map(c => `
     <a class="card" href="category.html?cat=${c.slug}">
+      <div class="icon">${catIcon(c.name)}</div>
       <div class="ct"><h3>${c.name}</h3>${gradeBadge(c.grade)}</div>
       <div class="meta">${c.count.toLocaleString()}개 모델</div>
       <div class="metrics">
-        ${c.star_metrics.map(s => `<span class="chip${c.limits.includes(s) ? " lim" : ""}"
-           title="${c.limits.includes(s) ? s + ' — 데이터 부족(표본 적음)' : s}">${s}${c.limits.includes(s) ? " ⚠" : ""}</span>`).join("")}
+        ${c.star_metrics.map(s => OPS
+          ? `<span class="chip${c.limits.includes(s) ? " lim" : ""}" title="${c.limits.includes(s) ? s + ' — 데이터 부족(표본 적음)' : s}">${s}${c.limits.includes(s) ? " ⚠" : ""}</span>`
+          : `<span class="chip">${s}</span>`).join("")}
       </div>
     </a>`).join("");
 
   // 홈 전역 검색
   setupHomeSearch();
-  document.getElementById("foot").innerHTML =
-    `자동생성 LIMITS 기반 · 측정값만 · 추측 없음.`;
+  document.getElementById("foot").innerHTML = OPS
+    ? `운영자 모드 · 자동생성 LIMITS 기반 · 측정값만 · 추측 없음.`
+    : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반.`;
 }
 
 async function setupHomeSearch() {
@@ -177,15 +198,16 @@ async function renderCategory() {
 
   document.getElementById("crumbName").textContent = d.name;
   document.title = `${d.name} 비교 — 캠핑기어 정직비교`;
-  document.getElementById("title").innerHTML = `${d.name} ${gradeBadge(d.grade)}`;
+  document.getElementById("title").innerHTML =
+    `<span class="titleicon">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`;
   document.getElementById("lead").innerHTML =
-    `${d.count.toLocaleString()}개 모델 (색상·구매처 변형 통합) · 같은 세그먼트 안 순위백분위 별점`;
-  document.getElementById("legend").innerHTML = GRADE_LEGEND;
+    `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
+  document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
 
   const star = d.metrics.filter(m => m.is_star);
   const lims = star.filter(m => m.limit);
   const note = document.getElementById("limitNote");
-  if (lims.length) {
+  if (OPS && lims.length) {   // 데이터 한계 안내는 운영자 전용
     note.style.display = "";
     note.innerHTML = `<b>⚠ 데이터 한계.</b> ` +
       lims.map(m => `<b>${m.label}</b> 충전율 ${m.fill}% — 별점은 소수 표본 기준, 값 없는 제품은 <span class="b 데이터부족">데이터부족</span>.`).join(" ");
@@ -261,7 +283,7 @@ function buildFilters(d, star) {
       <option value="price_min">가격 낮은순</option>
       ${star.map(m => `<option value="spec:${m.key}">${m.label} ${m.direction === 'higher_better' ? '높은' : '좋은'}순</option>`).join("")}
     </select>
-    <label class="fchk" title="현재 정렬 중인 지표의 값이 없는(데이터부족) 행을 숨깁니다"><input type="checkbox" data-qx> 정렬지표 데이터부족 행 숨김</label></div>`);
+    <label class="fchk" title="정렬 중인 항목의 값이 없는 제품을 숨깁니다"><input type="checkbox" data-qx> 스펙값 있는 것만</label></div>`);
 
   bar.innerHTML = parts.join("");
   // 모바일: 필터바 기본접기+토글(첫 화면에 표 노출). 71R: 라벨을 실제 상태서 동기화 + 폭전환 대응
@@ -327,7 +349,7 @@ function renderActiveFilters() {
     const txt = `${lab} ${r.min != null ? r.min : ""}~${r.max != null ? r.max : ""}${u}`;
     chips.push([txt, () => delete STATE.range[k]]);
   });
-  if (STATE.qExclude) chips.push(["정렬지표 데이터부족 숨김", () => { STATE.qExclude = false; }]);
+  if (STATE.qExclude) chips.push(["스펙값 있는 것만", () => { STATE.qExclude = false; }]);
   if (STATE.q) chips.push([`"${STATE.q}"`, () => { STATE.q = ""; document.getElementById("q").value = ""; }]);
   el.innerHTML = chips.length
     ? chips.map((c, i) => `<button class="achip" data-ai="${i}">${esc(c[0])} ✕</button>`).join("") +
@@ -427,7 +449,7 @@ function diagnoseEmpty(sortK) {
     const lab = key === "price" ? "가격" : (d.metrics.find(m => m.key === key) || {}).label || key;
     filters.push(["range:" + key, `${lab} 범위`]);
   });
-  if (STATE.qExclude) filters.push(["qx", "데이터부족 숨김"]);
+  if (STATE.qExclude) filters.push(["qx", "스펙값 있는 것만"]);
   if (!filters.length) return "— 데이터가 없습니다";
   // 각 필터를 뺐을 때 건수 → 가장 많이 살아나는 것 제안
   const sug = filters.map(([id, lab]) => [lab, d.models.filter(m => passExcept(m, id, sortK)).length])
@@ -473,9 +495,12 @@ function draw() {
     tds += `<td class="price">${priceRange(m.price_min, m.price_max)}</td>`;
     star.forEach(mt => {
       const s = m.specs[mt.key];
-      if (!s || s.value == null) { tds += `<td><span class="b 데이터부족">데이터부족</span></td>`; return; }
+      if (!s || s.value == null) {   // 사용자=깔끔한 '—', 운영자=데이터부족 배지
+        tds += OPS ? `<td><span class="b 데이터부족">데이터부족</span></td>` : `<td><span class="nd">—</span></td>`;
+        return;
+      }
       tds += `<td><div class="cell"><span class="val">${fmtVal(s.value, mt.unit)}</span>` +
-        `${stars(s.stars)}<span class="b ${s.badge}">${s.badge}</span></div></td>`;
+        `${stars(s.stars)}${OPS ? `<span class="b ${s.badge}">${s.badge}</span>` : ""}</div></td>`;
     });
     return `<tr>${tds}</tr>`;
   }).join("");
@@ -483,9 +508,9 @@ function draw() {
     `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 ${diagnoseEmpty(k)}</td></tr>`;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
-  document.getElementById("foot").innerHTML =
-    `컬럼 클릭=그 값으로 정렬(스펙은 좋은 것 먼저) · 별점=세그먼트 내 순위백분위(중앙값 ★3) · ` +
-    `가격=국내가 우선 · 무게 1kg↑는 kg 표기 · 측정값만.`;
+  document.getElementById("foot").innerHTML = OPS
+    ? `컬럼 클릭=그 값으로 정렬(스펙은 좋은 것 먼저) · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
+    : `컬럼을 누르면 그 항목으로 정렬 · 별점은 같은 그룹 내 순위 기준.`;
 }
 
 /* ---------- 브랜드 가로지르기 (전 카테고리 한 브랜드 모아보기) ---------- */
