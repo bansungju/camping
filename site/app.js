@@ -900,11 +900,30 @@ function openProduct(m) {
        <div class="pmname">${esc(m.model)}</div>
        <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
        <div class="pmspecs">${specRows}</div>
-       <button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
-       <div class="pmbuynote">구매 기능은 차차 추가할 예정입니다.</div>
+       ${m.coupang_url
+         ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>`
+         : `<button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
+       <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
+       }
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
      </div></div>`;
   modal.classList.add("on");
+  const buyBtn = modal.querySelector(".pmbuy-active");
+  if (buyBtn) {
+    buyBtn.onclick = async () => {
+      const url = buyBtn.dataset.url;
+      window.open(url, "_blank", "noopener");
+      try {
+        const { supabase } = await import("./supabaseClient.js");
+        let sessionId = localStorage.getItem("_sid");
+        if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
+        await supabase.from("click_events").insert({
+          slug: STATE.slug, brand: m.brand, model: m.model,
+          coupang_url: url, session_id: sessionId
+        });
+      } catch (_) {}
+    };
+  }
   const wbtn = modal.querySelector(".pmwish");
   wbtn.onclick = () => {
     const added = toggleWish(wishItem(m, STATE.slug));
