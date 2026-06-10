@@ -52,6 +52,8 @@
 6. **macmini 호스트명 DNS 해석 안 됨** — `ssh macmini` 대신 IP 직접.
 7. **Caddyfile `trusted_proxies cloudflare`** — Caddy v2.11 기본 빌드에 없는 모듈. 제거함. rate limit은 slowapi가 `CF-Connecting-IP` 헤더로 처리.
 8. **Caddy `rate_limit` 모듈** 기본 brew 빌드에 없음 → FastAPI(slowapi) 레이어로 옮김.
+9. **cloudflared 토큰 교체는 `pkill` 금지** — LaunchAgent(KeepAlive)가 옛 plist로 즉시 재기동함. 반드시 plist 갱신 후 `launchctl bootout gui/$(id -u)/com.camping.cloudflared` → `bootstrap`. (검증: ps의 토큰 끝자리 대조)
+10. **api `[Errno 48] address already in use` 크래시 루프** = 수동/고아 uvicorn이 8000 점유 중. `lsof -nP -tiTCP:8000 -sTCP:LISTEN`로 찾아 `kill` → KeepAlive가 즉시 8000 인계. (재부팅 시엔 고아 없으니 자연 해결되나, 수동 실행 습관 주의)
 
 ## 5. 자동시작 (LaunchAgents)
 
@@ -78,7 +80,7 @@ launchctl list | grep camping   # 3줄 나오면 성공
     > com.camping.cloudflared.plist
   cp com.camping.cloudflared.plist ~/Library/LaunchAgents/
   ```
-- 노출 이력: commit `80cc94e`에 토큰 평문 푸시됨(2026-06-10). **rotate 필요** → CF 대시보드 camping 터널 "Rotate token". rotate하면 옛 토큰 무효화되어 history 잔존분 무해.
+- 노출 이력: commit `80cc94e`에 토큰 평문 푸시됨(2026-06-10). **✅ rotate 완료(2026-06-10)** — 새 토큰 발급, 옛 토큰 무효화됨 → git history 잔존분 무해. 현재 launchd가 새 토큰으로 운영 중.
 - 토큰 위험범위: **이 터널 하나에 한정**. 계정/DNS/결제 접근권 아님.
 
 ## 7. CORS 허용 origin (main.py)
@@ -87,7 +89,10 @@ launchctl list | grep camping   # 3줄 나오면 성공
 
 ## 8. 현재 미해결 / TODO
 
-- [ ] LaunchAgents 등록 시 `5: Input/output error` — 진단 미완 (plutil -lint / bootout 후 재시도 / 경로 확인)
-- [ ] CF 토큰 rotate
-- [ ] `sudo pmset -a sleep 0 disksleep 0` (Mac mini 잠자기 방지)
-- [ ] 재부팅 후 자동복구 검증
+- [x] ~~LaunchAgents 등록 시 `5: Input/output error`~~ — 해결(2026-06-10). 실제 원인은 ① 옛-토큰 cloudflared가 KeepAlive로 재기동(GOTCHA #9) ② 고아 uvicorn이 8000 점유로 api 크래시 루프(GOTCHA #10). 3개 모두 launchd 관리 정상. 재bootstrap 시엔 `bootout` 먼저(GOTCHA #1).
+- [x] ~~CF 토큰 rotate~~ — 완료(2026-06-10), §6 참고.
+- [x] ~~`sudo pmset -a sleep 0 disksleep 0` (Mac mini 잠자기 방지)~~ — 이미 적용됨(2026-06-10 확인): `SleepDisabled 1`, `sleep 0`, `disksleep 0`. `pmset -g custom`에도 박혀 재부팅 유지.
+- [ ] 재부팅 후 자동복구 검증 (LaunchAgents 3개 + 헬스체크)
+
+### 멱등 재설치 스크립트
+`launchdaemons/install-agents.sh` — bootout 후 재bootstrap, 진단 출력. cloudflared는 토큰 채운 실제 plist 선행 필요(§6).
