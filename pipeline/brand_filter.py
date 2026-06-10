@@ -88,13 +88,18 @@ def main():
     print(f"\n  제외될 브랜드 예시: {', '.join(n+'('+str(c)+')' for n,c in drop_b[:20])}")
 
     if args.apply:
-        con.execute(f"""UPDATE products SET curation_status='rejected'
-            WHERE id IN (SELECT p.id FROM products p JOIN brands b ON b.id=p.brand_id
+        filter_args = [f"%{args.cat}%"] + list(BRANDS)
+        not_in = ','.join('?'*len(BRANDS))
+        sub = f"""SELECT p.id FROM products p JOIN brands b ON b.id=p.brand_id
               JOIN categories c ON c.id=p.category_id
-              WHERE c.name_ko LIKE ? AND b.name_ko NOT IN ({','.join('?'*len(BRANDS))}))""",
-            [f"%{args.cat}%"] + list(BRANDS))
+              WHERE c.name_ko LIKE ? AND b.name_ko NOT IN ({not_in})"""
+        con.execute(f"UPDATE products SET curation_status='rejected' WHERE id IN ({sub})", filter_args)
+        # 거부된 제품의 가격 관측치도 무효화 — 중앙값/이상치 계산 오염 방지
+        invalidated = con.execute(
+            f"UPDATE price_observations SET valid=0 WHERE valid=1 AND product_id IN ({sub})",
+            filter_args).rowcount
         con.commit()
-        print(f"\n→ {drop_n}개 제품 rejected 처리 완료")
+        print(f"\n→ {drop_n}개 제품 rejected 처리 완료 (가격관측치 {invalidated}건 무효화)")
     else:
         print("\n(미리보기. 실제 적용은 --apply)")
     con.close()

@@ -118,7 +118,14 @@ CONFIG = {
 EXCLUDE = ("거치대", "스탠드", "케이스", "수납가방", "받침", "교체", "리필", "전용가방", "폴대", "부속",
            "보수", "패치", "스트링", "심실링", "걸이", "커버", "수선", "모노포드", "교체용",
            # 부속/부품 누수 보완(적대루프 1회차): 웨건 상판·바퀴, 전용 부속 등 본품 아닌 것
-           "상판", "바퀴", "전용 그릴", "전용그릴", "전용 메쉬", "전용메쉬")
+           "상판", "바퀴", "전용 그릴", "전용그릴", "전용 메쉬", "전용메쉬",
+           # 적대루프2: PC 파워서플라이(ATX) → 파워뱅크 카테고리 오분류 차단
+           "80PLUS", "파워서플라이", "전원공급장치",
+           # 적대루프2: 유아 전용 완구/용품 (캠핑 기어 아님)
+           "유아용")
+
+# 속성어가 브랜드로 오추출된 경우 차단 (다나와 브랜드 미기재 제품이 첫 토큰을 브랜드로 오취급)
+PSEUDO_BRANDS = {"소형", "초경량", "군용", "노브랜드", "브랜드없음", "기타"}
 
 
 def bootstrap(con):
@@ -144,6 +151,8 @@ def ingest_one(con, cfg, c, seen_names):
     toks = c["name"].split()
     brand, model = toks[0], (" ".join(toks[1:]) if len(toks) > 1 else c["name"])
     brand, model = HT.fix_brand(brand, model)
+    if brand in PSEUDO_BRANDS:
+        return "skip_brand"
     if model in seen_names:
         return "dup_name"
     seen_names.add(model)
