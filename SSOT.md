@@ -102,7 +102,7 @@ launchctl list | grep camping   # 3줄 나오면 성공
 - [x] ~~LaunchAgents 등록 시 `5: Input/output error`~~ — 해결(2026-06-10). 실제 원인은 ① 옛-토큰 cloudflared가 KeepAlive로 재기동(GOTCHA #9) ② 고아 uvicorn이 8000 점유로 api 크래시 루프(GOTCHA #10). 3개 모두 launchd 관리 정상. 재bootstrap 시엔 `bootout` 먼저(GOTCHA #1).
 - [x] ~~CF 토큰 rotate~~ — 완료(2026-06-10), §6 참고.
 - [x] ~~`sudo pmset -a sleep 0 disksleep 0` (Mac mini 잠자기 방지)~~ — 이미 적용됨(2026-06-10 확인): `SleepDisabled 1`, `sleep 0`, `disksleep 0`. `pmset -g custom`에도 박혀 재부팅 유지.
-- [ ] **재부팅 후 자동복구 검증** — `com.camping.bootverify` 에이전트가 부팅 시 1회 자동 헬스체크해 `/tmp/camping-boot-verify.log`에 기록(uptime으로 전/후 구분). 재부팅: Mac mini에서 `sudo reboot`. 검증 후 정리: `launchctl bootout gui/$(id -u)/com.camping.bootverify && rm ~/Library/LaunchAgents/com.camping.bootverify.plist`
+- [x] ~~**재부팅 후 자동복구 검증**~~ — 완료(2026-06-10). `sudo reboot` 후 api/caddy/cloudflared/autopull 4개 전부 자동 기동, 헬스체크 3종(`API`/`Caddy`/`Public gear-forest`) 모두 `{"status":"ok","products":2461}` 확인. cloudflared 새 토큰 유지. 검증용 `com.camping.bootverify`는 정리 완료.
 
 ### 스크립트 (launchdaemons/)
 - `install-agents.sh` — api/caddy/cloudflared 멱등 재설치(bootout 후 재bootstrap). cloudflared는 토큰 채운 실제 plist 선행 필요(§6).
