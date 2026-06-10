@@ -1042,7 +1042,6 @@ function syncFilterUI() {
       if (isWeight) return (+v).toFixed(1) + "kg";
       return (+v).toFixed(1) + (sl.dataset.unit || "");
     };
-    const toDisplay = v => isWeight ? v / 1000 : v;
     const loVal = (r && r.min != null) ? toDisplay(r.min) : totalLo;
     const hiVal = (r && r.max != null) ? toDisplay(r.max) : totalHi;
     minInp.value = loVal; maxInp.value = hiVal;
@@ -1588,11 +1587,21 @@ function renderRecent() {
   const a = getRecent();
   if (!a.length) { el.innerHTML = ""; return; }
   el.innerHTML = `<h2 class="sec">최근 본 상품</h2><div class="recent-row">` +
-    a.map(x => `<a class="recard" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
-      ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
-      <div class="recard-b">${esc(x.b)}</div>
-      <div class="recard-m">${esc(x.m)}</div>
-      <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div></a>`).join("") + `</div>`;
+    a.map((x, i) => `<div class="recard-wrap">
+      <a class="recard" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+        ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
+        <div class="recard-b">${esc(x.b)}</div>
+        <div class="recard-m">${esc(x.m)}</div>
+        <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div>
+      </a>
+      <button type="button" class="recard-setadd" data-ri="${i}" aria-label="세트에 추가" title="세트에 추가">⊕</button>
+    </div>`).join("") + `</div>`;
+  el.querySelectorAll(".recard-setadd").forEach(btn => btn.onclick = e => {
+    e.preventDefault();
+    const x = a[+btn.dataset.ri];
+    if (!x) return;
+    openSetModal({ pcode: x.key, b: x.b, m: x.m, cap: x.cap ?? null, s: x.s, p: x.p ?? null, img: x.img ?? null, weight_g: x.weight_g ?? null });
+  });
 }
 
 /* ---------- 내 정보 — Progressive Disclosure ---------- */
