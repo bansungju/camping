@@ -1338,16 +1338,46 @@ async function renderBestGear() {
   }
 }
 
-function renderLogFeed() {
+async function renderLogFeed() {
   const el = document.getElementById("comm-logs-list");
   if (!el) return;
-  // Cold Start 구간: 로그 없으면 Empty State
-  el.innerHTML = `
-    <div class="pli-empty" style="padding:48px 0">
-      <div class="pe-ico">📝</div>
-      <div class="pe-msg">아직 로그가 없어요.<br>첫 캠핑 로그를 작성해보세요!</div>
-      <button type="button" class="achip clear" style="margin-top:12px" onclick="openLogModal()">로그 쓰기</button>
-    </div>`;
+  el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
+  try {
+    const { supabase } = await import("./supabaseClient.js");
+    const { data: posts, error } = await supabase
+      .from("posts")
+      .select("id, title, content, tags, created_at, user_id, profiles(nickname)")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    if (!posts || posts.length === 0) {
+      el.innerHTML = `
+        <div class="pli-empty" style="padding:48px 0">
+          <div class="pe-ico">📝</div>
+          <div class="pe-msg">아직 로그가 없어요.<br>첫 캠핑 로그를 작성해보세요!</div>
+          <button type="button" class="achip clear" style="margin-top:12px" onclick="openLogModal()">로그 쓰기</button>
+        </div>`;
+      return;
+    }
+    el.innerHTML = posts.map(p => {
+      const nick = p.profiles?.nickname || "익명";
+      const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+      const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
+      const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
+      return `<div class="log-card">
+        <div class="log-card-head">
+          <span class="log-nick">${esc(nick)}</span>
+          <span class="log-date">${dt}</span>
+        </div>
+        <div class="log-title">${esc(p.title)}</div>
+        <div class="log-preview">${esc(preview)}${p.content.length > 80 ? "…" : ""}</div>
+        ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
+      </div>`;
+    }).join("");
+  } catch (e) {
+    el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">로그를 불러오지 못했어요.</div>`;
+  }
 }
 
 function openLogModal() {
