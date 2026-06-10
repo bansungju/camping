@@ -55,7 +55,8 @@ const PERSONAS = [
   { key: "auto", emoji: "🚙", name: "오토 / 맥시멀", tagline: "차로 싣고, 집처럼 편하게",
     note: "공간·용량·스펙이 큰 순 (무게 무관) · 스펙 상위일수록 가격이 높은 경향",
     picks: [
-      { cat: "auto-tent", metric: "floor_area", label: "넓은 거실형 텐트" },
+      // 외형기준(외피 footprint·이너 미상)은 실내공간 비교에 부적합 → 실내 측정값만 추천(정직)
+      { cat: "auto-tent", metric: "floor_area", filter: m => m.specs.floor_area.badge !== "외형기준", label: "넓은 거실형 텐트" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
       { cat: "burner", metric: "power_output", label: "고화력 버너" },
       { cat: "chair", metric: "max_load", label: "튼튼한 의자" },
@@ -64,7 +65,7 @@ const PERSONAS = [
   { key: "family", emoji: "👨‍👩‍👧‍👦", name: "4인 가족", tagline: "안전하게, 넉넉하게",
     note: "4인 이상 · 넓고(공간분리) 방수 좋은 순 · ‘신속설치’는 측정값이 없어 미반영 · 스펙 상위는 고가 경향",
     picks: [
-      { cat: "auto-tent", metric: "floor_area", filter: m => m.capacity != null && m.capacity >= 4, label: "4인+ 넓은 텐트" },
+      { cat: "auto-tent", metric: "floor_area", filter: m => m.capacity != null && m.capacity >= 4 && m.specs.floor_area.badge !== "외형기준", label: "4인+ 넓은 텐트" },
       { cat: "auto-tent", metric: "water_head", filter: m => m.capacity != null && m.capacity >= 4, label: "방수 좋은 텐트 (우천 안전)" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
       // 가족 3~4계절 기준: -20℃ 미만 극지 동계백은 과스펙·고가라 제외(따뜻한 순)

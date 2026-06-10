@@ -1,7 +1,7 @@
 /* 캠핑기어 정직비교 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-2e9227fe";
+const CACHE = "camping-db8f3760";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
