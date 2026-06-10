@@ -36,6 +36,17 @@ def main():
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new)
             changed.append(name)
+    # PWA: 서비스워커 CACHE 버전을 app.js+style.css 결합해시로 스탬프(내용 바뀌면 옛 캐시 폐기)
+    swp = os.path.join(SITE, "sw.js")
+    if os.path.exists(swp):
+        build = hashlib.md5((hj + hc).encode()).hexdigest()[:8]
+        with open(swp, encoding="utf-8") as f:
+            sw = f.read()
+        sw2 = re.sub(r'const CACHE = "camping-[^"]*";', f'const CACHE = "camping-{build}";', sw)
+        if sw2 != sw:
+            with open(swp, "w", encoding="utf-8") as f:
+                f.write(sw2)
+            changed.append(f"sw.js(build={build})")
     print(f"버전 스탬프 app.js={hj} style.css={hc} → {', '.join(changed) if changed else '변경없음'}")
 
 
