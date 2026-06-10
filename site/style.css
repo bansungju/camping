@@ -562,3 +562,10 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .bnav-icon{font-size:20px;line-height:1}
 .bnav-label{font-size:10px;font-weight:600;line-height:1}
 @media(min-width:640px){.bottom-nav{display:none}}
+/* 세트 무게 목표 프로그레스바 */
+.set-goal-bar-wrap{margin-top:5px;display:flex;align-items:center;gap:8px}
+.set-goal-bar-track{flex:1;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.set-goal-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.set-goal-label{font-size:10px;white-space:nowrap;font-weight:600}
+.set-goal-set{border:none;background:none;font-size:11px;color:var(--muted);cursor:pointer;padding:3px 0;text-decoration:underline;text-underline-offset:2px}
+.set-goal-set:hover{color:var(--accent)}

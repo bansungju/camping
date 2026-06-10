@@ -430,6 +430,22 @@ async function setupHomeSearch() {
   };
   inp.oninput = run;
   inp.onfocus = run;
+  // 엔터 → category.html?q= 이동 (첫 번째 결과 카테고리 or 전체 검색)
+  inp.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const q = inp.value.trim();
+    if (!q) return;
+    // 첫 번째 매치의 카테고리 슬러그로 이동
+    const first = idx.find(x => (x.b + " " + x.m).toLowerCase().includes(q.toLowerCase()));
+    if (first) {
+      location.href = `category/${first.s}?q=${encodeURIComponent(q)}`;
+    } else {
+      // 브랜드 매치면 brand 페이지
+      const brandMatch = idx.find(x => x.b.toLowerCase().includes(q.toLowerCase()));
+      if (brandMatch) location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
+    }
+  });
 }
 
 /* ---------- 캠핑 스타일 칩 상수 ---------- */
@@ -1641,12 +1657,32 @@ function renderAccount() {
     const totalWeight = items => { const w = items.reduce((s, x) => x.weight_g != null ? s + x.weight_g * (x.qty || 1) : s, 0); return w > 0 ? w : null; };
     const fmtWeight = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
     const weightBadge = g => g == null ? '' : `<span class="pli-wt-badge" style="font-size:11px;color:${g<5000?'var(--ok,#2e7d32)':g<10000?'#e65100':'#b71c1c'}">${g<5000?'🪶경량':g<10000?'⚖️보통':'🏋️무거움'} ${fmtWeight(g)}</span>`;
+    const getGoal = id => parseInt(localStorage.getItem(`set-goal-${id}`) || "0", 10) || 0;
+    const setGoal = (id, g) => localStorage.setItem(`set-goal-${id}`, String(g));
+    const goalBar = (s) => {
+      const tw = totalWeight(s.items);
+      const goal = getGoal(s.id);
+      if (!tw) return "";
+      const goalHtml = goal > 0
+        ? (() => {
+          const pct = Math.min(100, Math.round(tw / goal * 100));
+          const over = tw > goal;
+          const color = over ? "#e53e3e" : tw / goal > 0.9 ? "#d97706" : "var(--accent)";
+          return `<div class="set-goal-bar-wrap">
+            <div class="set-goal-bar-track"><div class="set-goal-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+            <span class="set-goal-label" style="color:${color}">${over ? "⚠️초과" : "🎯"} ${pct}% (목표 ${fmtWeight(goal)})</span>
+          </div>`;
+        })()
+        : `<button type="button" class="set-goal-set" data-si="${s.id}">🎯 무게 목표 설정</button>`;
+      return goalHtml;
+    };
     setsEl.innerHTML = sets.map((s, si) =>
       `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
         <div class="pli-info">
           <div class="pli-top">${esc(s.style || "세트")}</div>
           <div class="pli-name">${esc(s.title)}</div>
           <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비 ${weightBadge(totalWeight(s.items))}</div>
+          ${goalBar(s)}
         </div>
         <div class="pli-side">
           <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
@@ -1654,6 +1690,33 @@ function renderAccount() {
           <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
         </div></div>`
     ).join("");
+    // 무게 목표 설정 버튼
+    setsEl.querySelectorAll(".set-goal-set").forEach(btn => btn.onclick = e => {
+      e.stopPropagation();
+      const setId = btn.dataset.si;
+      const current = getGoal(setId) || 5000;
+      const dialog = document.createElement("div");
+      dialog.className = "pmodal on";
+      dialog.innerHTML = `<div class="pmbox" style="max-width:320px;width:100%;padding:24px">
+        <button class="pmx" aria-label="닫기">✕</button>
+        <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 무게 목표 설정</h2>
+        <div style="text-align:center;font-size:24px;font-weight:700;margin-bottom:8px" id="goal-display">${fmtWeight(current)}</div>
+        <input type="range" id="goal-slider" min="500" max="15000" step="100" value="${current}" style="width:100%;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:16px">
+          <span>500g</span><span>5kg</span><span>10kg</span><span>15kg</span>
+        </div>
+        <button type="button" id="goal-save" class="achip" style="width:100%;justify-content:center;padding:10px">저장</button>
+      </div>`;
+      document.body.appendChild(dialog);
+      const slider = dialog.querySelector("#goal-slider");
+      const display = dialog.querySelector("#goal-display");
+      slider.oninput = () => { display.textContent = fmtWeight(+slider.value); };
+      dialog.querySelector(".pmx").onclick = () => dialog.remove();
+      dialog.onclick = ev => { if (ev.target === dialog) dialog.remove(); };
+      dialog.querySelector("#goal-save").onclick = () => {
+        setGoal(setId, +slider.value); dialog.remove(); renderAccount();
+      };
+    });
     setsEl.querySelectorAll(".acc-set-share").forEach(b => b.onclick = e => {
       e.stopPropagation();
       const s = getSets()[+b.dataset.si];
