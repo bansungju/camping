@@ -1030,40 +1030,84 @@ function renderRecent() {
       <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div></a>`).join("") + `</div>`;
 }
 
-/* ---------- 내 정보 — 찜한 상품(로그인 없이 localStorage) ---------- */
+/* ---------- 내 정보 — Progressive Disclosure ---------- */
 function renderAccount() {
-  const el = document.getElementById("wishlist");
-  if (!el) return;
-  const a = getWish();
-  const cnt = document.getElementById("wishcount");
-  if (cnt) cnt.textContent = a.length ? `${a.length}개` : "";
-  if (!a.length) {
-    el.innerHTML = `<div class="pli-empty"><div class="pe-ico">🤍</div>
-      <div class="pe-msg">아직 찜한 상품이 없어요. 카테고리에서 ♡ 를 눌러 담아보세요.</div>
-      <a class="achip clear" href="index.html">카테고리 보러가기</a></div>`;
-    return;
+  if (!document.getElementById("wishlist")) return;
+  const wishes = getWish();
+  const sets = getSets();
+  const hasAny = wishes.length || sets.length;
+
+  // Empty State vs 섹션 앵커
+  const emptyEl = document.getElementById("acc-empty");
+  const navEl = document.getElementById("acc-nav");
+  if (emptyEl) emptyEl.style.display = hasAny ? "none" : "block";
+  if (navEl) {
+    if (hasAny) {
+      const links = [];
+      if (wishes.length) links.push(`<a class="acc-anchor" href="#sec-wish">찜 ${wishes.length}</a>`);
+      if (sets.length) links.push(`<a class="acc-anchor" href="#sec-sets">세트 ${sets.length}</a>`);
+      navEl.innerHTML = links.join("");
+      navEl.style.display = "flex";
+    } else {
+      navEl.style.display = "none";
+    }
   }
-  el.innerHTML = a.map((x, i) => {
-    const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
-    return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
-      <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">♥</button>
-      ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
-      <div class="pli-info">
-        <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
-        <div class="pli-name">${esc(x.m)}</div>
-      </div>
-      <div class="pli-side">
-        <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
-        <span class="pli-chev" aria-hidden="true">›</span>
-      </div></div>`;
-  }).join("");
-  el.querySelectorAll(".pli").forEach(card => {
-    const go = () => { location.href = card.dataset.href; };
-    card.onclick = go;
-    card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
-  });
-  el.querySelectorAll(".pli-wish").forEach(b => b.onclick = e => {
-    e.stopPropagation();
-    const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
-  });
+
+  // 찜 섹션
+  const wishSec = document.getElementById("wish-section");
+  const wishEl = document.getElementById("wishlist");
+  const cnt = document.getElementById("wishcount");
+  if (wishSec) wishSec.style.display = wishes.length ? "block" : "none";
+  if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
+  if (wishEl && wishes.length) {
+    wishEl.innerHTML = wishes.map((x, i) => {
+      const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
+      return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
+        <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">♥</button>
+        ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
+        <div class="pli-info">
+          <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
+          <div class="pli-name">${esc(x.m)}</div>
+        </div>
+        <div class="pli-side">
+          <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
+          <span class="pli-chev" aria-hidden="true">›</span>
+        </div></div>`;
+    }).join("");
+    wishEl.querySelectorAll(".pli").forEach(card => {
+      const go = () => { location.href = card.dataset.href; };
+      card.onclick = go;
+      card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+    });
+    wishEl.querySelectorAll(".pli-wish").forEach(b => b.onclick = e => {
+      e.stopPropagation();
+      const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
+    });
+  }
+
+  // 세트 섹션
+  const setsSec = document.getElementById("sets-section");
+  const setsEl = document.getElementById("setslist");
+  const setsCnt = document.getElementById("setscount");
+  if (setsSec) setsSec.style.display = sets.length ? "block" : "none";
+  if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
+  if (setsEl && sets.length) {
+    const totalPrice = items => items.reduce((s, x) => s + (x.p || 0) * (x.qty || 1), 0);
+    setsEl.innerHTML = sets.map((s, si) =>
+      `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
+        <div class="pli-info">
+          <div class="pli-top">${esc(s.style || "세트")}</div>
+          <div class="pli-name">${esc(s.title)}</div>
+          <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비</div>
+        </div>
+        <div class="pli-side">
+          <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
+          <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
+        </div></div>`
+    ).join("");
+    setsEl.querySelectorAll(".acc-set-del").forEach(b => b.onclick = e => {
+      e.stopPropagation();
+      const arr = getSets(); arr.splice(+b.dataset.si, 1); saveSets(arr); renderAccount();
+    });
+  }
 }

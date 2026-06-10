@@ -38,19 +38,50 @@
 <main class="wrap">
   <h1 style="margin-top:22px">내 정보</h1>
 
-  <!-- 찜한 상품(로그인 시에만 표시) -->
-  <div id="wish-section" hidden>
-    <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+  <!-- 로그인 / 내 계정 (상단 고정) -->
+  <div id="auth-section">
+    <div id="auth-loading" style="max-width:360px;margin:16px auto 0;padding:20px 0;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:14px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--card2);flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="height:14px;background:var(--card2);border-radius:4px;margin-bottom:6px;width:60%"></div>
+        <div style="height:11px;background:var(--card2);border-radius:4px;width:40%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 섹션 앵커 (콘텐츠 있을 때만 JS로 표시) -->
+  <nav id="acc-nav" style="display:none;margin-top:20px;display:flex;flex-wrap:wrap;gap:8px"></nav>
+
+  <!-- 첫 방문 Empty State (콘텐츠 없을 때만 표시) -->
+  <div id="acc-empty" style="display:none;text-align:center;padding:40px 0 20px">
+    <div style="font-size:44px;margin-bottom:14px">📝</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:8px">첫 캠핑 로그를 써보세요</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">장비를 태그하면 나만의 장비 데이터가 쌓여요</div>
+    <a class="achip clear" href="community.html">커뮤니티 가서 로그 쓰기 ›</a>
+  </div>
+
+  <!-- 찜한 상품 (비로그인도 localStorage 표시) -->
+  <div id="wish-section" style="margin-top:28px;display:none">
+    <h2 class="sec" id="sec-wish">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
     <div id="wishlist" class="plist"></div>
   </div>
 
-  <!-- 로그인 / 내 계정 -->
-  <div id="auth-section" style="margin-top:34px"></div>
+  <!-- 내 세트 (gear_sets localStorage) -->
+  <div id="sets-section" style="margin-top:32px;display:none">
+    <h2 class="sec" id="sec-sets">🎒 내 세트 <span class="nd" id="setscount"></span></h2>
+    <div id="setslist" class="plist"></div>
+  </div>
 </main>
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
 <script src="app.js?v=df140e15"></script>
+<script>
+// 모듈 로드 전에 localStorage 찜목록 즉시 표시 (CDN 지연 없이)
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof renderAccount === 'function') renderAccount()
+})
+</script>
 <script type="module">
 import {
   initAuth, signInWithOAuth, signOut, getErrorMessage,
@@ -205,25 +236,20 @@ if (params.get('auth_error')) {
 }
 
 await initAuth(async (user, event) => {
-  const wishSection = document.getElementById('wish-section')
   if (!user) {
-    if (wishSection) wishSection.hidden = true
     renderLogin()
+    if (typeof renderAccount === 'function') renderAccount()
     return
   }
   // 로그인됨 — profiles에서 닉네임 확인
   const profile = await getProfile()
   if (!profile || !profile.nickname) {
-    // 최초 로그인(또는 닉네임 미설정): 찜 표시 전에 닉네임부터 강제
-    if (wishSection) wishSection.hidden = true
     renderNicknameModal()
+    if (typeof renderAccount === 'function') renderAccount()
     return
   }
-  if (wishSection) wishSection.hidden = false
-  renderAccount()
   renderProfile(profile)
-  // 실제 로그인 이벤트(SIGNED_IN)일 때만 찜 동기화. 페이지 새로고침(INITIAL)에서는
-  // onWishChange 훅만 등록하여 중복 동기화 방지.
+  if (typeof renderAccount === 'function') renderAccount()
   if (event === 'SIGNED_IN') {
     syncWishlistOnLogin()
   } else {
