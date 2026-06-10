@@ -65,3 +65,26 @@ self.addEventListener("fetch", (e) => {
     return cached || (await fetching) || new Response("", { status: 504 });
   })());
 });
+
+// Web Push 수신 → 알림 표시
+self.addEventListener("push", (e) => {
+  let data = { title: "장비의 숲", body: "새 알림이 있어요", icon: "/icon-192.png", data: { url: "/community.html" } };
+  try { data = { ...data, ...e.data.json() }; } catch {}
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body,
+    icon: data.icon,
+    badge: "/icon-192.png",
+    data: data.data,
+  }));
+});
+
+// 알림 클릭 → 해당 URL 열기
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = e.notification.data?.url || "/community.html";
+  e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    const existing = list.find((c) => c.url.includes(location.origin));
+    if (existing) return existing.focus();
+    return clients.openWindow(url);
+  }));
+});

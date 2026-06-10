@@ -1721,6 +1721,53 @@ async function renderCommunity() {
 
   // 로그 피드 (현재 empty state)
   renderLogFeed("latest");
+
+  // 로그인 사용자에게 댓글 알림 구독 요청 (최초 1회)
+  if (window._commUser && "serviceWorker" in navigator && "PushManager" in window) {
+    requestPushSubscription(window._commUser.id);
+  }
+}
+
+// VAPID 공개키 — supabase db push 후 Edge Function 환경변수에 등록한 값과 쌍을 이룸
+const VAPID_PUBLIC_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjZJTuT2wEGKwRCCLjLJAo-gFPRlY";
+
+async function requestPushSubscription(userId) {
+  if (localStorage.getItem("push-denied")) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) { await _savePushSub(sub, userId); return; }
+
+    // 알림 권한 요청
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { localStorage.setItem("push-denied", "1"); return; }
+
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    await _savePushSub(sub, userId);
+  } catch (err) {
+    console.warn("Push 구독 실패:", err);
+  }
+}
+
+async function _savePushSub(sub, userId) {
+  const j = sub.toJSON();
+  const { supabase } = await import("./supabaseClient.js");
+  await supabase.from("push_subscriptions").upsert({
+    user_id: userId,
+    endpoint: j.endpoint,
+    p256dh: j.keys.p256dh,
+    auth_key: j.keys.auth,
+  }, { onConflict: "user_id,endpoint" });
+}
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
 function _isPostLiked(pid) {
