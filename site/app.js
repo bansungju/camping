@@ -31,6 +31,46 @@ const CAT_TINT = {
 };
 const catTint = name => CAT_TINT[name] || "var(--card2)";
 
+/* 캠핑 스타일 페르소나 — 측정 지표의 '좋은 방향'으로 추천(추측 없이 별점 재배열).
+   각 pick: 카테고리 + 정렬 기준 지표(+선택 필터). 정직성 원칙상 측정 가능한 4개만. */
+const PERSONAS = [
+  { key: "backpacker", emoji: "🎒", name: "백패커", tagline: "메고 걷는다 — 가볍고 작게",
+    note: "무게가 가벼운 순, 1~2인 기준",
+    picks: [
+      { cat: "backpacking-tent", metric: "weight_min", filter: m => m.capacity != null && m.capacity <= 2, label: "경량 텐트 (1~2인)" },
+      { cat: "sleeping-bag", metric: "weight_min", label: "경량 침낭" },
+      { cat: "mat", metric: "weight_min", label: "경량 매트" },
+      { cat: "cookware", metric: "weight_min", label: "미니 코펠" },
+      { cat: "burner", metric: "weight_min", label: "초경량 버너" },
+    ] },
+  { key: "minimal", emoji: "📦", name: "미니멀리스트", tagline: "적게, 다용도로",
+    note: "최소 구성 — 텐트 대신 타프, 가벼운 순",
+    picks: [
+      { cat: "tarp", metric: "weight_min", label: "경량 타프 (텐트 대신)" },
+      { cat: "sleeping-bag", metric: "weight_min", label: "경량 침낭" },
+      { cat: "mat", metric: "weight_min", label: "경량 매트" },
+      { cat: "cookware", metric: "weight_min", label: "미니 코펠" },
+      { cat: "chair", metric: "weight_min", label: "경량 의자" },
+    ] },
+  { key: "auto", emoji: "🚙", name: "오토 / 맥시멀", tagline: "차로 싣고, 집처럼 편하게",
+    note: "공간·용량·스펙이 큰 순 (무게 무관)",
+    picks: [
+      { cat: "auto-tent", metric: "floor_area", label: "넓은 거실형 텐트" },
+      { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
+      { cat: "burner", metric: "power_output", label: "고화력 버너" },
+      { cat: "chair", metric: "max_load", label: "튼튼한 의자" },
+      { cat: "powerbank", metric: "capacity_mah", label: "대용량 파워뱅크" },
+    ] },
+  { key: "family", emoji: "👨‍👩‍👧‍👦", name: "4인 가족", tagline: "안전하게, 넉넉하게",
+    note: "4인 이상 · 넓고(공간분리) 방수 좋은 순 · ‘신속설치’는 측정값이 없어 미반영",
+    picks: [
+      { cat: "auto-tent", metric: "floor_area", filter: m => m.capacity != null && m.capacity >= 4, label: "4인+ 넓은 텐트" },
+      { cat: "auto-tent", metric: "water_head", filter: m => m.capacity != null && m.capacity >= 4, label: "방수 좋은 텐트 (우천 안전)" },
+      { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
+      { cat: "sleeping-bag", metric: "comfort_temp", label: "따뜻한 침낭" },
+    ] },
+];
+
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
 const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>'
@@ -98,6 +138,14 @@ async function renderHub() {
     `<b>${m.total_verified.toLocaleString()}개</b> 제품 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
 
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
+
+  // 캠핑 스타일 추천 진입
+  const pel = document.getElementById("personas");
+  if (pel) pel.innerHTML = PERSONAS.map(p =>
+    `<a class="pcard" href="recommend.html?p=${p.key}">
+       <span class="pe">${p.emoji}</span>
+       <span class="pn">${p.name}</span>
+       <span class="pt">${p.tagline}</span></a>`).join("");
 
   const grid = document.getElementById("grid");
   grid.innerHTML = m.categories.map(c => `
@@ -585,4 +633,55 @@ async function renderBrand() {
   draw(bname);
   renderChips();
   document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음.`;
+}
+
+/* ---------- 캠핑 스타일 추천 ---------- */
+async function renderRecommend() {
+  renderCatNav("");
+  const params = new URLSearchParams(location.search);
+  const persona = PERSONAS.find(p => p.key === params.get("p")) || PERSONAS[0];
+
+  document.getElementById("pswitch").innerHTML = PERSONAS.map(p =>
+    `<a class="pchip${p.key === persona.key ? " on" : ""}" href="recommend.html?p=${p.key}">
+       <span class="pe">${p.emoji}</span>${p.name}</a>`).join("");
+  document.getElementById("crumbName").textContent = persona.name;
+  document.title = `${persona.name} 추천 — 캠핑기어 정직비교`;
+  document.getElementById("title").innerHTML = `<span class="titleicon">${persona.emoji}</span>${persona.name}`;
+  document.getElementById("lead").textContent = persona.tagline;
+  document.getElementById("pnote").innerHTML =
+    `<b>측정 스펙 기준 추천</b> — ${persona.note}. 디자인·설치 편의성 등 측정할 수 없는 요소는 반영하지 않습니다.`;
+
+  // 필요한 카테고리 데이터만 로드(중복 제거)
+  const cats = [...new Set(persona.picks.map(p => p.cat))];
+  const data = {};
+  await Promise.all(cats.map(async c => { try { data[c] = await getJSON(`data/${c}.json`); } catch (e) { data[c] = null; } }));
+
+  const sections = persona.picks.map(pick => {
+    const d = data[pick.cat]; if (!d) return "";
+    const mt = d.metrics.find(m => m.key === pick.metric); if (!mt) return "";
+    const lower = mt.direction === "lower_better";
+    let rows = d.models.filter(m => {
+      const s = m.specs[pick.metric];
+      return s && s.value != null && (pick.filter ? pick.filter(m) : true);
+    });
+    rows.sort((a, b) => { const va = a.specs[pick.metric].value, vb = b.specs[pick.metric].value; return lower ? va - vb : vb - va; });
+    rows = rows.slice(0, 4);
+    if (!rows.length) return "";
+    const more = `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
+    const cards = rows.map(m => {
+      const s = m.specs[pick.metric];
+      return `<a class="rcard" href="category.html?cat=${pick.cat}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
+        <div class="ricon" style="background:${catTint(d.name)}">${catIcon(d.name)}</div>
+        <div class="rb">${esc(m.brand)}</div>
+        <div class="rm">${esc(m.model)}</div>
+        <div class="rs"><b>${esc(mt.label)} ${fmtVal(s.value, mt.unit)}</b> ${stars(s.stars)}</div>
+        <div class="rp">${won(m.price_min)}</div>
+      </a>`;
+    }).join("");
+    return `<section class="rsec"><div class="rsec-h"><h2>${esc(pick.label)}</h2>
+       <a class="rmore" href="${more}">${esc(d.name)} 전체 ›</a></div>
+       <div class="rgrid">${cards}</div></section>`;
+  }).join("");
+  document.getElementById("recs").innerHTML = sections || `<p class="nd">추천할 데이터가 없습니다.</p>`;
+  document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음.`;
 }
