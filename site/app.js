@@ -145,10 +145,16 @@ function restoreState(params) {
   STATE.range = {};
   for (const [pk, pv] of params.entries()) {
     const mm = pk.match(/^(.+)__(min|max)$/);
-    if (mm) { (STATE.range[mm[1]] = STATE.range[mm[1]] || {})[mm[2]] = parseFloat(pv); }
+    if (mm) {
+      const f = parseFloat(pv);
+      if (Number.isFinite(f)) (STATE.range[mm[1]] = STATE.range[mm[1]] || {})[mm[2]] = f;  // 71R: NaN 차단
+    }
   }
+  // 71R: sort는 실제 존재하는 옵션일 때만 채택(가짜키→기본 정렬, UI/상태 불일치 방지)
   const srt = params.get("sort");
-  if (srt) { STATE.sortKey = srt; STATE.sortAsc = params.get("sa") === "1"; }
+  const validSort = srt && (srt === "value" || srt === "price_min" ||
+    STATE.data.metrics.some(m => m.is_star && "spec:" + m.key === srt));
+  if (validSort) { STATE.sortKey = srt; STATE.sortAsc = params.get("sa") === "1"; }
   STATE.qExclude = params.get("qx") === "1";
 }
 
@@ -247,24 +253,25 @@ function buildFilters(d, star) {
   parts.push(`<div class="fgrp"><span class="flab">정렬</span>
     <select class="fsel" data-sort>
       <option value="">기본(주력지표)</option>
-      <option value="value">가성비순(별점/가격)</option>
+      <option value="value">가성비순(${star[0] ? esc(star[0].label) : '별점'}/가격)</option>
       <option value="price_min">가격 낮은순</option>
       ${star.map(m => `<option value="spec:${m.key}">${m.label} ${m.direction === 'higher_better' ? '높은' : '좋은'}순</option>`).join("")}
     </select>
     <label class="fchk" title="현재 정렬 중인 지표의 값이 없는(데이터부족) 행을 숨깁니다"><input type="checkbox" data-qx> 정렬지표 데이터부족 행 숨김</label></div>`);
 
   bar.innerHTML = parts.join("");
-  // 모바일: 필터바를 기본 접고 토글 버튼 노출(첫 화면에 표가 바로 보이게). 69R [중]4
+  // 모바일: 필터바 기본접기+토글(첫 화면에 표 노출). 71R: 라벨을 실제 상태서 동기화 + 폭전환 대응
   if (!document.getElementById("filtoggle")) {
     bar.insertAdjacentHTML("beforebegin",
-      `<button id="filtoggle" class="filtoggle" type="button">필터 펼치기 ▾</button>`);
+      `<button id="filtoggle" class="filtoggle" type="button"></button>`);
     const tg = document.getElementById("filtoggle");
-    tg.onclick = () => {
-      const col = bar.classList.toggle("collapsed");
-      tg.textContent = col ? "필터 펼치기 ▾" : "필터 접기 ▴";
-    };
+    const syncLabel = () => tg.textContent = bar.classList.contains("collapsed") ? "필터 펼치기 ▾" : "필터 접기 ▴";
+    tg.onclick = () => { bar.classList.toggle("collapsed"); syncLabel(); };
+    const mq = window.matchMedia("(max-width:640px)");
+    const applyMq = () => { bar.classList.toggle("collapsed", mq.matches); syncLabel(); };
+    mq.addEventListener("change", applyMq);   // 640px 경계 넘나들 때 상태·라벨 재설정
+    applyMq();                                 // 초기: 모바일이면 접힘
   }
-  if (window.innerWidth <= 640) bar.classList.add("collapsed");
 
   // 인원
   bar.querySelectorAll("[data-cap]").forEach(btn => btn.onclick = () => {
@@ -388,6 +395,38 @@ function defaultAsc(key) {
   return true;
 }
 
+// 0건일 때 '어느 필터가 범인'인지 진단 — 필터 하나씩 빼며 건수 재계산. 71R [중]
+function passExcept(m, skip, sortK) {
+  if (skip !== "cap" && STATE.cap && String(m.capacity) !== STATE.cap) return false;
+  if (skip !== "brands" && STATE.brands.size && !STATE.brands.has(m.brand)) return false;
+  if (skip !== "q" && STATE.q && !(m.brand + " " + m.model).toLowerCase().includes(STATE.q)) return false;
+  for (const [key, r] of Object.entries(STATE.range)) {
+    if (skip === "range:" + key) continue;
+    const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
+    if (v == null || (r.min != null && v < r.min) || (r.max != null && v > r.max)) return false;
+  }
+  if (skip !== "qx" && STATE.qExclude && cellVal(m, sortK) == null) return false;
+  return true;
+}
+function diagnoseEmpty(sortK) {
+  const d = STATE.data;
+  const filters = [];
+  if (STATE.cap) filters.push(["cap", `인원 ${STATE.cap}인`]);
+  if (STATE.brands.size) filters.push(["brands", `브랜드(${[...STATE.brands].join("·")})`]);
+  if (STATE.q) filters.push(["q", `검색 "${STATE.q}"`]);
+  Object.keys(STATE.range).forEach(key => {
+    const lab = key === "price" ? "가격" : (d.metrics.find(m => m.key === key) || {}).label || key;
+    filters.push(["range:" + key, `${lab} 범위`]);
+  });
+  if (STATE.qExclude) filters.push(["qx", "데이터부족 숨김"]);
+  if (!filters.length) return "— 데이터가 없습니다";
+  // 각 필터를 뺐을 때 건수 → 가장 많이 살아나는 것 제안
+  const sug = filters.map(([id, lab]) => [lab, d.models.filter(m => passExcept(m, id, sortK)).length])
+    .filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
+  if (!sug.length) return "— 여러 필터가 겹쳐 0건입니다. 활성 필터를 해제해보세요";
+  return `— <b>${esc(sug[0][0])}</b> 조건을 빼면 ${sug[0][1]}개` + (sug[1] ? `, ${esc(sug[1][0])} 빼면 ${sug[1][1]}개` : "");
+}
+
 function draw() {
   const d = STATE.data, star = d.metrics.filter(m => m.is_star);
   renderActiveFilters();
@@ -430,7 +469,7 @@ function draw() {
     return `<tr>${tds}</tr>`;
   }).join("");
   document.getElementById("body").innerHTML = body ||
-    `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 — 필터를 완화하세요</td></tr>`;
+    `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 ${diagnoseEmpty(k)}</td></tr>`;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
   document.getElementById("foot").innerHTML =
@@ -462,9 +501,11 @@ async function renderBrand() {
     const byCat = {};
     rows.forEach(x => { (byCat[x.s] = byCat[x.s] || { name: x.c, slug: x.s, items: [] }).items.push(x); });
     const cats = Object.values(byCat).sort((a, b) => b.items.length - a.items.length);
-    document.getElementById("lead").innerHTML = bn
+    document.getElementById("lead").innerHTML = !bn
+      ? "아래 목록에서 브랜드를 고르거나 위에서 검색하세요."
+      : rows.length
       ? `<b>${rows.length}개</b> 모델 · ${cats.length}개 카테고리에 분포. 카테고리 제목을 누르면 그 카테고리에서 <b>${esc(bn)}</b>만 필터된 비교표로 이동.`
-      : "왼쪽 목록에서 브랜드를 고르거나 위에서 검색하세요.";
+      : `<b>${esc(bn)}</b> 제품이 없습니다. 브랜드명을 확인하거나 위에서 다시 검색하세요.`;
     document.getElementById("sections").innerHTML = cats.map(c => `
       <h2 class="sec" style="margin-top:24px">
         <a href="category.html?cat=${c.slug}&brands=${encodeURIComponent(bn)}" style="color:var(--accent)">
