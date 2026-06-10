@@ -1070,6 +1070,7 @@ function openProduct(m) {
        <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
        }
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
+       ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
      </div></div>`;
   modal.classList.add("on");
   const buyBtn = modal.querySelector(".pmbuy-active");
