@@ -1,4 +1,8 @@
 /* 캠핑기어 정직비교 — 정적 프론트엔드 (DB→data/*.json) */
+/* PWA: 서비스워커 등록(오프라인+홈화면 설치). 실패해도 사이트는 정상 동작 */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
 const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 const gradeBadge = g => `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>`;
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
@@ -104,7 +108,7 @@ async function setupHomeSearch() {
          <span class="sb">${esc(b)}</span> <b>전체 ${n}개</b> 모아보기
          <span class="scat">브랜드 →</span></a>`).join("");
     box.innerHTML = (brandHtml || "") + (hits.length ? hits.map(x =>
-      `<a class="sres" href="category.html?cat=${x.s}&q=${encodeURIComponent(x.m)}">
+      `<a class="sres" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
          <span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}
          <span class="scat">${esc(x.c)}</span></a>`).join("")
       : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
