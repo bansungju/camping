@@ -1207,15 +1207,33 @@ function openCmpModal(rows) {
     </div>`;
   }).join('<div style="width:1px;background:var(--line);flex-shrink:0"></div>');
 
+  const catLabel = d.name || STATE.slug || "";
   modal.innerHTML = `<div class="pmbox" style="max-width:600px;width:100%;padding:20px;overflow-x:auto">
     <button class="pmx" aria-label="닫기">✕</button>
     <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">📊 스펙 비교</h2>
     <div style="display:flex;gap:12px;align-items:flex-start">${cols}</div>
     <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">✓ 표시: 해당 지표 최선값</p>
+    <button type="button" id="cmp-save-set" style="margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">🎒 선택 장비를 세트로 저장</button>
   </div>`;
   modal.classList.add("on");
   modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+  modal.querySelector("#cmp-save-set").onclick = () => {
+    const today = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
+    const setName = `${catLabel} 비교 ${today}`;
+    const setItems = items.map(m => ({
+      b: m.brand, m: m.model, cap: m.capacity ?? null,
+      weight_g: m.specs.weight_min?.value ?? null, qty: 1,
+      img: m.img ?? null, p: m.price_min ?? null
+    }));
+    const sets = getSets();
+    sets.push({ id: Date.now().toString(36), title: setName, style: "비교", items: setItems, created_at: new Date().toISOString() });
+    saveSets(sets);
+    const btn = modal.querySelector("#cmp-save-set");
+    btn.textContent = "✅ 저장됐어요! 마이페이지에서 확인하세요";
+    btn.disabled = true;
+    btn.style.background = "var(--muted)";
+  };
 }
 
 function draw() {
