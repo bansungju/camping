@@ -86,6 +86,20 @@ def is_tent(tags, name):
     return any(x in t for x in ("쉘터", "타프쉘", "돔", "터널"))
 
 
+def fix_brand(brand, model):
+    """복합 브랜드명 오분리 교정. toks[0]=브랜드 휴리스틱이 다어절 브랜드를 깨는 케이스만 정확매칭.
+    예: '레드렌서(LED LENSER) → brand=LED' 오분리 → 레드렌서로 교정(적대루프9: 화이트리스트 우연배제 해소).
+    refresh/harvest/multicat 공용. 확실한 케이스만(추측 금지)."""
+    toks = model.split()
+    # 'LED LENSER 레드렌서 X' : brand='LED', model='LENSER 레드렌서 X' → brand='레드렌서', model='X'
+    if brand == "LED" and toks and toks[0] == "LENSER":
+        rest = toks[1:]
+        if rest and rest[0] == "레드렌서":
+            rest = rest[1:]
+        return "레드렌서", (" ".join(rest) if rest else model)
+    return brand, model
+
+
 def ingest(con, cand, seen_names):
     specs, tags = D.parse_spec_string(cand["spec_text"])
     if not is_tent(tags, cand["name"]):
@@ -97,6 +111,7 @@ def ingest(con, cand, seen_names):
     toks = cand["name"].split()
     brand = toks[0]
     model = " ".join(toks[1:]) if len(toks) > 1 else cand["name"]  # 모델명서 브랜드 중복 제거
+    brand, model = fix_brand(brand, model)
     if model in seen_names:
         return "dup_name"
     seen_names.add(model)

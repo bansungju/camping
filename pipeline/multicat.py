@@ -143,6 +143,7 @@ def ingest_one(con, cfg, c, seen_names):
         return "skip_exclude"
     toks = c["name"].split()
     brand, model = toks[0], (" ".join(toks[1:]) if len(toks) > 1 else c["name"])
+    brand, model = HT.fix_brand(brand, model)
     if model in seen_names:
         return "dup_name"
     seen_names.add(model)
