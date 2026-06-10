@@ -357,13 +357,30 @@ async function renderHub() {
   renderRecent();   // 최근 본 상품(있으면)
   renderHotSection(m.categories);   // 이번 주 인기
 
-  // 캠핑 스타일 추천 진입
+  // 캠핑 스타일 추천 진입 — 클릭 시 카테고리+필터 직접 이동
+  const PERSONA_CAT = {
+    backpacker: { cat: "backpacking-tent", sort: "weight_min", sa: "1", cap: "2" },
+    minimal:    { cat: "tarp",             sort: "weight_min", sa: "1" },
+    auto:       { cat: "auto-tent",        sort: "floor_area", sa: "0", cap: "4" },
+    family:     { cat: "auto-tent",        sort: "floor_area", sa: "0", cap: "4" },
+  };
   const pel = document.getElementById("personas");
-  if (pel) pel.innerHTML = PERSONAS.map(p =>
-    `<a class="pcard" href="recommend.html?p=${p.key}">
+  if (pel) pel.innerHTML = PERSONAS.map(p => {
+    const pc = PERSONA_CAT[p.key];
+    let url;
+    if (pc) {
+      const u = new URLSearchParams({ cat: pc.cat });
+      if (pc.sort) { u.set("sort", "spec:" + pc.sort); u.set("sa", pc.sa || "0"); }
+      if (pc.cap)  u.set("cap", pc.cap);
+      url = `category.html?${u.toString()}`;
+    } else {
+      url = `recommend.html?p=${p.key}`;
+    }
+    return `<a class="pcard" href="${url}">
        <span class="pe">${p.emoji}</span>
        <span class="pn">${p.name}</span>
-       <span class="pt">${p.tagline}</span></a>`).join("");
+       <span class="pt">${p.tagline}</span></a>`;
+  }).join("");
 
   const grid = document.getElementById("grid");
   grid.innerHTML = m.categories.map(c => `
