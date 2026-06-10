@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.camping.cloudflared</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/cloudflared</string>
+        <string>tunnel</string>
+        <string>run</string>
+        <string>--token</string>
+        <string>eyJhIjoiM2UyZTZmZGFiOTdjODhjM2YyMDllM2Q2ZjQzZWMxZGMiLCJ0IjoiODA4ZGZjN2YtZjg1NC00MWM1LTk2OGUtNWIxZjk3YjlhYmU0IiwicyI6Ik1URTVOamN4WmpFdE5qUTBaaTAwWXpFMExXSTJNVEF0WmpneU1qYzBZek5oWTJVNSJ9</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/camping-cloudflared.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/camping-cloudflared.err</string>
+</dict>
+</plist>

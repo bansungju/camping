@@ -1,0 +1,29 @@
+# SSOT 레지스트리 — 영역별 정본 1개 + 파생 (DESIGN.md §14.1)
+# 경로는 repo root (camping/) 기준 상대.
+auth:
+  canonical: dev-harness/ssot/auth.md
+  derived: []
+frontend:
+  canonical: dev-harness/ssot/frontend.md
+  derived:
+    - DESIGN-social.md
+    - site/        # index/category/brand/recommend/community/account/privacy + app.js/style.css
+backend:
+  canonical: dev-harness/ssot/backend.md
+  derived:
+    - backend/        # FastAPI 구현 (main/db/store/routers) — push됨 2026-06-10
+    - backend-plan/ARCH-R1.md
+    - backend-plan/ARCH-R2.md
+    - backend-plan/ARCH-R3.md
+    - Caddyfile
+    - deploy-to-mini.sh
+devagent:
+  canonical: dev-harness/DESIGN.md
+  derived:
+    - dev-harness/critique/
+data:
+  canonical: dev-harness/ssot/data.md
+  derived:
+    - DATABASE-DESIGN.md
+    - schema.sql
+    - pipeline/README.md

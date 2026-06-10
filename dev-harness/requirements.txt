@@ -1,0 +1,6 @@
+# dev-harness 런타임 의존. 게이트 단독검증(--dry/--status 등)은 표준라이브러리만으로 동작하고,
+# 그래프 실행(--request/--inject/--resume)에만 아래가 필요하다.
+langgraph>=0.2.40
+langgraph-checkpoint-sqlite>=2.0
+pyyaml>=6.0
+# 선택 게이트 도구 (있으면 실행, 없으면 skip): ruff, mypy, pytest

@@ -1,0 +1,68 @@
+{
+	admin off
+	log {
+		output file /tmp/caddy-camping-access.log {
+			roll_size 10mb
+			roll_keep 7
+		}
+		format json
+	}
+}
+
+:8080 {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	@dbfile path *.db *.db-wal *.db-shm *.sqlite *.py *.sh
+	respond @dbfile 403
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8000 {
+			health_uri      /health
+			health_interval 2s
+			fail_duration   10s
+		}
+	}
+
+	handle /health {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle /images/* {
+		@hotlink {
+			not header Referer *bansungju.github.io*
+			not header Referer ""
+		}
+		respond @hotlink 403
+		root * /Users/mimi/camping/site/images
+		file_server {
+			hide .*
+		}
+		header Cache-Control "public, max-age=86400"
+	}
+
+	handle /data/* {
+		root * /Users/mimi/camping/site/data
+		file_server {
+			hide .*
+		}
+		header Cache-Control "public, max-age=1800"
+	}
+
+	handle {
+		root * /Users/mimi/camping/site
+		file_server {
+			index index.html
+			hide .* *.db *.py *.sh
+		}
+		header Cache-Control "public, max-age=1800"
+	}
+
+	handle_errors {
+		respond "서비스 점검 중입니다." 503
+	}
+}

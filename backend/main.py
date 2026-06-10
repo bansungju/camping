@@ -36,7 +36,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://bansungju.github.io", "http://localhost:3000", "http://127.0.0.1:5500"],
+    allow_origins=["https://www.gear-forest.com", "https://bansungju.github.io", "http://localhost:3000", "http://127.0.0.1:5500"],
     allow_methods=["GET"],
     allow_headers=[],
     max_age=86400,
