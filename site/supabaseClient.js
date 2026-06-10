@@ -3,7 +3,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = 'https://kavfzsdimsrhteohmirc.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_5_z5YGgiq4Fc1LeXHTZdGA_6JVd6ITY'
-const SITE_BASE   = 'https://bansungju.github.io/camping'
+const SITE_BASE   = 'https://gear-forest.com'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
