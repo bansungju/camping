@@ -154,7 +154,13 @@ function thumbFallback(img) {
 /* 찜(위시리스트) — localStorage 저장. 로그인 없이도 동작, '내 정보' 탭에서 모아봄.
    항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
 function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
-function setWish(a) { localStorage.setItem("wish", JSON.stringify(a)); }
+function setWish(a) {
+  localStorage.setItem("wish", JSON.stringify(a));
+  // 로그인 상태에서 account 페이지가 등록한 훅이 있으면 원격 동기화. 없으면 로컬만(오프라인 우선).
+  if (typeof window !== "undefined" && typeof window.onWishChange === "function") {
+    try { window.onWishChange(a); } catch (e) { /* 동기화 실패는 로컬 동작 막지 않음 */ }
+  }
+}
 function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
 function inWish(key) { return getWish().some(x => x.key === key); }
 function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
