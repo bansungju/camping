@@ -1343,24 +1343,34 @@ function renderAccount() {
             .order("created_at", { ascending: false })
             .limit(10);
           const logsCnt = document.getElementById("logscount");
+          myLogsList.dataset.loaded = "1";
           if (!posts || posts.length === 0) {
-            logsSec._accHasContent = false;
-            logsSec.style.display = "none";
+            if (logsCnt) logsCnt.textContent = "";
+            myLogsList.innerHTML = `
+              <div style="text-align:center;padding:32px 0 16px">
+                <div style="font-size:36px;margin-bottom:10px">📝</div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
+                <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
+                <a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>
+              </div>`;
             return;
           }
-          myLogsList.dataset.loaded = "1";
           if (logsCnt) logsCnt.textContent = `${posts.length}개`;
-          myLogsList.innerHTML = posts.map(p => {
-            const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-            const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
-            const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
-            return `<div class="my-log-card">
-              <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
-              <div class="log-title">${esc(p.title)}</div>
-              <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
-              ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
-            </div>`;
-          }).join("");
+          myLogsList.innerHTML = `
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+              <a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>
+            </div>` +
+            posts.map(p => {
+              const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+              const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
+              const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
+              return `<div class="my-log-card">
+                <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
+                <div class="log-title">${esc(p.title)}</div>
+                <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
+                ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
+              </div>`;
+            }).join("");
         }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; });
       }
     } else {
