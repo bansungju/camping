@@ -1,6 +1,6 @@
 :root{
   --bg:#ffffff; --card:#ffffff; --card2:#f5f5f7; --line:#ededed;
-  --txt:#1a1a1a; --muted:#8a8a8e; --faint:#bcbcc0;
+  --txt:#1a1a1a; --muted:#6e6e73; --faint:#919198;
   --accent:#111111; --star:#ff9500;
   --ok:#16a34a; --ref:#9a9a9e; --outer:#d97706; --none:#bcbcc0;
   --gA:#16a34a; --gB:#caa106; --gL:#e5484d;
@@ -54,7 +54,7 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .count{color:var(--muted);font-size:13px;margin-left:auto}
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
-th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{background:var(--card2);color:var(--muted);font-weight:600;font-size:12px;
   position:sticky;top:0;cursor:pointer;user-select:none}
 th:hover{color:var(--txt)}
@@ -128,7 +128,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 /* 필터 태그 바 */
 .filterbar{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}
 .fgrp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.flab{font-size:11px;color:var(--faint);width:42px;flex:0 0 auto}
+.flab{font-size:11px;color:var(--muted);width:42px;flex:0 0 auto}
 .ftag{font-size:12.5px;padding:5px 11px;border-radius:8px;border:1px solid var(--line);
   background:var(--card);color:var(--muted);cursor:pointer}
 .ftag:hover{border-color:var(--accent);color:var(--txt)}
