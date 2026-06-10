@@ -117,13 +117,22 @@ def render(con, rows):
         for cell, rate in _star_rate_pairs(r):
             if rate < GOOD:
                 weak.append((r["cat"], cell, rate))
-    # 63R 데이터부족 정직성 감사: '회수불가(구조적 미공개)'와 '회수가능(미수집)'을 구분.
-    #   웹/판매처에 값이 있는데 아직 안 모은 것은 '회수불가'라 하면 거짓 — 정직하게 분리.
-    RECOVERABLE = {("랜턴", "최소무게"), ("코펠", "용량"), ("침낭", "충전량")}  # 웹확인 회수가능
+    # 63~68R 데이터부족 정직성 감사 결론: 6라운드 웹회수로 '거짓 한계'(프리미엄/수입
+    #   브랜드가 공표하는데 안 모은 값)는 회수 완료. 잔여 결측은 국내 보급형·무명 브랜드가
+    #   스펙 자체를 미표기하는 '구조적 미공개'(회수불가)임을 교차검증으로 확정.
+    #   회수내역: 코펠 용량 30→56%(Keith/S2S/SnowPeak 등), 랜턴 무게 44→82%(경량 헤드램프
+    #   복구), 침낭 충전량 45→48%(S2S Spark/Alpine만, 몽벨·코튼 미공개), 버너 화력 44→46%
+    #   (이와타니·SOTO·MSR만, 국내 부탄버너 g/h만 표기).
+    RECOVERED = {  # 6R 웹회수 완료 — 잔여는 보급형 미공개(구조적)
+        ("랜턴", "최소무게"): "프리미엄 회수완료, 잔여=무명 공구브랜드 무게 미표기",
+        ("코펠", "용량"): "수입 회수완료, 잔여=코베아/캠핑문 보급형 용량 미표기",
+        ("침낭", "충전량"): "S2S 다운 회수완료, 잔여=몽벨/코튼/국내 다운량 미공개",
+        ("버너", "화력"): "이와타니/SOTO/MSR 회수완료, 잔여=국내 부탄 kcal 미표기",
+    }
     for cat, cell, rate in sorted(weak, key=lambda x: x[2]):
         metric_lab = cell.split("(")[0]
-        if (cat, metric_lab) in RECOVERABLE:
-            kind = "미수집(회수가능·웹확인, 진행중)"
+        if (cat, metric_lab) in RECOVERED:
+            kind = "구조적 미공개(회수불가) — " + RECOVERED[(cat, metric_lab)]
         elif rate < WEAK:
             kind = "구조적 미공개(회수불가)"
         else:

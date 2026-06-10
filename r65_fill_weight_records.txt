@@ -1,3 +1,0 @@
-# 65R fill_weight 회수 (침낭) — crosssource RECORDS
-# confidence: high=공식충전량, medium=판매처
-{"pcode": "73889717", "src": "Sea to Summit 공식 Spark Down 7C Regular 850FP — down fill 150g (seatosummit.com/products/spark-down-sleeping-bag)", "m": {"fill_weight": 150}},
