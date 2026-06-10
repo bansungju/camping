@@ -21,6 +21,7 @@ camping_auto.db
 .env.*
 *.env
 cf_token.txt
+client_secret_*.json
 
 # 파이프라인 shadow DB (배포 전 임시)
 camping_shadow.db
