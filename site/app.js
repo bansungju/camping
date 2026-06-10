@@ -1361,13 +1361,106 @@ function openLogModal() {
         <p style="font-size:14px;color:var(--muted);margin-bottom:20px">로그 작성은 로그인 후 이용할 수 있어요.</p>
         <a class="achip clear" href="account.html">로그인하러 가기</a>
       </div>`;
-  } else {
-    body.innerHTML = `
-      <div style="font-size:13px;color:var(--muted);text-align:center;padding:16px 0">
-        <div style="font-size:32px;margin-bottom:10px">🚧</div>
-        로그 작성 기능을 준비 중이에요.<br>곧 오픈됩니다!
-      </div>`;
+    modal.classList.add("on");
+    modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+    modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
+    return;
   }
+
+  // 기어 세트에서 태그 후보 추출
+  const sets = getSets();
+  const tagSuggestions = sets.flatMap(s => (s.items || []).map(i => `${i.b} ${i.m}`)).slice(0, 20);
+
+  body.innerHTML = `
+    <form id="log-form" autocomplete="off">
+      <div class="lf-field">
+        <label class="lf-label" for="lf-title">제목 <span class="lf-req">*</span></label>
+        <input id="lf-title" class="lf-input" type="text" placeholder="오늘 캠핑은 어땠나요?" maxlength="60" required>
+      </div>
+      <div class="lf-field">
+        <label class="lf-label" for="lf-body">내용 <span class="lf-req">*</span></label>
+        <textarea id="lf-body" class="lf-textarea" placeholder="캠핑 경험을 자유롭게 적어주세요. (날씨, 장소, 장비 소감 등)" rows="5" maxlength="1000" required></textarea>
+        <div class="lf-count"><span id="lf-body-cnt">0</span>/1000</div>
+      </div>
+      <div class="lf-field">
+        <label class="lf-label">장비 태그 <span class="lf-req">*</span> <span class="lf-hint">최소 1개</span></label>
+        <div id="lf-tags" class="lf-tags"></div>
+        <div class="lf-taginput-row">
+          <input id="lf-tag-input" class="lf-input" type="text" placeholder="브랜드 + 모델명 입력 후 Enter" maxlength="40">
+          <button type="button" id="lf-tag-add" class="lf-tag-addbtn">추가</button>
+        </div>
+        ${tagSuggestions.length ? `<div class="lf-tag-sug">${tagSuggestions.map(t => `<button type="button" class="lf-sug-chip" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : ""}
+      </div>
+      <div class="lf-field" style="display:flex;align-items:center;gap:10px">
+        <input id="lf-public" type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
+        <label for="lf-public" style="font-size:13px;cursor:pointer">공개 로그로 등록 (비공개 시 나만 볼 수 있어요)</label>
+      </div>
+      <div id="lf-err" class="lf-err" style="display:none"></div>
+      <button type="submit" class="lf-submit" id="lf-submit">로그 등록</button>
+    </form>`;
+
+  const tags = [];
+  const tagsEl = body.querySelector("#lf-tags");
+  const tagInput = body.querySelector("#lf-tag-input");
+
+  function renderTags() {
+    tagsEl.innerHTML = tags.map((t, i) =>
+      `<span class="lf-tag">${esc(t)}<button type="button" class="lf-tagx" data-i="${i}">×</button></span>`
+    ).join("");
+    tagsEl.querySelectorAll(".lf-tagx").forEach(b => {
+      b.onclick = () => { tags.splice(+b.dataset.i, 1); renderTags(); };
+    });
+  }
+
+  function addTag(val) {
+    const v = val.trim();
+    if (!v || tags.includes(v) || tags.length >= 10) return;
+    tags.push(v);
+    renderTags();
+    tagInput.value = "";
+  }
+
+  body.querySelector("#lf-tag-add").onclick = () => addTag(tagInput.value);
+  tagInput.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); addTag(tagInput.value); } };
+
+  body.querySelectorAll(".lf-sug-chip").forEach(c => {
+    c.onclick = () => addTag(c.dataset.tag);
+  });
+
+  const bodyTxt = body.querySelector("#lf-body");
+  const cntEl = body.querySelector("#lf-body-cnt");
+  bodyTxt.oninput = () => { cntEl.textContent = bodyTxt.value.length; };
+
+  const form = body.querySelector("#log-form");
+  const errEl = body.querySelector("#lf-err");
+  const submitBtn = body.querySelector("#lf-submit");
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const title = form.querySelector("#lf-title").value.trim();
+    const content = form.querySelector("#lf-body").value.trim();
+    const is_public = form.querySelector("#lf-public").checked;
+    if (!title) { errEl.textContent = "제목을 입력해주세요."; errEl.style.display = ""; return; }
+    if (content.length < 20) { errEl.textContent = "내용을 20자 이상 작성해주세요."; errEl.style.display = ""; return; }
+    if (tags.length < 1) { errEl.textContent = "장비 태그를 1개 이상 추가해주세요."; errEl.style.display = ""; return; }
+    errEl.style.display = "none";
+    submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
+    try {
+      const { supabase } = await import("./supabaseClient.js");
+      const { error } = await supabase.from("posts").insert({
+        user_id: window._commUser.id, title, content,
+        tags, is_public
+      });
+      if (error) throw error;
+      modal.classList.remove("on");
+      renderLogFeed();
+    } catch (err) {
+      errEl.textContent = "저장 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
+      errEl.style.display = "";
+      submitBtn.disabled = false; submitBtn.textContent = "로그 등록";
+    }
+  };
+
   modal.classList.add("on");
   const close = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) close(); };
