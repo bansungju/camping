@@ -22,6 +22,8 @@ camping_auto.db
 *.env
 cf_token.txt
 client_secret_*.json
+# CF 터널 토큰 박힌 실제 plist (템플릿만 커밋)
+launchdaemons/com.camping.cloudflared.plist
 
 # 파이프라인 shadow DB (배포 전 임시)
 camping_shadow.db

@@ -10,7 +10,7 @@
         <string>tunnel</string>
         <string>run</string>
         <string>--token</string>
-        <string>eyJhIjoiM2UyZTZmZGFiOTdjODhjM2YyMDllM2Q2ZjQzZWMxZGMiLCJ0IjoiODA4ZGZjN2YtZjg1NC00MWM1LTk2OGUtNWIxZjk3YjlhYmU0IiwicyI6Ik1URTVOamN4WmpFdE5qUTBaaTAwWXpFMExXSTJNVEF0WmpneU1qYzBZek5oWTJVNSJ9</string>
+        <string>__CF_TUNNEL_TOKEN__</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
