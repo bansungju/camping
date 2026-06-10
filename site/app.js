@@ -1365,14 +1365,58 @@ function renderAccount() {
                 const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
                 const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
                 const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
-                return `<div class="my-log-card" style="position:relative">
-                  <button type="button" class="my-log-del" data-pi="${pi}" aria-label="삭제">✕</button>
+                return `<div class="my-log-card" id="mlc-${pi}" style="position:relative">
+                  <div class="my-log-card-actions">
+                    <button type="button" class="my-log-edit" data-pi="${pi}" aria-label="수정">✎</button>
+                    <button type="button" class="my-log-del" data-pi="${pi}" aria-label="삭제">✕</button>
+                  </div>
                   <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
                   <div class="log-title">${esc(p.title)}</div>
                   <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
                   ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
                 </div>`;
               }).join("");
+
+            myLogsList.querySelectorAll(".my-log-edit").forEach(btn => {
+              btn.onclick = () => {
+                const pi = +btn.dataset.pi;
+                const p = list[pi];
+                const card = document.getElementById(`mlc-${pi}`);
+                card.innerHTML = `
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <input id="le-title-${pi}" class="lf-input" type="text" value="${esc(p.title)}" maxlength="60" style="font-size:14px">
+                    <textarea id="le-body-${pi}" class="lf-textarea" rows="4" maxlength="1000" style="font-size:13px">${esc(p.content)}</textarea>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input id="le-pub-${pi}" type="checkbox" ${p.is_public ? "checked" : ""} style="width:14px;height:14px">
+                      <label for="le-pub-${pi}" style="font-size:12px;color:var(--muted)">공개</label>
+                    </div>
+                    <div id="le-err-${pi}" style="font-size:12px;color:#e53e3e;display:none"></div>
+                    <div style="display:flex;gap:8px">
+                      <button type="button" id="le-save-${pi}" class="lf-submit" style="padding:9px;font-size:13px;flex:1">저장</button>
+                      <button type="button" id="le-cancel-${pi}" style="padding:9px;font-size:13px;flex:1;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer">취소</button>
+                    </div>
+                  </div>`;
+                document.getElementById(`le-cancel-${pi}`).onclick = () => renderMyLogs(list);
+                document.getElementById(`le-save-${pi}`).onclick = async () => {
+                  const newTitle = document.getElementById(`le-title-${pi}`).value.trim();
+                  const newContent = document.getElementById(`le-body-${pi}`).value.trim();
+                  const newPublic = document.getElementById(`le-pub-${pi}`).checked;
+                  const errEl2 = document.getElementById(`le-err-${pi}`);
+                  if (!newTitle) { errEl2.textContent = "제목을 입력해주세요."; errEl2.style.display = ""; return; }
+                  if (newContent.length < 20) { errEl2.textContent = "내용을 20자 이상 작성해주세요."; errEl2.style.display = ""; return; }
+                  const saveBtn = document.getElementById(`le-save-${pi}`);
+                  saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
+                  const { supabase: sb } = await import("./supabaseClient.js");
+                  const { error } = await sb.from("posts")
+                    .update({ title: newTitle, content: newContent, is_public: newPublic })
+                    .eq("id", p.id).eq("user_id", userId);
+                  if (error) { errEl2.textContent = "저장 중 오류가 발생했어요."; errEl2.style.display = ""; saveBtn.disabled = false; saveBtn.textContent = "저장"; return; }
+                  list[pi] = { ...p, title: newTitle, content: newContent, is_public: newPublic };
+                  renderMyLogs(list);
+                };
+              };
+            });
+
             myLogsList.querySelectorAll(".my-log-del").forEach(btn => {
               btn.onclick = async () => {
                 const p = list[+btn.dataset.pi];
