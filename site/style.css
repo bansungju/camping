@@ -358,6 +358,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .lf-submit{width:100%;padding:13px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
 .lf-submit:disabled{opacity:.5;cursor:not-allowed}
 /* 로그 피드 카드 */
+.log-sort-btn{padding:5px 14px;border:1px solid var(--line);border-radius:20px;background:transparent;font-size:13px;cursor:pointer;color:var(--muted)}
+.log-sort-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .log-card{padding:14px 0;border-bottom:1px solid var(--border)}
 .log-card-img{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block}
 .log-card:last-child{border-bottom:none}

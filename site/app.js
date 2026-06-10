@@ -1477,8 +1477,17 @@ async function renderCommunity() {
   // 베스트 장비 큐레이션 로드
   renderBestGear();
 
+  // 정렬 버튼 이벤트
+  document.querySelectorAll(".log-sort-btn").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".log-sort-btn").forEach(b => b.classList.remove("on"));
+      btn.classList.add("on");
+      renderLogFeed(btn.dataset.sort);
+    };
+  });
+
   // 로그 피드 (현재 empty state)
-  renderLogFeed();
+  renderLogFeed("latest");
 }
 
 function _isPostLiked(pid) {
@@ -1538,17 +1547,18 @@ async function renderBestGear() {
   }
 }
 
-async function renderLogFeed() {
+async function renderLogFeed(sortMode = "latest") {
   const el = document.getElementById("comm-logs-list");
   if (!el) return;
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
     const { supabase } = await import("./supabaseClient.js");
+    const orderCol = sortMode === "popular" ? "likes" : "created_at";
     const { data: posts, error } = await supabase
       .from("posts")
       .select("id, title, content, tags, created_at, user_id, image_url, likes, profiles(nickname)")
       .eq("is_public", true)
-      .order("created_at", { ascending: false })
+      .order(orderCol, { ascending: false })
       .limit(20);
     if (error) throw error;
     if (!posts || posts.length === 0) {
