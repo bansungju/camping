@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
 import {
   initAuth, signInWithOAuth, signOut, getErrorMessage,
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
-  loadRemoteWishlist, saveRemoteWishlist, mergeWishlists
+  loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
+  loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
 } from './supabaseClient.js'
 
 const section = document.getElementById('auth-section')
@@ -104,6 +105,37 @@ const section = document.getElementById('auth-section')
 const localWish = {
   get() { try { return JSON.parse(localStorage.getItem('wish') || '[]') } catch { return [] } },
   set(a) { localStorage.setItem('wish', JSON.stringify(a)) }
+}
+
+// 로컬 기어세트 헬퍼
+const localSets = {
+  get() { try { return JSON.parse(localStorage.getItem('gear_sets') || '[]') } catch { return [] } },
+  set(a) { localStorage.setItem('gear_sets', JSON.stringify(a)) }
+}
+
+// 로그인 직후 1회: 로컬↔원격 기어세트 병합
+async function syncGearSetsOnLogin(userId) {
+  const remote = await loadRemoteGearSets()
+  if (remote === null) return
+  const local  = localSets.get()
+  // 원격에 없는 로컬 세트 → upsert
+  const remoteIds = new Set(remote.map(r => r.id))
+  const localLinked = new Set(local.map(s => s.remoteId).filter(Boolean))
+  // upsert local-only sets
+  const toUpsert = local.filter(s => !s.remoteId)
+  for (const s of toUpsert) {
+    const id = await upsertGearSet(s, userId)
+    if (id) s.remoteId = id
+  }
+  // merge remote sets not yet in local
+  const newFromRemote = remote
+    .filter(r => !localLinked.has(r.id))
+    .map(r => ({ id: r.id.toString(36) || Date.now().toString(36),
+                 remoteId: r.id, title: r.title, style: r.style || '',
+                 items: r.items || [], created_at: r.created_at }))
+  const merged = [...local, ...newFromRemote]
+  localSets.set(merged)
+  if (typeof renderAccount === 'function') renderAccount()
 }
 
 // 로그인 직후 1회: 로컬↔원격 찜 병합 → 양쪽 저장 → 이후 변경은 onWishChange로 원격 반영
@@ -262,9 +294,12 @@ await initAuth(async (user, event) => {
   if (typeof renderAccount === 'function') renderAccount()
   if (event === 'SIGNED_IN') {
     syncWishlistOnLogin()
+    syncGearSetsOnLogin(user.id)
   } else {
     window.onWishChange = (items) => { saveRemoteWishlist(items) }
   }
+  // expose for app.js delete handler
+  window._deleteRemoteGearSet = (remoteId) => deleteRemoteGearSet(remoteId)
 })
 </script>
 </body>

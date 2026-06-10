@@ -77,6 +77,37 @@ export function getErrorMessage(error) {
   return '오류가 발생했습니다. 잠시 후 다시 시도해주세요'
 }
 
+// ── 기어 세트 동기화 ─────────────────────────────────────────────────────
+export async function loadRemoteGearSets() {
+  const { data, error } = await supabase
+    .from('gear_sets')
+    .select('id, title, style, items, completeness, created_at, updated_at')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+  if (error) return null
+  return data || []
+}
+
+export async function upsertGearSet(set, userId) {
+  const payload = {
+    user_id: userId,
+    title: set.title || '새 세트',
+    style: set.style || null,
+    items: set.items || [],
+    completeness: set.items?.length || 0,
+  }
+  if (set.remoteId) {
+    const { error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId)
+    return error ? null : set.remoteId
+  }
+  const { data, error } = await supabase.from('gear_sets').insert(payload).select('id').single()
+  return error ? null : data?.id
+}
+
+export async function deleteRemoteGearSet(remoteId) {
+  return supabase.from('gear_sets').update({ deleted_at: new Date().toISOString() }).eq('id', remoteId)
+}
+
 // ── 전역 에러 핸들러 (네트워크 실패 등) ───────────────────────────────────
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled rejection:', e.reason)
