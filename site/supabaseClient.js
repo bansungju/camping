@@ -36,6 +36,64 @@ export async function getUser() {
   return user
 }
 
+// ── Profile (닉네임은 profiles 테이블이 단일 진실. auth 메타데이터의 실명 사용 금지) ──
+export async function getProfile() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nickname, avatar_url, role, created_at')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (error) { console.error('getProfile', error); return null }
+  // 트리거(handle_new_user)가 만든 행이 복제 지연 등으로 아직 없으면 null
+  return data ? { ...data, email: user.email } : { id: user.id, nickname: null, avatar_url: user.user_metadata?.avatar_url ?? null, email: user.email }
+}
+
+export const NICKNAME_RE = /^[가-힣a-zA-Z0-9_]{2,20}$/
+
+// 닉네임 사용 가능 여부(중복 검사). true=사용가능
+export async function isNicknameAvailable(nickname) {
+  const { count, error } = await supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('nickname', nickname)
+  if (error) { console.error('isNicknameAvailable', error); return null }
+  return count === 0
+}
+
+// 닉네임 설정/변경. 형식·금지어·중복(23505)·쿨다운은 DB 트리거가 최종 검증.
+export async function setNickname(nickname) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('profiles').update({ nickname }).eq('id', user.id)
+}
+
+// ── 찜(위시리스트) 동기화 ──────────────────────────────────────────────────
+export async function loadRemoteWishlist() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await supabase
+    .from('wishlists').select('items').eq('user_id', user.id).maybeSingle()
+  if (error) { console.error('loadRemoteWishlist', error); return null }
+  return Array.isArray(data?.items) ? data.items : []
+}
+
+export async function saveRemoteWishlist(items) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('wishlists')
+    .upsert({ user_id: user.id, items }, { onConflict: 'user_id' })
+}
+
+// 로컬·원격 찜을 key 기준 합집합(원격 항목의 가격/이미지 등은 로컬 최신값 우선)
+export function mergeWishlists(local = [], remote = []) {
+  const byKey = new Map()
+  for (const it of remote) if (it && it.key) byKey.set(it.key, it)
+  for (const it of local)  if (it && it.key) byKey.set(it.key, it)  // 로컬 우선
+  return Array.from(byKey.values()).slice(0, 500)
+}
+
 // ── localStorage (incognito fallback) ────────────────────────────────────
 export const safeLocalStorage = {
   getItem(key) {
@@ -63,6 +121,7 @@ const ERROR_MAP = {
   'content_policy_violation':      '금지된 표현이 포함되어 있습니다',
   'nickname_policy_violation':     '사용할 수 없는 닉네임입니다',
   'nickname_format_invalid':       '닉네임은 2~20자 (한글/영문/숫자/_)만 사용 가능합니다',
+  'nickname_cooldown':             '닉네임은 변경 후 30일이 지나야 다시 바꿀 수 있습니다',
   'account_deleted_cooldown':      '탈퇴 후 30일 이내에는 재가입할 수 없습니다',
   'report_target_deleted':         '이미 삭제된 게시물입니다',
   'unauthorized':                  '권한이 없습니다',
@@ -70,6 +129,8 @@ const ERROR_MAP = {
 
 export function getErrorMessage(error) {
   if (!error) return null
+  // Postgres unique violation(닉네임 중복 등)
+  if (error.code === '23505') return '이미 사용 중인 닉네임입니다'
   const msg = error.message ?? ''
   for (const [key, label] of Object.entries(ERROR_MAP)) {
     if (msg.includes(key)) return label
