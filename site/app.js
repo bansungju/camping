@@ -659,11 +659,15 @@ async function renderCategory() {
     `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`
     + `<button class="share-btn" id="share-btn" aria-label="공유">🔗</button>`;
   document.getElementById("share-btn").onclick = async () => {
+    // 현재 필터 상태가 URL에 반영돼 있으므로 location.href 사용 (필터 공유)
+    const currentUrl = location.href.replace(/^https?:\/\/localhost:\d+/, "https://gear-forest.com");
+    const hasFilter = location.search.length > 1;
+    const shareTarget = hasFilter ? currentUrl : shareUrl;
     if (navigator.share) {
-      try { await navigator.share({ title: shareTitle, url: shareUrl }); return; } catch (_) {}
+      try { await navigator.share({ title: shareTitle, url: shareTarget }); return; } catch (_) {}
     }
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(shareTarget);
       const btn = document.getElementById("share-btn");
       btn.textContent = "✓"; btn.style.color = "var(--accent)";
       setTimeout(() => { btn.textContent = "🔗"; btn.style.color = ""; }, 2000);
