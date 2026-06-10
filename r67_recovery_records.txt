@@ -1,0 +1,12 @@
+# 67R 데이터부족 회수 (프리미엄/수입 집중) — crosssource RECORDS
+# confidence: high=공식측정/일치확인, medium=판매처/경미한오차
+#
+# === 대상 A: 버너 power_output (kcal/h) ===
+{"pcode": "77380283", "src": "SOTO 공식 ST-350 TriTrail 스펙표 발열량 2.6kW(2,200kcal/h), ST-760 사용시 — 제조사 kcal 직접표기, 환산불필요 (soto.shinfuji.co.jp/products/st-350/)", "m": {"power_output": 2200}, "confidence": "high"},
+{"pcode": "7082689", "src": "MSR 공식 PocketRocket 2 출력 8,000 BTU/h → ×0.252 = 2,016 kcal/h (msrgear.com / REI / Cascade Designs). 미니 스토브 키트=PocketRocket 2 본체 동일", "m": {"power_output": 2016}, "confidence": "high"},
+#
+# === 대상 B: 침낭 fill_weight (g) ===
+{"pcode": "74421434", "src": "Sea to Summit 공식 Spark Pro -9C/15F Regular 950FP — down fill 480g. 온도/필파워/사이즈 일치, 다나와 총중량 782g 정확일치 (seatosummit.com/products/spark-pro-down-sleeping-bag)", "m": {"fill_weight": 480}, "confidence": "high"},
+{"pcode": "74421482", "src": "Sea to Summit 공식 Spark Pro -9C/15F Long 950FP — down fill 504g. 온도/필파워/사이즈 일치 (다나와 총 873g vs 공식 861g, +12g 경미차) (seatosummit.com/products/spark-pro-down-sleeping-bag)", "m": {"fill_weight": 504}, "confidence": "medium"},
+{"pcode": "74421632", "src": "Sea to Summit 공식 Alpine -29C/-20F Regular 850FP — down fill 1000g. 온도/필파워/사이즈 일치, 다나와 총 1.43kg 정합 (seatosummit.com/products/alpine-down-sleeping-bag)", "m": {"fill_weight": 1000}, "confidence": "high"},
+{"pcode": "74421617", "src": "Sea to Summit 공식 Alpine -29C/-20F Long 850FP — down fill 1135g. 온도/필파워/사이즈 일치, 다나와 총 1.61kg 정합 (seatosummit.com/products/alpine-down-sleeping-bag)", "m": {"fill_weight": 1135}, "confidence": "high"},

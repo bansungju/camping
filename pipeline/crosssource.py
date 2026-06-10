@@ -127,6 +127,13 @@ RECORDS = [
     {"pcode": "18951833", "src": "Iwatani(야키마루II CB-SLG-2 900kcal/h 공식)", "m": {"power_output": 900}},
     {"pcode": "18932918", "src": "Iwatani(아부리야II CB-ABR-2 2000kcal/h 공식)", "m": {"power_output": 2000}},
     {"pcode": "13092032", "src": "Iwatani(야키마루 CB-SLG-1 900kcal/h 공식)", "m": {"power_output": 900}},
+    # 67R 프리미엄 집중 회수 — 버너(SOTO/MSR) + 침낭(S2S Spark Pro/Alpine 공식 다운량)
+    {"pcode": "77380283", "src": "SOTO(ST-350 2.6kW=2200kcal/h 공식)", "m": {"power_output": 2200}},
+    {"pcode": "7082689", "src": "MSR(PocketRocket 2, 8000BTU×0.252=2016kcal)", "m": {"power_output": 2016}},
+    {"pcode": "74421434", "src": "S2S(Spark Pro -9C Reg 950FP down 480g 공식)", "m": {"fill_weight": 480}},
+    {"pcode": "74421482", "src": "S2S(Spark Pro -9C Long 950FP down 504g 공식)", "m": {"fill_weight": 504}},
+    {"pcode": "74421632", "src": "S2S(Alpine -29C Reg 850FP down 1000g 공식)", "m": {"fill_weight": 1000}},
+    {"pcode": "74421617", "src": "S2S(Alpine -29C Long 850FP down 1135g 공식)", "m": {"fill_weight": 1135}},
 ]
 
 
