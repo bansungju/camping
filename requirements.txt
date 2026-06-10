@@ -1,4 +1,10 @@
-# 기본 파이프라인(harvest/normalize/validate/pipeline)은 표준 라이브러리만 사용 → 설치 불필요.
-# LangGraph 채우기 파이프라인(graph_pipeline.py)만 아래 필요:
+# 파이프라인 (LangGraph)
 langgraph>=0.2
 langchain-core>=0.3
+
+# 백엔드 API (FastAPI + uvicorn)
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+aiosqlite>=0.20.0
+slowapi>=0.1.9
+httpx>=0.27.0
