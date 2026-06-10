@@ -1121,6 +1121,86 @@ function openProduct(m) {
   document.addEventListener("keydown", onKey);
 }
 
+/* ---- 비교 기능 ---- */
+let _cmpSet = [];  // 선택된 모델 인덱스 배열 (최대 3)
+
+function toggleCmp(mi, rows) {
+  const idx = _cmpSet.indexOf(mi);
+  if (idx >= 0) { _cmpSet.splice(idx, 1); }
+  else if (_cmpSet.length < 3) { _cmpSet.push(mi); }
+  else { return; }  // 3개 초과 무시
+  updateCmpBar(rows);
+  document.querySelectorAll("#list .pli-cmp").forEach(btn => {
+    const i = +btn.dataset.mi;
+    btn.classList.toggle("on", _cmpSet.includes(i));
+    btn.setAttribute("aria-pressed", _cmpSet.includes(i));
+  });
+}
+
+function updateCmpBar(rows) {
+  let bar = document.getElementById("cmp-bar");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "cmp-bar";
+    bar.className = "cmp-bar";
+    document.body.appendChild(bar);
+  }
+  if (_cmpSet.length < 2) { bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  bar.innerHTML = `<span class="cmp-bar-label">${_cmpSet.length}개 선택됨</span>
+    <button type="button" class="cmp-bar-btn" id="cmp-go">비교하기 →</button>
+    <button type="button" class="cmp-bar-clear" id="cmp-clear">✕</button>`;
+  bar.querySelector("#cmp-clear").onclick = () => { _cmpSet = []; updateCmpBar(rows); draw(); };
+  bar.querySelector("#cmp-go").onclick = () => openCmpModal(rows);
+}
+
+function openCmpModal(rows) {
+  const d = STATE.data;
+  const metrics = d.metrics.filter(m => m.is_star);
+  const items = _cmpSet.map(i => rows[i]).filter(Boolean);
+  if (items.length < 2) return;
+
+  let modal = document.getElementById("cmp-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "cmp-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+
+  // 각 지표별 최선값 계산
+  const best = {};
+  metrics.forEach(mt => {
+    const vals = items.map(m => m.specs[mt.key]?.value).filter(v => v != null);
+    if (!vals.length) return;
+    best[mt.key] = mt.direction === "lower_better" ? Math.min(...vals) : Math.max(...vals);
+  });
+
+  const colWidth = items.length === 2 ? "46%" : "30%";
+  const cols = items.map(m => {
+    const rows = metrics.map(mt => {
+      const s = m.specs[mt.key];
+      const val = s?.value;
+      const isBest = val != null && best[mt.key] === val;
+      const cell = val != null ? fmtVal(val, mt.unit) : '<span class="nd">—</span>';
+      return `<tr><td style="padding:6px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)">${esc(mt.label)}</td>
+        <td style="padding:6px 8px;font-size:13px;font-weight:${isBest ? "700" : "400"};color:${isBest ? "var(--accent)" : "var(--txt)"};border-bottom:1px solid var(--line)">${cell}${isBest ? " ✓" : ""}</td></tr>`;
+    }).join("");
+    const tint = catTint(d.name), icon = catIcon(d.name);
+    return `<div style="flex:1;min-width:0;max-width:${colWidth}">
+      ${thumbCell(m.img, m.model, tint, icon, "cmp-thumb", "cmp-noimg")}
+      <div style="font-size:11px;color:var(--muted);margin:6px 4px 2px">${esc(m.brand)}</div>
+      <div style="font-size:13px;font-weight:700;margin:0 4px 8px;line-height:1.3">${esc(m.model)}</div>
+      <table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>
+    </div>`;
+  }).join('<div style="width:1px;background:var(--line);flex-shrink:0"></div>');
+
+  modal.innerHTML = `<div class="pmbox" style="max-width:600px;width:100%;padding:20px;overflow-x:auto">
+    <button class="pmx" aria-label="닫기">✕</button>
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">📊 스펙 비교</h2>
+    <div style="display:flex;gap:12px;align-items:flex-start">${cols}</div>
+    <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">✓ 표시: 해당 지표 최선값</p>
+  </div>`;
+  modal.classList.add("on");
+  modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+}
+
 function draw() {
   const d = STATE.data, star = d.metrics.filter(m => m.is_star);
   renderActiveFilters();
@@ -1164,6 +1244,7 @@ function draw() {
         `${s.stars != null ? " " + stars(s.stars) : ""}${badge}</span>`;
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
+    const inCmp = _cmpSet.includes(i);
     return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
@@ -1176,6 +1257,7 @@ function draw() {
       </div>
       <div class="pli-side">
         <div class="pli-price">${priceRange(m.price_min, m.price_max)}</div>
+        <button type="button" class="pli-cmp${inCmp ? " on" : ""}" data-mi="${i}" aria-label="비교에 추가" aria-pressed="${inCmp}" title="비교에 추가">⚖</button>
         <span class="pli-chev" aria-hidden="true">›</span>
       </div></div>`;
   }).join("");
@@ -1199,6 +1281,10 @@ function draw() {
   document.querySelectorAll("#list .pli-setadd").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     openSetModal(setItem(rows[+btn.dataset.mi], STATE.slug));
+  });
+  document.querySelectorAll("#list .pli-cmp").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    toggleCmp(+btn.dataset.mi, rows);
   });
   const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
