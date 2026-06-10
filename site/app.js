@@ -303,6 +303,7 @@ async function renderHub() {
   }
 
   renderRecent();   // 최근 본 상품(있으면)
+  renderHotSection(m.categories);   // 이번 주 인기
 
   // 캠핑 스타일 추천 진입
   const pel = document.getElementById("personas");
@@ -1179,6 +1180,45 @@ async function renderRecommend() {
 }
 
 /* ---------- 최근 본 상품(홈, 가로 스크롤) ---------- */
+const HOT_FALLBACK = [
+  { slug: "backpacking-tent", name: "백패킹텐트" },
+  { slug: "sleeping-bag",     name: "침낭" },
+  { slug: "burner",           name: "버너" },
+  { slug: "lantern",          name: "랜턴" },
+];
+
+async function renderHotSection(categories) {
+  const sec = document.getElementById("hot-section");
+  const listEl = document.getElementById("hot-list");
+  if (!sec || !listEl) return;
+
+  let hotSlugs = HOT_FALLBACK;
+  try {
+    const { supabase } = await import("./supabaseClient.js");
+    const since = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+    const { data } = await supabase
+      .from("click_events")
+      .select("slug")
+      .gte("created_at", since);
+    if (data && data.length >= 3) {
+      const counts = {};
+      data.forEach(r => { counts[r.slug] = (counts[r.slug] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+      const catMap = Object.fromEntries((categories || []).map(c => [c.slug, c.name]));
+      hotSlugs = sorted.map(([slug, cnt]) => ({ slug, name: catMap[slug] || slug, cnt }));
+    }
+  } catch (_) {}
+
+  listEl.innerHTML = hotSlugs.map(h =>
+    `<a class="hot-chip" href="category/${h.slug}">
+      <span class="hot-icon">${catIcon(h.name || h.slug)}</span>
+      <span class="hot-name">${esc(h.name || h.slug)}</span>
+      ${h.cnt ? `<span class="hot-cnt">${h.cnt}회</span>` : ""}
+    </a>`
+  ).join("");
+  sec.style.display = "block";
+}
+
 function renderRecent() {
   const el = document.getElementById("recent");
   if (!el) return;
