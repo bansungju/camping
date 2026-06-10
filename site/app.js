@@ -398,29 +398,45 @@ function buildFilters(d, star) {
       caps.map(c => `<button class="ftag" data-cap="${c}">${c}인</button>`).join("") + `</div>`);
   }
 
-  // 가격 범위
+  // 가격 범위 — 듀얼 슬라이더
   const prices = num(ms.map(m => m.price_min));
   if (prices.length) {
     const lo = Math.min(...prices), hi = Math.max(...prices);
-    parts.push(`<div class="fgrp"><span class="flab">가격</span>
-      <input class="frng" type="number" data-rng="price" data-b="min" placeholder="${lo.toLocaleString()}" inputmode="numeric">
-      <span class="rsep">~</span>
-      <input class="frng" type="number" data-rng="price" data-b="max" placeholder="${hi.toLocaleString()}" inputmode="numeric">
-      <span class="runit">원</span></div>`);
+    const step = Math.max(1000, Math.round((hi - lo) / 100 / 1000) * 1000);
+    parts.push(`<div class="fgrp fgrp-slider"><span class="flab">가격</span>
+      <div class="dslider" data-rng="price" data-lo="${lo}" data-hi="${hi}" data-step="${step}" data-unit="price">
+        <div class="dslider-track"><div class="dslider-fill"></div></div>
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max">
+        <div class="dslider-labels">
+          <span class="dsl-val" data-b="min">${lo.toLocaleString()}원</span>
+          <span class="dsl-val" data-b="max">${hi.toLocaleString()}원</span>
+        </div>
+      </div></div>`);
   }
 
-  // 스펙 범위 (각 ★지표) — 무게는 kg환산 안내
+  // 스펙 범위 (각 ★지표) — 무게는 kg 단위 슬라이더
   star.forEach(m => {
     const vals = num(ms.map(x => x.specs[m.key] && x.specs[m.key].value));
     if (vals.length < 2) return;
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    const u = m.unit || "";
-    const hint = (u === "g") ? "g(1000↑kg)" : u;
-    parts.push(`<div class="fgrp"><span class="flab">${m.label}</span>
-      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="min" placeholder="${+lo.toFixed(1)}" inputmode="decimal">
-      <span class="rsep">~</span>
-      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="max" placeholder="${+hi.toFixed(1)}" inputmode="decimal">
-      <span class="runit">${hint}</span></div>`);
+    const isWeight = (m.unit || "") === "g";
+    const rawLo = Math.min(...vals), rawHi = Math.max(...vals);
+    const slo = isWeight ? rawLo / 1000 : rawLo;
+    const shi = isWeight ? rawHi / 1000 : rawHi;
+    const displayUnit = isWeight ? "kg" : (m.unit || "");
+    const step = isWeight ? 0.1 : Math.max(0.1, +((shi - slo) / 100).toFixed(2));
+    const fmtVal = v => isWeight ? (+v).toFixed(1) + "kg" : (+v).toFixed(1) + displayUnit;
+    parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${m.label}</span>
+      <div class="dslider" data-rng="${m.key}" data-lo="${slo}" data-hi="${shi}" data-step="${step}"
+           data-unit="${displayUnit}" data-isweight="${isWeight ? 1 : 0}">
+        <div class="dslider-track"><div class="dslider-fill"></div></div>
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${slo}" data-b="min">
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${shi}" data-b="max">
+        <div class="dslider-labels">
+          <span class="dsl-val" data-b="min">${fmtVal(slo)}</span>
+          <span class="dsl-val" data-b="max">${fmtVal(shi)}</span>
+        </div>
+      </div></div>`);
   });
 
   // 브랜드 멀티선택 + 전체 드롭다운
@@ -473,13 +489,48 @@ function buildFilters(d, star) {
   // 브랜드 드롭다운(추가)
   const bsel = bar.querySelector("[data-brandsel]");
   if (bsel) bsel.onchange = e => { if (e.target.value) { STATE.brands.add(e.target.value); e.target.value = ""; draw(); } };
-  // 범위 입력
-  bar.querySelectorAll(".frng").forEach(inp => inp.oninput = () => {
-    const key = inp.dataset.rng, b = inp.dataset.b, v = inp.value.trim();
-    STATE.range[key] = STATE.range[key] || {};
-    if (v === "") delete STATE.range[key][b]; else STATE.range[key][b] = parseFloat(v);
-    if (!Object.keys(STATE.range[key]).length) delete STATE.range[key];
-    draw();
+  // 듀얼 슬라이더 이벤트
+  bar.querySelectorAll(".dslider").forEach(sl => {
+    const key = sl.dataset.rng;
+    const isWeight = sl.dataset.isweight === "1";
+    const isPrice = sl.dataset.unit === "price";
+    const totalLo = parseFloat(sl.dataset.lo), totalHi = parseFloat(sl.dataset.hi);
+    const minInp = sl.querySelector('[data-b="min"]'), maxInp = sl.querySelector('[data-b="max"]');
+    const minLbl = sl.querySelector('.dsl-val[data-b="min"]'), maxLbl = sl.querySelector('.dsl-val[data-b="max"]');
+    const fill = sl.querySelector(".dslider-fill");
+    const fmtLabel = v => {
+      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isWeight) return (+v).toFixed(1) + "kg";
+      return (+v).toFixed(1) + (sl.dataset.unit || "");
+    };
+    const updateFill = () => {
+      const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
+      const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+      fill.style.left = pct(lo) + "%";
+      fill.style.width = (pct(hi) - pct(lo)) + "%";
+    };
+    const toStateVal = v => isWeight ? parseFloat(v) * 1000 : parseFloat(v);
+    const applyToState = () => {
+      const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
+      if (lo <= totalLo && hi >= totalHi) { delete STATE.range[key]; }
+      else {
+        STATE.range[key] = {};
+        if (lo > totalLo) STATE.range[key].min = toStateVal(lo);
+        if (hi < totalHi) STATE.range[key].max = toStateVal(hi);
+      }
+      draw();
+    };
+    minInp.oninput = () => {
+      if (parseFloat(minInp.value) > parseFloat(maxInp.value)) minInp.value = maxInp.value;
+      minLbl.textContent = fmtLabel(minInp.value);
+      updateFill(); applyToState();
+    };
+    maxInp.oninput = () => {
+      if (parseFloat(maxInp.value) < parseFloat(minInp.value)) maxInp.value = minInp.value;
+      maxLbl.textContent = fmtLabel(maxInp.value);
+      updateFill(); applyToState();
+    };
+    updateFill();
   });
   // 정렬 적용(셀렉트·빠른칩 공용) — 셀렉트 값도 동기화
   const ssel = bar.querySelector("[data-sort]");
@@ -541,9 +592,28 @@ function syncFilterUI() {
   const bar = document.getElementById("filters");
   bar.querySelectorAll("[data-cap]").forEach(b => b.classList.toggle("on", b.dataset.cap === STATE.cap));
   bar.querySelectorAll("[data-brand]").forEach(b => b.classList.toggle("on", STATE.brands.has(b.dataset.brand)));
-  bar.querySelectorAll(".frng").forEach(inp => {
-    const r = STATE.range[inp.dataset.rng];
-    inp.value = (r && r[inp.dataset.b] != null) ? r[inp.dataset.b] : "";
+  bar.querySelectorAll(".dslider").forEach(sl => {
+    const key = sl.dataset.rng;
+    const isWeight = sl.dataset.isweight === "1";
+    const isPrice = sl.dataset.unit === "price";
+    const totalLo = parseFloat(sl.dataset.lo), totalHi = parseFloat(sl.dataset.hi);
+    const r = STATE.range[key];
+    const minInp = sl.querySelector('[data-b="min"]'), maxInp = sl.querySelector('[data-b="max"]');
+    const minLbl = sl.querySelector('.dsl-val[data-b="min"]'), maxLbl = sl.querySelector('.dsl-val[data-b="max"]');
+    const fill = sl.querySelector(".dslider-fill");
+    const toDisplay = v => isWeight ? v / 1000 : v;
+    const fmtLabel = v => {
+      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isWeight) return (+v).toFixed(1) + "kg";
+      return (+v).toFixed(1) + (sl.dataset.unit || "");
+    };
+    const loVal = (r && r.min != null) ? toDisplay(r.min) : totalLo;
+    const hiVal = (r && r.max != null) ? toDisplay(r.max) : totalHi;
+    minInp.value = loVal; maxInp.value = hiVal;
+    if (minLbl) minLbl.textContent = fmtLabel(loVal);
+    if (maxLbl) maxLbl.textContent = fmtLabel(hiVal);
+    const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+    if (fill) { fill.style.left = pct(loVal) + "%"; fill.style.width = (pct(hiVal) - pct(loVal)) + "%"; }
   });
   const qx = bar.querySelector("[data-qx]"); if (qx) qx.checked = STATE.qExclude;
   // 정렬 셀렉트도 복원상태 반영(URL→컨트롤). 기본 주력지표 정렬이면 '기본' 표시
