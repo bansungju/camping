@@ -14,13 +14,22 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 })();
 const OPS = localStorage.getItem("ops") === "1";
 
-/* 카테고리 아이콘(이미지 수집 전 단계: 이모지 타일) */
+/* 카테고리 아이콘(이미지 수집 전 단계: 이모지 타일). 중복 없이 1:1 */
 const CAT_ICON = {
-  "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "기타텐트": "⛺", "침낭": "🛌", "매트": "🧘",
-  "의자": "🪑", "랜턴": "🔦", "아이스박스": "🧊", "버너": "🔥", "타프": "⛱️",
-  "테이블": "🪵", "야전침대": "🛏️", "코펠": "🍳", "웨건": "🛒", "화로대": "🔥", "파워뱅크": "🔋",
+  "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "기타텐트": "🎪", "침낭": "🛌", "매트": "🧘",
+  "의자": "🪑", "랜턴": "🔦", "아이스박스": "🧊", "버너": "🍳", "타프": "⛱️",
+  "테이블": "🪵", "야전침대": "🛏️", "코펠": "🥘", "웨건": "🛒", "화로대": "🔥", "파워뱅크": "🔋",
 };
 const catIcon = name => CAT_ICON[name] || "🏕️";
+/* 카테고리별 옅은 배경 톤(아이콘 타일 — 단색 회색 대신 생동감) */
+const CAT_TINT = {
+  "백패킹텐트": "#eaf4ec", "오토캠핑텐트": "#eaf4ec", "기타텐트": "#eaf4ec", "타프": "#e6f4f7",
+  "침낭": "#eef0fb", "매트": "#eef0fb", "야전침대": "#eef0fb", "아이스박스": "#e6f4f7",
+  "의자": "#f6efe7", "테이블": "#f6efe7", "웨건": "#f6efe7",
+  "버너": "#fdeee7", "화로대": "#fdeee7", "코펠": "#fdeee7",
+  "랜턴": "#fdf6e0", "파워뱅크": "#fdf6e0",
+};
+const catTint = name => CAT_TINT[name] || "var(--card2)";
 
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
@@ -93,7 +102,7 @@ async function renderHub() {
   const grid = document.getElementById("grid");
   grid.innerHTML = m.categories.map(c => `
     <a class="card" href="category.html?cat=${c.slug}">
-      <div class="icon">${catIcon(c.name)}</div>
+      <div class="icon" style="background:${catTint(c.name)}">${catIcon(c.name)}</div>
       <div class="ct"><h3>${c.name}</h3>${gradeBadge(c.grade)}</div>
       <div class="meta">${c.count.toLocaleString()}개 모델</div>
       <div class="metrics">
@@ -199,7 +208,7 @@ async function renderCategory() {
   document.getElementById("crumbName").textContent = d.name;
   document.title = `${d.name} 비교 — 캠핑기어 정직비교`;
   document.getElementById("title").innerHTML =
-    `<span class="titleicon">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`;
+    `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`;
   document.getElementById("lead").innerHTML =
     `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
