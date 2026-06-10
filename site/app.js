@@ -361,6 +361,25 @@ async function setupHomeSearch() {
   inp.onfocus = run;
 }
 
+/* ---------- 캠핑 스타일 칩 상수 ---------- */
+const STYLE_META = [
+  { key:"backpacking", label:"백패킹",  icon:"🏕" },
+  { key:"car-camping", label:"오토캠핑",icon:"🚗" },
+  { key:"glamping",    label:"글램핑",  icon:"✨" },
+  { key:"winter",      label:"겨울",    icon:"❄" },
+  { key:"beach",       label:"해변",    icon:"🏖" },
+  { key:"family",      label:"가족",    icon:"👨‍👩‍👧" },
+];
+// 스타일별 "이 스펙이 중요해요" 설명 (재정렬보다 설명 레이어가 먼저)
+const STYLE_TIPS = {
+  backpacking: { label:"백패킹", keys:["weight_min"], tip:"가벼울수록 좋아요 — 무게를 최우선으로 확인하세요." },
+  "car-camping":{ label:"오토캠핑", keys:["floor_area","max_load"], tip:"공간이 넓을수록 쾌적해요 — 면적·적재하중을 확인하세요." },
+  glamping:    { label:"글램핑", keys:["floor_area","brightness"], tip:"넓고 밝은 환경이 핵심 — 면적·조도를 확인하세요." },
+  winter:      { label:"겨울", keys:["comfort_temp","water_head","r_value"], tip:"보온·방수·단열이 생명 — 온도·내수압·R값을 확인하세요." },
+  beach:       { label:"해변", keys:["water_head","floor_area"], tip:"방수와 통풍이 중요 — 내수압·면적을 확인하세요." },
+  family:      { label:"가족", keys:["floor_area","max_load","capacity_l"], tip:"용량과 공간이 핵심 — 면적·하중·용량을 확인하세요." },
+};
+
 /* ---------- 카테고리 비교표 + 필터 ---------- */
 let STATE = {};
 
@@ -384,6 +403,7 @@ function serializeState() {
     p.set("sort", STATE.sortKey); p.set("sa", STATE.sortAsc ? "1" : "0");
   }
   if (STATE.qExclude) p.set("qx", "1");
+  if (STATE.campStyle) p.set("style", STATE.campStyle);
   history.replaceState(null, "", "?" + p.toString());
 }
 function restoreState(params) {
@@ -404,6 +424,48 @@ function restoreState(params) {
     STATE.data.metrics.some(m => m.is_star && "spec:" + m.key === srt));
   if (validSort) { STATE.sortKey = srt; STATE.sortAsc = params.get("sa") === "1"; }
   STATE.qExclude = params.get("qx") === "1";
+  const sty = params.get("style");
+  if (sty && STYLE_META.some(s => s.key === sty)) STATE.campStyle = sty;
+}
+
+function renderStyleChips(d) {
+  const el = document.getElementById("stylechips");
+  if (!el) return;
+  // 이 카테고리 데이터에 어떤 spec_key가 실제 있는지 확인
+  const availKeys = new Set(d.models.flatMap(m => Object.keys(m.specs || {})));
+  // 각 스타일이 이 카테고리와 관련 있으면 표시 (tip의 keys 중 1개라도 있으면)
+  const relevant = STYLE_META.filter(s => {
+    const tip = STYLE_TIPS[s.key];
+    return !tip || tip.keys.some(k => availKeys.has(k));
+  });
+  if (!relevant.length) { el.style.display = "none"; return; }
+  el.innerHTML = `<div class="sc-row">` +
+    relevant.map(s =>
+      `<button class="sc-chip${STATE.campStyle === s.key ? " on" : ""}" data-style="${s.key}">${s.icon} ${s.label}</button>`
+    ).join("") +
+    `</div><div class="sc-tip" id="sc-tip-text">${STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : ""}</div>`;
+  el.style.display = "block";
+  el.querySelectorAll(".sc-chip").forEach(btn => btn.onclick = () => {
+    const sk = btn.dataset.style;
+    STATE.campStyle = STATE.campStyle === sk ? "" : sk;
+    el.querySelectorAll(".sc-chip").forEach(b => b.classList.toggle("on", b.dataset.style === STATE.campStyle));
+    const tipEl = document.getElementById("sc-tip-text");
+    if (tipEl) tipEl.textContent = STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : "";
+    updateLeadText(d);
+    serializeState();
+    draw();
+  });
+}
+
+function updateLeadText(d) {
+  const leadEl = document.getElementById("lead");
+  if (!leadEl) return;
+  if (STATE.campStyle) {
+    const sm = STYLE_META.find(s => s.key === STATE.campStyle);
+    leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · <span style="color:var(--accent);font-weight:700">${sm.icon} ${sm.label} 기준</span> — 관련 스펙 슬라이더를 활용해보세요`;
+  } else {
+    leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
+  }
 }
 
 async function renderCategory() {
@@ -414,7 +476,7 @@ async function renderCategory() {
   catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
   STATE = { data: d, slug: slug, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
-            sortKey: null, sortAsc: false,
+            sortKey: null, sortAsc: false, campStyle: "",
             dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])),
             unit: Object.fromEntries(d.metrics.map(m => [m.key, m.unit])) };
   renderCatNav(slug);
@@ -437,6 +499,7 @@ async function renderCategory() {
   } else { note.style.display = "none"; }
 
   buildFilters(d, star);
+  renderStyleChips(d);
   STATE.hasCap = d.models.some(m => m.capacity != null);
   STATE.sortKey = "spec:" + (star[0] && star[0].key);
   STATE.sortAsc = defaultAsc(STATE.sortKey);   // 주력지표 '좋은 것 먼저'
