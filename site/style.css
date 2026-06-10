@@ -309,6 +309,25 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease,color .12s ease}
 .pli-wish:hover{color:#e5484d;transform:scale(1.12)}
 .pli-wish.on{color:#e5484d}
+.pli-setadd{position:absolute;top:5px;left:37px;z-index:2;width:28px;height:28px;border:0;border-radius:50%;
+  background:rgba(255,255,255,.85);color:var(--accent);font-size:16px;line-height:1;cursor:pointer;padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
+.pli-setadd:hover{transform:scale(1.12);background:var(--accent);color:#fff}
+/* 세트 선택 모달 */
+.sm-box{padding:20px;max-width:340px;width:100%}
+.sm-head{margin-bottom:14px}
+.sm-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.sm-item{font-size:12px;color:var(--muted)}
+.sm-list{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;margin-bottom:14px}
+.sm-set-btn{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--line);
+  border-radius:10px;background:var(--card2);cursor:pointer;text-align:left}
+.sm-set-btn:hover{border-color:var(--accent);background:var(--card)}
+.sm-set-name{font-size:14px;font-weight:600}
+.sm-set-cnt{font-size:12px;color:var(--muted)}
+.sm-empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 0}
+.sm-new{display:flex;gap:8px}
+.sm-input{flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--txt)}
+.sm-create{padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .pmwish{position:absolute;top:10px;left:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;
   background:rgba(255,255,255,.9);color:var(--faint);font-size:18px;line-height:1;cursor:pointer;
   box-shadow:0 1px 4px rgba(0,0,0,.18)}

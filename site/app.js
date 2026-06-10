@@ -169,6 +169,70 @@ function wishItem(m, slug) {
            cap: m.capacity, s: slug, p: m.price_min, img: m.img };
 }
 
+/* ── 장비 세트 빌더 — localStorage 저장 (로그인 없이도 동작) ──
+   세트 구조: {id, title, style, items:[{pcode,b,m,cap,s,p,img,weight_g,qty}], created_at} */
+function getSets() { try { return JSON.parse(localStorage.getItem("gear_sets") || "[]"); } catch (e) { return []; } }
+function saveSets(a) { localStorage.setItem("gear_sets", JSON.stringify(a)); }
+function newSet(title) {
+  const s = { id: Date.now().toString(36), title, style: "", items: [], created_at: new Date().toISOString() };
+  const a = getSets(); a.unshift(s); saveSets(a); return s;
+}
+function addToSet(setId, item) {
+  const a = getSets(), s = a.find(x => x.id === setId);
+  if (!s) return;
+  const i = s.items.findIndex(x => x.pcode === item.pcode);
+  if (i >= 0) s.items[i].qty = (s.items[i].qty || 1) + 1;
+  else s.items.push({ ...item, qty: 1 });
+  saveSets(a);
+}
+function setItem(m, slug) {
+  return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
+           cap: m.capacity, s: slug, p: m.price_min, img: m.img,
+           weight_g: m.specs?.weight?.value ?? null };
+}
+
+function openSetModal(item) {
+  let modal = document.getElementById("set-modal");
+  if (!modal) {
+    modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal";
+    document.body.appendChild(modal);
+  }
+  const sets = getSets();
+  const setListHtml = sets.length
+    ? sets.map(s => `<button class="sm-set-btn" data-sid="${s.id}">
+        <span class="sm-set-name">${esc(s.title)}</span>
+        <span class="sm-set-cnt">${s.items.length}개 장비</span></button>`).join("")
+    : `<div class="sm-empty">저장된 세트가 없어요</div>`;
+  modal.innerHTML = `<div class="pmbox sm-box" role="dialog" aria-modal="true">
+    <button class="pmx" aria-label="닫기">✕</button>
+    <div class="sm-head">
+      <div class="sm-title">세트에 추가</div>
+      <div class="sm-item">${esc(item.b)} ${esc(item.m)}</div>
+    </div>
+    <div class="sm-list">${setListHtml}</div>
+    <div class="sm-new">
+      <input class="sm-input" type="text" placeholder="새 세트 이름 입력" maxlength="40">
+      <button class="sm-create">만들기</button>
+    </div></div>`;
+  modal.classList.add("on");
+  const close = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").onclick = close;
+  modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
+    addToSet(btn.dataset.sid, item);
+    btn.textContent = "✓ 추가됨"; btn.disabled = true;
+    setTimeout(close, 700);
+  });
+  const inp = modal.querySelector(".sm-input");
+  modal.querySelector(".sm-create").onclick = () => {
+    const t = inp.value.trim(); if (!t) { inp.focus(); return; }
+    const s = newSet(t); addToSet(s.id, item);
+    close();
+  };
+  inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
+  modal.querySelector(".pmx").focus();
+}
+
 /* 최근 본 상품 — 상세 모달 열 때 기록. 최신순, 중복 제거, 최대 12개. */
 function getRecent() { try { return JSON.parse(localStorage.getItem("recent") || "[]"); } catch (e) { return []; } }
 function pushRecent(item) {
@@ -774,6 +838,7 @@ function draw() {
     return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+      <button type="button" class="pli-setadd" data-mi="${i}" aria-label="세트에 추가">⊕</button>
       ${thumbCell(m.img, m.model, tint, icon)}
       <div class="pli-info">
         <div class="pli-top">${top}</div>
@@ -800,6 +865,11 @@ function draw() {
     const added = toggleWish(wishItem(rows[+btn.dataset.mi], STATE.slug));
     btn.classList.toggle("on", added); btn.textContent = added ? "♥" : "♡";
     btn.setAttribute("aria-pressed", added);
+  });
+  // 세트에 추가 버튼
+  document.querySelectorAll("#list .pli-setadd").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    openSetModal(setItem(rows[+btn.dataset.mi], STATE.slug));
   });
   const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
