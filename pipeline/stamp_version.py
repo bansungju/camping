@@ -15,10 +15,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(os.path.dirname(HERE), "site")
 
 
+def _hash(fname):
+    with open(os.path.join(SITE, fname), "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()[:8]
+
+
 def main():
-    appjs = os.path.join(SITE, "app.js")
-    with open(appjs, "rb") as f:
-        h = hashlib.md5(f.read()).hexdigest()[:8]
+    # 72R: app.js뿐 아니라 style.css도 콘텐츠해시 스탬프(둘 중 하나만 하면 JS새/CSS헌 깨짐)
+    hj, hc = _hash("app.js"), _hash("style.css")
     changed = []
     for name in os.listdir(SITE):
         if not name.endswith(".html"):
@@ -26,12 +30,13 @@ def main():
         p = os.path.join(SITE, name)
         with open(p, encoding="utf-8") as f:
             html = f.read()
-        new = re.sub(r'src="app\.js(\?v=[^"]*)?"', f'src="app.js?v={h}"', html)
+        new = re.sub(r'src="app\.js(\?v=[^"]*)?"', f'src="app.js?v={hj}"', html)
+        new = re.sub(r'href="style\.css(\?v=[^"]*)?"', f'href="style.css?v={hc}"', new)
         if new != html:
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new)
             changed.append(name)
-    print(f"app.js 버전 스탬프 v={h} → {', '.join(changed) if changed else '변경없음(이미 최신)'}")
+    print(f"버전 스탬프 app.js={hj} style.css={hc} → {', '.join(changed) if changed else '변경없음'}")
 
 
 if __name__ == "__main__":

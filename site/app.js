@@ -360,11 +360,16 @@ function buildHead(d, star) {
   cols.push(["price_min", "가격"]);
   star.forEach(m => cols.push(["spec:" + m.key, `${m.label}${m.unit ? `(${m.unit})` : ""}`]));
   STATE.cols = cols; STATE.hasCap = hasCap;
-  document.getElementById("head").innerHTML = cols.map(([k, lab]) => `<th data-k="${k}">${lab}</th>`).join("");
-  document.querySelectorAll("#head th").forEach(th => th.onclick = () => {
-    if (STATE.sortKey === th.dataset.k) STATE.sortAsc = !STATE.sortAsc;
-    else { STATE.sortKey = th.dataset.k; STATE.sortAsc = defaultAsc(th.dataset.k); }
+  document.getElementById("head").innerHTML = cols.map(([k, lab]) =>
+    `<th data-k="${k}" tabindex="0" role="columnheader" aria-sort="none" title="클릭/Enter=정렬">${lab}</th>`).join("");
+  const sortBy = k => {
+    if (STATE.sortKey === k) STATE.sortAsc = !STATE.sortAsc;
+    else { STATE.sortKey = k; STATE.sortAsc = defaultAsc(k); }
     draw();
+  };
+  document.querySelectorAll("#head th").forEach(th => {
+    th.onclick = () => sortBy(th.dataset.k);
+    th.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sortBy(th.dataset.k); } };
   });
 }
 
@@ -451,8 +456,10 @@ function draw() {
   });
 
   document.querySelectorAll("#head th").forEach(th => {
-    th.classList.toggle("sorted", th.dataset.k === k);
-    th.classList.toggle("asc", th.dataset.k === k && asc);
+    const on = th.dataset.k === k;
+    th.classList.toggle("sorted", on);
+    th.classList.toggle("asc", on && asc);
+    th.setAttribute("aria-sort", on ? (asc ? "ascending" : "descending") : "none");
   });
 
   const body = rows.map(m => {
