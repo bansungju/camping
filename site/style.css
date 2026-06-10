@@ -357,6 +357,16 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .lf-err{color:#e53;font-size:13px;padding:8px 12px;background:#fff0f0;border-radius:8px;margin-bottom:10px}
 .lf-submit{width:100%;padding:13px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
 .lf-submit:disabled{opacity:.5;cursor:not-allowed}
+/* 로그 피드 카드 */
+.log-card{padding:14px 0;border-bottom:1px solid var(--border)}
+.log-card:last-child{border-bottom:none}
+.log-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.log-nick{font-size:12px;font-weight:600;color:var(--accent)}
+.log-date{font-size:11px;color:var(--muted)}
+.log-title{font-size:15px;font-weight:700;color:var(--fg);margin-bottom:4px}
+.log-preview{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.log-tags{display:flex;flex-wrap:wrap;gap:4px}
+.log-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--chip-bg);color:var(--muted)}
 /* 캠핑 스타일 칩 */
 #stylechips{margin:8px 0 4px}
 .sc-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
