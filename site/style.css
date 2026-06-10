@@ -153,7 +153,13 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   header.top .sub{display:none}          /* 헤더 1줄 유지 */
   header.top{position:static}            /* 모바일선 sticky 해제(겹침 방지) */
   .catnav-wrap{position:static;top:auto}
-  th{position:static}                    /* 3중 sticky 충돌 제거 */
+  th{position:static}                    /* 세로 sticky 해제(3중 겹침 방지) */
+  /* 가로 sticky: 첫 두 컬럼(브랜드·모델)을 좌측 고정 → 스펙 가로스크롤시 행 식별 가능 */
+  th:nth-child(1),td.brand{position:sticky;left:0;z-index:3;background:var(--card2);
+    min-width:62px;max-width:62px;overflow:hidden;text-overflow:ellipsis}
+  th:nth-child(2),td.model{position:sticky;left:62px;z-index:3;background:var(--bg);min-width:130px}
+  tbody tr:hover td.brand{background:var(--card2)}
+  tbody tr:hover td.model{background:var(--card)}
   .wrap{padding:0 14px}
   h1{font-size:22px}
   h2.sec{font-size:15px}
