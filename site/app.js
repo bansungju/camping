@@ -1271,18 +1271,46 @@ function renderRecent() {
 }
 
 /* ---------- 내 정보 — Progressive Disclosure ---------- */
+function _accActiveTab() {
+  const t = sessionStorage.getItem("acc-tab") || "wish";
+  return t;
+}
+function _accSetTab(tab) {
+  sessionStorage.setItem("acc-tab", tab);
+  document.querySelectorAll(".acc-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  ["wish-section", "sets-section", "logs-section"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const map = { "wish-section": "wish", "sets-section": "sets", "logs-section": "logs" };
+    el.style.display = (map[id] === tab && el._accHasContent) ? "block" : "none";
+  });
+}
 function renderAccount() {
   if (!document.getElementById("wishlist")) return;
   const wishes = getWish();
   const sets = getSets();
+  const isLoggedIn = !!window._accUser;
   const hasAny = wishes.length || sets.length;
 
-  // Empty State vs 섹션 앵커
   const emptyEl = document.getElementById("acc-empty");
   const navEl = document.getElementById("acc-nav");
-  if (emptyEl) emptyEl.style.display = hasAny ? "none" : "block";
+  const tabsEl = document.getElementById("acc-tabs");
+
+  // 탭 바는 로그인 상태에서만 표시
+  if (tabsEl) {
+    if (isLoggedIn) {
+      tabsEl.style.display = "flex";
+      tabsEl.querySelectorAll(".acc-tab").forEach(b => {
+        b.onclick = () => { _accSetTab(b.dataset.tab); renderAccount(); };
+      });
+    } else {
+      tabsEl.style.display = "none";
+    }
+  }
+
+  // 비로그인: 앵커 링크 fallback
   if (navEl) {
-    if (hasAny) {
+    if (!isLoggedIn && hasAny) {
       const links = [];
       if (wishes.length) links.push(`<a class="acc-anchor" href="#sec-wish">찜 ${wishes.length}</a>`);
       if (sets.length) links.push(`<a class="acc-anchor" href="#sec-sets">세트 ${sets.length}</a>`);
@@ -1293,41 +1321,50 @@ function renderAccount() {
     }
   }
 
+  if (emptyEl) emptyEl.style.display = (!isLoggedIn && !hasAny) ? "block" : "none";
+
+  const activeTab = _accActiveTab();
+
   // 내 로그 섹션 (로그인 사용자만)
   const logsSec = document.getElementById("logs-section");
   const myLogsList = document.getElementById("my-logs-list");
   if (logsSec && myLogsList) {
     const userId = window._accUser?.id;
     if (userId) {
-      logsSec.style.display = "block";
-      myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-      import("./supabaseClient.js").then(async ({ supabase }) => {
-        const { data: posts } = await supabase
-          .from("posts")
-          .select("id, title, content, tags, created_at, is_public")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        const logsCnt = document.getElementById("logscount");
-        if (!posts || posts.length === 0) {
-          logsSec.style.display = "none";
-          if (emptyEl && !hasAny) emptyEl.style.display = "block";
-          return;
-        }
-        if (logsCnt) logsCnt.textContent = `${posts.length}개`;
-        myLogsList.innerHTML = posts.map(p => {
-          const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-          const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
-          const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
-          return `<div class="my-log-card">
-            <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
-            <div class="log-title">${esc(p.title)}</div>
-            <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
-            ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
-          </div>`;
-        }).join("");
-      }).catch(() => { logsSec.style.display = "none"; });
+      logsSec._accHasContent = true;
+      logsSec.style.display = (isLoggedIn && activeTab === "logs") ? "block" : "none";
+      if (!myLogsList.dataset.loaded) {
+        myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
+        import("./supabaseClient.js").then(async ({ supabase }) => {
+          const { data: posts } = await supabase
+            .from("posts")
+            .select("id, title, content, tags, created_at, is_public")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(10);
+          const logsCnt = document.getElementById("logscount");
+          if (!posts || posts.length === 0) {
+            logsSec._accHasContent = false;
+            logsSec.style.display = "none";
+            return;
+          }
+          myLogsList.dataset.loaded = "1";
+          if (logsCnt) logsCnt.textContent = `${posts.length}개`;
+          myLogsList.innerHTML = posts.map(p => {
+            const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+            const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
+            const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
+            return `<div class="my-log-card">
+              <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
+              <div class="log-title">${esc(p.title)}</div>
+              <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
+              ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
+            </div>`;
+          }).join("");
+        }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; });
+      }
     } else {
+      logsSec._accHasContent = false;
       logsSec.style.display = "none";
     }
   }
@@ -1336,7 +1373,10 @@ function renderAccount() {
   const wishSec = document.getElementById("wish-section");
   const wishEl = document.getElementById("wishlist");
   const cnt = document.getElementById("wishcount");
-  if (wishSec) wishSec.style.display = wishes.length ? "block" : "none";
+  if (wishSec) {
+    wishSec._accHasContent = wishes.length > 0;
+    wishSec.style.display = (wishes.length && (!isLoggedIn || activeTab === "wish")) ? "block" : "none";
+  }
   if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
@@ -1368,7 +1408,10 @@ function renderAccount() {
   const setsSec = document.getElementById("sets-section");
   const setsEl = document.getElementById("setslist");
   const setsCnt = document.getElementById("setscount");
-  if (setsSec) setsSec.style.display = sets.length ? "block" : "none";
+  if (setsSec) {
+    setsSec._accHasContent = sets.length > 0;
+    setsSec.style.display = (sets.length && (!isLoggedIn || activeTab === "sets")) ? "block" : "none";
+  }
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
   if (setsEl && sets.length) {
     const totalPrice = items => items.reduce((s, x) => s + (x.p || 0) * (x.qty || 1), 0);
@@ -1392,6 +1435,16 @@ function renderAccount() {
         window._deleteRemoteGearSet(deleted.remoteId);
       }
       saveSets(arr); renderAccount();
+    });
+  }
+
+  // 탭 레이블에 카운트 뱃지 업데이트
+  if (tabsEl && isLoggedIn) {
+    tabsEl.querySelectorAll(".acc-tab").forEach(b => {
+      const labels = { wish: `❤️ 찜목록${wishes.length ? ` <span style="font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 6px">${wishes.length}</span>` : ""}`,
+                       sets: `🎒 내 세트${sets.length ? ` <span style="font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 6px">${sets.length}</span>` : ""}`,
+                       logs: `📝 내 로그` };
+      b.innerHTML = labels[b.dataset.tab] || b.textContent;
     });
   }
 }

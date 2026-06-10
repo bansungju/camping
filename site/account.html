@@ -49,7 +49,13 @@
     </div>
   </div>
 
-  <!-- 섹션 앵커 (콘텐츠 있을 때만 JS로 표시) -->
+  <!-- 탭 바 (로그인+콘텐츠 있을 때만 JS로 표시) -->
+  <div id="acc-tabs" class="acc-tabs" style="display:none">
+    <button class="acc-tab active" data-tab="wish">❤️ 찜목록</button>
+    <button class="acc-tab" data-tab="sets">🎒 내 세트</button>
+    <button class="acc-tab" data-tab="logs">📝 내 로그</button>
+  </div>
+  <!-- 섹션 앵커 (콘텐츠 있을 때만 JS로 표시, 비로그인 fallback) -->
   <nav id="acc-nav" style="display:none;margin-top:20px;display:flex;flex-wrap:wrap;gap:8px"></nav>
 
   <!-- 첫 방문 Empty State (콘텐츠 없을 때만 표시) -->

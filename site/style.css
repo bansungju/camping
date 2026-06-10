@@ -393,6 +393,10 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sc-tip{font-size:12px;color:var(--accent);font-weight:600;min-height:16px;padding-bottom:4px}
 .acc-anchor{display:inline-block;padding:5px 14px;border-radius:20px;border:1.5px solid var(--accent);color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}
 .acc-anchor:hover{background:var(--accent);color:#fff}
+.acc-tabs{display:flex;gap:0;border-bottom:1.5px solid var(--line);margin-top:20px}
+.acc-tab{padding:10px 18px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:color .15s}
+.acc-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.acc-tab:hover{color:var(--accent)}
 .acc-set-del{border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;line-height:1}
 .acc-set-del:hover{color:#e5484d}
 .sm-box{padding:20px;max-width:340px;width:100%}
