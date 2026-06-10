@@ -1,4 +1,4 @@
-/* 캠핑기어 정직비교 — 정적 프론트엔드 (DB→data/*.json) */
+/* 장비의 숲 — 정적 프론트엔드 (DB→data/*.json) */
 /* PWA: 서비스워커 등록(오프라인+홈화면 설치). 실패해도 사이트는 정상 동작 */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
@@ -356,7 +356,7 @@ async function renderCategory() {
   renderCatNav(slug);
 
   document.getElementById("crumbName").textContent = d.name;
-  document.title = `${d.name} 비교 — 캠핑기어 정직비교`;
+  document.title = `${d.name} 비교 — 장비의 숲`;
   document.getElementById("title").innerHTML =
     `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`;
   document.getElementById("lead").innerHTML =
@@ -756,7 +756,7 @@ async function renderBrand() {
   const draw = (bn) => {
     const rows = idx.filter(x => x.b === bn);
     document.getElementById("crumbName").textContent = bn || "선택";
-    document.title = `${bn} 전체보기 — 캠핑기어 정직비교`;
+    document.title = `${bn} 전체보기 — 장비의 숲`;
     document.getElementById("title").innerHTML = bn ? `${esc(bn)} <span class="nd" style="font-size:15px">전 카테고리</span>` : "브랜드를 선택하세요";
     document.getElementById("count").textContent = bn ? `${rows.length}개 모델` : "";
     // 카테고리별 그룹
@@ -821,7 +821,7 @@ async function renderRecommend() {
     `<a class="pchip${p.key === persona.key ? " on" : ""}" href="recommend.html?p=${p.key}">
        <span class="pe">${p.emoji}</span>${p.name}</a>`).join("");
   document.getElementById("crumbName").textContent = persona.name;
-  document.title = `${persona.name} 추천 — 캠핑기어 정직비교`;
+  document.title = `${persona.name} 추천 — 장비의 숲`;
   document.getElementById("title").innerHTML = `<span class="titleicon">${persona.emoji}</span>${persona.name}`;
   document.getElementById("lead").textContent = persona.tagline;
   document.getElementById("pnote").innerHTML =
