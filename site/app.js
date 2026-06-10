@@ -520,9 +520,18 @@ async function renderCategory() {
   renderCatNav(slug);
 
   document.getElementById("crumbName").textContent = d.name;
-  document.title = `${d.name} 비교 — 장비의 숲`;
   const shareUrl = `https://gear-forest.com/category/${slug}`;
   const shareTitle = `${d.name} 비교 — 장비의 숲`;
+  const shareDesc = `${d.count.toLocaleString()}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다.`;
+  document.title = shareTitle;
+  // OG / Twitter 메타 동적 업데이트 (SNS 공유 미리보기)
+  [["og:title", shareTitle], ["og:description", shareDesc], ["og:url", shareUrl],
+   ["twitter:title", shareTitle], ["twitter:description", shareDesc]].forEach(([prop, content]) => {
+    const el = document.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`);
+    if (el) el.setAttribute("content", content);
+  });
+  const canonEl = document.querySelector("link[rel=canonical]");
+  if (canonEl) canonEl.setAttribute("href", shareUrl);
   document.getElementById("title").innerHTML =
     `<span class="titleicon" style="background:${catTint(d.name)}">${catIcon(d.name)}</span>${d.name} ${gradeBadge(d.grade)}`
     + `<button class="share-btn" id="share-btn" aria-label="공유">🔗</button>`;
