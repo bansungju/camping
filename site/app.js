@@ -152,8 +152,10 @@ async function renderHub() {
   let m;
   try { m = await getJSON("data/manifest.json"); }
   catch (e) { document.getElementById("lead").textContent = "데이터를 불러오지 못했습니다. (로컬서버 필요)"; return; }
+  // 헤드라인 카운트를 앱 전체와 동일하게 dedup 모델 기준으로 통일(변형 포함 raw와 불일치 해소)
+  const totalModels = m.categories.reduce((s, c) => s + (c.count || 0), 0);
   document.getElementById("lead").innerHTML =
-    `<b>${m.total_verified.toLocaleString()}개</b> 제품 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
+    `<b>${totalModels.toLocaleString()}개</b> 모델 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
 
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
 
