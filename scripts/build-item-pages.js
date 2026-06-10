@@ -55,7 +55,34 @@ function specTableRows(specs, metrics) {
     .join("\n");
 }
 
-function buildPage(catSlug, catLabel, model, metrics, rank, total, idx) {
+function buildRelatedSection(catSlug, catLabel, model, allModels, currentIdx) {
+  // 같은 카테고리에서 가격 가까운 3개 (현재 모델 제외)
+  const withPrice = allModels
+    .map((m, i) => ({ m, i }))
+    .filter(({ m, i }) => i !== currentIdx && m.price_min != null);
+  if (!withPrice.length) return "";
+  const ref = model.price_min;
+  const sorted = ref != null
+    ? withPrice.sort((a, b) => Math.abs(a.m.price_min - ref) - Math.abs(b.m.price_min - ref))
+    : withPrice.slice(0, 3);
+  const picks = sorted.slice(0, 3);
+  const cards = picks.map(({ m, i }) => {
+    const pr = m.price_min != null ? `${m.price_min.toLocaleString()}원` : "";
+    const imgTag = m.img ? `<img src="../../${m.img}" alt="${m.brand} ${m.model}" style="width:60px;height:60px;object-fit:contain;border-radius:6px;border:1px solid var(--line);flex-shrink:0" loading="lazy">` : "";
+    return `<a href="item-${i}.html" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--txt)">
+      ${imgTag}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:var(--muted)">${m.brand}</div>
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.model}</div>
+        ${pr ? `<div style="font-size:12px;color:var(--accent);font-weight:600;margin-top:2px">${pr}</div>` : ""}
+      </div>
+    </a>`;
+  }).join("");
+  return `<h2 style="font-size:16px;font-weight:600;margin:24px 0 8px">비슷한 ${catLabel} 더 보기</h2>
+<div style="display:flex;flex-direction:column;gap:6px">${cards}</div>`;
+}
+
+function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModels) {
   const { brand, model: modelName, price_min, price_max, img, specs, capacity } = model;
   const pageSlug = slugify(brand, modelName, idx);
   const canonicalUrl = `${SITE_URL}/item/${catSlug}/${pageSlug}.html`;
@@ -166,6 +193,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx) {
     <tbody>${specRows}</tbody>
   </table>
 
+  ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
   <a class="back-link" href="../../category/${catSlug}/">← ${catLabel} 전체 비교 보기</a>
 </main>
 
@@ -194,7 +222,7 @@ for (const catSlug of categories) {
   const total = data.models.length;
 
   data.models.forEach((model, idx) => {
-    const { pageSlug, html } = buildPage(catSlug, catLabel, model, data.metrics, idx + 1, total, idx);
+    const { pageSlug, html } = buildPage(catSlug, catLabel, model, data.metrics, idx + 1, total, idx, data.models);
     const outPath = path.join(catDir, `${pageSlug}.html`);
     fs.writeFileSync(outPath, html, "utf8");
     sitemapEntries.push(`  <url><loc>${SITE_URL}/item/${catSlug}/${pageSlug}.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>`);
