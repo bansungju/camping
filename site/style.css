@@ -314,6 +314,10 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
 .pli-setadd:hover{transform:scale(1.12);background:var(--accent);color:#fff}
 /* 세트 선택 모달 */
+.acc-anchor{display:inline-block;padding:5px 14px;border-radius:20px;border:1.5px solid var(--accent);color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}
+.acc-anchor:hover{background:var(--accent);color:#fff}
+.acc-set-del{border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;line-height:1}
+.acc-set-del:hover{color:#e5484d}
 .sm-box{padding:20px;max-width:340px;width:100%}
 .sm-head{margin-bottom:14px}
 .sm-title{font-size:16px;font-weight:700;margin-bottom:4px}
