@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>커뮤니티 — 장비의 숲</title>
-<meta name="description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta name="description" content="캠핑 로그와 베스트 장비를 나누는 공간. 실측 스펙 기반 장비 추천.">
 <link rel="canonical" href="https://gear-forest.com/community.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="장비의 숲">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="커뮤니티 — 장비의 숲">
-<meta property="og:description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta property="og:description" content="캠핑 로그와 베스트 장비를 나누는 공간. 실측 스펙 기반 장비 추천.">
 <meta property="og:url" content="https://gear-forest.com/community.html">
 <meta property="og:image" content="https://gear-forest.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="커뮤니티 — 장비의 숲">
-<meta name="twitter:description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta name="twitter:description" content="캠핑 로그와 베스트 장비를 나누는 공간.">
 <meta name="twitter:image" content="https://gear-forest.com/og-image.png">
 <meta name="theme-color" content="#2f7a4e">
 <link rel="manifest" href="manifest.webmanifest">
@@ -36,23 +36,45 @@
 </div></header>
 
 <main class="wrap">
-  <div class="coming">
-    <div class="ce">💬</div>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:20px;margin-bottom:4px">
     <h1>커뮤니티</h1>
-    <p>사용기·질문·꿀팁을 나누는 공간을 준비하고 있어요.</p>
-    <span class="cbadge">준비중 · 곧 만나요</span>
-    <ul class="clist">
-      <li><span class="ci">📝</span> 실사용 후기 — 측정 스펙 너머의 경험</li>
-      <li><span class="ci">❓</span> 장비 추천 Q&amp;A</li>
-      <li><span class="ci">🏷️</span> 가격·중고 거래 정보</li>
-      <li><span class="ci">🔥</span> 캠핑장·세팅 자랑</li>
-    </ul>
-    <div class="cfoot">오픈 알림을 받으려면 ‘내 정보’ 탭에서 가입을 준비해 주세요.</div>
+    <button id="comm-write-btn" class="comm-write-btn" type="button">✏ 로그 쓰기</button>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 로그를 남기고 장비를 태그해보세요</p>
+
+  <!-- 탭 -->
+  <div class="comm-tabs" id="comm-tabs">
+    <button class="comm-tab on" data-tab="best">🏆 베스트 장비</button>
+    <button class="comm-tab" data-tab="logs">📝 캠핑 로그</button>
+  </div>
+
+  <!-- 베스트 장비 탭 -->
+  <div id="comm-best" class="comm-panel">
+    <div id="comm-best-list"></div>
+  </div>
+
+  <!-- 로그 탭 -->
+  <div id="comm-logs" class="comm-panel" style="display:none">
+    <div id="comm-logs-list"></div>
   </div>
 </main>
 
-<footer><div class="wrap">측정값 기반 정직비교 · 커뮤니티 기능 준비중.</div></footer>
+<!-- 로그 작성 모달 -->
+<div id="log-modal" class="pmodal">
+  <div class="pmbox log-modal-box" role="dialog" aria-modal="true">
+    <button class="pmx" aria-label="닫기">✕</button>
+    <h2 style="font-size:17px;font-weight:700;margin-bottom:16px">캠핑 로그 작성</h2>
+    <div id="log-modal-body"></div>
+  </div>
+</div>
 
-<script src="app.js?v=df140e15"></script>
+<footer><div class="wrap">측정값 기반 정직비교 · 캠핑 로그로 나만의 장비 데이터를 쌓아보세요.</div></footer>
+
+<script src="app.js?v=ada1470d"></script>
+<script type="module">
+import { initAuth } from './supabaseClient.js'
+window._commUser = null;
+initAuth(async (user) => { window._commUser = user; })
+</script>
 </body>
 </html>
