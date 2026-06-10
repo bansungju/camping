@@ -1784,7 +1784,41 @@ function _setPostLiked(pid, on) {
 async function renderBestGear() {
   const el = document.getElementById("comm-best-list");
   if (!el) return;
-  el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px 0 12px">측정 스펙 기반 카테고리별 상위 장비</div>`;
+  el.innerHTML = "";
+
+  // 커뮤니티 태그 집계 TOP-10 (RPC)
+  try {
+    const { supabase: sb } = await import("./supabaseClient.js");
+    const { data: topTags } = await sb.rpc("get_top_gear_tags", { limit_n: 10 });
+    if (topTags && topTags.length) {
+      const sec = document.createElement("div");
+      sec.className = "comm-sec";
+      sec.innerHTML = `
+        <div class="comm-sec-head">
+          <span class="comm-sec-label">🏆 커뮤니티 인기 장비</span>
+          <span class="comm-sec-style" style="font-size:11px;color:var(--muted)">로그 태그 기준</span>
+        </div>
+        <div class="comm-top-tags">${topTags.map((r, i) =>
+          `<button type="button" class="comm-top-tag" data-tag="${esc(r.tag)}" title="${esc(r.tag)} — ${r.cnt}개 로그">
+            <span class="comm-tag-rank">${i + 1}</span>
+            <span class="comm-tag-name">${esc(r.tag)}</span>
+            <span class="comm-tag-cnt">${r.cnt}</span>
+          </button>`).join("")}
+        </div>`;
+      el.appendChild(sec);
+      // 태그 클릭 → 로그 탭 + 태그 필터 적용
+      sec.querySelectorAll(".comm-top-tag").forEach(btn => btn.onclick = () => {
+        document.querySelectorAll(".comm-tab").forEach(b => b.classList.remove("on"));
+        const logsTab = document.querySelector('.comm-tab[data-tab="logs"]');
+        if (logsTab) logsTab.classList.add("on");
+        document.getElementById("comm-best").style.display = "none";
+        document.getElementById("comm-logs").style.display = "block";
+        renderLogFeed("latest", btn.dataset.tag);
+      });
+    }
+  } catch {}
+
+  el.insertAdjacentHTML("beforeend", `<div style="color:var(--muted);font-size:12px;padding:8px 0 12px">측정 스펙 기반 카테고리별 상위 장비</div>`);
 
   for (const { slug, label, style } of BEST_SLUGS) {
     try {
