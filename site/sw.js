@@ -1,7 +1,7 @@
 /* 장비의 숲 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-3695ed71";
+const CACHE = "camping-237452da";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
@@ -48,7 +48,7 @@ self.addEventListener("fetch", (e) => {
         const c = await caches.open(CACHE); c.put(req, net.clone());
         return net;
       } catch (err) {
-        return (await caches.match(req)) || (await caches.match("index.html")) ||
+        return (await caches.match(req)) || (await caches.match(new URL("index.html", location.origin).href)) ||
           new Response("오프라인입니다.", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
       }
     })());

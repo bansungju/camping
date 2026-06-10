@@ -38,9 +38,12 @@
 <main class="wrap">
   <h1 style="margin-top:22px">내 정보</h1>
 
-  <!-- 찜한 상품(로그인 시에만 표시) -->
-  <div id="wish-section" hidden>
+  <!-- 찜한 상품 — 로그인 없이도 localStorage 기준으로 항상 표시 -->
+  <div id="wish-section">
     <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+    <p id="wish-synchint" style="color:var(--muted);font-size:12.5px;margin:-4px 0 12px" hidden>
+      로그인하면 찜 목록이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
+    </p>
     <div id="wishlist" class="plist"></div>
   </div>
 
@@ -50,15 +53,23 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=df140e15"></script>
+<script src="app.js?v=88addffc"></script>
 <script type="module">
 import {
   initAuth, signInWithOAuth, signOut, getErrorMessage,
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists
-} from './supabaseClient.js'
+} from './supabaseClient.js?v=f7596e97'
 
 const section = document.getElementById('auth-section')
+
+// 찜 목록은 로그인 여부와 무관하게 즉시 표시(localStorage 기준).
+// 로그인 상태에 따라 동기화 안내만 토글한다.
+if (typeof renderAccount === 'function') renderAccount()
+function setSyncHint(loggedIn) {
+  const h = document.getElementById('wish-synchint')
+  if (h) h.hidden = loggedIn
+}
 
 // 로컬 찜 헬퍼(app.js의 localStorage "wish"와 동일 포맷)
 const localWish = {
@@ -93,7 +104,16 @@ function renderNicknameModal() {
         background:var(--brand,#2f7a4e);color:#fff;cursor:pointer;font-size:15px;font-weight:600;opacity:.5">
         시작하기
       </button>
+      <button id="nick-signout" type="button" style="
+        margin-top:10px;width:100%;padding:9px;border-radius:8px;border:none;
+        background:none;cursor:pointer;font-size:13px;color:var(--muted)">
+        다른 계정으로 로그인 (로그아웃)
+      </button>
     </div>`
+
+  document.getElementById('nick-signout').addEventListener('click', async () => {
+    await signOut()
+  })
 
   const input = document.getElementById('nick-input')
   const hint  = document.getElementById('nick-hint')
@@ -205,21 +225,20 @@ if (params.get('auth_error')) {
 }
 
 await initAuth(async (user, event) => {
-  const wishSection = document.getElementById('wish-section')
   if (!user) {
-    if (wishSection) wishSection.hidden = true
+    setSyncHint(false)
     renderLogin()
     return
   }
   // 로그인됨 — profiles에서 닉네임 확인
   const profile = await getProfile()
   if (!profile || !profile.nickname) {
-    // 최초 로그인(또는 닉네임 미설정): 찜 표시 전에 닉네임부터 강제
-    if (wishSection) wishSection.hidden = true
+    // 최초 로그인(또는 닉네임 미설정): 닉네임부터 강제(찜 목록은 계속 표시)
+    setSyncHint(true)
     renderNicknameModal()
     return
   }
-  if (wishSection) wishSection.hidden = false
+  setSyncHint(true)
   renderAccount()
   renderProfile(profile)
   // 실제 로그인 이벤트(SIGNED_IN)일 때만 찜 동기화. 페이지 새로고침(INITIAL)에서는

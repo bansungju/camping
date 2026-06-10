@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>커뮤니티 — 장비의 숲</title>
-<meta name="description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta name="description" content="캠핑 장비 사용기·질문·꿀팁을 나누는 커뮤니티">
 <link rel="canonical" href="https://gear-forest.com/community.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="장비의 숲">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="커뮤니티 — 장비의 숲">
-<meta property="og:description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta property="og:description" content="캠핑 장비 사용기·질문·꿀팁을 나누는 커뮤니티">
 <meta property="og:url" content="https://gear-forest.com/community.html">
 <meta property="og:image" content="https://gear-forest.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="커뮤니티 — 장비의 숲">
-<meta name="twitter:description" content="캠핑 장비 사용기·질문·정보를 나누는 커뮤니티 (준비중)">
+<meta name="twitter:description" content="캠핑 장비 사용기·질문·꿀팁을 나누는 커뮤니티">
 <meta name="twitter:image" content="https://gear-forest.com/og-image.png">
 <meta name="theme-color" content="#2f7a4e">
 <link rel="manifest" href="manifest.webmanifest">
@@ -28,6 +28,71 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <link rel="stylesheet" href="style.css?v=ada1470d">
+<style>
+  /* 커뮤니티 전용 — HTML은 네트워크 우선이라 항상 최신 */
+  .cm-bar{display:flex;align-items:center;gap:10px;margin:22px 0 8px}
+  .cm-bar h1{margin:0;font-size:22px;flex:1}
+  .cm-btn{padding:9px 16px;border-radius:9px;border:none;background:var(--accent);color:#fff;
+    font-size:14px;font-weight:600;cursor:pointer}
+  .cm-btn:disabled{opacity:.5;cursor:default}
+  .cm-btn.ghost{background:none;color:var(--muted);border:1px solid var(--line)}
+  .cm-loginhint{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .cm-loginhint a{color:var(--accent);font-weight:600}
+  .cm-feed{display:flex;flex-direction:column;gap:12px;margin:14px 0 30px}
+  .cm-post{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:15px 16px;box-shadow:var(--shadow);cursor:pointer}
+  .cm-post:hover{box-shadow:var(--shadow-h)}
+  .cm-meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;margin-bottom:6px}
+  .cm-ava{width:22px;height:22px;border-radius:50%;object-fit:cover;background:var(--card2);
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+  .cm-title{font-size:16px;font-weight:700;margin:0 0 4px;color:var(--txt)}
+  .cm-snippet{color:var(--muted);font-size:13.5px;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cm-thumbs{display:flex;gap:6px;margin-top:10px}
+  .cm-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--card2)}
+  .cm-stat{display:flex;gap:14px;color:var(--muted);font-size:12.5px;margin-top:10px}
+  .cm-empty{text-align:center;color:var(--muted);padding:48px 0;font-size:14px}
+  .cm-empty .e{font-size:40px;display:block;margin-bottom:12px}
+  /* 작성 폼 */
+  .cm-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0 30px}
+  .cm-form label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:600}
+  .cm-form label:first-child{margin-top:0}
+  .cm-form input[type=text],.cm-form textarea{width:100%;padding:11px;border-radius:9px;
+    border:1.5px solid var(--line);font-size:15px;font-family:inherit;background:var(--bg);color:var(--txt)}
+  .cm-form textarea{min-height:160px;resize:vertical;line-height:1.6}
+  .cm-form .cm-count{font-size:12px;color:var(--faint);text-align:right;margin-top:4px}
+  .cm-up{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+  .cm-up .prev{position:relative;width:72px;height:72px;border-radius:9px;overflow:hidden;background:var(--card2)}
+  .cm-up .prev img{width:100%;height:100%;object-fit:cover}
+  .cm-up .prev button{position:absolute;top:2px;right:2px;width:20px;height:20px;border:none;border-radius:50%;
+    background:rgba(0,0,0,.6);color:#fff;font-size:12px;cursor:pointer;line-height:1}
+  .cm-up .addimg{width:72px;height:72px;border-radius:9px;border:1.5px dashed var(--line);background:var(--card2);
+    color:var(--muted);font-size:24px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .cm-actions{display:flex;gap:10px;margin-top:20px}
+  .cm-actions .cm-btn{flex:1;padding:12px}
+  .cm-err{color:#e53e3e;font-size:13px;margin-top:12px;min-height:16px}
+  /* 상세 */
+  .cm-back{color:var(--muted);font-size:13.5px;cursor:pointer;display:inline-block;margin:18px 0 8px}
+  .cm-detail h1{font-size:21px;margin:6px 0 10px;line-height:1.35}
+  .cm-body{font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin:14px 0}
+  .cm-imgs{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+  .cm-imgs img{width:100%;border-radius:12px;background:var(--card2)}
+  .cm-toolbar{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);padding:12px 0;margin:18px 0}
+  .cm-like{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+    border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:14px;color:var(--muted)}
+  .cm-like.on{color:#e0245e;border-color:#f3b6c6;background:#fff5f8}
+  .cm-report{margin-left:auto;color:var(--faint);font-size:12.5px;cursor:pointer;background:none;border:none}
+  .cm-del{color:var(--faint);font-size:12.5px;cursor:pointer;background:none;border:none}
+  .cm-cmts{margin:18px 0 40px}
+  .cm-cmt{padding:12px 0;border-bottom:1px solid var(--line)}
+  .cm-cmt .cm-meta{margin-bottom:4px}
+  .cm-cmt .t{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .cm-cform{display:flex;gap:8px;margin:14px 0}
+  .cm-cform textarea{flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--line);
+    font-size:14px;font-family:inherit;min-height:44px;resize:vertical;background:var(--bg);color:var(--txt)}
+  .cm-spin{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+</style>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -36,23 +101,293 @@
 </div></header>
 
 <main class="wrap">
-  <div class="coming">
-    <div class="ce">💬</div>
-    <h1>커뮤니티</h1>
-    <p>사용기·질문·꿀팁을 나누는 공간을 준비하고 있어요.</p>
-    <span class="cbadge">준비중 · 곧 만나요</span>
-    <ul class="clist">
-      <li><span class="ci">📝</span> 실사용 후기 — 측정 스펙 너머의 경험</li>
-      <li><span class="ci">❓</span> 장비 추천 Q&amp;A</li>
-      <li><span class="ci">🏷️</span> 가격·중고 거래 정보</li>
-      <li><span class="ci">🔥</span> 캠핑장·세팅 자랑</li>
-    </ul>
-    <div class="cfoot">오픈 알림을 받으려면 ‘내 정보’ 탭에서 가입을 준비해 주세요.</div>
-  </div>
+  <div id="cm-root"><div class="cm-spin">불러오는 중…</div></div>
 </main>
 
-<footer><div class="wrap">측정값 기반 정직비교 · 커뮤니티 기능 준비중.</div></footer>
+<footer><div class="wrap">측정값 기반 정직비교 · 커뮤니티는 닉네임으로 참여합니다. 실명·이메일은 공개되지 않아요.</div></footer>
 
-<script src="app.js?v=df140e15"></script>
+<script src="app.js?v=88addffc"></script>
+<script type="module">
+import {
+  initAuth, getProfile, getErrorMessage,
+  listPosts, getPost, createPost, deletePost,
+  listComments, createComment, getMyLikes, toggleLike,
+  reportContent, uploadImage
+} from './supabaseClient.js?v=f7596e97'
+
+const root = document.getElementById('cm-root')
+let me = null            // { user, profile } 또는 null
+let myProfileNick = null // 닉네임(참여 가능 여부)
+
+// app.js의 esc가 전역. 없으면 폴백.
+const esc = window.esc || (s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])))
+
+function timeAgo(iso) {
+  if (!iso) return ''
+  const d = (Date.now() - new Date(iso).getTime()) / 1000
+  if (d < 60) return '방금'
+  if (d < 3600) return `${Math.floor(d/60)}분 전`
+  if (d < 86400) return `${Math.floor(d/3600)}시간 전`
+  if (d < 2592000) return `${Math.floor(d/86400)}일 전`
+  return new Date(iso).toLocaleDateString('ko-KR')
+}
+
+function authorBlock(author, iso) {
+  const nick = author?.nickname ?? '탈퇴한 사용자'
+  const av = author?.avatar_url
+  const avatar = av
+    ? `<img class="cm-ava" src="${esc(av)}" referrerpolicy="no-referrer" alt="">`
+    : `<span class="cm-ava">🙂</span>`
+  return `<div class="cm-meta">${avatar}<span>${esc(nick)}</span><span>·</span><span>${timeAgo(iso)}</span></div>`
+}
+
+function canParticipate() { return !!(me && myProfileNick) }
+
+function loginHint(action) {
+  return `<p class="cm-loginhint"><a href="account.html">로그인</a>하고 ${action} 참여해 보세요. (닉네임 설정 후 가능)</p>`
+}
+
+// ── 피드 ───────────────────────────────────────────────────────────────
+async function renderFeed() {
+  root.innerHTML = `
+    <div class="cm-bar">
+      <h1>커뮤니티</h1>
+      ${canParticipate()
+        ? `<button class="cm-btn" id="cm-write">✍️ 글쓰기</button>`
+        : ``}
+    </div>
+    ${canParticipate() ? `` : loginHint('사용기·질문·꿀팁에')}
+    <div class="cm-feed" id="cm-list"><div class="cm-spin">불러오는 중…</div></div>`
+
+  const wb = document.getElementById('cm-write')
+  if (wb) wb.onclick = () => { location.hash = '#new' }
+
+  const { data, error } = await listPosts({ limit: 30 })
+  const list = document.getElementById('cm-list')
+  if (error) { list.innerHTML = `<div class="cm-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`; return }
+  if (!data.length) {
+    list.innerHTML = `<div class="cm-empty"><span class="e">🌲</span>
+      아직 글이 없어요. 첫 이야기를 남겨보세요!</div>`
+    return
+  }
+  const liked = await getMyLikes(data.map(p => p.id))
+  list.innerHTML = data.map(p => {
+    const imgs = Array.isArray(p.image_urls) ? p.image_urls.slice(0, 3) : []
+    const thumbs = imgs.length
+      ? `<div class="cm-thumbs">${imgs.map(u => `<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>` : ''
+    return `<a class="cm-post" data-id="${esc(p.id)}">
+      ${authorBlock(p.author, p.created_at)}
+      <h2 class="cm-title">${esc(p.title)}</h2>
+      <div class="cm-snippet">${esc(p.body)}</div>
+      ${thumbs}
+      <div class="cm-stat"><span>${liked.has(p.id) ? '❤️' : '🤍'} ${p.like_count ?? 0}</span>
+        <span>💬 ${p.comment_count ?? 0}</span></div>
+    </a>`
+  }).join('')
+  list.querySelectorAll('.cm-post').forEach(el =>
+    el.onclick = () => { location.hash = '#post=' + el.dataset.id })
+}
+
+// ── 작성 ───────────────────────────────────────────────────────────────
+function renderCompose() {
+  if (!canParticipate()) { location.hash = ''; return }
+  const pending = []   // 업로드된 이미지 URL
+  root.innerHTML = `
+    <span class="cm-back" id="cm-cancel">← 목록으로</span>
+    <div class="cm-form">
+      <label>제목</label>
+      <input type="text" id="cm-t" maxlength="100" placeholder="제목 (2~100자)">
+      <label>내용</label>
+      <textarea id="cm-b" maxlength="10000" placeholder="사용기·질문·꿀팁을 자유롭게 적어주세요 (10자 이상)"></textarea>
+      <div class="cm-count" id="cm-bc">0 / 10000</div>
+      <label>사진 (선택 · 최대 4장 · 각 5MB)</label>
+      <div class="cm-up" id="cm-up">
+        <button type="button" class="addimg" id="cm-addimg">＋</button>
+        <input type="file" id="cm-file" accept="image/*" multiple hidden>
+      </div>
+      <div class="cm-actions">
+        <button class="cm-btn ghost" id="cm-cancel2" type="button">취소</button>
+        <button class="cm-btn" id="cm-submit" type="button">등록</button>
+      </div>
+      <div class="cm-err" id="cm-err"></div>
+    </div>`
+
+  const t = document.getElementById('cm-t')
+  const b = document.getElementById('cm-b')
+  const bc = document.getElementById('cm-bc')
+  const up = document.getElementById('cm-up')
+  const file = document.getElementById('cm-file')
+  const err = document.getElementById('cm-err')
+  const submit = document.getElementById('cm-submit')
+
+  b.addEventListener('input', () => { bc.textContent = `${b.value.length} / 10000` })
+  const cancel = () => { location.hash = '' }
+  document.getElementById('cm-cancel').onclick = cancel
+  document.getElementById('cm-cancel2').onclick = cancel
+  document.getElementById('cm-addimg').onclick = () => file.click()
+
+  function renderPreviews() {
+    up.querySelectorAll('.prev').forEach(n => n.remove())
+    const add = document.getElementById('cm-addimg')
+    pending.forEach((u, i) => {
+      const d = document.createElement('div')
+      d.className = 'prev'
+      d.innerHTML = `<img src="${esc(u)}" alt=""><button type="button" data-i="${i}" aria-label="삭제">✕</button>`
+      d.querySelector('button').onclick = () => { pending.splice(i, 1); renderPreviews() }
+      up.insertBefore(d, add)
+    })
+    add.style.display = pending.length >= 4 ? 'none' : ''
+  }
+
+  file.addEventListener('change', async () => {
+    err.textContent = ''
+    const files = Array.from(file.files).slice(0, 4 - pending.length)
+    file.value = ''
+    for (const f of files) {
+      const r = await uploadImage(f)
+      if (r.error) { err.textContent = getErrorMessage(r.error) || (r.error.message || '업로드 실패'); continue }
+      pending.push(r.url); renderPreviews()
+    }
+  })
+
+  submit.onclick = async () => {
+    err.textContent = ''
+    const title = t.value.trim(), body = b.value.trim()
+    if (title.length < 2) { err.textContent = '제목은 2자 이상이어야 해요'; return }
+    if (body.length < 10) { err.textContent = '내용은 10자 이상이어야 해요'; return }
+    submit.disabled = true; submit.textContent = '등록 중…'
+    const { data, error } = await createPost({ title, body, image_urls: pending })
+    if (error) {
+      err.textContent = getErrorMessage(error)
+      submit.disabled = false; submit.textContent = '등록'
+      return
+    }
+    if (data?.id) location.hash = '#post=' + data.id
+    else location.hash = ''
+  }
+  setTimeout(() => t.focus(), 50)
+}
+
+// ── 상세 ───────────────────────────────────────────────────────────────
+async function renderDetail(id) {
+  root.innerHTML = `<span class="cm-back" id="cm-back">← 목록으로</span>
+    <div class="cm-spin">불러오는 중…</div>`
+  document.getElementById('cm-back').onclick = () => { location.hash = '' }
+
+  const { data: post, error } = await getPost(id)
+  if (error || !post) {
+    root.innerHTML = `<span class="cm-back" id="cm-back2">← 목록으로</span>
+      <div class="cm-empty">글을 찾을 수 없어요. 삭제되었거나 숨김 처리된 글일 수 있어요.</div>`
+    document.getElementById('cm-back2').onclick = () => { location.hash = '' }
+    return
+  }
+
+  const imgs = Array.isArray(post.image_urls) ? post.image_urls : []
+  const liked = (await getMyLikes([post.id])).has(post.id)
+  const isMine = me && post.user_id === me.user.id
+
+  root.innerHTML = `
+    <span class="cm-back" id="cm-back">← 목록으로</span>
+    <div class="cm-detail">
+      ${authorBlock(post.author, post.created_at)}
+      <h1>${esc(post.title)}</h1>
+      <div class="cm-body">${esc(post.body)}</div>
+      ${imgs.length ? `<div class="cm-imgs">${imgs.map(u => `<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>` : ''}
+      <div class="cm-toolbar">
+        <button class="cm-like${liked ? ' on' : ''}" id="cm-like">${liked ? '❤️' : '🤍'} <span id="cm-likec">${post.like_count ?? 0}</span></button>
+        ${isMine ? `<button class="cm-del" id="cm-del">삭제</button>`
+                 : `<button class="cm-report" id="cm-report">🚩 신고</button>`}
+      </div>
+      <div class="cm-cmts" id="cm-cmts"></div>
+    </div>`
+  document.getElementById('cm-back').onclick = () => { location.hash = '' }
+
+  // 좋아요
+  const likeBtn = document.getElementById('cm-like')
+  const likeC = document.getElementById('cm-likec')
+  let likedState = liked
+  likeBtn.onclick = async () => {
+    if (!canParticipate()) { alert('로그인 후 닉네임을 설정하면 좋아요를 누를 수 있어요.'); return }
+    likeBtn.disabled = true
+    const r = await toggleLike(post.id, likedState)
+    likeBtn.disabled = false
+    if (r.error) { alert(getErrorMessage(r.error)); return }
+    likedState = r.liked
+    likeBtn.classList.toggle('on', likedState)
+    likeC.textContent = Math.max(0, (+likeC.textContent || 0) + (likedState ? 1 : -1))
+    likeBtn.firstChild.textContent = (likedState ? '❤️' : '🤍') + ' '
+  }
+
+  // 삭제 / 신고
+  const delBtn = document.getElementById('cm-del')
+  if (delBtn) delBtn.onclick = async () => {
+    if (!confirm('이 글을 삭제할까요?')) return
+    const { error } = await deletePost(post.id)
+    if (error) { alert(getErrorMessage(error)); return }
+    location.hash = ''
+  }
+  const repBtn = document.getElementById('cm-report')
+  if (repBtn) repBtn.onclick = async () => {
+    if (!canParticipate()) { alert('로그인 후 신고할 수 있어요.'); return }
+    const reason = prompt('신고 사유를 적어주세요 (5자 이상)')
+    if (!reason || reason.trim().length < 5) return
+    const { error } = await reportContent({ target_type: 'post', target_id: post.id, reason: reason.trim() })
+    alert(error ? getErrorMessage(error) : '신고가 접수되었어요. 검토 후 조치합니다.')
+  }
+
+  renderComments(post.id)
+}
+
+async function renderComments(postId) {
+  const box = document.getElementById('cm-cmts')
+  if (!box) return
+  const { data, error } = await listComments(postId)
+  const formHtml = canParticipate()
+    ? `<div class="cm-cform">
+         <textarea id="cm-ct" maxlength="1000" placeholder="댓글 달기…"></textarea>
+         <button class="cm-btn" id="cm-csend" type="button">등록</button>
+       </div>`
+    : loginHint('댓글로')
+  const listHtml = (error || !data.length)
+    ? (error ? '' : `<p style="color:var(--muted);font-size:13.5px;padding:8px 0">첫 댓글을 남겨보세요.</p>`)
+    : data.map(c => `<div class="cm-cmt">${authorBlock(c.author, c.created_at)}
+        <div class="t">${esc(c.body)}</div></div>`).join('')
+  box.innerHTML = `<h2 class="sec">댓글 ${data?.length ?? 0}</h2>${formHtml}<div id="cm-clist">${listHtml}</div>`
+
+  const send = document.getElementById('cm-csend')
+  if (send) send.onclick = async () => {
+    const ta = document.getElementById('cm-ct')
+    const body = ta.value.trim()
+    if (!body) return
+    send.disabled = true; send.textContent = '…'
+    const { error: e } = await createComment({ post_id: postId, body })
+    send.disabled = false; send.textContent = '등록'
+    if (e) { alert(getErrorMessage(e)); return }
+    ta.value = ''
+    renderComments(postId)   // 새로고침
+  }
+}
+
+// ── 라우팅 ─────────────────────────────────────────────────────────────
+function route() {
+  const h = location.hash
+  if (h.startsWith('#post=')) return renderDetail(decodeURIComponent(h.slice(6)))
+  if (h === '#new') return renderCompose()
+  return renderFeed()
+}
+
+window.addEventListener('hashchange', route)
+
+await initAuth(async (user) => {
+  if (user) {
+    me = { user }
+    const profile = await getProfile()
+    myProfileNick = profile?.nickname ?? null
+  } else {
+    me = null; myProfileNick = null
+  }
+  route()
+})
+</script>
 </body>
 </html>

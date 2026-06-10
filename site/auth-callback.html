@@ -20,7 +20,7 @@
   <p>로그인 처리 중입니다…</p>
 </div>
 <script type="module">
-  import { supabase } from './supabaseClient.js'
+  import { supabase } from './supabaseClient.js?v=f7596e97'
 
   // Supabase SDK가 URL hash의 토큰을 처리하고 세션을 설정함
   const { data: { session }, error } = await supabase.auth.getSession()
