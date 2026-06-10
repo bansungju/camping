@@ -163,10 +163,19 @@ function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 f
   setWish(a);
   return i < 0;
 }
-// 모델·카테고리슬러그 → 위시 항목
+// 모델·카테고리슬러그 → 위시/최근 항목(공용 형태)
 function wishItem(m, slug) {
   return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img };
+}
+
+/* 최근 본 상품 — 상세 모달 열 때 기록. 최신순, 중복 제거, 최대 12개. */
+function getRecent() { try { return JSON.parse(localStorage.getItem("recent") || "[]"); } catch (e) { return []; } }
+function pushRecent(item) {
+  if (!item.s) return;   // 슬러그 없으면(되돌아갈 경로 불명) 기록 생략
+  const a = getRecent().filter(x => x.key !== item.key);
+  a.unshift(item);
+  localStorage.setItem("recent", JSON.stringify(a.slice(0, 12)));
 }
 
 /* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
@@ -229,6 +238,8 @@ async function renderHub() {
     }
   }
 
+  renderRecent();   // 최근 본 상품(있으면)
+
   // 캠핑 스타일 추천 진입
   const pel = document.getElementById("personas");
   if (pel) pel.innerHTML = PERSONAS.map(p =>
@@ -277,7 +288,8 @@ async function setupHomeSearch() {
          <span class="scat">브랜드 →</span></a>`).join("");
     box.innerHTML = (brandHtml || "") + (hits.length ? hits.map(x =>
       `<a class="sres" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
-         <span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}
+         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
+         <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
          <span class="scat">${esc(x.c)}</span></a>`).join("")
       : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
   };
@@ -601,6 +613,7 @@ function diagnoseEmpty(sortK) {
 /* 상품 클릭 → 이미지·스펙 상세 모달 */
 function openProduct(m) {
   if (!m) return;
+  pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
   if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }
@@ -861,6 +874,20 @@ async function renderRecommend() {
   }).join("");
   document.getElementById("recs").innerHTML = sections || `<p class="nd">추천할 데이터가 없습니다.</p>`;
   document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음.`;
+}
+
+/* ---------- 최근 본 상품(홈, 가로 스크롤) ---------- */
+function renderRecent() {
+  const el = document.getElementById("recent");
+  if (!el) return;
+  const a = getRecent();
+  if (!a.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `<h2 class="sec">최근 본 상품</h2><div class="recent-row">` +
+    a.map(x => `<a class="recard" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+      ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
+      <div class="recard-b">${esc(x.b)}</div>
+      <div class="recard-m">${esc(x.m)}</div>
+      <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div></a>`).join("") + `</div>`;
 }
 
 /* ---------- 내 정보 — 찜한 상품(로그인 없이 localStorage) ---------- */
