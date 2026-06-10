@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로그인 처리 중 — 캠핑기어 정직비교</title>
+<style>
+  body { margin: 0; background: #fff; font-family: system-ui, sans-serif;
+         display: flex; align-items: center; justify-content: center; height: 100vh; }
+  .msg { text-align: center; color: #6c757d; font-size: 14px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid #e9ecef;
+             border-top-color: #0070f3; border-radius: 50%;
+             animation: spin .7s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="msg">
+  <div class="spinner"></div>
+  <p>로그인 처리 중입니다…</p>
+</div>
+<script type="module">
+  import { supabase } from './supabaseClient.js'
+
+  // Supabase SDK가 URL hash의 토큰을 처리하고 세션을 설정함
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (error || !session) {
+    // 실패 시 account 페이지로 (에러 표시)
+    location.replace('./account.html?auth_error=1')
+  } else {
+    // 성공 — account 페이지로
+    location.replace('./account.html')
+  }
+</script>
+</body>
+</html>
