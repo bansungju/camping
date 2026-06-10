@@ -39,6 +39,8 @@
 - **Service URL: `http://localhost:8080`** ← `https://`로 하면 `tls: first record does not look like a TLS handshake` 502 발생. 반드시 `http://`.
 - DNS: CNAME `www.gear-forest.com` → `808dfc7f-...cfargotunnel.com` (자동 생성됨)
 - 검증 OK: `curl https://www.gear-forest.com/health` → `{"status":"ok","products":2461}`
+- **apex → www 리다이렉트 (2026-06-11 해결)**: 서비스 실체는 `www.gear-forest.com` 1곳. apex `gear-forest.com`은 ① DNS CNAME `@`→`www.gear-forest.com`(프록시 ON) + ② Page Rule `gear-forest.com/*` → 301 `https://www.gear-forest.com/$1`로 처리. 검증: `curl https://gear-forest.com/` → 301 → www. **터널 public hostname은 www 1개만 두는 게 맞음**(apex를 터널에 직접 추가 안 함).
+  - 주의: DNS 변경 직후 기존에 `Could not resolve host` 캐싱한 리졸버(Mac mini 로컬 등)는 음수 캐시 만료까지 잠시 실패할 수 있음 — `dig +short`로는 정상 해석되면 OK.
 
 ## 4. 하드 검증된 GOTCHA (다시 헤매지 말 것)
 
