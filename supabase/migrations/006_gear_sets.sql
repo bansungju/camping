@@ -1,0 +1,70 @@
+-- 006_gear_sets.sql
+-- 캠핑 장비 세트 빌더: 세트 저장, 공유, 커뮤니티 연동
+
+CREATE TABLE IF NOT EXISTS gear_sets (
+  id            uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       uuid          NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title         text          NOT NULL CHECK (char_length(title) BETWEEN 1 AND 100),
+  description   text          CHECK (char_length(description) <= 500),
+  style         text          CHECK (style IN (
+                                'backpacking','car-camping','glamping',
+                                'bikepacking','winter','beach','family'
+                              )),
+  items         jsonb         NOT NULL DEFAULT '[]'::jsonb,
+  -- items 구조: [{pcode, name, brand, price, weight_g, category, qty}]
+  total_price   bigint        GENERATED ALWAYS AS (
+                                COALESCE(
+                                  (SELECT SUM((el->>'price')::bigint * COALESCE((el->>'qty')::int,1))
+                                   FROM jsonb_array_elements(items) el),
+                                  0
+                                )
+                              ) STORED,
+  total_weight_g bigint       GENERATED ALWAYS AS (
+                                COALESCE(
+                                  (SELECT SUM((el->>'weight_g')::bigint * COALESCE((el->>'qty')::int,1))
+                                   FROM jsonb_array_elements(items) el),
+                                  0
+                                )
+                              ) STORED,
+  budget_goal   bigint        CHECK (budget_goal >= 0),
+  completeness  smallint      NOT NULL DEFAULT 0 CHECK (completeness BETWEEN 0 AND 100),
+  is_public     boolean       NOT NULL DEFAULT true,
+  like_count    int           NOT NULL DEFAULT 0 CHECK (like_count >= 0),
+  comment_count int           NOT NULL DEFAULT 0 CHECK (comment_count >= 0),
+  deleted_at    timestamptz,
+  created_at    timestamptz   NOT NULL DEFAULT now(),
+  updated_at    timestamptz   NOT NULL DEFAULT now()
+);
+
+-- updated_at 자동 갱신 (002의 set_updated_at 재사용)
+CREATE TRIGGER gear_sets_updated_at
+  BEFORE UPDATE ON gear_sets
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- 인덱스
+CREATE INDEX idx_gear_sets_user_id   ON gear_sets (user_id)             WHERE deleted_at IS NULL;
+CREATE INDEX idx_gear_sets_public    ON gear_sets (is_public, created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_gear_sets_items_gin ON gear_sets USING GIN (items);
+
+-- RLS
+ALTER TABLE gear_sets ENABLE ROW LEVEL SECURITY;
+
+-- 공개 세트는 누구나 조회
+CREATE POLICY gear_sets_select_public ON gear_sets
+  FOR SELECT USING (is_public = true AND deleted_at IS NULL);
+
+-- 본인 세트는 비공개 포함 조회 (deleted 제외)
+CREATE POLICY gear_sets_select_own ON gear_sets
+  FOR SELECT USING (user_id = auth.uid() AND deleted_at IS NULL);
+
+-- 본인만 생성
+CREATE POLICY gear_sets_insert_own ON gear_sets
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- 본인만 수정
+CREATE POLICY gear_sets_update_own ON gear_sets
+  FOR UPDATE USING (user_id = auth.uid() AND deleted_at IS NULL);
+
+-- 본인만 삭제 (soft delete: deleted_at 세팅)
+CREATE POLICY gear_sets_delete_own ON gear_sets
+  FOR DELETE USING (user_id = auth.uid());
