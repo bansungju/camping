@@ -520,7 +520,7 @@ async function renderBrand() {
       <div class="tablewrap"><table>
         <thead><tr><th>모델</th><th>인원</th><th>최저가</th></tr></thead>
         <tbody>${c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x => `
-          <tr><td class="model"><a href="category.html?cat=${x.s}&q=${encodeURIComponent(x.m)}"><b>${esc(x.m)}</b></a></td>
+          <tr><td class="model"><a href="category.html?cat=${x.s}&brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}"><b>${esc(x.m)}</b></a></td>
             <td>${x.cap != null ? x.cap + "인" : "—"}</td>
             <td class="price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</td></tr>`).join("")}
         </tbody></table></div>`).join("") ||
