@@ -428,6 +428,33 @@ function restoreState(params) {
   if (sty && STYLE_META.some(s => s.key === sty)) STATE.campStyle = sty;
 }
 
+// 스타일 선택 시 해당 스타일의 핵심 스펙으로 sortKey 자동 전환
+const STYLE_SORT = {
+  backpacking:  { key:"weight_min",    asc: true  },  // 가벼울수록
+  "car-camping":{ key:"floor_area",    asc: false },  // 넓을수록
+  glamping:     { key:"floor_area",    asc: false },
+  winter:       { key:"comfort_temp",  asc: true  },  // 낮을수록(더 따뜻)
+  beach:        { key:"water_head",    asc: false },  // 방수 높을수록
+  family:       { key:"floor_area",    asc: false },
+};
+function applyStyleSort(d) {
+  if (!STATE.campStyle) {
+    // 스타일 해제 → 기본 정렬로 복귀
+    const star = d.metrics.filter(m => m.is_star);
+    STATE.sortKey = "spec:" + (star[0] && star[0].key);
+    STATE.sortAsc = defaultAsc(STATE.sortKey);
+    return;
+  }
+  const ss = STYLE_SORT[STATE.campStyle];
+  if (!ss) return;
+  // 해당 spec_key가 이 카테고리에 존재하는지 확인
+  const specExists = d.models.some(m => m.specs[ss.key] && m.specs[ss.key].value != null);
+  if (specExists) {
+    STATE.sortKey = "spec:" + ss.key;
+    STATE.sortAsc = ss.asc;
+  }
+}
+
 function renderStyleChips(d) {
   const el = document.getElementById("stylechips");
   if (!el) return;
@@ -451,6 +478,7 @@ function renderStyleChips(d) {
     el.querySelectorAll(".sc-chip").forEach(b => b.classList.toggle("on", b.dataset.style === STATE.campStyle));
     const tipEl = document.getElementById("sc-tip-text");
     if (tipEl) tipEl.textContent = STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : "";
+    applyStyleSort(d);
     updateLeadText(d);
     serializeState();
     draw();
