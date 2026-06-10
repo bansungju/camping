@@ -1788,6 +1788,29 @@ function renderAccount() {
       e.stopPropagation();
       const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
     });
+
+    // 찜 → 세트 일괄 추가 버튼
+    let bulkBtn = document.getElementById("wish-bulk-add");
+    if (!bulkBtn) {
+      bulkBtn = document.createElement("button");
+      bulkBtn.id = "wish-bulk-add";
+      bulkBtn.type = "button";
+      bulkBtn.style.cssText = "margin-top:10px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)";
+      wishEl.after(bulkBtn);
+    }
+    bulkBtn.textContent = `🎒 찜한 ${wishes.length}개 전체 → 새 세트로 저장`;
+    bulkBtn.onclick = () => {
+      const setName = `찜 목록 세트 ${new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}`;
+      const setItems = wishes.map(x => ({ b: x.b, m: x.m, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null }));
+      const s = { id: Date.now().toString(36), title: setName, style: "찜", items: setItems, created_at: new Date().toISOString() };
+      const all = getSets(); all.unshift(s); saveSets(all);
+      const tw = setItems.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g : sum, 0);
+      const tp = setItems.reduce((sum, x) => sum + (x.p || 0), 0);
+      const wStr = tw >= 1000 ? `${(tw/1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
+      showToast(`"${setName}" 저장됨${wStr ? " · ⚖️ " + wStr : ""}${tp ? " · 💰 " + tp.toLocaleString() + "원" : ""}`, 3000);
+      bulkBtn.textContent = "✅ 세트 저장됨 — 마이페이지 세트 탭에서 확인";
+      bulkBtn.disabled = true;
+    };
   }
 
   // 세트 섹션
