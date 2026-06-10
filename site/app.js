@@ -1415,12 +1415,15 @@ function renderAccount() {
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
   if (setsEl && sets.length) {
     const totalPrice = items => items.reduce((s, x) => s + (x.p || 0) * (x.qty || 1), 0);
+    const totalWeight = items => { const w = items.reduce((s, x) => x.weight_g != null ? s + x.weight_g * (x.qty || 1) : s, 0); return w > 0 ? w : null; };
+    const fmtWeight = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
+    const weightBadge = g => g == null ? '' : `<span class="pli-wt-badge" style="font-size:11px;color:${g<5000?'var(--ok,#2e7d32)':g<10000?'#e65100':'#b71c1c'}">${g<5000?'🪶경량':g<10000?'⚖️보통':'🏋️무거움'} ${fmtWeight(g)}</span>`;
     setsEl.innerHTML = sets.map((s, si) =>
       `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
         <div class="pli-info">
           <div class="pli-top">${esc(s.style || "세트")}</div>
           <div class="pli-name">${esc(s.title)}</div>
-          <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비</div>
+          <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비 ${weightBadge(totalWeight(s.items))}</div>
         </div>
         <div class="pli-side">
           <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
