@@ -314,6 +314,14 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
 .pli-setadd:hover{transform:scale(1.12);background:var(--accent);color:#fff}
 /* 세트 선택 모달 */
+/* 캠핑 스타일 칩 */
+#stylechips{margin:8px 0 4px}
+.sc-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.sc-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);
+  font-size:12px;font-weight:600;cursor:pointer;color:var(--txt);transition:border-color .12s,background .12s}
+.sc-chip:hover{border-color:var(--accent);color:var(--accent)}
+.sc-chip.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.sc-tip{font-size:12px;color:var(--accent);font-weight:600;min-height:16px;padding-bottom:4px}
 .acc-anchor{display:inline-block;padding:5px 14px;border-radius:20px;border:1.5px solid var(--accent);color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}
 .acc-anchor:hover{background:var(--accent);color:#fff}
 .acc-set-del{border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;line-height:1}
