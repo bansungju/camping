@@ -14,6 +14,20 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 })();
 const OPS = localStorage.getItem("ops") === "1";
 
+/* 운영자 모드일 땐 눈에 띄는 배너+끄기 버튼(조용히 갇히는 것 방지) */
+if (OPS) window.addEventListener("DOMContentLoaded", () => {
+  const b = document.createElement("div");
+  b.className = "opsbar";
+  b.innerHTML = `🛠 운영자 모드 — 신뢰등급·정직성 배지가 표시됩니다 ` +
+    `<button type="button" id="opsoff">사용자 화면으로 전환</button>`;
+  document.body.prepend(b);
+  document.getElementById("opsoff").onclick = () => {
+    localStorage.removeItem("ops");
+    const u = new URL(location.href); u.searchParams.delete("ops");
+    location.replace(u.pathname + u.search + u.hash);
+  };
+});
+
 /* 카테고리 아이콘(이미지 수집 전 단계: 이모지 타일). 중복 없이 1:1 */
 const CAT_ICON = {
   "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "기타텐트": "🎪", "침낭": "🛌", "매트": "🧘",
