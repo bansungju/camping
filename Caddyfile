@@ -38,7 +38,7 @@
 			not header Referer ""
 		}
 		respond @hotlink 403
-		root * /Users/mimi/camping/site/images
+		root * /Users/mimi/camping/site
 		file_server {
 			hide .*
 		}
@@ -46,7 +46,7 @@
 	}
 
 	handle /data/* {
-		root * /Users/mimi/camping/site/data
+		root * /Users/mimi/camping/site
 		file_server {
 			hide .*
 		}
