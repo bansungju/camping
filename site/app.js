@@ -504,7 +504,27 @@ function updateLeadText(d) {
   }
 }
 
+function renderCategorySkeleton() {
+  const listEl = document.getElementById("list");
+  if (!listEl) return;
+  listEl.innerHTML = Array.from({ length: 6 }).map(() =>
+    `<div class="pli pli-skel" aria-hidden="true">
+      <div class="skel-thumb"></div>
+      <div class="pli-info">
+        <div class="skel-line" style="width:40%;height:11px;margin-bottom:6px"></div>
+        <div class="skel-line" style="width:70%;height:14px;margin-bottom:8px"></div>
+        <div class="skel-line" style="width:55%;height:11px"></div>
+      </div>
+      <div class="pli-side" style="gap:6px">
+        <div class="skel-line" style="width:52px;height:14px"></div>
+        <div class="skel-line" style="width:28px;height:11px"></div>
+      </div>
+    </div>`
+  ).join("");
+}
+
 async function renderCategory() {
+  renderCategorySkeleton();
   const params = new URLSearchParams(location.search);
   // 클린 URL /category/{slug} 또는 ?cat= 파라미터 두 방식 모두 지원
   const pathMatch = location.pathname.match(/^\/category\/([a-z0-9-]+)/);
