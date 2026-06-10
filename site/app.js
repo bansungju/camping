@@ -377,12 +377,30 @@ async function setupHomeSearch() {
       `<a class="sres sbrand" href="brand.html?b=${encodeURIComponent(b)}">
          <span class="sb">${esc(b)}</span> <b>전체 ${n}개</b> 모아보기
          <span class="scat">브랜드 →</span></a>`).join("");
-    box.innerHTML = (brandHtml || "") + (hits.length ? hits.map(x =>
-      `<a class="sres" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
-         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
-         <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
-         <span class="scat">${esc(x.c)}</span></a>`).join("")
+    box.innerHTML = (brandHtml || "") + (hits.length ? hits.map((x, i) => {
+      const wk = wishKey(x.b, x.m, x.cap || null);
+      const wished = inWish(wk);
+      return `<div class="sres-wrap">
+        <a class="sres" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+          ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
+          <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
+          <span class="scat">${esc(x.c)}</span></a>
+        <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+      </div>`;
+    }).join("")
       : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
+    // 찜 버튼 이벤트
+    box.querySelectorAll(".sres-wish").forEach(btn => {
+      btn.onclick = e => {
+        e.preventDefault(); e.stopPropagation();
+        const x = hits[+btn.dataset.hi];
+        const item = { key: wishKey(x.b, x.m, x.cap || null), b: x.b, m: x.m, cap: x.cap || null, s: x.s, p: x.p, img: x.img };
+        const added = toggleWish(item);
+        btn.classList.toggle("on", added);
+        btn.textContent = added ? "♥" : "♡";
+        btn.setAttribute("aria-pressed", added);
+      };
+    });
   };
   inp.oninput = run;
   inp.onfocus = run;
