@@ -155,7 +155,7 @@ function thumbFallback(img) {
    항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
 function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
 function setWish(a) {
-  localStorage.setItem("wish", JSON.stringify(a));
+  try { localStorage.setItem("wish", JSON.stringify(a)); } catch (e) { /* 저장공간 부족 시 로컬 동작만 */ }
   // 로그인 상태에서 account 페이지가 등록한 훅이 있으면 원격 동기화. 없으면 로컬만(오프라인 우선).
   if (typeof window !== "undefined" && typeof window.onWishChange === "function") {
     try { window.onWishChange(a); } catch (e) { /* 동기화 실패는 로컬 동작 막지 않음 */ }
@@ -181,7 +181,7 @@ function pushRecent(item) {
   if (!item.s) return;   // 슬러그 없으면(되돌아갈 경로 불명) 기록 생략
   const a = getRecent().filter(x => x.key !== item.key);
   a.unshift(item);
-  localStorage.setItem("recent", JSON.stringify(a.slice(0, 12)));
+  try { localStorage.setItem("recent", JSON.stringify(a.slice(0, 12))); } catch (e) { /* 저장공간 부족 시 무시 */ }
 }
 
 /* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
@@ -240,7 +240,7 @@ async function renderHub() {
         <span class="it"><b>별점은 같은 그룹 안에서의 순위를 환산한 값</b>이에요. 측정값만 쓰고, 추측은 없습니다.</span>
         <button type="button" class="ix" aria-label="안내 닫기">✕</button>`;
       h1.insertAdjacentElement("beforebegin", ib);
-      ib.querySelector(".ix").onclick = () => { localStorage.setItem("seenIntro", "1"); ib.remove(); };
+      ib.querySelector(".ix").onclick = () => { try { localStorage.setItem("seenIntro", "1"); } catch (e) {} ib.remove(); };
     }
   }
 
@@ -278,7 +278,7 @@ async function setupHomeSearch() {
   let idx = [];
   try { idx = await getJSON("data/search.json"); } catch (e) { return; }
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
-  if (!inp) return;
+  if (!inp || !box) return;
   const run = () => {
     const q = inp.value.trim().toLowerCase();
     if (q.length < 1) { box.innerHTML = ""; box.style.display = "none"; return; }
@@ -301,6 +301,7 @@ async function setupHomeSearch() {
   };
   inp.oninput = run;
   inp.onfocus = run;
+  inp.onblur = () => { setTimeout(() => { box.style.display = "none"; }, 150); }
 }
 
 /* ---------- 카테고리 비교표 + 필터 ---------- */
@@ -404,29 +405,46 @@ function buildFilters(d, star) {
       caps.map(c => `<button class="ftag" data-cap="${c}">${c}인</button>`).join("") + `</div>`);
   }
 
-  // 가격 범위
+  // 가격 범위 — 듀얼 슬라이더
   const prices = num(ms.map(m => m.price_min));
   if (prices.length) {
     const lo = Math.min(...prices), hi = Math.max(...prices);
-    parts.push(`<div class="fgrp"><span class="flab">가격</span>
-      <input class="frng" type="number" data-rng="price" data-b="min" placeholder="${lo.toLocaleString()}" inputmode="numeric">
-      <span class="rsep">~</span>
-      <input class="frng" type="number" data-rng="price" data-b="max" placeholder="${hi.toLocaleString()}" inputmode="numeric">
-      <span class="runit">원</span></div>`);
+    const step = Math.max(1000, Math.round((hi - lo) / 100 / 1000) * 1000);
+    parts.push(`<div class="fgrp fgrp-slider"><span class="flab">가격</span>
+      <div class="dslider" data-rng="price" data-lo="${lo}" data-hi="${hi}" data-step="${step}" data-unit="price">
+        <div class="dslider-track"><div class="dslider-fill"></div></div>
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max">
+        <div class="dslider-labels">
+          <span class="dsl-val" data-b="min">${lo.toLocaleString()}원</span>
+          <span class="dsl-val" data-b="max">${hi.toLocaleString()}원</span>
+        </div>
+      </div></div>`);
   }
 
-  // 스펙 범위 (각 ★지표) — 무게는 kg환산 안내
+  // 스펙 범위 (각 ★지표) — 무게는 kg 단위 슬라이더
   star.forEach(m => {
     const vals = num(ms.map(x => x.specs[m.key] && x.specs[m.key].value));
     if (vals.length < 2) return;
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    const u = m.unit || "";
-    const hint = (u === "g") ? "g(1000↑kg)" : u;
-    parts.push(`<div class="fgrp"><span class="flab">${m.label}</span>
-      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="min" placeholder="${+lo.toFixed(1)}" inputmode="decimal">
-      <span class="rsep">~</span>
-      <input class="frng" type="number" step="any" data-rng="${m.key}" data-b="max" placeholder="${+hi.toFixed(1)}" inputmode="decimal">
-      <span class="runit">${hint}</span></div>`);
+    const isWeight = (m.unit || "") === "g";
+    const rawLo = Math.min(...vals), rawHi = Math.max(...vals);
+    // 슬라이더는 kg 단위, STATE.range는 g 단위 유지 (passRange가 specs.value와 비교하므로)
+    const slo = isWeight ? rawLo / 1000 : rawLo;
+    const shi = isWeight ? rawHi / 1000 : rawHi;
+    const displayUnit = isWeight ? "kg" : (m.unit || "");
+    const step = isWeight ? 0.1 : Math.max(0.1, +((shi - slo) / 100).toFixed(2));
+    const fmtVal = v => isWeight ? (+v).toFixed(1) + "kg" : (+v).toFixed(1) + displayUnit;
+    parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${m.label}</span>
+      <div class="dslider" data-rng="${m.key}" data-lo="${slo}" data-hi="${shi}" data-step="${step}"
+           data-unit="${displayUnit}" data-isweight="${isWeight ? 1 : 0}">
+        <div class="dslider-track"><div class="dslider-fill"></div></div>
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${slo}" data-b="min">
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${shi}" data-b="max">
+        <div class="dslider-labels">
+          <span class="dsl-val" data-b="min">${fmtVal(slo)}</span>
+          <span class="dsl-val" data-b="max">${fmtVal(shi)}</span>
+        </div>
+      </div></div>`);
   });
 
   // 브랜드 멀티선택 + 전체 드롭다운
@@ -479,13 +497,51 @@ function buildFilters(d, star) {
   // 브랜드 드롭다운(추가)
   const bsel = bar.querySelector("[data-brandsel]");
   if (bsel) bsel.onchange = e => { if (e.target.value) { STATE.brands.add(e.target.value); e.target.value = ""; draw(); } };
-  // 범위 입력
-  bar.querySelectorAll(".frng").forEach(inp => inp.oninput = () => {
-    const key = inp.dataset.rng, b = inp.dataset.b, v = inp.value.trim();
-    STATE.range[key] = STATE.range[key] || {};
-    if (v === "") delete STATE.range[key][b]; else STATE.range[key][b] = parseFloat(v);
-    if (!Object.keys(STATE.range[key]).length) delete STATE.range[key];
-    draw();
+  // 듀얼 슬라이더 이벤트
+  bar.querySelectorAll(".dslider").forEach(sl => {
+    const key = sl.dataset.rng;
+    const isWeight = sl.dataset.isweight === "1";
+    const isPrice = sl.dataset.unit === "price";
+    const totalLo = parseFloat(sl.dataset.lo), totalHi = parseFloat(sl.dataset.hi);
+    const minInp = sl.querySelector('[data-b="min"]'), maxInp = sl.querySelector('[data-b="max"]');
+    const minLbl = sl.querySelector('.dsl-val[data-b="min"]'), maxLbl = sl.querySelector('.dsl-val[data-b="max"]');
+    const fill = sl.querySelector(".dslider-fill");
+
+    const fmtLabel = v => {
+      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isWeight) return (+v).toFixed(1) + "kg";
+      return (+v).toFixed(1) + (sl.dataset.unit || "");
+    };
+    const updateFill = () => {
+      const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
+      const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+      fill.style.left = pct(lo) + "%";
+      fill.style.width = (pct(hi) - pct(lo)) + "%";
+    };
+    const toStateVal = v => isWeight ? parseFloat(v) * 1000 : parseFloat(v);
+    const applyToState = () => {
+      const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
+      const isDefault = (lo <= totalLo && hi >= totalHi);
+      if (isDefault) { delete STATE.range[key]; }
+      else {
+        STATE.range[key] = {};
+        if (lo > totalLo) STATE.range[key].min = toStateVal(lo);
+        if (hi < totalHi) STATE.range[key].max = toStateVal(hi);
+      }
+      draw();
+    };
+
+    minInp.oninput = () => {
+      if (parseFloat(minInp.value) > parseFloat(maxInp.value)) minInp.value = maxInp.value;
+      minLbl.textContent = fmtLabel(minInp.value);
+      updateFill(); applyToState();
+    };
+    maxInp.oninput = () => {
+      if (parseFloat(maxInp.value) < parseFloat(minInp.value)) maxInp.value = minInp.value;
+      maxLbl.textContent = fmtLabel(maxInp.value);
+      updateFill(); applyToState();
+    };
+    updateFill();
   });
   // 정렬 적용(셀렉트·빠른칩 공용) — 셀렉트 값도 동기화
   const ssel = bar.querySelector("[data-sort]");
@@ -519,8 +575,16 @@ function renderActiveFilters() {
   STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
   Object.entries(STATE.range).forEach(([k, r]) => {
     const lab = k === "price" ? "가격" : (STATE.data.metrics.find(m => m.key === k) || {}).label || k;
-    const u = k === "price" ? "원" : (STATE.unit[k] || "");
-    const txt = `${lab} ${r.min != null ? r.min : ""}~${r.max != null ? r.max : ""}${u}`;
+    const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");
+    // 무게(g) 필터는 STATE.range에 g 단위로 저장되지만 사용자에게는 kg으로 표시
+    const isWeight = rawUnit === "g";
+    const fmt = v => {
+      if (v == null) return "";
+      if (k === "price") return v.toLocaleString("ko-KR");
+      if (isWeight) return (v / 1000).toFixed(1) + "kg";
+      return v + rawUnit;
+    };
+    const txt = `${lab} ${fmt(r.min)}~${fmt(r.max)}`;
     chips.push([txt, () => delete STATE.range[k]]);
   });
   if (STATE.qExclude) chips.push(["스펙값 있는 것만", () => { STATE.qExclude = false; }]);
@@ -547,9 +611,28 @@ function syncFilterUI() {
   const bar = document.getElementById("filters");
   bar.querySelectorAll("[data-cap]").forEach(b => b.classList.toggle("on", b.dataset.cap === STATE.cap));
   bar.querySelectorAll("[data-brand]").forEach(b => b.classList.toggle("on", STATE.brands.has(b.dataset.brand)));
-  bar.querySelectorAll(".frng").forEach(inp => {
-    const r = STATE.range[inp.dataset.rng];
-    inp.value = (r && r[inp.dataset.b] != null) ? r[inp.dataset.b] : "";
+  bar.querySelectorAll(".dslider").forEach(sl => {
+    const key = sl.dataset.rng;
+    const isWeight = sl.dataset.isweight === "1";
+    const totalLo = parseFloat(sl.dataset.lo), totalHi = parseFloat(sl.dataset.hi);
+    const r = STATE.range[key];
+    const minInp = sl.querySelector('[data-b="min"]'), maxInp = sl.querySelector('[data-b="max"]');
+    const minLbl = sl.querySelector('.dsl-val[data-b="min"]'), maxLbl = sl.querySelector('.dsl-val[data-b="max"]');
+    const fill = sl.querySelector(".dslider-fill");
+    const isPrice = sl.dataset.unit === "price";
+    const fmtLabel = v => {
+      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isWeight) return (+v).toFixed(1) + "kg";
+      return (+v).toFixed(1) + (sl.dataset.unit || "");
+    };
+    const toDisplayVal = v => isWeight ? v / 1000 : v;
+    const loVal = (r && r.min != null) ? toDisplayVal(r.min) : totalLo;
+    const hiVal = (r && r.max != null) ? toDisplayVal(r.max) : totalHi;
+    minInp.value = loVal; maxInp.value = hiVal;
+    if (minLbl) minLbl.textContent = fmtLabel(loVal);
+    if (maxLbl) maxLbl.textContent = fmtLabel(hiVal);
+    const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+    if (fill) { fill.style.left = pct(loVal) + "%"; fill.style.width = (pct(hiVal) - pct(loVal)) + "%"; }
   });
   const qx = bar.querySelector("[data-qx]"); if (qx) qx.checked = STATE.qExclude;
   // 정렬 셀렉트도 복원상태 반영(URL→컨트롤). 기본 주력지표 정렬이면 '기본' 표시
@@ -630,7 +713,7 @@ function openProduct(m) {
     const val = has ? fmtVal(s.value, mt.unit) : (OPS ? '<span class="b 데이터부족">데이터부족</span>' : "—");
     const st = (has && s.stars != null) ? " " + stars(s.stars) : "";
     const badge = (OPS && has && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
-    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? `(${mt.unit})` : ""}</span>` +
+    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? ` (${mt.unit})` : ""}</span>` +
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
@@ -655,12 +738,16 @@ function openProduct(m) {
     wbtn.setAttribute("aria-pressed", added);
   };
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
-  const close = () => { modal.classList.remove("on"); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const close = () => {
+    modal.classList.remove("on");
+    document.removeEventListener("keydown", onKey);
+    if (prevFocus && prevFocus.focus) prevFocus.focus();
+  };
   modal.onclick = e => { if (e.target === modal) close(); };
   const xbtn = modal.querySelector(".pmx");
   xbtn.onclick = close;
   xbtn.focus();
-  const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  const onKey = e => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
 }
 
@@ -679,7 +766,7 @@ function draw() {
   rows.sort((a, b) => {
     let va = cellVal(a, k), vb = cellVal(b, k);
     if (typeof va === "string" || typeof vb === "string")
-      return asc ? String(va).localeCompare(vb) : String(vb).localeCompare(va);
+      return asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
     // 데이터부족(null)은 정렬 방향과 무관하게 항상 맨 아래
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
@@ -762,7 +849,7 @@ async function renderBrand() {
   const draw = (bn) => {
     const rows = idx.filter(x => x.b === bn);
     document.getElementById("crumbName").textContent = bn || "선택";
-    document.title = `${bn} 전체보기 — 장비의 숲`;
+    document.title = bn ? `${bn} 전체보기 — 장비의 숲` : `브랜드 — 장비의 숲`;
     document.getElementById("title").innerHTML = bn ? `${esc(bn)} <span class="nd" style="font-size:15px">전 카테고리</span>` : "브랜드를 선택하세요";
     document.getElementById("count").textContent = bn ? `${rows.length}개 모델` : "";
     // 카테고리별 그룹

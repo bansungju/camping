@@ -34,6 +34,7 @@
 
 	handle /images/* {
 		@hotlink {
+			not header Referer *gear-forest.com*
 			not header Referer *bansungju.github.io*
 			not header Referer ""
 		}
