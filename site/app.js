@@ -225,6 +225,18 @@ function wishItem(m, slug) {
    세트 구조: {id, title, style, items:[{pcode,b,m,cap,s,p,img,weight_g,qty}], created_at} */
 function getSets() { try { return JSON.parse(localStorage.getItem("gear_sets") || "[]"); } catch (e) { return []; } }
 function saveSets(a) { localStorage.setItem("gear_sets", JSON.stringify(a)); }
+function showToast(msg, duration) {
+  let t = document.getElementById("app-toast");
+  if (!t) {
+    t = document.createElement("div"); t.id = "app-toast";
+    t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center";
+    document.body.appendChild(t);
+  }
+  clearTimeout(t._tid);
+  t.textContent = msg;
+  requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
+  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; }, duration || 2400);
+}
 function newSet(title) {
   const s = { id: Date.now().toString(36), title, style: "", items: [], created_at: new Date().toISOString() };
   const a = getSets(); a.unshift(s); saveSets(a); return s;
@@ -270,16 +282,26 @@ function openSetModal(item) {
   const close = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
+  const showSetToast = (setId) => {
+    const s = getSets().find(x => x.id === setId);
+    if (!s) return;
+    const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
+    const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
+    const wStr = tw >= 1000 ? `${(tw/1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
+    const pStr = tp > 0 ? `${tp.toLocaleString()}원` : null;
+    const parts = [wStr && `⚖️ ${wStr}`, pStr && `💰 ${pStr}`].filter(Boolean);
+    showToast(`"${s.title}" 추가됨${parts.length ? " · " + parts.join(" · ") : ""}`, 2800);
+  };
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
     addToSet(btn.dataset.sid, item);
     btn.textContent = "✓ 추가됨"; btn.disabled = true;
-    setTimeout(close, 700);
+    setTimeout(() => { close(); showSetToast(btn.dataset.sid); }, 400);
   });
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
     const s = newSet(t); addToSet(s.id, item);
-    close();
+    close(); showSetToast(s.id);
   };
   inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
   modal.querySelector(".pmx").focus();
