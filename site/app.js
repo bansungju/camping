@@ -391,7 +391,6 @@ function defaultSortKey() {
 }
 function serializeState() {
   const p = new URLSearchParams();
-  p.set("cat", new URLSearchParams(location.search).get("cat") || "");
   if (STATE.q) p.set("q", STATE.q);
   if (STATE.cap) p.set("cap", STATE.cap);
   if (STATE.brands.size) p.set("brands", [...STATE.brands].join("|"));
@@ -405,7 +404,15 @@ function serializeState() {
   }
   if (STATE.qExclude) p.set("qx", "1");
   if (STATE.campStyle) p.set("style", STATE.campStyle);
-  history.replaceState(null, "", "?" + p.toString());
+  // 클린 URL 유지: /category/{slug}?필터  (cat= 쿼리 제거)
+  const pathMatch = location.pathname.match(/^\/category\/[a-z0-9-]+/);
+  const qs = p.toString();
+  if (pathMatch) {
+    history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
+  } else {
+    const full = qs ? `?cat=${STATE.slug}&${qs}` : `?cat=${STATE.slug}`;
+    history.replaceState(null, "", full);
+  }
 }
 function restoreState(params) {
   STATE.q = (params.get("q") || "").toLowerCase();
@@ -499,7 +506,9 @@ function updateLeadText(d) {
 
 async function renderCategory() {
   const params = new URLSearchParams(location.search);
-  const slug = params.get("cat");
+  // 클린 URL /category/{slug} 또는 ?cat= 파라미터 두 방식 모두 지원
+  const pathMatch = location.pathname.match(/^\/category\/([a-z0-9-]+)/);
+  const slug = params.get("cat") || (pathMatch && pathMatch[1]);
   let d;
   try { d = await getJSON(`data/${slug}.json`); }
   catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
