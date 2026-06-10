@@ -57,14 +57,13 @@ const PERSONAS = [
       { cat: "cookware", metric: "weight_min", label: "미니 코펠" },
       { cat: "burner", metric: "weight_min", label: "초경량 버너" },
     ] },
-  { key: "minimal", emoji: "📦", name: "미니멀리스트", tagline: "적게, 다용도로",
-    note: "최소 구성 — 텐트 대신 타프, 가벼운 순",
+  { key: "minimal", emoji: "📦", name: "미니멀리스트", tagline: "적게, 군더더기 없이",
+    note: "텐트 대신 타프 · 가볍고 합리적인 '가성비'(별점÷가격) 순 — 백패커의 프리미엄 최경량과 차별",
     picks: [
-      { cat: "tarp", metric: "weight_min", label: "경량 타프 (텐트 대신)" },
-      { cat: "sleeping-bag", metric: "weight_min", label: "경량 침낭" },
-      { cat: "mat", metric: "weight_min", label: "경량 매트" },
-      { cat: "cookware", metric: "weight_min", label: "미니 코펠" },
-      { cat: "chair", metric: "weight_min", label: "경량 의자" },
+      { cat: "tarp", metric: "weight_min", rankBy: "value", label: "타프 (텐트 대신)" },
+      { cat: "sleeping-bag", metric: "weight_min", rankBy: "value", label: "침낭" },
+      { cat: "mat", metric: "weight_min", rankBy: "value", label: "매트" },
+      { cat: "cookware", metric: "weight_min", rankBy: "value", label: "코펠" },
     ] },
   { key: "auto", emoji: "🚙", name: "오토 / 맥시멀", tagline: "차로 싣고, 집처럼 편하게",
     note: "공간·용량·스펙이 큰 순 (무게 무관) · 스펙 상위일수록 가격이 높은 경향",
@@ -73,8 +72,10 @@ const PERSONAS = [
       { cat: "auto-tent", metric: "floor_area", filter: m => m.specs.floor_area.badge !== "외형기준", label: "넓은 거실형 텐트" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
       { cat: "burner", metric: "power_output", label: "고화력 버너" },
+      { cat: "table", metric: "max_load", label: "튼튼한 테이블" },
       { cat: "chair", metric: "max_load", label: "튼튼한 의자" },
-      { cat: "powerbank", metric: "capacity_mah", label: "대용량 파워뱅크" },
+      // 파워스테이션(대형) 제외 — 일반 휴대 파워뱅크만(mAh 단일 이상치 독점 방지)
+      { cat: "powerbank", metric: "capacity_mah", filter: m => m.specs.capacity_mah.value <= 100000, label: "대용량 파워뱅크" },
     ] },
   { key: "family", emoji: "👨‍👩‍👧‍👦", name: "4인 가족", tagline: "안전하게, 넉넉하게",
     note: "4인 이상 · 넓고(공간분리) 방수 좋은 순 · ‘신속설치’는 측정값이 없어 미반영 · 스펙 상위는 고가 경향",
@@ -82,9 +83,9 @@ const PERSONAS = [
       { cat: "auto-tent", metric: "floor_area", filter: m => m.capacity != null && m.capacity >= 4 && m.specs.floor_area.badge !== "외형기준", label: "4인+ 넓은 텐트" },
       { cat: "auto-tent", metric: "water_head", filter: m => m.capacity != null && m.capacity >= 4, label: "방수 좋은 텐트 (우천 안전)" },
       { cat: "cooler", metric: "capacity_l", label: "대용량 아이스박스" },
-      // 가족 3~4계절 기준: -20℃ 미만 극지 동계백은 과스펙·고가라 제외(따뜻한 순)
-      { cat: "sleeping-bag", metric: "comfort_temp",
-        filter: m => m.specs.comfort_temp && m.specs.comfort_temp.value >= -20, label: "따뜻한 침낭 (3계절~겨울)" },
+      { cat: "table", metric: "max_load", label: "넓고 튼튼한 테이블" },
+      // 가족 3~4계절: 내한온도가 적정대(-5℃ 안팎)에 가까운 순. 극지 동계백·한여름백 둘 다 배제
+      { cat: "sleeping-bag", metric: "comfort_temp", target: -5, label: "3계절용 침낭" },
     ] },
 ];
 
@@ -681,10 +682,19 @@ async function renderRecommend() {
       const s = m.specs[pick.metric];
       return s && s.value != null && (pick.filter ? pick.filter(m) : true);
     });
-    rows.sort((a, b) => { const va = a.specs[pick.metric].value, vb = b.specs[pick.metric].value; return lower ? va - vb : vb - va; });
+    // 순위 점수(클수록 추천 상위). target=목표근접 / rankBy:value=가성비 / 기본=지표 좋은방향
+    const score = m => {
+      const s = m.specs[pick.metric];
+      if (pick.target != null) return -Math.abs(s.value - pick.target);
+      if (pick.rankBy === "value") return (s.stars != null && m.price_min) ? s.stars / (m.price_min / 10000) : -Infinity;
+      return lower ? -s.value : s.value;
+    };
+    rows.sort((a, b) => score(b) - score(a));
     rows = rows.slice(0, 4);
     if (!rows.length) return "";
-    const more = `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
+    const more = pick.rankBy === "value"
+      ? `category.html?cat=${pick.cat}&sort=value`
+      : `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
     const cards = rows.map(m => {
       const s = m.specs[pick.metric];
       const starHtml = s.stars != null ? " " + stars(s.stars) : "";   // 별점 없으면 외톨이 '—' 대신 생략
