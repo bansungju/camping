@@ -1386,7 +1386,12 @@ function renderAccount() {
     ).join("");
     setsEl.querySelectorAll(".acc-set-del").forEach(b => b.onclick = e => {
       e.stopPropagation();
-      const arr = getSets(); arr.splice(+b.dataset.si, 1); saveSets(arr); renderAccount();
+      const arr = getSets();
+      const deleted = arr.splice(+b.dataset.si, 1)[0];
+      if (deleted?.remoteId && typeof window._deleteRemoteGearSet === 'function') {
+        window._deleteRemoteGearSet(deleted.remoteId);
+      }
+      saveSets(arr); renderAccount();
     });
   }
 }
