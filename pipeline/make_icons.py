@@ -6,7 +6,7 @@ SVG 래스터라이저가 없어 PIL로 직접 드로잉(4x 슈퍼샘플 후 LAN
 """
 import os
 import sys
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(os.path.dirname(HERE), "site")
@@ -51,7 +51,44 @@ def render(size, tree_scale=1.0, ground_frac=0.80, spread=0.20):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def _font(size):
+    for p in ["/System/Library/Fonts/AppleSDGothicNeo.ttc",
+              "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
+              "/Library/Fonts/AppleSDGothicNeo.ttc"]:
+        try:
+            return ImageFont.truetype(p, size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def render_og(path):
+    """링크 공유용 OG 이미지 1200x630 — 숲 + '장비의 숲' 워드마크."""
+    S = 2
+    W, H = 1200 * S, 630 * S
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    for y in range(H):
+        d.line([(0, y), (W, y)], fill=_lerp(GREEN_TOP, GREEN_BOT, y / H))
+    ground = int(H * 0.80)
+    th = H * 0.46
+    _pine(d, int(W * 0.16), ground - int(H * 0.02), th * 0.70, W * 0.05, CREAM)
+    _pine(d, int(W * 0.30), ground - int(H * 0.04), th * 0.60, W * 0.045, CREAM)
+    _pine(d, int(W * 0.23), ground, th, W * 0.062, CREAM)
+    tx = int(W * 0.42)
+    f_title = _font(int(H * 0.20))
+    f_tag = _font(int(H * 0.058))
+    d.text((tx, int(H * 0.30)), "장비의 숲", font=f_title, fill=CREAM)
+    d.text((tx, int(H * 0.56)), "캠핑 장비, 측정값으로 정직하게 비교", font=f_tag, fill=(0xcf, 0xe3, 0xd6))
+    d.text((tx, int(H * 0.66)), "gear-forest.com", font=f_tag, fill=(0xa9, 0xcc, 0xb8))
+    img.resize((1200, 630), Image.LANCZOS).save(path)
+
+
 def main():
+    if "--og" in sys.argv:
+        render_og("/tmp/gearforest_og_preview.png")
+        print("og preview → /tmp/gearforest_og_preview.png")
+        return
     if "--preview" in sys.argv:
         render(512).save("/tmp/gearforest_icon_preview.png")
         render(512, tree_scale=0.74, ground_frac=0.74, spread=0.16).save("/tmp/gearforest_maskable_preview.png")
@@ -62,7 +99,8 @@ def main():
     render(180).save(os.path.join(SITE, "apple-touch-icon.png"))
     # maskable: 런처가 원형 크롭 → 콘텐츠를 중앙 안전영역으로 축소
     render(512, tree_scale=0.74, ground_frac=0.74, spread=0.16).save(os.path.join(SITE, "icon-maskable-512.png"))
-    print("아이콘 4종 생성 완료 →", SITE)
+    render_og(os.path.join(SITE, "og-image.png"))   # 링크 공유 미리보기 1200x630
+    print("아이콘 4종 + og-image 생성 완료 →", SITE)
 
 
 if __name__ == "__main__":
