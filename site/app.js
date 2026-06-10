@@ -1980,10 +1980,19 @@ function renderAccount() {
               <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tp ? won(tp) : "—"}</td>
             </tr></tfoot>
           </table>
+          <button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>
         </div>`;
         modal.classList.add("on");
         modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
         modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+        modal.querySelector("#set-to-log-btn").onclick = () => {
+          modal.classList.remove("on");
+          if (document.getElementById("log-modal")) {
+            openLogModal(si);
+          } else {
+            location.href = `community.html?open-log=1&set=${si}`;
+          }
+        };
       };
     });
   }
@@ -2411,7 +2420,7 @@ function openLogDetail(p) {
   })();
 }
 
-function openLogModal() {
+function openLogModal(presetSetIndex) {
   const modal = document.getElementById("log-modal");
   if (!modal) return;
   const body = document.getElementById("log-modal-body");
@@ -2493,6 +2502,12 @@ function openLogModal() {
     tags.push(v);
     renderTags();
     tagInput.value = "";
+  }
+
+  // 세트에서 직접 로그 작성 진입 시 해당 세트 자동 선택
+  if (presetSetIndex != null) {
+    const setSelect = body.querySelector("#lf-set");
+    if (setSelect) setSelect.value = String(presetSetIndex);
   }
 
   body.querySelector("#lf-tag-add").onclick = () => addTag(tagInput.value);
