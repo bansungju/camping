@@ -1643,7 +1643,7 @@ async function renderLogFeed(sortMode = "latest") {
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     const { data: posts, error } = await supabase
       .from("posts")
-      .select("id, title, content, tags, created_at, user_id, image_url, likes, comment_count, profiles(nickname)")
+      .select("id, title, content, tags, created_at, user_id, image_url, likes, comment_count, gear_set_snapshot, profiles(nickname)")
       .eq("is_public", true)
       .order(orderCol, { ascending: false })
       .limit(20);
@@ -1663,6 +1663,8 @@ async function renderLogFeed(sortMode = "latest") {
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<span class="log-tag">${esc(t)}</span>`).join("");
       const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
       const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
+      const gs = p.gear_set_snapshot;
+      const gsBadge = gs ? (() => { const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const cnt = (gs.items||[]).length; return `<div class="log-set-badge">🎒 ${esc(gs.name)}${cnt ? ` · ${cnt}개` : ""}${wTxt ? ` · ${wTxt}` : ""}</div>`; })() : "";
       const liked = _isPostLiked(p.id);
       const likeCount = p.likes || 0;
       return `<div class="log-card" role="button" tabindex="0" data-li="${i}" style="cursor:pointer">
@@ -1674,6 +1676,7 @@ async function renderLogFeed(sortMode = "latest") {
         <div class="log-title">${esc(p.title)}</div>
         <div class="log-preview">${esc(preview)}${p.content.length > 80 ? "…" : ""}</div>
         ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
+        ${gsBadge}
         <div class="log-card-foot">
           <button type="button" class="log-like-btn${liked ? " on" : ""}" data-pid="${esc(p.id)}" data-liked="${liked ? "1" : "0"}" aria-label="좋아요">
             ${liked ? "♥" : "♡"} <span class="log-like-cnt">${likeCount}</span>
@@ -1738,6 +1741,7 @@ function openLogDetail(p) {
     ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
     <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
     ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
+    ${(() => { const gs = p.gear_set_snapshot; if (!gs) return ""; const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const itemsHtml = (gs.items||[]).slice(0,5).map(x => `<span class="log-set-item">${esc(x.name)}${x.weight_g ? ` <span style="color:var(--muted)">${x.weight_g >= 1000 ? (x.weight_g/1000).toFixed(1)+"kg" : x.weight_g+"g"}</span>` : ""}</span>`).join(""); return `<div class="log-set-detail" style="margin-top:14px;padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--line)"><div style="font-size:12px;font-weight:600;margin-bottom:6px">🎒 ${esc(gs.name)}${wTxt ? ` · 총 ${wTxt}` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:4px">${itemsHtml}${(gs.items||[]).length > 5 ? `<span style="font-size:11px;color:var(--muted)">외 ${(gs.items||[]).length - 5}개</span>` : ""}</div></div>`; })()}
     <div class="log-card-foot" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
       <button type="button" class="log-like-btn${_isPostLiked(p.id) ? " on" : ""}" id="detail-like-btn" data-pid="${esc(p.id)}" data-liked="${_isPostLiked(p.id) ? "1" : "0"}">
         ${_isPostLiked(p.id) ? "♥" : "♡"} <span class="log-like-cnt">${p.likes || 0}</span> 좋아요
@@ -1881,6 +1885,13 @@ function openLogModal() {
         </div>
         ${tagSuggestions.length ? `<div class="lf-tag-sug">${tagSuggestions.map(t => `<button type="button" class="lf-sug-chip" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : ""}
       </div>
+      ${sets.length ? `<div class="lf-field">
+        <label class="lf-label" for="lf-set">내 세트 첨부 <span class="lf-hint">선택</span></label>
+        <select id="lf-set" class="lf-input" style="cursor:pointer">
+          <option value="">첨부 안 함</option>
+          ${sets.map((s, i) => `<option value="${i}">${esc(s.name || "이름 없는 세트")} (${(s.items || []).length}개)</option>`).join("")}
+        </select>
+      </div>` : ""}
       <div class="lf-field">
         <label class="lf-label" for="lf-img">사진 <span class="lf-hint">선택 · 최대 5MB</span></label>
         <input id="lf-img" type="file" accept="image/*" style="font-size:13px;width:100%">
@@ -1969,9 +1980,18 @@ function openLogModal() {
         const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(path);
         image_url = urlData?.publicUrl ?? null;
       }
+      const setSelect = form.querySelector("#lf-set");
+      let gear_set_snapshot = null;
+      if (setSelect && setSelect.value !== "") {
+        const s = sets[+setSelect.value];
+        if (s) {
+          const totalW = (s.items || []).reduce((acc, x) => x.weight_g != null ? acc + x.weight_g * (x.qty || 1) : acc, 0);
+          gear_set_snapshot = { name: s.name || "이름 없는 세트", items: (s.items || []).map(x => ({ name: `${x.b || ""} ${x.m || ""}`.trim(), weight_g: x.weight_g ?? null, qty: x.qty || 1 })), total_weight_g: totalW > 0 ? totalW : null };
+        }
+      }
       const { error } = await supabase.from("posts").insert({
         user_id: window._commUser.id, title, content,
-        tags, is_public, image_url
+        tags, is_public, image_url, gear_set_snapshot
       });
       if (error) throw error;
       modal.classList.remove("on");
