@@ -35,6 +35,7 @@
 	handle /images/* {
 		@hotlink {
 			not header Referer *bansungju.github.io*
+			not header Referer *gear-forest.com*
 			not header Referer ""
 		}
 		respond @hotlink 403
@@ -44,6 +45,9 @@
 		}
 		header Cache-Control "public, max-age=86400"
 	}
+
+	@catpath path_regexp cat ^/category/([a-z0-9-]+)$
+	rewrite @catpath /category.html?cat={re.cat.1}
 
 	handle /data/* {
 		root * /Users/mimi/camping/site
