@@ -129,8 +129,54 @@ def bootstrap(con):
     con.commit()
 
 
-def harvest(con, name, cfg, maxpages, seen_pcode, seen_names):
+def ingest_one(con, cfg, c, seen_names):
+    """단일 후보(c) → DB 적재. 신규 pcode 가정(중복 pcode 게이트는 호출자 책임).
+    반환: 'ok' | 'skip_kw' | 'skip_exclude' | 'dup_name'. (refresh 노드도 이걸 재사용)"""
     cid = cfg["cid"]
+    specs, tags = D.parse_spec_string(c["spec_text"])
+    blob = " ".join(tags) + " " + c["name"]
+    if not any(k in blob for k in cfg["kw"]):
+        return "skip_kw"
+    if any(x in blob for x in EXCLUDE):
+        return "skip_exclude"
+    toks = c["name"].split()
+    brand, model = toks[0], (" ".join(toks[1:]) if len(toks) > 1 else c["name"])
+    if model in seen_names:
+        return "dup_name"
+    seen_names.add(model)
+    cap = None
+    if cfg["seg"] == "인원":
+        m = re.search(r"(\d+)인", blob)
+        cap = int(m.group(1)) if m else None
+    con.execute("INSERT OR IGNORE INTO brands(name_ko) VALUES(?)", (brand,))
+    bid = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()[0]
+    con.execute("""INSERT OR IGNORE INTO products(brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
+        VALUES(?,?,?,?,?, 'pending','on_sale')""", (bid, cid, model, cap, c["pcode"]))
+    pid = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
+                      (bid, model)).fetchone()[0]
+    got = set()
+    for metric, keys, fn in cfg["spec"]:
+        raw = P.find_spec(specs, keys, ["수납"] if metric == "floor_area" else None)
+        if not raw:
+            continue
+        val = P.derive_floor(raw) if fn == "derive_floor" else FN[fn](raw)
+        if val is None:
+            continue
+        con.execute("""INSERT INTO product_spec_values(product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
+            VALUES(?,?,?,?,?,1,'high',1,1)""", (pid, P.metric_id(con, cid, metric), val, raw, "norm"))
+        got.add(metric)
+    for key in cfg["core"]:
+        if key not in got:
+            P.flag(con, pid, P.metric_id(con, cid, key), "missing", f"{key} 미표기")
+    if c["price"]:
+        con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel) VALUES(?,?,?,?)",
+                    (pid, c["price"], "다나와최저가", "danawa_search"))
+    else:
+        P.flag(con, pid, None, "missing", "가격 없음")
+    return "ok"
+
+
+def harvest(con, name, cfg, maxpages, seen_pcode, seen_names):
     ok = 0
     for q in cfg["queries"]:
         for page in range(1, maxpages + 1):
@@ -144,47 +190,8 @@ def harvest(con, name, cfg, maxpages, seen_pcode, seen_names):
                 if c["pcode"] in seen_pcode:
                     continue
                 seen_pcode.add(c["pcode"])
-                specs, tags = D.parse_spec_string(c["spec_text"])
-                blob = " ".join(tags) + " " + c["name"]
-                if not any(k in blob for k in cfg["kw"]):
-                    continue
-                if any(x in blob for x in EXCLUDE):
-                    continue
-                toks = c["name"].split()
-                brand, model = toks[0], (" ".join(toks[1:]) if len(toks) > 1 else c["name"])
-                if model in seen_names:
-                    continue
-                seen_names.add(model)
-                cap = None
-                if cfg["seg"] == "인원":
-                    m = re.search(r"(\d+)인", blob)
-                    cap = int(m.group(1)) if m else None
-                con.execute("INSERT OR IGNORE INTO brands(name_ko) VALUES(?)", (brand,))
-                bid = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()[0]
-                con.execute("""INSERT OR IGNORE INTO products(brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
-                    VALUES(?,?,?,?,?, 'pending','on_sale')""", (bid, cid, model, cap, c["pcode"]))
-                pid = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
-                                  (bid, model)).fetchone()[0]
-                got = set()
-                for metric, keys, fn in cfg["spec"]:
-                    raw = P.find_spec(specs, keys, ["수납"] if metric == "floor_area" else None)
-                    if not raw:
-                        continue
-                    val = P.derive_floor(raw) if fn == "derive_floor" else FN[fn](raw)
-                    if val is None:
-                        continue
-                    con.execute("""INSERT INTO product_spec_values(product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
-                        VALUES(?,?,?,?,?,1,'high',1,1)""", (pid, P.metric_id(con, cid, metric), val, raw, "norm"))
-                    got.add(metric)
-                for key in cfg["core"]:
-                    if key not in got:
-                        P.flag(con, pid, P.metric_id(con, cid, key), "missing", f"{key} 미표기")
-                if c["price"]:
-                    con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel) VALUES(?,?,?,?)",
-                                (pid, c["price"], "다나와최저가", "danawa_search"))
-                else:
-                    P.flag(con, pid, None, "missing", "가격 없음")
-                ok += 1
+                if ingest_one(con, cfg, c, seen_names) == "ok":
+                    ok += 1
             con.commit()
             time.sleep(0.4)
     return ok
