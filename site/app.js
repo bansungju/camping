@@ -1212,3 +1212,121 @@ function renderAccount() {
     });
   }
 }
+
+/* ---------- 커뮤니티 ---------- */
+const BEST_SLUGS = [
+  { slug:"backpacking-tent", label:"백패킹텐트", style:"🏕 백패킹" },
+  { slug:"sleeping-bag",     label:"침낭",       style:"❄ 겨울·백패킹" },
+  { slug:"mat",              label:"매트",       style:"🏕 백패킹" },
+  { slug:"burner",           label:"버너",       style:"🚗 오토캠핑" },
+  { slug:"lantern",          label:"랜턴",       style:"✨ 글램핑" },
+  { slug:"chair",            label:"체어",       style:"🚗 오토캠핑" },
+];
+
+async function renderCommunity() {
+  if (!document.getElementById("comm-best-list")) return;
+
+  // 탭 전환
+  document.querySelectorAll(".comm-tab").forEach(btn => btn.onclick = () => {
+    document.querySelectorAll(".comm-tab").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    document.getElementById("comm-best").style.display = btn.dataset.tab === "best" ? "block" : "none";
+    document.getElementById("comm-logs").style.display  = btn.dataset.tab === "logs"  ? "block" : "none";
+  });
+
+  // 로그 작성 버튼
+  const writeBtn = document.getElementById("comm-write-btn");
+  if (writeBtn) writeBtn.onclick = () => openLogModal();
+
+  // 베스트 장비 큐레이션 로드
+  renderBestGear();
+
+  // 로그 피드 (현재 empty state)
+  renderLogFeed();
+}
+
+async function renderBestGear() {
+  const el = document.getElementById("comm-best-list");
+  if (!el) return;
+  el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px 0 12px">측정 스펙 기반 카테고리별 상위 장비</div>`;
+
+  for (const { slug, label, style } of BEST_SLUGS) {
+    try {
+      const d = await getJSON(`data/${slug}.json`);
+      const star = d.metrics.filter(m => m.is_star)[0];
+      if (!star) continue;
+      // 주력 스펙 기준 상위 3개
+      const sorted = [...d.models]
+        .filter(m => m.specs[star.key] && m.specs[star.key].value != null)
+        .sort((a, b) => {
+          const av = a.specs[star.key].value, bv = b.specs[star.key].value;
+          return star.direction === "lower_better" ? av - bv : bv - av;
+        })
+        .slice(0, 3);
+      if (!sorted.length) continue;
+
+      const cards = sorted.map(m =>
+        `<a class="comm-gear-card" href="category.html?cat=${slug}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
+          ${thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "comm-gear-thumb", "comm-gear-noimg")}
+          <div class="comm-gear-info">
+            <div class="comm-gear-brand">${esc(m.brand)}</div>
+            <div class="comm-gear-model">${esc(m.model)}</div>
+            <div class="comm-gear-spec">${star.label} ${fmtVal(m.specs[star.key].value, star.unit)}</div>
+          </div>
+          <div class="comm-gear-price">${m.price_min != null ? won(m.price_min) : '<span class="nd">—</span>'}</div>
+        </a>`
+      ).join("");
+
+      const sec = document.createElement("div");
+      sec.className = "comm-sec";
+      sec.innerHTML = `
+        <div class="comm-sec-head">
+          <span class="comm-sec-label">${catIcon(d.name)} ${label}</span>
+          <span class="comm-sec-style">${style}</span>
+          <a class="comm-sec-more" href="category.html?cat=${slug}">전체 보기 ›</a>
+        </div>
+        <div class="comm-gear-row">${cards}</div>`;
+      el.appendChild(sec);
+    } catch (e) { /* 로드 실패 시 섹션 건너뜀 */ }
+  }
+}
+
+function renderLogFeed() {
+  const el = document.getElementById("comm-logs-list");
+  if (!el) return;
+  // Cold Start 구간: 로그 없으면 Empty State
+  el.innerHTML = `
+    <div class="pli-empty" style="padding:48px 0">
+      <div class="pe-ico">📝</div>
+      <div class="pe-msg">아직 로그가 없어요.<br>첫 캠핑 로그를 작성해보세요!</div>
+      <button type="button" class="achip clear" style="margin-top:12px" onclick="openLogModal()">로그 쓰기</button>
+    </div>`;
+}
+
+function openLogModal() {
+  const modal = document.getElementById("log-modal");
+  if (!modal) return;
+  const body = document.getElementById("log-modal-body");
+  if (!window._commUser) {
+    body.innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:36px;margin-bottom:12px">🌲</div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px">로그 작성은 로그인 후 이용할 수 있어요.</p>
+        <a class="achip clear" href="account.html">로그인하러 가기</a>
+      </div>`;
+  } else {
+    body.innerHTML = `
+      <div style="font-size:13px;color:var(--muted);text-align:center;padding:16px 0">
+        <div style="font-size:32px;margin-bottom:10px">🚧</div>
+        로그 작성 기능을 준비 중이에요.<br>곧 오픈됩니다!
+      </div>`;
+  }
+  modal.classList.add("on");
+  const close = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").onclick = close;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("comm-best-list")) renderCommunity();
+});

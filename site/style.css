@@ -314,6 +314,27 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
 .pli-setadd:hover{transform:scale(1.12);background:var(--accent);color:#fff}
 /* 세트 선택 모달 */
+/* 커뮤니티 */
+.comm-write-btn{padding:7px 14px;border-radius:20px;border:0;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.comm-tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:16px}
+.comm-tab{flex:1;padding:10px 0;border:0;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px}
+.comm-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.comm-sec{margin-bottom:24px}
+.comm-sec-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.comm-sec-label{font-size:14px;font-weight:700}
+.comm-sec-style{font-size:11px;color:var(--muted);background:var(--card2);padding:2px 8px;border-radius:10px}
+.comm-sec-more{margin-left:auto;font-size:12px;color:var(--accent);text-decoration:none;font-weight:600}
+.comm-gear-row{display:flex;flex-direction:column;gap:8px}
+.comm-gear-card{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border-radius:12px;border:1px solid var(--line);text-decoration:none;color:var(--txt)}
+.comm-gear-card:hover{border-color:var(--accent)}
+.comm-gear-thumb{width:52px;height:52px;border-radius:8px;object-fit:contain;flex-shrink:0}
+.comm-gear-noimg{width:52px;height:52px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.comm-gear-info{flex:1;min-width:0}
+.comm-gear-brand{font-size:11px;color:var(--muted)}
+.comm-gear-model{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comm-gear-spec{font-size:11px;color:var(--accent);font-weight:600;margin-top:2px}
+.comm-gear-price{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--txt)}
+.log-modal-box{max-width:380px;width:100%;padding:24px}
 /* 캠핑 스타일 칩 */
 #stylechips{margin:8px 0 4px}
 .sc-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
