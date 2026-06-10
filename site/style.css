@@ -112,6 +112,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .legend>span{display:inline-flex;align-items:center;gap:5px}
 .legend .lg-sep{width:1px;height:16px;background:var(--line);margin:0 4px}
 
+/* 필터 펼치기/접기 토글(모바일 전용) */
+.filtoggle{display:none;width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  padding:10px;border-radius:9px;font-size:13.5px;font-weight:600;margin:4px 0 10px;cursor:pointer}
 /* 필터 태그 바 */
 .filterbar{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}
 .fgrp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -158,6 +161,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   .homesearch input{font-size:14px;padding:12px 14px}
   .legend{font-size:11.5px;gap:6px 12px}
   .flab{width:auto}
+  .filtoggle{display:block}            /* 모바일선 토글 노출 */
+  .filterbar.collapsed{display:none}   /* 접힘 상태 — 표가 바로 보이게 */
 }
 @media (max-width:420px){
   .grid{grid-template-columns:1fr}

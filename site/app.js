@@ -108,6 +108,42 @@ async function setupHomeSearch() {
 /* ---------- 카테고리 비교표 + 필터 ---------- */
 let STATE = {};
 
+/* 필터 상태 → URL (공유·뒤로가기·새로고침에 필터 보존). 69R 사용성감사 [상]1 */
+function defaultSortKey() {
+  const s0 = STATE.data.metrics.filter(m => m.is_star)[0];
+  return "spec:" + (s0 && s0.key);
+}
+function serializeState() {
+  const p = new URLSearchParams();
+  p.set("cat", new URLSearchParams(location.search).get("cat") || "");
+  if (STATE.q) p.set("q", STATE.q);
+  if (STATE.cap) p.set("cap", STATE.cap);
+  if (STATE.brands.size) p.set("brands", [...STATE.brands].join("|"));
+  for (const [k, r] of Object.entries(STATE.range)) {
+    if (r.min != null) p.set(k + "__min", r.min);
+    if (r.max != null) p.set(k + "__max", r.max);
+  }
+  const dk = defaultSortKey();
+  if (STATE.sortKey && !(STATE.sortKey === dk && STATE.sortAsc === defaultAsc(dk))) {
+    p.set("sort", STATE.sortKey); p.set("sa", STATE.sortAsc ? "1" : "0");
+  }
+  if (STATE.qExclude) p.set("qx", "1");
+  history.replaceState(null, "", "?" + p.toString());
+}
+function restoreState(params) {
+  STATE.q = (params.get("q") || "").toLowerCase();
+  STATE.cap = params.get("cap") || "";
+  const br = params.get("brands"); if (br) br.split("|").forEach(b => STATE.brands.add(b));
+  STATE.range = {};
+  for (const [pk, pv] of params.entries()) {
+    const mm = pk.match(/^(.+)__(min|max)$/);
+    if (mm) { (STATE.range[mm[1]] = STATE.range[mm[1]] || {})[mm[2]] = parseFloat(pv); }
+  }
+  const srt = params.get("sort");
+  if (srt) { STATE.sortKey = srt; STATE.sortAsc = params.get("sa") === "1"; }
+  STATE.qExclude = params.get("qx") === "1";
+}
+
 async function renderCategory() {
   const params = new URLSearchParams(location.search);
   const slug = params.get("cat");
@@ -141,7 +177,9 @@ async function renderCategory() {
   buildHead(d, star);
   STATE.sortKey = "spec:" + (star[0] && star[0].key);
   STATE.sortAsc = defaultAsc(STATE.sortKey);   // 주력지표 '좋은 것 먼저'
-  document.getElementById("q").value = rawQ;   // 표시는 원본 대소문자, 필터는 소문자(STATE.q)
+  restoreState(params);                        // URL의 필터상태 복원(공유링크·뒤로가기)
+  syncFilterUI();                              // 복원된 STATE를 컨트롤(칩·입력)에 반영
+  document.getElementById("q").value = params.get("q") || rawQ;   // 표시는 원본, 필터는 소문자
   document.getElementById("q").oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
   draw();
 }
@@ -205,9 +243,20 @@ function buildFilters(d, star) {
       <option value="price_min">가격 낮은순</option>
       ${star.map(m => `<option value="spec:${m.key}">${m.label} ${m.direction === 'higher_better' ? '높은' : '좋은'}순</option>`).join("")}
     </select>
-    <label class="fchk"><input type="checkbox" data-qx> 데이터부족 제외</label></div>`);
+    <label class="fchk" title="현재 정렬 중인 지표의 값이 없는(데이터부족) 행을 숨깁니다"><input type="checkbox" data-qx> 정렬지표 데이터부족 행 숨김</label></div>`);
 
   bar.innerHTML = parts.join("");
+  // 모바일: 필터바를 기본 접고 토글 버튼 노출(첫 화면에 표가 바로 보이게). 69R [중]4
+  if (!document.getElementById("filtoggle")) {
+    bar.insertAdjacentHTML("beforebegin",
+      `<button id="filtoggle" class="filtoggle" type="button">필터 펼치기 ▾</button>`);
+    const tg = document.getElementById("filtoggle");
+    tg.onclick = () => {
+      const col = bar.classList.toggle("collapsed");
+      tg.textContent = col ? "필터 펼치기 ▾" : "필터 접기 ▴";
+    };
+  }
+  if (window.innerWidth <= 640) bar.classList.add("collapsed");
 
   // 인원
   bar.querySelectorAll("[data-cap]").forEach(btn => btn.onclick = () => {
@@ -259,7 +308,7 @@ function renderActiveFilters() {
     const txt = `${lab} ${r.min != null ? r.min : ""}~${r.max != null ? r.max : ""}${u}`;
     chips.push([txt, () => delete STATE.range[k]]);
   });
-  if (STATE.qExclude) chips.push(["데이터부족 제외", () => { STATE.qExclude = false; }]);
+  if (STATE.qExclude) chips.push(["정렬지표 데이터부족 숨김", () => { STATE.qExclude = false; }]);
   if (STATE.q) chips.push([`"${STATE.q}"`, () => { STATE.q = ""; document.getElementById("q").value = ""; }]);
   el.innerHTML = chips.length
     ? chips.map((c, i) => `<button class="achip" data-ai="${i}">${esc(c[0])} ✕</button>`).join("") +
@@ -284,6 +333,9 @@ function syncFilterUI() {
     inp.value = (r && r[inp.dataset.b] != null) ? r[inp.dataset.b] : "";
   });
   const qx = bar.querySelector("[data-qx]"); if (qx) qx.checked = STATE.qExclude;
+  // 정렬 셀렉트도 복원상태 반영(URL→컨트롤). 기본 주력지표 정렬이면 '기본' 표시
+  const ssel = bar.querySelector("[data-sort]");
+  if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : (STATE.sortKey || "");
 }
 
 function buildHead(d, star) {
@@ -372,6 +424,7 @@ function draw() {
   document.getElementById("body").innerHTML = body ||
     `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 — 필터를 완화하세요</td></tr>`;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
+  serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
   document.getElementById("foot").innerHTML =
     `컬럼 클릭=그 값으로 정렬(스펙은 좋은 것 먼저) · 별점=세그먼트 내 순위백분위(중앙값 ★3) · ` +
     `가격=국내가 우선 · 무게 1kg↑는 kg 표기 · 측정값만.`;
