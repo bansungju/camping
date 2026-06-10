@@ -1356,21 +1356,51 @@ function renderAccount() {
             return;
           }
           if (logsCnt) logsCnt.textContent = `${posts.length}개`;
-          myLogsList.innerHTML = `
-            <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-              <a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>
-            </div>` +
-            posts.map(p => {
-              const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-              const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
-              const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
-              return `<div class="my-log-card">
-                <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
-                <div class="log-title">${esc(p.title)}</div>
-                <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
-                ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
-              </div>`;
-            }).join("");
+          const renderMyLogs = (list) => {
+            myLogsList.innerHTML = `
+              <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+                <a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>
+              </div>` +
+              list.map((p, pi) => {
+                const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+                const preview = (p.content || "").slice(0, 60).replace(/\n/g, " ");
+                const vis = p.is_public ? "" : `<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:var(--chip-bg);color:var(--muted);margin-left:6px">비공개</span>`;
+                return `<div class="my-log-card" style="position:relative">
+                  <button type="button" class="my-log-del" data-pi="${pi}" aria-label="삭제">✕</button>
+                  <div class="log-card-head"><span class="log-date">${dt}</span>${vis}</div>
+                  <div class="log-title">${esc(p.title)}</div>
+                  <div class="log-preview">${esc(preview)}${p.content.length > 60 ? "…" : ""}</div>
+                  ${(p.tags||[]).slice(0,3).map(t=>`<span class="log-tag">${esc(t)}</span>`).join("")}
+                </div>`;
+              }).join("");
+            myLogsList.querySelectorAll(".my-log-del").forEach(btn => {
+              btn.onclick = async () => {
+                const p = list[+btn.dataset.pi];
+                if (!confirm(`"${p.title}" 로그를 삭제할까요?`)) return;
+                btn.disabled = true;
+                const { supabase: sb } = await import("./supabaseClient.js");
+                const { error } = await sb.from("posts")
+                  .update({ deleted_at: new Date().toISOString() })
+                  .eq("id", p.id).eq("user_id", userId);
+                if (error) { alert("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }
+                const remaining = list.filter((_, i) => i !== +btn.dataset.pi);
+                if (remaining.length === 0) {
+                  if (logsCnt) logsCnt.textContent = "";
+                  myLogsList.innerHTML = `
+                    <div style="text-align:center;padding:32px 0 16px">
+                      <div style="font-size:36px;margin-bottom:10px">📝</div>
+                      <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
+                      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
+                      <a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>
+                    </div>`;
+                } else {
+                  if (logsCnt) logsCnt.textContent = `${remaining.length}개`;
+                  renderMyLogs(remaining);
+                }
+              };
+            });
+          };
+          renderMyLogs(posts);
         }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; });
       }
     } else {

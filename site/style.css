@@ -375,7 +375,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .log-like-btn.on{color:#e5484d}
 .log-like-btn:hover{color:#e5484d}
 .log-like-cnt{font-size:12px}
-.my-log-card{padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:8px;background:var(--card)}
+.my-log-card{padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:8px;background:var(--card);position:relative}
+.my-log-del{position:absolute;top:10px;right:10px;border:0;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
+.my-log-del:hover{color:#e5484d}
 .log-detail-box{max-width:440px;width:100%;padding:24px;max-height:85vh;overflow-y:auto}
 .share-btn{margin-left:10px;padding:4px 10px;border:1.5px solid var(--line);border-radius:20px;background:var(--card);cursor:pointer;font-size:14px;vertical-align:middle}
 /* 이번 주 인기 */
