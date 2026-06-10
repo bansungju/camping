@@ -46,8 +46,8 @@
 		header Cache-Control "public, max-age=86400"
 	}
 
-	@catpath path_regexp cat ^/category/([a-z0-9-]+)$
-	rewrite @catpath /category.html?cat={re.cat.1}
+	@catpath path_regexp cat ^/category/([a-z0-9-]+)
+	rewrite @catpath /category.html?cat={re.cat.1}&{http.request.uri.query}
 
 	handle /data/* {
 		root * /Users/mimi/camping/site

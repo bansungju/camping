@@ -271,7 +271,7 @@ async function renderCatNav(activeSlug) {
   try {
     const m = await getJSON("data/manifest.json");
     el.innerHTML = m.categories.map(c =>
-      `<a class="navchip${c.slug === activeSlug ? " on" : ""}" href="category.html?cat=${c.slug}"
+      `<a class="navchip${c.slug === activeSlug ? " on" : ""}" href="category/${c.slug}"
          title="${c.name}"><span class="ni">${catIcon(c.name)}</span>${c.name}${OPS ? `<i>${GRADE_CLASS[c.grade] || ""}</i>` : ""}</a>`).join("");
   } catch (e) { /* noop */ }
 }
@@ -314,7 +314,7 @@ async function renderHub() {
 
   const grid = document.getElementById("grid");
   grid.innerHTML = m.categories.map(c => `
-    <a class="card" href="category.html?cat=${c.slug}">
+    <a class="card" href="category/${c.slug}">
       <div class="icon" style="background:${catTint(c.name)}">${catIcon(c.name)}</div>
       <div class="ct"><h3>${c.name}</h3>${gradeBadge(c.grade)}</div>
       <div class="meta">${c.count.toLocaleString()}개 모델</div>
@@ -351,7 +351,7 @@ async function setupHomeSearch() {
          <span class="sb">${esc(b)}</span> <b>전체 ${n}개</b> 모아보기
          <span class="scat">브랜드 →</span></a>`).join("");
     box.innerHTML = (brandHtml || "") + (hits.length ? hits.map(x =>
-      `<a class="sres" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+      `<a class="sres" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
          ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
          <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
          <span class="scat">${esc(x.c)}</span></a>`).join("")
@@ -1059,7 +1059,7 @@ async function renderBrand() {
     document.getElementById("sections").innerHTML = cats.map(c => {
       const tint = catTint(c.name), icon = catIcon(c.name);
       const items = c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x =>
-        `<a class="pli" href="category.html?cat=${x.s}&brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}">
+        `<a class="pli" href="category/${x.s}?brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}">
           ${thumbCell(x.img, x.m, tint, icon)}
           <div class="pli-info">
             <div class="pli-top">${esc(c.name)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
@@ -1070,7 +1070,7 @@ async function renderBrand() {
             <span class="pli-chev" aria-hidden="true">›</span>
           </div></a>`).join("");
       return `<h2 class="sec" style="margin-top:24px">
-        <a href="category.html?cat=${c.slug}&brands=${encodeURIComponent(bn)}" style="color:var(--accent)">
+        <a href="category/${c.slug}?brands=${encodeURIComponent(bn)}" style="color:var(--accent)">
           ${esc(c.name)} <span class="nd">${c.items.length}개 ›</span></a></h2>
       <div class="plist">${items}</div>`;
     }).join("") ||
@@ -1142,13 +1142,13 @@ async function renderRecommend() {
     if (!rows.length) return "";
     const showStars = pick.target == null && pick.rankBy !== "value";  // 정렬축과 별점이 일치할 때만 별점 표시
     const more = pick.rankBy === "value"
-      ? `category.html?cat=${pick.cat}&sort=value`
-      : `category.html?cat=${pick.cat}&sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
+      ? `category/${pick.cat}?sort=value`
+      : `category/${pick.cat}?sort=spec:${pick.metric}&sa=${lower ? 1 : 0}`;
     const cards = rows.map(m => {
       const s = m.specs[pick.metric];
       const starHtml = (showStars && s.stars != null) ? " " + stars(s.stars) : "";   // 가성비·목표 정렬엔 별점 숨김(축 불일치)
       const opsBadge = (OPS && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
-      return `<a class="rcard" href="category.html?cat=${pick.cat}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
+      return `<a class="rcard" href="category/${pick.cat}?brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
         ${thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "rthumb", "rnoimg")}
         <div class="rb">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}</div>
         <div class="rm">${esc(m.model)}</div>
@@ -1171,7 +1171,7 @@ function renderRecent() {
   const a = getRecent();
   if (!a.length) { el.innerHTML = ""; return; }
   el.innerHTML = `<h2 class="sec">최근 본 상품</h2><div class="recent-row">` +
-    a.map(x => `<a class="recard" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+    a.map(x => `<a class="recard" href="category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
       ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
       <div class="recard-b">${esc(x.b)}</div>
       <div class="recard-m">${esc(x.m)}</div>
@@ -1209,7 +1209,7 @@ function renderAccount() {
   if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
-      const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
+      const href = `category/${x.s}?brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
       return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
         <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">♥</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
@@ -1313,7 +1313,7 @@ async function renderBestGear() {
       if (!sorted.length) continue;
 
       const cards = sorted.map(m =>
-        `<a class="comm-gear-card" href="category.html?cat=${slug}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
+        `<a class="comm-gear-card" href="category/${slug}?brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
           ${thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "comm-gear-thumb", "comm-gear-noimg")}
           <div class="comm-gear-info">
             <div class="comm-gear-brand">${esc(m.brand)}</div>
@@ -1330,7 +1330,7 @@ async function renderBestGear() {
         <div class="comm-sec-head">
           <span class="comm-sec-label">${catIcon(d.name)} ${label}</span>
           <span class="comm-sec-style">${style}</span>
-          <a class="comm-sec-more" href="category.html?cat=${slug}">전체 보기 ›</a>
+          <a class="comm-sec-more" href="category/${slug}">전체 보기 ›</a>
         </div>
         <div class="comm-gear-row">${cards}</div>`;
       el.appendChild(sec);
