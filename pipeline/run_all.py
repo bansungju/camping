@@ -177,6 +177,8 @@ def main():
             WHERE c.name_ko IN ('의자','테이블') AND p.curation_status<>'rejected'""").fetchall():
         if _re.search(r"(?<!\d)[2-9]\s*개(?!월| ?세트)", mn or "") or _re.search(r"(?<!\d)[2-9]\s*팩", mn or ""):
             con.execute("UPDATE products SET curation_status='rejected' WHERE id=?", (pid,))
+            # 멀티팩 묶음가는 단품과 비교축이 달라 오염원 → 가격관측도 무효화(적대루프1 보완)
+            con.execute("UPDATE price_observations SET valid=0 WHERE product_id=? AND valid=1", (pid,))
     con.commit()
     print("[승격] 카테고리별 완비 → verified")
     v = promote_all(con)

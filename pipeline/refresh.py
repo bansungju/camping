@@ -46,20 +46,53 @@ def build_tasks():
 
 
 def snapshot(con):
-    """현재 DB 상태 스냅샷: pcode→pid, pid→(최신가격,관측일), on_sale pcode, 기존 모델명."""
-    pcode2pid, on_sale = {}, set()
+    """현재 DB 상태 스냅샷: pcode→pid, pid→(최신가격,관측일), on_sale pcode, rejected pid, 기존 모델명."""
+    pcode2pid, on_sale, rejected = {}, set(), set()
     for pcode, pid, sale, cur in con.execute(
             "SELECT danawa_pcode, id, sale_status, curation_status FROM products WHERE danawa_pcode IS NOT NULL"):
         pcode2pid[pcode] = pid
-        if sale == "on_sale" and cur != "rejected":
+        if cur == "rejected":
+            rejected.add(pid)
+        elif sale == "on_sale":
             on_sale.add(pcode)
     # SQLite: MAX(observed_at) 와 함께 쓴 bare 컬럼은 해당 행 값 → 최신 가격
     latest = {}
     for pid, price, obs in con.execute(
             "SELECT product_id, price_krw, MAX(observed_at) FROM price_observations WHERE valid=1 GROUP BY product_id"):
         latest[pid] = (price, obs)
+    # 카테고리별 유효가격 중앙값 — 기준선 없는 신규확보 건의 '오등록 최저가' 판정용
+    cat_median = {}
+    for cid, prices in _group_prices_by_cat(con):
+        cat_median[cid] = _median(prices)
     names = {r[0] for r in con.execute("SELECT model_name FROM products")}
-    return pcode2pid, latest, on_sale, names
+    return pcode2pid, latest, on_sale, rejected, cat_median, names
+
+
+def _group_prices_by_cat(con):
+    rows = con.execute("""SELECT p.category_id, po.price_krw
+        FROM price_observations po JOIN products p ON p.id=po.product_id
+        WHERE po.valid=1 ORDER BY p.category_id""").fetchall()
+    cur_cid, bucket = None, []
+    for cid, price in rows:
+        if cid != cur_cid and cur_cid is not None:
+            yield cur_cid, bucket
+            bucket = []
+        cur_cid, _ = cid, bucket.append(price)
+    if cur_cid is not None:
+        yield cur_cid, bucket
+
+
+def _median(xs):
+    s = sorted(xs)
+    n = len(s)
+    if n == 0:
+        return None
+    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
+# 신규/갱신가가 기준선(직전 유효가 또는 카테고리 중앙값)의 이 비율 미만이면
+# = 다나와 오등록 최저가(placeholder 셀러) 의심 → valid=0 격리 + 플래그(검토요). 추측 아님: 격리·표기만.
+OUTLIER_FLOOR_RATIO = 0.30
 
 
 def prod_label(con, pid):
@@ -91,10 +124,12 @@ def main():
     con = sqlite3.connect(args.db)
     M.bootstrap(con)   # 카테고리/메트릭 보장(멱등)
     now = datetime.strptime(con.execute("SELECT datetime('now')").fetchone()[0], DTFMT)
-    pcode2pid, latest, on_sale, seen_names = snapshot(con)
+    pcode2pid, latest, on_sale, rejected, cat_median, seen_names = snapshot(con)
+    pid2cat = {pid: cid for cid, pid in con.execute(
+        "SELECT category_id, id FROM products WHERE danawa_pcode IS NOT NULL")}
 
     R = {"scanned": 0, "new": [], "changed": [], "freshened": 0, "price_new": [],
-         "unchanged": 0, "no_price": 0, "skipped": 0}
+         "unchanged": 0, "no_price": 0, "skipped": 0, "quarantined": []}
     seen_run = set()   # 이번 검색에 등장한 pcode(단종 후보 판정용)
     done = set()       # 이번 run 에서 이미 처리한 pcode(중복 방지)
 
@@ -118,7 +153,8 @@ def main():
                         continue
                     done.add(pc)
                     if pc in pcode2pid:
-                        refresh_price(con, c, pcode2pid[pc], latest, now, args.stale_days, R)
+                        refresh_price(con, c, pcode2pid[pc], latest, now, args.stale_days,
+                                      rejected, cat_median, pid2cat, R)
                     else:
                         status = (HT.ingest(con, c, seen_names) if cfg is None
                                   else M.ingest_one(con, cfg, c, seen_names))
@@ -145,14 +181,27 @@ def main():
         subprocess.run([sys.executable, os.path.join(HERE, "run_all.py"), "--db", args.db], check=True)
 
 
-def refresh_price(con, c, pid, latest, now, stale_days, R):
-    """기존 제품 가격 갱신. 검색가가 바뀌었으면 관측치 추가, 같아도 stale 면 재확인."""
+def refresh_price(con, c, pid, latest, now, stale_days, rejected, cat_median, pid2cat, R):
+    """기존 제품 가격 갱신. 검색가가 바뀌었으면 관측치 추가, 같아도 stale 면 재확인.
+    rejected(멀티팩·노네임 등)는 비교축이 오염되므로 가격 갱신/리포트에서 제외."""
+    if pid in rejected:                   # 멀티팩/부적격 제품 → 가격 갱신 안 함(변동리포트 오염 방지)
+        R["skipped"] += 1
+        return
     price = c["price"]
     if price is None:
         R["no_price"] += 1
         return
     prev = latest.get(pid)
-    if prev is None:                      # 기존에 가격이 아예 없던 제품 → 신규 확보
+    # 이상치 가드: 기준선(직전 유효가 또는 카테고리 중앙값) 대비 OUTLIER_FLOOR_RATIO 미만이면
+    #   = 다나와 오등록 최저가 의심 → valid=0 격리 + 플래그(추측 아님: 사실 보존+검토표기)
+    ref = prev[0] if prev else cat_median.get(pid2cat.get(pid))
+    is_outlier = ref is not None and price < ref * OUTLIER_FLOOR_RATIO
+    if is_outlier:
+        _insert_price(con, pid, price, valid=0)
+        P.flag(con, pid, None, "implausible",
+               f"가격 급락 이상치(다나와 오등록 의심): {price:,} vs 기준 {int(ref):,} — 검토요")
+        R["quarantined"].append((pid, price, int(ref)))
+    elif prev is None:                    # 기존에 가격이 아예 없던 제품 → 신규 확보
         _insert_price(con, pid, price)
         R["price_new"].append((pid, price))
     else:
@@ -165,12 +214,13 @@ def refresh_price(con, c, pid, latest, now, stale_days, R):
             R["freshened"] += 1
         else:
             R["unchanged"] += 1           # 최근에 확인됨 → 관측치 추가 안 함(불필요한 누적 방지)
-    latest[pid] = (price, now.strftime(DTFMT))   # run 내 재등장 시 이중기록 방지
+    if not is_outlier:
+        latest[pid] = (price, now.strftime(DTFMT))   # run 내 재등장 시 이중기록 방지
 
 
-def _insert_price(con, pid, price):
-    con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel) VALUES(?,?,?,?)",
-                (pid, price, "다나와최저가", "danawa_search"))
+def _insert_price(con, pid, price, valid=1):
+    con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel,valid) VALUES(?,?,?,?,?)",
+                (pid, price, "다나와최저가", "danawa_search", valid))
 
 
 def report(con, R, missing, args, now):
@@ -180,7 +230,15 @@ def report(con, R, missing, args, now):
     L.append(f"- 크롤: 페이지당 {args.maxpages} / 후보 {R['scanned']}건 스캔 / stale {args.stale_days}일")
     L.append(f"- 요약: 신규 {len(R['new'])} · 가격변동 {len(R['changed'])} · 신선도재확인 {R['freshened']} "
              f"· 가격신규확보 {len(R['price_new'])} · 변동없음 {R['unchanged']} · 무가격 {R['no_price']} "
-             f"· 인제스트제외 {R['skipped']} · 단종후보 {len(missing)}")
+             f"· 이상치격리 {len(R.get('quarantined', []))} · 인제스트/rejected제외 {R['skipped']} · 단종후보 {len(missing)}")
+
+    if R.get("quarantined"):
+        L.append(f"\n### 🚧 가격 이상치 격리 {len(R['quarantined'])}건 (valid=0 + implausible 플래그 · 검토요)")
+        L.append("| 카테고리 | 제품 | 격리가 | 기준 |")
+        L.append("|---|---|---|---|")
+        for pid, price, ref in R["quarantined"][:30]:
+            b, m, cat = prod_label(con, pid)
+            L.append(f"| {cat} | {b} {m} | {price:,} | {ref:,} |")
 
     if R["new"]:
         L.append(f"\n### 🆕 신규 제품 {len(R['new'])}건")
