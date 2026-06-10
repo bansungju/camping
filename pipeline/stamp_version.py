@@ -22,7 +22,10 @@ def _hash(fname):
 
 def main():
     # 72R: app.js뿐 아니라 style.css도 콘텐츠해시 스탬프(둘 중 하나만 하면 JS새/CSS헌 깨짐)
+    # +supabaseClient.js: 모듈 import도 콘텐츠해시 스탬프(버전쿼리 없으면 SW가 구버전 모듈을
+    #  stale 캐싱 → 새 함수 미정의로 페이지 깨짐). HTML의 './supabaseClient.js' import에 ?v= 박음.
     hj, hc = _hash("app.js"), _hash("style.css")
+    hs = _hash("supabaseClient.js")
     changed = []
     for name in os.listdir(SITE):
         if not name.endswith(".html"):
@@ -32,6 +35,9 @@ def main():
             html = f.read()
         new = re.sub(r'src="app\.js(\?v=[^"]*)?"', f'src="app.js?v={hj}"', html)
         new = re.sub(r'href="style\.css(\?v=[^"]*)?"', f'href="style.css?v={hc}"', new)
+        # './supabaseClient.js' 또는 './supabaseClient.js?v=...' (작은/큰따옴표 모두)
+        new = re.sub(r"(['\"])\./supabaseClient\.js(\?v=[^'\"]*)?\1",
+                     lambda mm: f"{mm.group(1)}./supabaseClient.js?v={hs}{mm.group(1)}", new)
         if new != html:
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new)
@@ -39,7 +45,7 @@ def main():
     # PWA: 서비스워커 CACHE 버전을 app.js+style.css 결합해시로 스탬프(내용 바뀌면 옛 캐시 폐기)
     swp = os.path.join(SITE, "sw.js")
     if os.path.exists(swp):
-        build = hashlib.md5((hj + hc).encode()).hexdigest()[:8]
+        build = hashlib.md5((hj + hc + hs).encode()).hexdigest()[:8]
         with open(swp, encoding="utf-8") as f:
             sw = f.read()
         sw2 = re.sub(r'const CACHE = "camping-[^"]*";', f'const CACHE = "camping-{build}";', sw)

@@ -215,20 +215,21 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .ftag.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 .ftag i{font-style:normal;opacity:.6;font-size:11px}
 .ftag.on i{opacity:.8}
-/* 범위 입력 */
+/* 범위 입력 (레거시 — 슬라이더로 대체됨, 혹시 남은 곳 대비) */
 .frng{width:80px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
   padding:5px 8px;border-radius:7px;font-size:12.5px;font-variant-numeric:tabular-nums}
 .frng:focus{outline:none;border-color:var(--accent)}
 .rsep{color:var(--faint);font-size:12px}
 .runit{color:var(--faint);font-size:11px;min-width:30px}
 /* 듀얼 슬라이더 */
-.fgrp-slider{flex-direction:column;align-items:flex-start;gap:2px}
+.fgrp-slider{flex-direction:column;align-items:flex-start;gap:4px}
+.fgrp-slider .flab{margin-bottom:2px}
 .dslider{position:relative;width:100%;max-width:280px;padding:4px 0 0}
-.dslider-track{position:relative;height:4px;background:var(--line);border-radius:4px;margin:10px 0 4px}
+.dslider-track{position:relative;height:4px;background:var(--line);border-radius:4px;margin:10px 0 6px}
 .dslider-fill{position:absolute;height:100%;background:var(--accent);border-radius:4px;pointer-events:none}
 .dsl-input{position:absolute;top:-8px;width:100%;height:20px;opacity:0;cursor:pointer;margin:0;padding:0;-webkit-appearance:none;pointer-events:all}
 .dsl-input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;cursor:pointer}
-.dslider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600;line-height:1.2}
+.dslider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600;margin-top:2px;line-height:1.2}
 /* 셀렉트(브랜드 더보기·정렬) */
 .fsel{background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:12.5px;
   padding:5px 8px;border-radius:7px;max-width:210px}

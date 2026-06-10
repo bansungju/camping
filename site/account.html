@@ -49,26 +49,12 @@
     </div>
   </div>
 
-  <!-- 탭 바 (로그인+콘텐츠 있을 때만 JS로 표시) -->
-  <div id="acc-tabs" class="acc-tabs" style="display:none">
-    <button class="acc-tab active" data-tab="wish">❤️ 찜목록</button>
-    <button class="acc-tab" data-tab="sets">🎒 내 세트</button>
-    <button class="acc-tab" data-tab="logs">📝 내 로그</button>
-  </div>
-  <!-- 섹션 앵커 (콘텐츠 있을 때만 JS로 표시, 비로그인 fallback) -->
-  <nav id="acc-nav" style="display:none;margin-top:20px;display:flex;flex-wrap:wrap;gap:8px"></nav>
-
-  <!-- 첫 방문 Empty State (콘텐츠 없을 때만 표시) -->
-  <div id="acc-empty" style="display:none;text-align:center;padding:40px 0 20px">
-    <div style="font-size:44px;margin-bottom:14px">📝</div>
-    <div style="font-size:17px;font-weight:700;margin-bottom:8px">첫 캠핑 로그를 써보세요</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">장비를 태그하면 나만의 장비 데이터가 쌓여요</div>
-    <a class="achip clear" href="community.html">커뮤니티 가서 로그 쓰기 ›</a>
-  </div>
-
-  <!-- 찜한 상품 (비로그인도 localStorage 표시) -->
-  <div id="wish-section" style="margin-top:28px;display:none">
-    <h2 class="sec" id="sec-wish">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+  <!-- 찜한 상품 — 로그인 없이도 localStorage 기준으로 항상 표시 -->
+  <div id="wish-section">
+    <h2 class="sec">❤️ 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+    <p id="wish-synchint" style="color:var(--muted);font-size:12.5px;margin:-4px 0 12px" hidden>
+      로그인하면 찜 목록이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
+    </p>
     <div id="wishlist" class="plist"></div>
   </div>
 
@@ -91,12 +77,6 @@
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
 <script src="app.js?v=df140e15"></script>
-<script>
-// 모듈 로드 전에 localStorage 찜목록 즉시 표시 (CDN 지연 없이)
-document.addEventListener('DOMContentLoaded', () => {
-  if (typeof renderAccount === 'function') renderAccount()
-})
-</script>
 <script type="module">
 import {
   initAuth, signInWithOAuth, signOut, getErrorMessage,
@@ -106,6 +86,14 @@ import {
 } from './supabaseClient.js'
 
 const section = document.getElementById('auth-section')
+
+// 찜 목록은 로그인 여부와 무관하게 즉시 표시(localStorage 기준).
+// 로그인 상태에 따라 동기화 안내만 토글한다.
+if (typeof renderAccount === 'function') renderAccount()
+function setSyncHint(loggedIn) {
+  const h = document.getElementById('wish-synchint')
+  if (h) h.hidden = loggedIn
+}
 
 // 로컬 찜 헬퍼(app.js의 localStorage "wish"와 동일 포맷)
 const localWish = {
@@ -171,7 +159,16 @@ function renderNicknameModal() {
         background:var(--brand,#2f7a4e);color:#fff;cursor:pointer;font-size:15px;font-weight:600;opacity:.5">
         시작하기
       </button>
+      <button id="nick-signout" type="button" style="
+        margin-top:10px;width:100%;padding:9px;border-radius:8px;border:none;
+        background:none;cursor:pointer;font-size:13px;color:var(--muted)">
+        다른 계정으로 로그인 (로그아웃)
+      </button>
     </div>`
+
+  document.getElementById('nick-signout').addEventListener('click', async () => {
+    await signOut()
+  })
 
   const input = document.getElementById('nick-input')
   const hint  = document.getElementById('nick-hint')
@@ -285,6 +282,7 @@ if (params.get('auth_error')) {
 await initAuth(async (user, event) => {
   window._accUser = user || null
   if (!user) {
+    setSyncHint(false)
     renderLogin()
     if (typeof renderAccount === 'function') renderAccount()
     return
@@ -292,10 +290,14 @@ await initAuth(async (user, event) => {
   // 로그인됨 — profiles에서 닉네임 확인
   const profile = await getProfile()
   if (!profile || !profile.nickname) {
+    // 최초 로그인(또는 닉네임 미설정): 닉네임부터 강제(찜 목록은 계속 표시)
+    setSyncHint(true)
     renderNicknameModal()
     if (typeof renderAccount === 'function') renderAccount()
     return
   }
+  setSyncHint(true)
+  renderAccount()
   renderProfile(profile)
   if (typeof renderAccount === 'function') renderAccount()
   if (event === 'SIGNED_IN') {

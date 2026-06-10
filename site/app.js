@@ -206,7 +206,13 @@ function thumbFallback(img) {
 /* 찜(위시리스트) — localStorage 저장. 로그인 없이도 동작, '내 정보' 탭에서 모아봄.
    항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
 function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
-function setWish(a) { localStorage.setItem("wish", JSON.stringify(a)); }
+function setWish(a) {
+  try { localStorage.setItem("wish", JSON.stringify(a)); } catch (e) { /* 저장공간 부족 시 로컬 동작만 */ }
+  // 로그인 상태에서 account 페이지가 등록한 훅이 있으면 원격 동기화. 없으면 로컬만(오프라인 우선).
+  if (typeof window !== "undefined" && typeof window.onWishChange === "function") {
+    try { window.onWishChange(a); } catch (e) { /* 동기화 실패는 로컬 동작 막지 않음 */ }
+  }
+}
 function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
 function inWish(key) { return getWish().some(x => x.key === key); }
 function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
@@ -313,7 +319,7 @@ function pushRecent(item) {
   if (!item.s) return;   // 슬러그 없으면(되돌아갈 경로 불명) 기록 생략
   const a = getRecent().filter(x => x.key !== item.key);
   a.unshift(item);
-  localStorage.setItem("recent", JSON.stringify(a.slice(0, 12)));
+  try { localStorage.setItem("recent", JSON.stringify(a.slice(0, 12))); } catch (e) { /* 저장공간 부족 시 무시 */ }
 }
 
 /* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
@@ -372,7 +378,7 @@ async function renderHub() {
         <span class="it"><b>별점은 같은 그룹 안에서의 순위를 환산한 값</b>이에요. 측정값만 쓰고, 추측은 없습니다.</span>
         <button type="button" class="ix" aria-label="안내 닫기">✕</button>`;
       h1.insertAdjacentElement("beforebegin", ib);
-      ib.querySelector(".ix").onclick = () => { localStorage.setItem("seenIntro", "1"); ib.remove(); };
+      ib.querySelector(".ix").onclick = () => { try { localStorage.setItem("seenIntro", "1"); } catch (e) {} ib.remove(); };
     }
   }
 
@@ -428,7 +434,7 @@ async function setupHomeSearch() {
   let idx = [];
   try { idx = await getJSON("data/search.json"); } catch (e) { return; }
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
-  if (!inp) return;
+  if (!inp || !box) return;
   const run = () => {
     const q = inp.value.trim().toLowerCase();
     if (q.length < 1) { box.innerHTML = ""; box.style.display = "none"; return; }
@@ -469,6 +475,7 @@ async function setupHomeSearch() {
   };
   inp.oninput = run;
   inp.onfocus = run;
+  inp.onblur = () => { setTimeout(() => { box.style.display = "none"; }, 150); }
   // 엔터 → category.html?q= 이동 (첫 번째 결과 카테고리 or 전체 검색)
   inp.addEventListener("keydown", e => {
     if (e.key !== "Enter") return;
@@ -758,6 +765,7 @@ function buildFilters(d, star) {
     if (vals.length < 2) return;
     const isWeight = (m.unit || "") === "g";
     const rawLo = Math.min(...vals), rawHi = Math.max(...vals);
+    // 슬라이더는 kg 단위, STATE.range는 g 단위 유지 (passRange가 specs.value와 비교하므로)
     const slo = isWeight ? rawLo / 1000 : rawLo;
     const shi = isWeight ? rawHi / 1000 : rawHi;
     const displayUnit = isWeight ? "kg" : (m.unit || "");
@@ -914,6 +922,7 @@ function buildFilters(d, star) {
     const minInp = sl.querySelector('[data-b="min"]'), maxInp = sl.querySelector('[data-b="max"]');
     const minLbl = sl.querySelector('.dsl-val[data-b="min"]'), maxLbl = sl.querySelector('.dsl-val[data-b="max"]');
     const fill = sl.querySelector(".dslider-fill");
+
     const fmtLabel = v => {
       if (isPrice) return (+v).toLocaleString() + "원";
       if (isWeight) return (+v).toFixed(1) + "kg";
@@ -928,7 +937,8 @@ function buildFilters(d, star) {
     const toStateVal = v => isWeight ? parseFloat(v) * 1000 : parseFloat(v);
     const applyToState = () => {
       const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
-      if (lo <= totalLo && hi >= totalHi) { delete STATE.range[key]; }
+      const isDefault = (lo <= totalLo && hi >= totalHi);
+      if (isDefault) { delete STATE.range[key]; }
       else {
         STATE.range[key] = {};
         if (lo > totalLo) STATE.range[key].min = toStateVal(lo);
@@ -936,6 +946,7 @@ function buildFilters(d, star) {
       }
       draw();
     };
+
     minInp.oninput = () => {
       if (parseFloat(minInp.value) > parseFloat(maxInp.value)) minInp.value = maxInp.value;
       minLbl.textContent = fmtLabel(minInp.value);
@@ -980,8 +991,16 @@ function renderActiveFilters() {
   STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
   Object.entries(STATE.range).forEach(([k, r]) => {
     const lab = k === "price" ? "가격" : (STATE.data.metrics.find(m => m.key === k) || {}).label || k;
-    const u = k === "price" ? "원" : (STATE.unit[k] || "");
-    const txt = `${lab} ${r.min != null ? r.min : ""}~${r.max != null ? r.max : ""}${u}`;
+    const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");
+    // 무게(g) 필터는 STATE.range에 g 단위로 저장되지만 사용자에게는 kg으로 표시
+    const isWeight = rawUnit === "g";
+    const fmt = v => {
+      if (v == null) return "";
+      if (k === "price") return v.toLocaleString("ko-KR");
+      if (isWeight) return (v / 1000).toFixed(1) + "kg";
+      return v + rawUnit;
+    };
+    const txt = `${lab} ${fmt(r.min)}~${fmt(r.max)}`;
     chips.push([txt, () => delete STATE.range[k]]);
   });
   if (STATE.qExclude) chips.push(["스펙값 있는 것만", () => { STATE.qExclude = false; }]);
@@ -1023,6 +1042,7 @@ function syncFilterUI() {
       if (isWeight) return (+v).toFixed(1) + "kg";
       return (+v).toFixed(1) + (sl.dataset.unit || "");
     };
+    const toDisplay = v => isWeight ? v / 1000 : v;
     const loVal = (r && r.min != null) ? toDisplay(r.min) : totalLo;
     const hiVal = (r && r.max != null) ? toDisplay(r.max) : totalHi;
     minInp.value = loVal; maxInp.value = hiVal;
@@ -1110,7 +1130,7 @@ function openProduct(m) {
     const val = has ? fmtVal(s.value, mt.unit) : (OPS ? '<span class="b 데이터부족">데이터부족</span>' : "—");
     const st = (has && s.stars != null) ? " " + stars(s.stars) : "";
     const badge = (OPS && has && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
-    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? `(${mt.unit})` : ""}</span>` +
+    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? ` (${mt.unit})` : ""}</span>` +
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
@@ -1155,12 +1175,16 @@ function openProduct(m) {
     wbtn.setAttribute("aria-pressed", added);
   };
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
-  const close = () => { modal.classList.remove("on"); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const close = () => {
+    modal.classList.remove("on");
+    document.removeEventListener("keydown", onKey);
+    if (prevFocus && prevFocus.focus) prevFocus.focus();
+  };
   modal.onclick = e => { if (e.target === modal) close(); };
   const xbtn = modal.querySelector(".pmx");
   xbtn.onclick = close;
   xbtn.focus();
-  const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  const onKey = e => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
 }
 
@@ -1277,7 +1301,7 @@ function draw() {
   rows.sort((a, b) => {
     let va = cellVal(a, k), vb = cellVal(b, k);
     if (typeof va === "string" || typeof vb === "string")
-      return asc ? String(va).localeCompare(vb) : String(vb).localeCompare(va);
+      return asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
     // 데이터부족(null)은 정렬 방향과 무관하게 항상 맨 아래
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
@@ -1392,7 +1416,7 @@ async function renderBrand() {
   const draw = (bn) => {
     const rows = idx.filter(x => x.b === bn);
     document.getElementById("crumbName").textContent = bn || "선택";
-    document.title = `${bn} 전체보기 — 장비의 숲`;
+    document.title = bn ? `${bn} 전체보기 — 장비의 숲` : `브랜드 — 장비의 숲`;
     document.getElementById("title").innerHTML = bn ? `${esc(bn)} <span class="nd" style="font-size:15px">전 카테고리</span>` : "브랜드를 선택하세요";
     document.getElementById("count").textContent = bn ? `${rows.length}개 모델` : "";
     // 카테고리별 그룹
