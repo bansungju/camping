@@ -375,6 +375,15 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .log-like-btn.on{color:#e5484d}
 .log-like-btn:hover{color:#e5484d}
 .log-like-cnt{font-size:12px}
+.log-cmt-count{font-size:12px;color:var(--muted)}
+.cmt-row{padding:8px 0;border-bottom:1px solid var(--line)}
+.cmt-row:last-child{border-bottom:none}
+.cmt-meta{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.cmt-nick{font-size:12px;font-weight:600;color:var(--fg)}
+.cmt-date{font-size:11px;color:var(--muted)}
+.cmt-del-btn{border:none;background:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0 2px;margin-left:auto}
+.cmt-del-btn:hover{color:#e5484d}
+.cmt-body{font-size:13px;line-height:1.6;color:var(--fg);white-space:pre-wrap;word-break:break-word}
 .my-log-card{padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:8px;background:var(--card);position:relative}
 .my-log-card-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px}
 .my-log-del,.my-log-edit{border:0;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}

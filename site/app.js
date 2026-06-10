@@ -1643,7 +1643,7 @@ async function renderLogFeed(sortMode = "latest") {
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     const { data: posts, error } = await supabase
       .from("posts")
-      .select("id, title, content, tags, created_at, user_id, image_url, likes, profiles(nickname)")
+      .select("id, title, content, tags, created_at, user_id, image_url, likes, comment_count, profiles(nickname)")
       .eq("is_public", true)
       .order(orderCol, { ascending: false })
       .limit(20);
@@ -1678,6 +1678,7 @@ async function renderLogFeed(sortMode = "latest") {
           <button type="button" class="log-like-btn${liked ? " on" : ""}" data-pid="${esc(p.id)}" data-liked="${liked ? "1" : "0"}" aria-label="좋아요">
             ${liked ? "♥" : "♡"} <span class="log-like-cnt">${likeCount}</span>
           </button>
+          <span class="log-cmt-count">💬 ${p.comment_count || 0}</span>
         </div>
       </div>`;
     }).join("");
@@ -1742,6 +1743,14 @@ function openLogDetail(p) {
         ${_isPostLiked(p.id) ? "♥" : "♡"} <span class="log-like-cnt">${p.likes || 0}</span> 좋아요
       </button>
     </div>
+    <div id="detail-comments" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px">댓글 <span id="detail-cmt-cnt" style="color:var(--muted);font-weight:400">${p.comment_count || 0}</span></div>
+      <div id="detail-cmt-list" style="font-size:13px;color:var(--muted);padding:8px 0">불러오는 중…</div>
+      <form id="detail-cmt-form" style="display:flex;gap:8px;margin-top:10px">
+        <textarea id="detail-cmt-input" rows="2" maxlength="300" placeholder="댓글을 입력하세요 (최대 300자)" style="flex:1;resize:none;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--fg)"></textarea>
+        <button type="submit" class="achip" style="align-self:flex-end;white-space:nowrap;font-size:13px">등록</button>
+      </form>
+    </div>
   </div>`;
   modal.classList.add("on");
   const close = () => modal.classList.remove("on");
@@ -1772,6 +1781,63 @@ function openLogDetail(p) {
   }
   const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
+
+  // 댓글 로드 및 제출
+  (async () => {
+    const { supabase } = await import("./supabaseClient.js");
+    const cmtList = document.getElementById("detail-cmt-list");
+    const cmtCnt = document.getElementById("detail-cmt-cnt");
+    const cmtForm = document.getElementById("detail-cmt-form");
+    const cmtInput = document.getElementById("detail-cmt-input");
+
+    async function loadComments() {
+      const { data: cmts } = await supabase
+        .from("comments")
+        .select("id, content, created_at, user_id, profiles(nickname)")
+        .eq("post_id", p.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true })
+        .limit(50);
+      if (!cmtList) return;
+      if (!cmts || cmts.length === 0) {
+        cmtList.innerHTML = `<div style="color:var(--muted);padding:4px 0">첫 댓글을 남겨보세요!</div>`;
+      } else {
+        if (cmtCnt) cmtCnt.textContent = cmts.length;
+        cmtList.innerHTML = cmts.map(c => {
+          const nick = c.profiles?.nickname || "익명";
+          const dt = new Date(c.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+          const isMine = window._commUser && window._commUser.id === c.user_id;
+          return `<div class="cmt-row" data-cid="${esc(c.id)}">
+            <div class="cmt-meta"><span class="cmt-nick">${esc(nick)}</span><span class="cmt-date">${dt}</span>${isMine ? `<button type="button" class="cmt-del-btn" data-cid="${esc(c.id)}">✕</button>` : ""}</div>
+            <div class="cmt-body">${esc(c.content)}</div>
+          </div>`;
+        }).join("");
+        cmtList.querySelectorAll(".cmt-del-btn").forEach(btn => {
+          btn.onclick = async () => {
+            const cid = btn.dataset.cid;
+            await supabase.from("comments").update({ deleted_at: new Date().toISOString() }).eq("id", cid).eq("user_id", window._commUser.id);
+            await loadComments();
+          };
+        });
+      }
+    }
+
+    await loadComments();
+
+    if (cmtForm) {
+      cmtForm.onsubmit = async e => {
+        e.preventDefault();
+        const content = (cmtInput?.value || "").trim();
+        if (!content) return;
+        if (!window._commUser) { alert("로그인 후 댓글을 작성할 수 있어요."); return; }
+        const submitBtn = cmtForm.querySelector("button[type=submit]");
+        if (submitBtn) submitBtn.disabled = true;
+        const { error } = await supabase.from("comments").insert({ post_id: p.id, user_id: window._commUser.id, content });
+        if (submitBtn) submitBtn.disabled = false;
+        if (!error) { if (cmtInput) cmtInput.value = ""; await loadComments(); }
+      };
+    }
+  })();
 }
 
 function openLogModal() {
