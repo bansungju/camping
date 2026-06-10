@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="캠핑기어">
-<link rel="stylesheet" href="style.css?v=a49b27ff">
+<link rel="stylesheet" href="style.css?v=5b7bf89c">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -38,20 +38,20 @@
     <span class="count" id="count"></span>
   </div>
 
+  <!-- 빠른 정렬 칩(항상 노출 — 모바일에서 필터바 접혀도 정렬) -->
+  <div class="sortchips" id="sortchips"></div>
+
   <!-- 활성 필터 요약 칩 -->
   <div class="activefilters" id="activefilters"></div>
 
-  <div class="tablewrap"><table>
-    <thead><tr id="head"></tr></thead>
-    <tbody id="body"></tbody>
-  </table></div>
+  <div id="list" class="plist"></div>
 
   <div id="legend" style="margin-top:24px"></div>
 </main>
 
 <footer><div class="wrap" id="foot"></div></footer>
 
-<script src="app.js?v=f692c416"></script>
+<script src="app.js?v=2588890a"></script>
 <script>renderCategory();</script>
 </body>
 </html>

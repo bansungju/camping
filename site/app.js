@@ -135,6 +135,62 @@ function esc(s) {
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/* 공통: 상품 썸네일 셀 — 이미지가 있으면 <img>, 없거나 로드 실패하면 '이미지 준비중' 카드.
+   data-* 로 폴백에 쓸 톤/아이콘/클래스를 실어, 깨진 링크도 onerror로 우아하게 대체. */
+function thumbCell(img, name, tint, icon, imgCls, noCls) {
+  imgCls = imgCls || "pli-thumb"; noCls = noCls || "pli-noimg";
+  if (!img) return `<div class="${noCls}" style="background:${tint}">${icon}<span>이미지 준비중</span></div>`;
+  return `<img class="${imgCls}" src="${esc(img)}" alt="${esc(name)}" loading="lazy"` +
+    ` data-tint="${tint}" data-icon="${icon}" data-fcls="${noCls}" onerror="thumbFallback(this)">`;
+}
+function thumbFallback(img) {
+  const d = document.createElement("div");
+  d.className = img.dataset.fcls || "pli-noimg";
+  d.style.background = img.dataset.tint || "var(--card2)";
+  d.innerHTML = (img.dataset.icon || "🏕️") + "<span>이미지 준비중</span>";
+  img.replaceWith(d);
+}
+
+/* 찜(위시리스트) — localStorage 저장. 로그인 없이도 동작, '내 정보' 탭에서 모아봄.
+   항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
+function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
+function setWish(a) { localStorage.setItem("wish", JSON.stringify(a)); }
+function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
+function inWish(key) { return getWish().some(x => x.key === key); }
+function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
+  const a = getWish(), i = a.findIndex(x => x.key === item.key);
+  if (i >= 0) a.splice(i, 1); else a.push(item);
+  setWish(a);
+  return i < 0;
+}
+// 모델·카테고리슬러그 → 위시 항목
+function wishItem(m, slug) {
+  return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
+           cap: m.capacity, s: slug, p: m.price_min, img: m.img };
+}
+
+/* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
+   로그인·커뮤니티는 계획 단계라 '준비중' 플레이스홀더로 연결. */
+const TABS = [
+  { href: "index.html", icon: "📊", label: "비교", match: ["index.html", "", "category.html", "brand.html", "recommend.html"] },
+  { href: "community.html", icon: "💬", label: "커뮤니티", match: ["community.html"] },
+  { href: "account.html", icon: "👤", label: "내 정보", match: ["account.html"] },
+];
+window.addEventListener("DOMContentLoaded", () => {
+  if (document.querySelector(".tabbar")) return;
+  const here = (location.pathname.split("/").pop() || "").toLowerCase();
+  const nav = document.createElement("nav");
+  nav.className = "tabbar";
+  nav.innerHTML = `<div class="wrap tabbar-in">` + TABS.map(t => {
+    const on = t.match.includes(here);
+    return `<a class="tab${on ? " on" : ""}" href="${t.href}"${on ? ' aria-current="page"' : ""}>` +
+      `<span class="ti">${t.icon}</span><span class="tl">${t.label}</span></a>`;
+  }).join("") + `</div>`;
+  const header = document.querySelector("header.top");
+  if (header) header.insertAdjacentElement("afterend", nav);
+  else document.body.prepend(nav);
+});
+
 /* 공통: 카테고리 네비게이션 바 (어느 카테고리든 직접 이동) */
 async function renderCatNav(activeSlug) {
   const el = document.getElementById("catnav");
@@ -158,6 +214,20 @@ async function renderHub() {
     `<b>${totalModels.toLocaleString()}개</b> 모델 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
 
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
+
+  // 첫 진입 1회성 안내 — 별점이 '추측'이 아니라 '측정값 순위'임을 각인(정직성 정체성 강화)
+  if (!localStorage.getItem("seenIntro")) {
+    const h1 = document.querySelector("main h1");
+    if (h1) {
+      const ib = document.createElement("div");
+      ib.className = "introbar";
+      ib.innerHTML = `<span class="ii">⭐</span>
+        <span class="it"><b>별점은 같은 그룹 안에서의 순위를 환산한 값</b>이에요. 측정값만 쓰고, 추측은 없습니다.</span>
+        <button type="button" class="ix" aria-label="안내 닫기">✕</button>`;
+      h1.insertAdjacentElement("beforebegin", ib);
+      ib.querySelector(".ix").onclick = () => { localStorage.setItem("seenIntro", "1"); ib.remove(); };
+    }
+  }
 
   // 캠핑 스타일 추천 진입
   const pel = document.getElementById("personas");
@@ -267,7 +337,7 @@ async function renderCategory() {
   try { d = await getJSON(`data/${slug}.json`); }
   catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
-  STATE = { data: d, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
+  STATE = { data: d, slug: slug, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
             sortKey: null, sortAsc: false,
             dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])),
             unit: Object.fromEntries(d.metrics.map(m => [m.key, m.unit])) };
@@ -291,7 +361,7 @@ async function renderCategory() {
   } else { note.style.display = "none"; }
 
   buildFilters(d, star);
-  buildHead(d, star);
+  STATE.hasCap = d.models.some(m => m.capacity != null);
   STATE.sortKey = "spec:" + (star[0] && star[0].key);
   STATE.sortAsc = defaultAsc(STATE.sortKey);   // 주력지표 '좋은 것 먼저'
   restoreState(params);                        // URL의 필터상태 복원(공유링크·뒤로가기)
@@ -399,15 +469,24 @@ function buildFilters(d, star) {
     if (!Object.keys(STATE.range[key]).length) delete STATE.range[key];
     draw();
   });
-  // 정렬 셀렉트
+  // 정렬 적용(셀렉트·빠른칩 공용) — 셀렉트 값도 동기화
   const ssel = bar.querySelector("[data-sort]");
-  if (ssel) ssel.onchange = e => {
-    const v = e.target.value;
+  const applySort = v => {
     if (!v) { STATE.sortKey = "spec:" + (star[0] && star[0].key); STATE.sortAsc = defaultAsc(STATE.sortKey); }
     else if (v === "value") { STATE.sortKey = "value"; STATE.sortAsc = false; }
     else { STATE.sortKey = v; STATE.sortAsc = defaultAsc(v); }
+    if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : STATE.sortKey;
     draw();
   };
+  if (ssel) ssel.onchange = e => applySort(e.target.value);
+  // 빠른 정렬 칩(항상 노출 — 모바일에서 필터바가 접혀도 한 번에 정렬). 발견율 개선
+  const sc = document.getElementById("sortchips");
+  if (sc) {
+    const CHIPS = [["", "기본"], ["price_min", "가격 낮은순"], ["value", "가성비순"]];
+    sc.innerHTML = `<span class="flab">정렬</span>` + CHIPS.map(([v, lab]) =>
+      `<button type="button" class="schip" data-sortval="${v}">${esc(lab)}</button>`).join("");
+    sc.querySelectorAll(".schip").forEach(b => b.onclick = () => applySort(b.dataset.sortval));
+  }
   // 품질 토글
   const qx = bar.querySelector("[data-qx]");
   if (qx) qx.onchange = e => { STATE.qExclude = e.target.checked; draw(); };
@@ -435,10 +514,14 @@ function renderActiveFilters() {
   el._chips = chips;
   el.querySelectorAll(".achip[data-ai]").forEach(b => b.onclick = () => { chips[+b.dataset.ai][1](); syncFilterUI(); draw(); });
   const cl = el.querySelector("[data-clear]");
-  if (cl) cl.onclick = () => {
-    STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
-    document.getElementById("q").value = ""; syncFilterUI(); draw();
-  };
+  if (cl) cl.onclick = clearAllFilters;
+}
+
+// 모든 필터 초기화(활성칩 '전체 해제' + 빈 상태 버튼 공용)
+function clearAllFilters() {
+  STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
+  const q = document.getElementById("q"); if (q) q.value = "";
+  syncFilterUI(); draw();
 }
 
 // 칩/입력 UI를 STATE에 동기화(활성칩에서 해제 시 컨트롤도 반영)
@@ -454,26 +537,6 @@ function syncFilterUI() {
   // 정렬 셀렉트도 복원상태 반영(URL→컨트롤). 기본 주력지표 정렬이면 '기본' 표시
   const ssel = bar.querySelector("[data-sort]");
   if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : (STATE.sortKey || "");
-}
-
-function buildHead(d, star) {
-  const cols = [["brand", "브랜드"], ["model", "모델"]];
-  const hasCap = d.models.some(m => m.capacity != null);
-  if (hasCap) cols.push(["capacity", "인원"]);
-  cols.push(["price_min", "가격"]);
-  star.forEach(m => cols.push(["spec:" + m.key, `${m.label}${m.unit ? `(${m.unit})` : ""}`]));
-  STATE.cols = cols; STATE.hasCap = hasCap;
-  document.getElementById("head").innerHTML = cols.map(([k, lab]) =>
-    `<th data-k="${k}" tabindex="0" role="columnheader" aria-sort="none" title="클릭/Enter=정렬">${lab}</th>`).join("");
-  const sortBy = k => {
-    if (STATE.sortKey === k) STATE.sortAsc = !STATE.sortAsc;
-    else { STATE.sortKey = k; STATE.sortAsc = defaultAsc(k); }
-    draw();
-  };
-  document.querySelectorAll("#head th").forEach(th => {
-    th.onclick = () => sortBy(th.dataset.k);
-    th.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sortBy(th.dataset.k); } };
-  });
 }
 
 function cellVal(m, key) {
@@ -541,9 +604,7 @@ function openProduct(m) {
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
   if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }
-  const imgHtml = m.img
-    ? `<img class="pmimg" src="${esc(m.img)}" alt="${esc(m.model)}" loading="lazy" onerror="this.remove()">`
-    : `<div class="pmicon" style="background:${catTint(d.name)}">${catIcon(d.name)}<span class="pmnoimg">이미지 수집 예정</span></div>`;
+  const imgHtml = thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "pmimg", "pmicon");
   const specRows = star.map(mt => {
     const s = m.specs[mt.key];
     const has = s && s.value != null;
@@ -553,20 +614,33 @@ function openProduct(m) {
     return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? `(${mt.unit})` : ""}</span>` +
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
+  const wished = inWish(wishKey(m.brand, m.model, m.capacity));
   modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true">
      <button class="pmx" aria-label="닫기">✕</button>
+     <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
      ${imgHtml}
      <div class="pmbody">
        <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
        <div class="pmname">${esc(m.model)}</div>
        <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
        <div class="pmspecs">${specRows}</div>
+       <button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
+       <div class="pmbuynote">구매 기능은 차차 추가할 예정입니다.</div>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
      </div></div>`;
   modal.classList.add("on");
-  const close = () => modal.classList.remove("on");
+  const wbtn = modal.querySelector(".pmwish");
+  wbtn.onclick = () => {
+    const added = toggleWish(wishItem(m, STATE.slug));
+    wbtn.classList.toggle("on", added); wbtn.textContent = added ? "♥" : "♡";
+    wbtn.setAttribute("aria-pressed", added);
+  };
+  const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
+  const close = () => { modal.classList.remove("on"); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
   modal.onclick = e => { if (e.target === modal) close(); };
-  modal.querySelector(".pmx").onclick = close;
+  const xbtn = modal.querySelector(".pmx");
+  xbtn.onclick = close;
+  xbtn.focus();
   const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
 }
@@ -594,37 +668,62 @@ function draw() {
     return asc ? va - vb : vb - va;
   });
 
-  document.querySelectorAll("#head th").forEach(th => {
-    const on = th.dataset.k === k;
-    th.classList.toggle("sorted", on);
-    th.classList.toggle("asc", on && asc);
-    th.setAttribute("aria-sort", on ? (asc ? "ascending" : "descending") : "none");
+  // 빠른 정렬 칩 활성표시(칩·셀렉트·URL복원 어느 경로로 바뀌든 일치)
+  document.querySelectorAll("#sortchips .schip").forEach(b => {
+    const v = b.dataset.sortval;
+    b.classList.toggle("on", (v === "" && k === defaultSortKey()) || v === k);
   });
 
-  const body = rows.map((m, i) => {
-    let tds = `<td class="brand">${esc(m.brand)}</td><td class="model"><b>${esc(m.model)}</b>` +
-      (m.variants > 1 ? ` <span class="nd">+${m.variants - 1}색</span>` : "") + `</td>`;
-    if (STATE.hasCap) tds += `<td>${m.capacity != null ? m.capacity + "인" : "—"}</td>`;
-    tds += `<td class="price">${priceRange(m.price_min, m.price_max)}</td>`;
-    star.forEach(mt => {
+  const tint = catTint(d.name), icon = catIcon(d.name);
+  const cards = rows.map((m, i) => {
+    const top = `${esc(m.brand)}${STATE.hasCap && m.capacity != null ? ` · ${m.capacity}인` : ""}` +
+      (m.variants > 1 ? ` · +${m.variants - 1}색` : "");
+    const specs = star.map(mt => {
       const s = m.specs[mt.key];
-      if (!s || s.value == null) {   // 사용자=깔끔한 '—', 운영자=데이터부족 배지
-        tds += OPS ? `<td><span class="b 데이터부족">데이터부족</span></td>` : `<td><span class="nd">—</span></td>`;
-        return;
-      }
-      tds += `<td><div class="cell"><span class="val">${fmtVal(s.value, mt.unit)}</span>` +
-        `${stars(s.stars)}${OPS ? `<span class="b ${s.badge}">${s.badge}</span>` : ""}</div></td>`;
-    });
-    return `<tr class="prow" data-mi="${i}">${tds}</tr>`;
+      const on = k === "spec:" + mt.key;   // 현재 정렬 중인 지표는 강조
+      if (!s || s.value == null)
+        return `<span class="pli-spec${on ? " on" : ""}"><i>${esc(mt.label)}</i> <span class="nd">—</span></span>`;
+      const badge = OPS && s.badge ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
+      return `<span class="pli-spec${on ? " on" : ""}"><i>${esc(mt.label)}</i> ${fmtVal(s.value, mt.unit)}` +
+        `${s.stars != null ? " " + stars(s.stars) : ""}${badge}</span>`;
+    }).join("");
+    const wished = inWish(wishKey(m.brand, m.model, m.capacity));
+    return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
+      <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
+        aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+      ${thumbCell(m.img, m.model, tint, icon)}
+      <div class="pli-info">
+        <div class="pli-top">${top}</div>
+        <div class="pli-name">${esc(m.model)}</div>
+        <div class="pli-specs">${specs}</div>
+      </div>
+      <div class="pli-side">
+        <div class="pli-price">${priceRange(m.price_min, m.price_max)}</div>
+        <span class="pli-chev" aria-hidden="true">›</span>
+      </div></div>`;
   }).join("");
-  document.getElementById("body").innerHTML = body ||
-    `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 ${diagnoseEmpty(k)}</td></tr>`;
-  document.querySelectorAll("#body .prow").forEach(tr => tr.onclick = () => openProduct(rows[+tr.dataset.mi]));
+  const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q;
+  document.getElementById("list").innerHTML = cards ||
+    `<div class="pli-empty"><div class="pe-ico">🔍</div>
+       <div class="pe-msg">조건에 맞는 결과가 없어요 ${diagnoseEmpty(k)}</div>
+       ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}</div>`;
+  document.querySelectorAll("#list .pli").forEach(el => {
+    el.onclick = () => openProduct(rows[+el.dataset.mi]);
+    el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProduct(rows[+el.dataset.mi]); } };
+  });
+  // 찜 토글(카드 클릭=모달과 분리 → stopPropagation)
+  document.querySelectorAll("#list .pli-wish").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    const added = toggleWish(wishItem(rows[+btn.dataset.mi], STATE.slug));
+    btn.classList.toggle("on", added); btn.textContent = added ? "♥" : "♡";
+    btn.setAttribute("aria-pressed", added);
+  });
+  const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
   document.getElementById("foot").innerHTML = OPS
-    ? `컬럼 클릭=그 값으로 정렬(스펙은 좋은 것 먼저) · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
-    : `컬럼을 누르면 그 항목으로 정렬 · 별점은 같은 그룹 내 순위 기준.`;
+    ? `카드를 누르면 이미지·전체 스펙 · 정렬은 위 ‘정렬’ 메뉴 · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
+    : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준.`;
 }
 
 /* ---------- 브랜드 가로지르기 (전 카테고리 한 브랜드 모아보기) ---------- */
@@ -656,17 +755,24 @@ async function renderBrand() {
       : rows.length
       ? `<b>${rows.length}개</b> 모델 · ${cats.length}개 카테고리에 분포. 카테고리 제목을 누르면 그 카테고리에서 <b>${esc(bn)}</b>만 필터된 비교표로 이동.`
       : `<b>${esc(bn)}</b> 제품이 없습니다. 브랜드명을 확인하거나 위에서 다시 검색하세요.`;
-    document.getElementById("sections").innerHTML = cats.map(c => `
-      <h2 class="sec" style="margin-top:24px">
+    document.getElementById("sections").innerHTML = cats.map(c => {
+      const tint = catTint(c.name), icon = catIcon(c.name);
+      const items = c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x =>
+        `<a class="pli" href="category.html?cat=${x.s}&brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}">
+          ${thumbCell(x.img, x.m, tint, icon)}
+          <div class="pli-info">
+            <div class="pli-top">${esc(c.name)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
+            <div class="pli-name">${esc(x.m)}</div>
+          </div>
+          <div class="pli-side">
+            <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
+            <span class="pli-chev" aria-hidden="true">›</span>
+          </div></a>`).join("");
+      return `<h2 class="sec" style="margin-top:24px">
         <a href="category.html?cat=${c.slug}&brands=${encodeURIComponent(bn)}" style="color:var(--accent)">
           ${esc(c.name)} <span class="nd">${c.items.length}개 ›</span></a></h2>
-      <div class="tablewrap"><table>
-        <thead><tr><th>모델</th><th>인원</th><th>최저가</th></tr></thead>
-        <tbody>${c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x => `
-          <tr><td class="model"><a href="category.html?cat=${x.s}&brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}"><b>${esc(x.m)}</b></a></td>
-            <td>${x.cap != null ? x.cap + "인" : "—"}</td>
-            <td class="price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</td></tr>`).join("")}
-        </tbody></table></div>`).join("") ||
+      <div class="plist">${items}</div>`;
+    }).join("") ||
       `<p class="nd">해당 브랜드 제품이 없습니다.</p>`;
   };
 
@@ -742,7 +848,7 @@ async function renderRecommend() {
       const starHtml = (showStars && s.stars != null) ? " " + stars(s.stars) : "";   // 가성비·목표 정렬엔 별점 숨김(축 불일치)
       const opsBadge = (OPS && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
       return `<a class="rcard" href="category.html?cat=${pick.cat}&brands=${encodeURIComponent(m.brand)}&q=${encodeURIComponent(m.model)}">
-        <div class="ricon" style="background:${catTint(d.name)}">${catIcon(d.name)}</div>
+        ${thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "rthumb", "rnoimg")}
         <div class="rb">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}</div>
         <div class="rm">${esc(m.model)}</div>
         <div class="rs"><b>${esc(mt.label)} ${fmtVal(s.value, mt.unit)}</b>${starHtml}${opsBadge}</div>
@@ -755,4 +861,42 @@ async function renderRecommend() {
   }).join("");
   document.getElementById("recs").innerHTML = sections || `<p class="nd">추천할 데이터가 없습니다.</p>`;
   document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음.`;
+}
+
+/* ---------- 내 정보 — 찜한 상품(로그인 없이 localStorage) ---------- */
+function renderAccount() {
+  const el = document.getElementById("wishlist");
+  if (!el) return;
+  const a = getWish();
+  const cnt = document.getElementById("wishcount");
+  if (cnt) cnt.textContent = a.length ? `${a.length}개` : "";
+  if (!a.length) {
+    el.innerHTML = `<div class="pli-empty"><div class="pe-ico">🤍</div>
+      <div class="pe-msg">아직 찜한 상품이 없어요. 카테고리에서 ♡ 를 눌러 담아보세요.</div>
+      <a class="achip clear" href="index.html">카테고리 보러가기</a></div>`;
+    return;
+  }
+  el.innerHTML = a.map((x, i) => {
+    const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
+    return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
+      <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">♥</button>
+      ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
+      <div class="pli-info">
+        <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
+        <div class="pli-name">${esc(x.m)}</div>
+      </div>
+      <div class="pli-side">
+        <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
+        <span class="pli-chev" aria-hidden="true">›</span>
+      </div></div>`;
+  }).join("");
+  el.querySelectorAll(".pli").forEach(card => {
+    const go = () => { location.href = card.dataset.href; };
+    card.onclick = go;
+    card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+  });
+  el.querySelectorAll(".pli-wish").forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
+  });
 }
