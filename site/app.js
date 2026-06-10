@@ -535,6 +535,42 @@ function diagnoseEmpty(sortK) {
   return `— <b>${esc(sug[0][0])}</b> 조건을 빼면 ${sug[0][1]}개` + (sug[1] ? `, ${esc(sug[1][0])} 빼면 ${sug[1][1]}개` : "");
 }
 
+/* 상품 클릭 → 이미지·스펙 상세 모달 */
+function openProduct(m) {
+  if (!m) return;
+  const d = STATE.data, star = d.metrics.filter(x => x.is_star);
+  let modal = document.getElementById("pmodal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  const imgHtml = m.img
+    ? `<img class="pmimg" src="${esc(m.img)}" alt="${esc(m.model)}" loading="lazy" onerror="this.remove()">`
+    : `<div class="pmicon" style="background:${catTint(d.name)}">${catIcon(d.name)}<span class="pmnoimg">이미지 수집 예정</span></div>`;
+  const specRows = star.map(mt => {
+    const s = m.specs[mt.key];
+    const has = s && s.value != null;
+    const val = has ? fmtVal(s.value, mt.unit) : (OPS ? '<span class="b 데이터부족">데이터부족</span>' : "—");
+    const st = (has && s.stars != null) ? " " + stars(s.stars) : "";
+    const badge = (OPS && has && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
+    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? `(${mt.unit})` : ""}</span>` +
+      `<span class="pmv">${val}${st}${badge}</span></div>`;
+  }).join("");
+  modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true">
+     <button class="pmx" aria-label="닫기">✕</button>
+     ${imgHtml}
+     <div class="pmbody">
+       <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
+       <div class="pmname">${esc(m.model)}</div>
+       <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
+       <div class="pmspecs">${specRows}</div>
+       <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
+     </div></div>`;
+  modal.classList.add("on");
+  const close = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").onclick = close;
+  const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  document.addEventListener("keydown", onKey);
+}
+
 function draw() {
   const d = STATE.data, star = d.metrics.filter(m => m.is_star);
   renderActiveFilters();
@@ -565,7 +601,7 @@ function draw() {
     th.setAttribute("aria-sort", on ? (asc ? "ascending" : "descending") : "none");
   });
 
-  const body = rows.map(m => {
+  const body = rows.map((m, i) => {
     let tds = `<td class="brand">${esc(m.brand)}</td><td class="model"><b>${esc(m.model)}</b>` +
       (m.variants > 1 ? ` <span class="nd">+${m.variants - 1}색</span>` : "") + `</td>`;
     if (STATE.hasCap) tds += `<td>${m.capacity != null ? m.capacity + "인" : "—"}</td>`;
@@ -579,10 +615,11 @@ function draw() {
       tds += `<td><div class="cell"><span class="val">${fmtVal(s.value, mt.unit)}</span>` +
         `${stars(s.stars)}${OPS ? `<span class="b ${s.badge}">${s.badge}</span>` : ""}</div></td>`;
     });
-    return `<tr>${tds}</tr>`;
+    return `<tr class="prow" data-mi="${i}">${tds}</tr>`;
   }).join("");
   document.getElementById("body").innerHTML = body ||
     `<tr><td colspan="${STATE.cols.length}" class="nd" style="padding:20px">조건에 맞는 결과 없음 ${diagnoseEmpty(k)}</td></tr>`;
+  document.querySelectorAll("#body .prow").forEach(tr => tr.onclick = () => openProduct(rows[+tr.dataset.mi]));
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
   document.getElementById("foot").innerHTML = OPS

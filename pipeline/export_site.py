@@ -88,9 +88,15 @@ def export(con, outdir):
                 JOIN products p ON p.id=? WHERE cm.brand_id=p.brand_id
                 AND cm.canonical_model=p.canonical_model
                 AND IFNULL(cm.capacity,-1)=IFNULL(p.capacity,-1)""", (rep,)).fetchone()
+            # 대표 이미지(canonical 그룹 내 수집된 og:image 1장, 'none'/NULL 제외)
+            imgr = con.execute("""SELECT image_url FROM products p2
+                WHERE p2.brand_id=(SELECT brand_id FROM products WHERE id=?)
+                  AND p2.canonical_model=? AND IFNULL(p2.capacity,-1)=IFNULL(?,-1)
+                  AND p2.image_url IS NOT NULL AND p2.image_url<>'none' LIMIT 1""", (rep, cm, cap)).fetchone()
             models.append({
                 "brand": brand, "model": cm, "capacity": cap, "variants": variants,
                 "price_min": pr[0] if pr else None, "price_max": pr[1] if pr else None,
+                "img": imgr[0] if imgr else None,
                 "specs": specs,
             })
             search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap,
