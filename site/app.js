@@ -1142,6 +1142,26 @@ function draw() {
   const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
+
+  // JSON-LD Product schema (현재 표시 중인 상위 20개)
+  let ldEl = document.getElementById("jsonld-products");
+  if (!ldEl) { ldEl = document.createElement("script"); ldEl.type = "application/ld+json"; ldEl.id = "jsonld-products"; document.head.appendChild(ldEl); }
+  const catUrl = `https://gear-forest.com/category/${STATE.slug}`;
+  ldEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList",
+    "name": d.name, "url": catUrl,
+    "numberOfItems": rows.length,
+    "itemListElement": rows.slice(0, 20).map((m, i) => ({
+      "@type": "ListItem", "position": i + 1,
+      "item": {
+        "@type": "Product",
+        "name": `${m.brand} ${m.model}`,
+        "brand": { "@type": "Brand", "name": m.brand },
+        "url": catUrl,
+        ...(m.price_min != null ? { "offers": { "@type": "Offer", "priceCurrency": "KRW", "price": m.price_min, "availability": "https://schema.org/InStock" } } : {})
+      }
+    }))
+  });
+
   document.getElementById("foot").innerHTML = OPS
     ? `카드를 누르면 이미지·전체 스펙 · 정렬은 위 ‘정렬’ 메뉴 · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
     : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준.`;
