@@ -446,9 +446,33 @@ async function setupHomeSearch() {
   try { idx = await getJSON("data/search.json"); } catch (e) { return; }
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
   if (!inp || !box) return;
+  // WAI-ARIA combobox 패턴 (H-17) — 입력창/목록에 역할·상태 부여
+  inp.setAttribute("role", "combobox");
+  inp.setAttribute("aria-autocomplete", "list");
+  inp.setAttribute("aria-haspopup", "listbox");
+  inp.setAttribute("aria-controls", "homeres");
+  inp.setAttribute("aria-expanded", "false");
+  box.setAttribute("role", "listbox");
+  box.setAttribute("aria-label", "검색 자동완성 결과");
+  let opts = [], active = -1;   // 키보드 탐색 대상(선택 가능한 항목)과 현재 활성 인덱스
+  const closeBox = () => {
+    box.innerHTML = ""; box.style.display = "none";
+    opts = []; active = -1;
+    inp.setAttribute("aria-expanded", "false");
+    inp.removeAttribute("aria-activedescendant");
+  };
+  const setActive = i => {
+    if (!opts.length) return;
+    if (active >= 0 && opts[active]) { opts[active].classList.remove("sres-active"); opts[active].setAttribute("aria-selected", "false"); }
+    active = (i + opts.length) % opts.length;   // 순환
+    const el = opts[active];
+    el.classList.add("sres-active"); el.setAttribute("aria-selected", "true");
+    inp.setAttribute("aria-activedescendant", el.id);
+    el.scrollIntoView({ block: "nearest" });
+  };
   const run = () => {
     const q = inp.value.trim().toLowerCase();
-    if (q.length < 1) { box.innerHTML = ""; box.style.display = "none"; return; }
+    if (q.length < 1) { closeBox(); return; }
     // 브랜드 단위 매치(가로지르기) — "헬리녹스 전체 39개 →"를 상단에
     const bcount = {};
     idx.forEach(x => { if (x.b.toLowerCase().includes(q)) bcount[x.b] = (bcount[x.b] || 0) + 1; });
@@ -481,21 +505,41 @@ async function setupHomeSearch() {
         toggleWishWithHint(item, btn);
       };
     });
+    // 키보드 탐색 대상 옵션 등록 (브랜드/상품 링크) — role=option·id 부여 (H-17)
+    opts = [...box.querySelectorAll("a.sres")];
+    active = -1;
+    opts.forEach((el, i) => {
+      el.id = "homeres-opt-" + i;
+      el.setAttribute("role", "option");
+      el.setAttribute("aria-selected", "false");
+    });
+    inp.setAttribute("aria-expanded", opts.length ? "true" : "false");
+    inp.removeAttribute("aria-activedescendant");
   };
   inp.oninput = run;
   inp.onfocus = run;
-  inp.onblur = () => { setTimeout(() => { box.style.display = "none"; }, 150); }
-  // 엔터 → category.html?q= 이동 (첫 번째 결과 카테고리 or 전체 검색)
+  inp.onblur = () => { setTimeout(() => { box.style.display = "none"; inp.setAttribute("aria-expanded", "false"); }, 150); }
   inp.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       // input[type=search]의 네이티브 Esc=입력값 초기화 동작 차단.
       // Esc는 드롭다운만 닫고 입력값은 유지한다. (H-18)
       e.preventDefault();
-      box.innerHTML = ""; box.style.display = "none";
+      closeBox();
+      return;
+    }
+    // ↓/↑ — 드롭다운 항목 간 이동 (WAI-ARIA combobox, H-17)
+    if (e.key === "ArrowDown") {
+      if (box.style.display !== "none" && opts.length) { e.preventDefault(); setActive(active + 1); }
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      if (box.style.display !== "none" && opts.length) { e.preventDefault(); setActive(active - 1); }
       return;
     }
     if (e.key !== "Enter") return;
     e.preventDefault();
+    // 활성 옵션이 있으면 그 항목으로 이동 (↓로 선택 후 Enter)
+    if (active >= 0 && opts[active]) { location.href = opts[active].href; return; }
     const q = inp.value.trim();
     if (!q) return;
     // 첫 번째 매치의 카테고리 슬러그로 이동
@@ -1677,8 +1721,8 @@ function renderRecent() {
 
 /* ---------- 내 정보 — Progressive Disclosure ---------- */
 function _accActiveTab() {
-  const t = sessionStorage.getItem("acc-tab") || "wish";
-  return t;
+  const t = sessionStorage.getItem("acc-tab");
+  return (t === "wish" || t === "sets" || t === "logs") ? t : "wish";
 }
 function _accSetTab(tab) {
   sessionStorage.setItem("acc-tab", tab);
@@ -1879,7 +1923,7 @@ function renderAccount() {
         wishEmptyEl.innerHTML = `<div style="font-size:32px;margin-bottom:10px">🔖</div>
           <div>아직 찜한 상품이 없어요</div>
           <div style="font-size:12px;margin-top:6px">상품 카드의 🔖 버튼으로 추가해보세요</div>
-          ${!isLoggedIn ? `<a href="account.html#login" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
+          ${!isLoggedIn ? `<a href="account.html#auth-section" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
         wishEl.after(wishEmptyEl);
       } else {
         wishEmptyEl.style.display = "block";

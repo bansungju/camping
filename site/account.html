@@ -27,7 +27,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
-<link rel="stylesheet" href="style.css?v=4c905299">
+<link rel="stylesheet" href="style.css?v=3f9c5eff">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -90,7 +90,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=00388f21"></script>
+<script src="app.js?v=f4fe8053"></script>
 <script>
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
@@ -123,7 +123,10 @@ const section = document.getElementById('auth-section')
 if (typeof renderAccount === 'function') renderAccount()
 function setSyncHint(loggedIn) {
   const h = document.getElementById('wish-synchint')
-  if (h) h.hidden = loggedIn
+  if (!h) return
+  const wishCount = (() => { try { return JSON.parse(localStorage.getItem('wish') || '[]').length } catch { return 0 } })()
+  // 비로그인 + 찜 1개 이상일 때만 표시 (0개면 wish-empty의 CTA가 커버)
+  h.hidden = loggedIn || wishCount === 0
 }
 
 // 로컬 찜 헬퍼(app.js의 localStorage "wish"와 동일 포맷)
