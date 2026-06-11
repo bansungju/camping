@@ -21,6 +21,9 @@
     "path": "./android.keystore",
     "alias": "gearforest"
   },
+  "fingerprints": [
+    { "name": "upload", "value": "D7:52:E1:9E:40:0D:2C:A2:1F:C9:8D:76:EB:32:FB:F2:A5:6F:15:61:85:03:0D:4D:B7:2B:12:73:0D:06:9D:ED" }
+  ],
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
   "shortcuts": [],
@@ -31,5 +34,7 @@
   "isMetaQuest": false,
   "fullScopeUrl": "https://gear-forest.com/",
   "minSdkVersion": 23,
-  "_comment": "appVersionCode는 출시마다 +1. signingKey 경로/별칭은 bubblewrap init 시 생성. host/start_url은 §2 결정에 따름."
+  "_comment": "appVersionCode는 출시마다 +1. signingKey 경로/별칭은 bubblewrap init 시 생성. host/start_url은 §2 결정에 따름.",
+  "_targetSdk_warning": "빌드 후 app/build.gradle의 targetSdkVersion이 35인지 반드시 확인(Play 2025.8 필수). Bubblewrap 기본이 33일 수 있음 → 35로 패치.",
+  "_push_backlog": "알림: monochromeIconUrl(흰색-on-투명) 추가 + sw.js notificationclick를 matchAll(includeUncontrolled) 후 focus 패턴으로 수정 필요(현재 백그라운드 TWA에서 새 Chrome탭 열림). 앱 무수정 원칙이라 별도 백로그."
 }

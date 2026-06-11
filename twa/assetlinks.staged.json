@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gearforest.app",
+      "sha256_cert_fingerprints": [
+        "D7:52:E1:9E:40:0D:2C:A2:1F:C9:8D:76:EB:32:FB:F2:A5:6F:15:61:85:03:0D:4D:B7:2B:12:73:0D:06:9D:ED"
+      ]
+    }
+  }
+]
