@@ -5,10 +5,18 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const DATA_DIR = path.join(__dirname, "../site/data");
 const OUT_DIR = path.join(__dirname, "../site/item");
 const SITE_URL = "https://gear-forest.com";
+
+// 자산 캐시버스팅 — app.js/style.css 내용 해시를 생성 시점에 동적 스탬프.
+// (하드코딩 버전은 내용이 바뀌어도 캐시 키가 안 바뀌어 재방문자가 구버전 자산을 받는다 — H-38 근본 보강)
+const _assetV = (rel) =>
+  crypto.createHash("md5").update(fs.readFileSync(path.join(__dirname, "../site", rel))).digest("hex").slice(0, 8);
+const APP_V = _assetV("app.js");
+const CSS_V = _assetV("style.css");
 
 const CAT_LABELS = {
   "backpacking-tent": "백패킹 텐트",
@@ -145,7 +153,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <meta name="twitter:image" content="${imgUrl}">
 <meta name="theme-color" content="#2f7a4e">
 <link rel="icon" type="image/png" href="../../icon-192.png">
-<link rel="stylesheet" href="../../style.css?v=ada1470d">
+<link rel="stylesheet" href="../../style.css?v=${CSS_V}">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <style>
 .item-hero{display:flex;gap:20px;align-items:flex-start;margin:24px 0 20px;flex-wrap:wrap}
@@ -216,7 +224,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 
 <footer><div class="wrap">정량 스펙 기반 정직 비교 · <a href="${canonicalUrl}" style="color:inherit">${brand} ${modelName}</a></div></footer>
 
-<script src="../../app.js?v=df140e15"></script>
+<script src="../../app.js?v=${APP_V}"></script>
 <script>
 // 찜하기 — app.js의 전역 찜 API(wishKey·inWish·toggleWish) 재사용 (H-07)
 (function(){

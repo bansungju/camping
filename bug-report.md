@@ -70,12 +70,13 @@
 - **해결(2026-06-11):** `app.js`의 데스크톱 탭바 `TABS` 배열에 "🧭 탐색"(`category.html`) 탭 추가 — 모바일 `.bottom-nav`와 일치하는 4탭 구성. 카테고리/브랜드/추천 페이지 매칭을 "비교"에서 "탐색"으로 이동(홈에선 비교, 탐색 페이지에선 탐색 강조). 로컬 프리뷰 검증 — index.html에서 비교 active·탐색 표시, category.html에서 탐색 active(`aria-current="page"`)·비교 비활성, 4탭 정상 렌더(스크린샷), 콘솔 에러 없음. [site/app.js](site/app.js)
 - **재현:** 데스크톱(≥768px) → 임의 페이지 → 상단 tabbar 확인 → "탐색/카테고리" 탭 없음
 
-### [H-38] 상세 페이지 하단 탭바 링크 4개 모두 404
+### [H-38] ✅ 해결완료 — 상세 페이지 하단 탭바 링크 4개 모두 404
 - **영역:** 상품 상세
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** 상세 페이지에서 탭바(홈·탐색·비교·커뮤니티·내 정보) 링크가 `/item/sleeping-bag/index.html`, `/item/sleeping-bag/category.html` 등 서브디렉터리 기준 상대경로로 생성되어 모두 404. 실제 경로는 루트 기준 `/index.html`, `/category.html` 등이어야 함. 상세 페이지 진입 후 다른 영역으로 이동 불가.
 - **재현:** item/*.html 직접 접근 → 탭바 링크 클릭 → 404
-- **원인:** `insertBottomNav()` / 데스크톱 tabbar 생성 시 상대경로 href 사용. 상세 페이지는 루트 대비 2단계 하위 경로(`/item/{cat}/item-N.html`)이므로 상대경로 오류 발생.
+- **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
+- **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
 
 ### [H-01] 🔧 코드수정 완료·대시보드 적용 대기 — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
