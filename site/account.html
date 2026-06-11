@@ -110,11 +110,11 @@
 </script>
 <script type="module">
 import {
-  initAuth, signInWithOAuth, signOut, getErrorMessage,
+  initAuth, signInWithOAuth, signOut, deleteAccount, getErrorMessage,
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=e6966f82'
+} from './supabaseClient.js?v=93a7428a'
 
 const section = document.getElementById('auth-section')
 
@@ -299,10 +299,41 @@ function renderProfile(profile) {
         background:var(--card2);cursor:pointer;font-size:14px;color:var(--muted)">
         로그아웃
       </button>
+
+      <div style="margin-top:28px;padding-top:16px;border-top:1px solid var(--line)">
+        <button id="btn-delete-account" type="button" style="
+          width:100%;padding:10px;border-radius:8px;border:1px solid transparent;
+          background:none;cursor:pointer;font-size:13px;color:#e53e3e">
+          계정 삭제
+        </button>
+        <p id="delete-hint" style="color:var(--muted);font-size:12px;text-align:center;margin:8px 4px 0">
+          삭제 시 프로필·찜·세트가 익명화·삭제되며, 작성한 글은 작성자 표시 없이 보존됩니다. 탈퇴 후 30일간 재가입할 수 없습니다.
+        </p>
+      </div>
     </div>`
 
   document.getElementById('btn-signout').addEventListener('click', async () => {
     await signOut()
+  })
+
+  document.getElementById('btn-delete-account').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-delete-account')
+    const hint = document.getElementById('delete-hint')
+    // 2단계 확인 — 파괴적·복구불가 + 30일 쿨다운
+    if (!confirm('정말 계정을 삭제하시겠어요?\n\n· 프로필·찜·세트가 삭제됩니다\n· 작성한 글은 작성자 표시 없이 남습니다\n· 30일간 재가입할 수 없습니다')) return
+    if (!confirm('이 작업은 되돌릴 수 없습니다. 계속할까요?')) return
+    btn.disabled = true; btn.textContent = '삭제 중…'; btn.style.opacity = '.6'
+    const { error } = await deleteAccount()
+    if (error) {
+      hint.textContent = getErrorMessage(error) || '삭제에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      hint.style.color = '#e53e3e'
+      btn.disabled = false; btn.textContent = '계정 삭제'; btn.style.opacity = '1'
+      return
+    }
+    // 성공 — 세션 정리 후 안내와 함께 홈으로
+    await signOut()
+    localStorage.removeItem('wish'); localStorage.removeItem('gear_sets')
+    location.href = 'index.html?account_deleted=1'
   })
 }
 
