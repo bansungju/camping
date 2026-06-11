@@ -406,7 +406,7 @@ async function renderHub() {
     backpacker: { cat: "backpacking-tent", sort: "weight_min", sa: "1", cap: "2" },
     minimal:    { cat: "tarp",             sort: "weight_min", sa: "1" },
     auto:       { cat: "auto-tent",        sort: "floor_area", sa: "0", cap: "4" },
-    family:     { cat: "auto-tent",        sort: "floor_area", sa: "0", cap: "4" },
+    // family: recommend.html?p=family 로 연결 (PERSONA_CAT에서 제외 시 fallback 사용, M-100)
   };
   const pel = document.getElementById("personas");
   if (pel) pel.innerHTML = PERSONAS.map(p => {
@@ -448,7 +448,7 @@ async function renderHub() {
 
 async function setupHomeSearch() {
   let idx = [];
-  try { idx = await getJSON("data/search.json"); } catch (e) { return; }
+  try { idx = await getJSON("data/search.json?v=9b015e7e"); } catch (e) { return; }
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
   if (!inp || !box) return;
   // WAI-ARIA combobox 패턴 (H-17) — 입력창/목록에 역할·상태 부여
@@ -565,6 +565,9 @@ async function setupHomeSearch() {
       if (brandMatch) location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
     }
   });
+  // URL ?q= 파라미터 복원 — 공유 링크 접근 시 검색창 pre-fill (M-62)
+  const initQ = new URLSearchParams(location.search).get("q");
+  if (initQ) { inp.value = initQ; run(); }
 }
 
 /* ---------- 캠핑 스타일 칩 상수 ---------- */
@@ -1568,7 +1571,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json"); }
+  try { idx = await getJSON("data/search.json?v=9b015e7e"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
