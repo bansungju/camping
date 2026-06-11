@@ -42,12 +42,17 @@ def main():
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new)
             changed.append(name)
-    # PWA: 서비스워커 CACHE 버전을 app.js+style.css 결합해시로 스탬프(내용 바뀌면 옛 캐시 폐기)
+    # PWA: 서비스워커 CACHE 버전 스탬프(내용 바뀌면 옛 캐시 폐기).
+    # app.js+style.css+supabaseClient.js 해시 + sw.js 자체 로직 해시를 결합.
+    # → SW fetch/캐시 전략만 바뀌어도 CACHE명이 바뀌어 옛(오염될 수 있는) 캐시가 폐기된다.
     swp = os.path.join(SITE, "sw.js")
     if os.path.exists(swp):
-        build = hashlib.md5((hj + hc + hs).encode()).hexdigest()[:8]
         with open(swp, encoding="utf-8") as f:
             sw = f.read()
+        # sw.js 로직 해시 — CACHE 줄은 제외(순환 방지: CACHE명이 해시에 영향주면 안 됨)
+        sw_logic = re.sub(r'const CACHE = "camping-[^"]*";', "", sw)
+        sw_hash = hashlib.md5(sw_logic.encode()).hexdigest()[:8]
+        build = hashlib.md5((hj + hc + hs + sw_hash).encode()).hexdigest()[:8]
         sw2 = re.sub(r'const CACHE = "camping-[^"]*";', f'const CACHE = "camping-{build}";', sw)
         if sw2 != sw:
             with open(swp, "w", encoding="utf-8") as f:

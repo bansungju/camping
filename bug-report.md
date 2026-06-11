@@ -30,6 +30,7 @@
 | 18 | 커뮤니티/소셜 (3순환) | 2026-06-11 | 4건 (중복 2건 제외) |
 | 19 | 홈/메인 (4순환) | 2026-06-11 | 2건 (중복·저영향 제외, L-27 보완) |
 | + | 컴플라이언스 감사 | 2026-06-11 | 5건 (H-23~H-27, L-19 승격 포함) |
+| 20 | 카테고리/목록 (4순환) | 2026-06-11 | 3건 (중복 2건 제외) |
 
 ---
 
@@ -45,6 +46,16 @@
 - **영역:** 홈/메인
 - **URL:** https://gear-forest.com
 - **증상:** non-www 주소로 직접 진입하면 리다이렉트 루프(gear-forest.com↔www.gear-forest.com)로 페이지 열리지 않음. www로 진입 시에는 정상. SEO canonical·공유 링크가 non-www를 가리키므로 외부 유입 사용자가 진입 불가.
+
+### [H-28] ✅ 해결완료 — Service Worker 캐시로 인한 `cat=cooking` ERR_TOO_MANY_REDIRECTS
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=cooking
+- **증상:** SW가 활성화된 상태에서 `cat=cooking` URL 진입 시 브라우저가 리다이렉트 루프(ERR_TOO_MANY_REDIRECTS)에 빠져 페이지 완전 불능. `data/cooking.json`이 존재하지 않는 슬러그임에도 SW 캐시에 `category.html?cat=cooking` URL이 `camping-0ea071e5` 캐시 내 저장되어 있어 캐시 히트→리다이렉트→캐시 히트 루프 발생. SW 언레지스터 후 접근 시 정상 오류 메시지 표시.
+- **재현:** SW 활성화 상태에서 https://www.gear-forest.com/category.html?cat=cooking 직접 접근
+- **영향:** `cat=cooking` 슬러그 접근 시 모든 사용자 완전 차단
+- **원인(2026-06-11):** `sw.js` fetch 핸들러(네비게이션·자산 모두)가 `fetch(req)` 응답을 무조건 `cache.put` 했는데, www→apex 301을 따라간 응답은 `net.redirected=true`. 리다이렉트된 Response를 캐시에 넣으면 이후 캐시 히트 시 redirect 꼬리표가 남아 ERR_TOO_MANY_REDIRECTS 루프 발생(잘 알려진 SW 함정).
+- **해결:** ① 네비게이션·자산 핸들러 모두 `net.ok && !net.redirected`일 때만 캐싱하도록 가드 추가. ② `pipeline/stamp_version.py`가 CACHE 빌드 해시에 **sw.js 로직 해시까지 포함**하도록 수정(기존엔 app.js+css+supabase만 반영 → SW 전략만 바뀌면 캐시명 불변 = 오염 캐시 잔류 latent 버그). 이번 배포로 CACHE `camping-0ea071e5`→`camping-11b6a30a`로 바뀌어 activate 시 오염된 옛 캐시 폐기. 로컬 프리뷰 검증 — SW 재등록 후 캐시 `camping-11b6a30a` 단일, 옛 캐시 폐기·콘솔 에러 없음. [site/sw.js](site/sw.js), [pipeline/stamp_version.py](pipeline/stamp_version.py)
+- **비고:** apex 기기는 이번 배포로 자동 복구. 과거 www-origin SW 고착 기기는 [H-19] 비고대로 데이터 삭제/apex 직접접속 필요.
 
 ### [H-22] ✅ 해결완료 — style 필터 URL 공유·직접 진입 시 칩 active 복원 실패 + 정렬 미적용
 - **영역:** 카테고리/목록
@@ -170,6 +181,12 @@
 ---
 
 ## 🟡 Medium
+
+### [M-45] 카테고리 필터 `<select>` 접근성 레이블 없음 — 스크린리더 목적 불명
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag 등
+- **증상:** 정렬 드롭다운 및 브랜드 필터 `<select class="fsel">` 2개에 `id`, `aria-label`, `<label for>`, `title` 중 어느 것도 없음. WCAG 4.1.2 위반 — 스크린리더 사용자가 드롭다운 목적을 알 수 없음.
+- **재현:** 카테고리 페이지 접근 → 접근성 트리 확인: `select` 요소 accessibleName = "" (공백)
 
 ### [M-44] LCP 이미지에 `loading="lazy"` + `fetchpriority` 없음 — LCP 점수 저해
 - **영역:** 홈/메인 (성능)
@@ -618,6 +635,12 @@
 - **증상:** `<a href="#main" class="skip-to-content">` 등 메인 콘텐츠 바로가기 링크가 없어 키보드 사용자가 Tab으로 탐색할 때 상단 nav 전체를 순회해야 함. WCAG 2.4.1(G1) 준수 미흡.
 - **재현:** 홈 접속 → Tab 키 반복 → 콘텐츠 바로가기 링크 없음 확인
 
+### [L-35] 카테고리 목록 스크롤 끝 "모두 표시됨" 안내 없음
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag 등
+- **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
+- **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
+
 ### [L-27] 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
 - **영역:** 홈/메인 — 공통 푸터
 - **URL:** https://www.gear-forest.com/
@@ -625,4 +648,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (4순환)*
+*다음 회차: 상품상세 (4순환)*
