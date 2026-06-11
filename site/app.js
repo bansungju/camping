@@ -626,7 +626,13 @@ function restoreState(params) {
   const srt = params.get("sort");
   const validSort = srt && (srt === "value" || srt === "price_min" ||
     STATE.data.metrics.some(m => m.is_star && "spec:" + m.key === srt));
-  if (validSort) { STATE.sortKey = srt; STATE.sortAsc = params.get("sa") === "1"; }
+  if (validSort) {
+    STATE.sortKey = srt;
+    // sa 파라미터가 있으면 그대로, 없으면 정렬키의 자연 기본방향을 적용 (M-59)
+    // (sa 없는 공유 URL이 비싼것부터 등 역방향으로 뒤집히던 문제 — applySort와 동일 규칙)
+    STATE.sortAsc = params.has("sa") ? params.get("sa") === "1"
+      : (srt === "value" ? false : defaultAsc(srt));
+  }
   STATE.qExclude = params.get("qx") === "1";
   const sty = params.get("style");
   if (sty && STYLE_META.some(s => s.key === sty)) STATE.campStyle = sty;
