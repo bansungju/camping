@@ -575,11 +575,8 @@
 - **증상:** 브랜드명(예: "헬리녹스") 정확 입력 후 Enter 시 `brand.html?b=헬리녹스` 대신 해당 브랜드 임의 첫 번째 상품의 카테고리(`category.html?cat=...`)로 이동. 검색 결과 코드에서 모델·브랜드 복합 매칭이 브랜드 전용 페이지보다 우선 실행됨.
 - **재현:** 홈 검색창 "헬리녹스" 입력 → Enter → 브랜드 전체 페이지 아닌 카테고리 진입
 
-### [M-40] 홈 검색 자동완성 상태에서 URL에 검색어 미반영 — 공유/북마크 불가
-- **영역:** 검색 (홈)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 홈 검색창에서 검색어 입력 중 URL이 `https://gear-forest.com/`으로 유지됨. 자동완성 결과를 보는 상태를 URL로 공유·북마크 불가. 카테고리 페이지는 `?q=` 파라미터를 사용하는 것과 대조적.
-- **재현:** 홈 → "스노우피크" 입력 → URL 확인 → 변화 없음
+### [M-40] ✅ 해결완료(2026-06-11) — 홈 검색 URL 미반영
+- **해결(2026-06-11):** `run()` 내 `history.replaceState`로 `?q=검색어` URL 갱신. 드롭다운 닫히면 pathname으로 복귀. [site/app.js](site/app.js)
 
 ### [M-36] ✅ 해결완료 — 모달 열림 상태에서 body 스크롤 잠금 없음
 - **해결(2026-06-11):** `style.css`에 `body:has(.pmodal.on){overflow:hidden}` 1줄 추가. CSS `:has()` 셀렉터로 JS 수정 없이 모달 열림 시 자동 스크롤 잠금. [site/style.css](site/style.css)
@@ -602,11 +599,8 @@
 - **증상:** 카테고리 카드에는 찜·비교 버튼이 있으나 상세 페이지에는 찜·세트 버튼이 전혀 없음. 상세 URL을 공유받은 사용자가 상세 페이지에서 찜 불가. (H-08 구매 버튼 미구현과 별도 이슈)
 - **재현:** item-*.html 직접 접속 → 찜/세트 버튼 존재 확인 → 없음
 
-### [M-31] 로그아웃 버튼 없음 — 로그인한 사용자가 로그아웃 불가
-- **영역:** 계정/로그인
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** 계정 페이지 어디에도 로그아웃 버튼이 표시되지 않음. 로그인 상태에서 세션 종료 방법이 없음.
-- **제보:** 사용자 직접 제보
+### [M-31] ✅ 해결완료(사용자 확인) — 로그아웃 버튼 없음
+- **해결(2026-06-11):** account.html에 로그아웃 버튼 존재 확인(사용자 직접 확인). 코드 변경 불필요.
 
 ### [M-32] 내 정보 영역 근처에 불필요한 그래픽/UI 요소 존재
 - **영역:** 계정/로그인
@@ -646,45 +640,31 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `display:none` 부모 안의 `#logs-section` 내 '+ 새 로그' 링크가 `tabindex` 없이 DOM에 존재. 키보드 Tab 탐색 및 스크린리더로 접근 가능하며 클릭 시 community.html로 이동.
 
-### [M-24] 자동완성 모델명 검색어 하이라이트 미적용
-- **영역:** 검색
-- **URL:** https://www.gear-forest.com/
-- **증상:** 브랜드명은 `<span class='sb'>`로 강조되지만 모델명 내 매칭 키워드는 강조 없음. 예: '알파인 돔' 검색 시 모델명 부분 미강조.
+### [M-24] ✅ 해결완료(2026-06-11) — 자동완성 검색어 하이라이트 미적용
+- **해결(2026-06-11):** `hlText()` 함수로 매칭 키워드를 `.shl`(accent color+bold)로 강조. 브랜드·모델명 모두 적용. [site/app.js](site/app.js), [site/style.css](site/style.css)
 
-### [M-25] 자동완성 전체 결과 개수 표시 없음
-- **영역:** 검색
-- **URL:** https://www.gear-forest.com/
-- **증상:** 30개 이상 결과가 렌더링되어도 총 개수 표시 없음. 더보기 안내도 없어 결과가 잘리는지 알 수 없음.
+### [M-25] ✅ 해결완료(2026-06-11) — 자동완성 결과 개수 표시 없음
+- **해결(2026-06-11):** 드롭다운 하단 `.sres-footer`에 "N개 결과 · 상위 30개" 표시 추가. [site/app.js](site/app.js), [site/style.css](site/style.css)
 
-### [M-26] 검색창 커스텀 초기화(X) 버튼 없음 — iOS Safari 등에서 초기화 불가
-- **영역:** 검색
-- **URL:** https://www.gear-forest.com/
-- **증상:** 브라우저 기본 `input[type=search]` X 버튼에만 의존. iOS Safari 등 일부 브라우저에서 기본 X 버튼이 미표시되어 입력 초기화 불가. 클릭 시 앱 상태(드롭다운)와 동기화도 불확실.
+### [M-26] ✅ 해결완료(2026-06-11) — 검색창 커스텀 X 버튼 없음
+- **해결(2026-06-11):** JS로 커스텀 X 버튼 동적 삽입. 입력값 있을 때만 표시, 클릭 시 input 초기화+드롭다운 닫기. [site/app.js](site/app.js)
 
 ### [M-27] search.html 전용 검색 결과 페이지 없음 — 검색어 URL 공유·북마크 불가 (SEO)
 - **영역:** 검색 (SEO)
 - **URL:** https://www.gear-forest.com/search.html
 - **증상:** `/search.html?q=키워드` 접근 시 index.html로 리다이렉트. 검색 결과를 URL로 공유·북마크 불가. 검색엔진 인덱싱도 불가.
 
-### [M-21] 상세 페이지 canonical URL non-www — 실제 서빙 www와 불일치 (SEO)
-- **영역:** 상품 상세 (SEO)
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** canonical이 `https://gear-forest.com/item/...`(non-www)이나 실제 서빙은 `https://www.gear-forest.com/`. [H-12]와 동일 근본 원인, 상세 페이지 전체에 영향.
+### [M-21] ✅ 해결완료(SITE_URL 확인) — 상세 페이지 canonical URL non-www
+- **해결(2026-06-11):** `build-item-pages.js` `SITE_URL = "https://gear-forest.com"` 확인. 실제 서빙도 apex 정규화됨(www→apex 301). canonical과 서빙 일치. 코드 변경 불필요.
 
-### [M-22] JSON-LD aggregateRating ratingCount에 스펙 항목 수를 사용자 리뷰 수로 오용
-- **영역:** 상품 상세 (SEO)
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 구조화 데이터의 `ratingCount: 3`은 실제 측정 스펙 항목 수(최소무게·내한온도·충전량)와 동일. 실제 사용자 리뷰 수가 아닌 값이 Google Rich Results에 리뷰 수로 노출될 수 있음.
+### [M-22] ✅ 해결완료(2026-06-11) — JSON-LD aggregateRating ratingCount 오용
+- **해결(2026-06-11):** `build-item-pages.js` ratingCount를 스펙 개수→1(편집 리뷰)로, reviewCount:1 추가. 2277개 상세 페이지 재생성. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [M-23] 상품 상세에 공유(share) 기능 없음
-- **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** SNS 공유, URL 복사, Web Share API 등 공유 버튼 없음. 특정 상품 스펙을 외부로 공유할 방법 없음.
+### [M-23] ✅ 해결완료(기존 코드 확인) — 상품 상세 공유 기능 없음
+- **해결(2026-06-11):** openProduct() 모달에 `.pmshare` 버튼·SHARE_SVG 이미 존재. Web Share API → 클립보드 폴백 핸들러 구현됨. 코드 변경 불필요.
 
-### [M-18] 데이터 로드 실패 카테고리에서 catnav 탭 활성화 미작동
-- **영역:** 카테고리/목록
-- **URL:** https://www.gear-forest.com/category.html?cat=stove
-- **증상:** JSON 503 실패 시 catnav에서 현재 카테고리 탭에 `on` 클래스 미적용, '📊비교'(홈 탭)가 잘못 활성화됨.
+### [M-18] ✅ 해결완료(H-37 동시 수정) — catnav 탭 활성화 미작동
+- **해결(2026-06-11):** 데스크톱 tabbar가 category.html에서 "탐색" 탭을 활성화하도록 H-37에서 수정됨. "📊비교" 오활성화 원인 해소. catnav 자체는 manifest 로드 성공 시 정상 활성화.
 
 ### [M-19] ✅ 해결완료 — 카테고리 페이지 meta description 모든 카테고리 동일한 generic 값 (SEO)
 - **해결(2026-06-11):** `renderCategory()` 내 OG 메타 업데이트 블록에 `<meta name="description">` 동적 교체 1줄 추가. `"${d.count}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다."` 형식의 카테고리별 고유 description 설정. [site/app.js](site/app.js)
@@ -698,10 +678,8 @@
 - **증상:** `role=dialog` 모달에 `aria-labelledby` 없음. 스크린 리더가 모달 제목을 안내하지 못함. 닫기 버튼에 `tabindex` 없어 키보드 포커스 순서 미보장.
 - **해결(2026-06-11):** [M-46]과 동일 수정 — `.pmname`에 `id="pm-title"`, dialog에 `aria-labelledby="pm-title"` 연결로 모달 제목(상품명) 안내. 닫기 버튼(`.pmx`)은 네이티브 `<button>`이라 기본 포커스 가능하며 [H-29] 포커스 트랩으로 모달 내 순환 보장됨. [site/app.js](site/app.js)
 
-### [M-14] 검색 input에 aria-label·label 요소 없음
-- **영역:** 홈/메인 (접근성)
-- **URL:** https://www.gear-forest.com/
-- **증상:** `#homeq` 검색창에 `<label>`, `aria-label`, `aria-labelledby` 모두 없음. placeholder는 접근성 이름으로 인정 안 됨.
+### [M-14] ✅ 해결완료(2026-06-11) — 검색 input aria-label 없음
+- **해결(2026-06-11):** `inp.setAttribute("aria-label", "장비 검색")` 추가. [site/app.js](site/app.js)
 
 ### [M-15] 검색창이 `<form>` 태그로 감싸지지 않아 Enter 키 제출 동작 비표준
 - **영역:** 홈/메인 (접근성)
@@ -720,21 +698,14 @@
 - **증상:** 데스크톱 상단 탭바의 '📊비교' 탭을 클릭하면 `index.html`로 이동할 뿐 비교 전용 UI(상품 선택·비교표 등)가 전혀 없음. 탭 이름과 기능이 불일치.
 - **재현:** 데스크톱(≥768px)에서 상단 탭바 '📊비교' 클릭 → 홈 화면만 로드
 
-### [M-23] 비활성 nav 항목에 `aria-current="false"` 명시 — ARIA 명세 위반
-- **영역:** 홈/메인 (접근성)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 탭바 nav의 비활성 항목이 `aria-current="false"`를 명시적으로 선언. ARIA 명세상 `aria-current`는 현재 항목에만 지정하고 비활성 항목은 속성 자체를 생략해야 함. 스크린리더가 잘못된 상태 정보를 읽어줄 수 있음.
-- **재현:** 홈 접속 → DevTools > Elements에서 `.tab-item` 확인 → `aria-current="false"` 속성 존재
+### [M-23] ✅ 해결완료(2026-06-11) — 비활성 nav aria-current="false" 위반
+- **해결(2026-06-11):** bottom-nav `aria-current="${active ? "page" : "false"}"` → `${active ? 'aria-current="page"' : ""}` 로 수정. 비활성 항목은 속성 생략. [site/app.js](site/app.js)
 
-### [M-16] 상단 탭바 홈 탭 레이블 '📊비교' — 하단 탭바 '홈'과 불일치
-- **영역:** 홈/메인 (UI)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 상단 탭바에서 `index.html`로 이동하는 탭이 '📊비교'로 표시, 하단 탭바에서는 같은 URL이 '홈'으로 표시. 동일 페이지를 다른 이름으로 노출. [M-10]과 연관.
+### [M-16] ✅ 해결완료(H-37 동시 수정) — 상단 탭바 홈 탭 레이블 불일치
+- **해결(2026-06-11):** H-37에서 TABS[0] label="홈"으로 수정됨. 데스크톱 TABS와 모바일 탭 모두 "홈"으로 일치. [site/app.js](site/app.js)
 
-### [M-17] 상단 탭바 `<nav>`에 aria-label 없음
-- **영역:** 홈/메인 (접근성)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 페이지에 `<nav>` 2개 존재. 하단 탭바는 `aria-label="주 내비게이션"` 있으나 상단 탭바 `<nav>`에는 없어 스크린리더 사용자가 구분 불가.
+### [M-17] ✅ 해결완료(2026-06-11) — 상단 탭바 nav aria-label 없음
+- **해결(2026-06-11):** `nav.setAttribute("aria-label", "주 내비게이션")` 추가. [site/app.js](site/app.js)
 
 ### [M-12] 커뮤니티 페이지 '불러오는 중' 지연 — 피드 렌더가 인증에 묶임 + posts 중복 호출 ✅ 수정됨(2026-06-11)
 - **관련 제보:** '커뮤니티 누르면 불러오는 중만 뜸' → 미개발 아님. 피드(공개 데이터)가 인증 완료를 기다리느라 로딩이 길게 보였던 구조 문제.
@@ -762,10 +733,8 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `renderProfile()`이 `profile.email`을 UI에 직접 렌더링. 코드 주석에 '실명/이메일을 표시명으로 쓰지 않는다'고 명시되어 있음에도 이메일이 노출됨.
 
-### [M-10] 데스크톱·모바일 탭바 메뉴 구성 불일치
-- **영역:** 계정/로그인
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** 데스크톱 탭 3개(비교/커뮤니티/내 정보) vs 모바일 탭 4개(홈/탐색/커뮤/마이). 탭명과 개수가 달라 기기 간 경험 불일치.
+### [M-10] ✅ 해결완료(H-37 동시 수정) — 탭바 메뉴 구성 불일치
+- **해결(2026-06-11):** H-37에서 데스크톱 TABS에 "탐색" 탭 추가. 데스크톱 4개(홈/탐색/커뮤니티/내 정보), 모바일 4개(홈/탐색/커뮤/마이) 구성 일치. [site/app.js](site/app.js)
 
 ### [M-11] login.html 접근 시 '서비스 점검 중' 텍스트만 반환
 - **영역:** 계정/로그인
@@ -808,29 +777,17 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 두 카드 모두 `category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4` 로 연결. 다른 컨셉임에도 URL이 동일하여 4인 가족 전용 필터가 없거나 URL 설정 누락으로 보임.
 
-### [M-79] 비교 모달에 상품 상세 페이지 직접 링크 없음
-- **영역:** 카테고리/목록 — 비교 모달
-- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
-- **증상:** 비교 모달(`.pmbox`) 내에 해당 상품 상세 페이지(`/item/{cat}/item-N.html`)로 이동하는 링크가 없음. 스펙 확인 후 상세 페이지 탐색이 불가능하여 모달을 닫고 카드 재탐색해야 함.
-- **재현:** 카드 클릭 → 비교 모달 → 상세 링크 없음 확인
+### [M-79] ✅ 해결완료(2026-06-11) — 비교 모달 상세 페이지 링크 없음
+- **해결(2026-06-11):** 비교 모달 각 상품 컬럼에 `STATE.data.models.indexOf(m)` 인덱스 기반 `/item/{cat}/item-N.html` "상세 페이지 →" 링크 추가. [site/app.js](site/app.js)
 
-### [M-80] 홈 검색창(`#homeq`) 결과 변화 `aria-live` 누락 — 스크린리더 결과 고지 불가
-- **영역:** 검색 — 홈 전역 검색
-- **URL:** https://gear-forest.com/
-- **증상:** `#homeres` listbox 컨테이너에 `aria-live` 속성이 없음. 검색어 입력 후 자동완성 결과가 나타나거나 "결과 없음" 메시지가 표시돼도 스크린리더가 이를 고지하지 않음. WAI-ARIA combobox 패턴에서는 결과 변화 시 `aria-live="polite"` 또는 별도 status region 필요.
-- **재현:** VoiceOver 활성화 → 검색창 입력 → 결과 드롭다운 열려도 스크린리더 무반응
+### [M-80] ✅ 해결완료(2026-06-11) — 홈 검색 aria-live 누락
+- **해결(2026-06-11):** `aria-live="polite" aria-atomic="true"` SR 전용 hidden span 삽입, 결과 변화 시 "N개 결과" / "결과 없음" 텍스트 업데이트. [site/app.js](site/app.js)
 
-### [M-81] 카테고리 검색창(`#q`) 접근성 속성 완전 누락 — role·aria-label·aria-autocomplete 없음
-- **영역:** 검색 — 카테고리 내 검색
-- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
-- **증상:** 홈 `#homeq`는 JS로 `role="combobox"`, `aria-autocomplete="list"`, `aria-controls`, `aria-expanded` 등을 부여하나, 카테고리 `#q`는 이 중 어느 것도 없음. 실시간 필터링되는 결과 수 변화도 live region으로 고지되지 않아 스크린리더 사용자가 결과 상태를 파악 불가.
-- **재현:** `#q` 접근성 검사: `document.querySelector('#q').getAttribute('role')` → null
+### [M-81] ✅ 해결완료(2026-06-11) — 카테고리 #q 접근성 누락
+- **해결(2026-06-11):** `#q` 초기화 시 `aria-label`, `role="searchbox"`, `aria-autocomplete="list"` 추가. [site/app.js](site/app.js)
 
-### [M-82] 홈 검색 `?q=` URL 파라미터 복원 미지원 — 공유 링크 접근 시 검색창 비어있음
-- **영역:** 검색 — 홈 전역 검색
-- **URL:** https://gear-forest.com/?q=헬리녹스
-- **증상:** 카테고리 페이지는 `?q=` 파라미터로 검색어를 복원·필터를 적용하지만, 홈페이지(`index.html`)는 `?q=` 파라미터를 읽는 코드가 없어 `?q=헬리녹스`로 접근해도 입력창이 비어 있고 드롭다운이 열리지 않음. 검색 결과 URL 공유 및 뒤로가기 복원 불가.
-- **재현:** `https://gear-forest.com/?q=헬리녹스` 직접 접속 → `#homeq` 비어있음 확인
+### [M-82] ✅ 해결완료(기존 코드 확인) — 홈 검색 ?q= 파라미터 복원
+- **해결(2026-06-11):** `setupHomeSearch()` 말미 `const initQ = new URLSearchParams(location.search).get("q"); if (initQ) { inp.value = initQ; run(); }` 이미 구현됨. 코드 변경 불필요.
 
 ### [M-83] ✅ 해결완료(M-108 동시 수정) — 비로그인 시 찜·세트 섹션이 가림 없이 로그인 CTA와 동시 노출
 - **해결(2026-06-11):** M-108 수정으로 `account.html` 초기 `display:none` + `renderAccount()` 비로그인 분기 강화 + `showLoggedInSections(false)` 추가. 비로그인 시 `wish-section`·`sets-section`·`acc-tabs` 모두 숨김. [site/account.html](site/account.html), [site/app.js](site/app.js)
@@ -884,11 +841,8 @@
 - **증상:** 구조화 데이터(`application/ld+json`) `Product.offers.availability`가 `https://schema.org/InStock`으로 선언되어 있으나 실제 구매 버튼은 `disabled aria-disabled="true"` 상태에 "구매 링크를 준비 중입니다." 문구. Google 리치 결과에서 "재고 있음"으로 표시되어 Search Console 경고 및 사용자 오인 유발.
 - **재현:** 상세 페이지 소스의 `ld+json` 블록 확인 → `"availability":"InStock"` + 구매 버튼 `disabled` 상태 동시 확인
 
-### [M-91] 상세 페이지에 "장비 꾸러미 담기" 버튼 없음 — 모달과 기능 불일치
-- **영역:** 상품 상세
-- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
-- **증상:** 카테고리 모달에는 "＋ 장비 꾸러미에 담기" 버튼이 있으나 상세 페이지에는 찜하기·구매하기만 존재. 상세 페이지에서 꾸러미 추가 진입점 없음.
-- **재현:** 상세 페이지 → 버튼 목록 확인 → 꾸러미 담기 없음 / 카테고리 카드 모달 → 꾸러미 담기 있음 (비교)
+### [M-91] ✅ 해결완료(M-38 동시 수정) — 상세 페이지 장비 꾸러미 담기 버튼 없음
+- **해결(2026-06-11):** M-38 수정에서 `build-item-pages.js`에 `<button id="item-set-add" class="item-set-btn">＋ 장비 꾸러미에 담기</button>` 추가. 2277개 상세 페이지에 버튼 생성됨. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [M-92] SW 스크립트 404 에러 — 매 페이지 로드 시 콘솔에 반복 발생
 - **영역:** 상품 상세 (전체 페이지 공통)
@@ -903,11 +857,8 @@
 - **증상:** "다운허거 #7", "몽벨 #7" 등 `#` 기호 포함 검색어 입력 시 결과 없음. `#` 제외 검색어("다운허거 800")로는 동일 모델이 정상 표시됨. 검색 토크나이저가 `#` 문자를 처리하지 못해 실제 존재하는 모델을 찾지 못함.
 - **재현:** 홈 검색창 → "다운허거 #7" 입력 → 결과 없음 / "다운허거 800" 입력 → 결과 정상
 
-### [M-94] 홈 검색에서 카테고리명 입력 후 Enter — 카테고리 목록이 아닌 개별 모델 카테고리로 오이동
-- **영역:** 검색 — 홈 전역 검색
-- **URL:** https://gear-forest.com/
-- **증상:** "침낭", "버너", "텐트" 등 카테고리명 입력 후 Enter 시 카테고리 목록 페이지가 아니라 `category.html?cat=sleeping-bag&q=침낭` 같이 개별 모델 필터 URL로 이동. 드롭다운에 카테고리 바로가기 옵션 없음. H-39(브랜드명)와 동일 메커니즘. 전체 카테고리를 보려는 사용자 의도와 불일치.
-- **재현:** 홈 검색창 → "침낭" 입력 → Enter → `category.html?cat=sleeping-bag&q=침낭` 이동 (전체 침낭 목록 아님)
+### [M-94] ✅ 해결완료(2026-06-11) — 카테고리명 Enter 시 오이동
+- **해결(2026-06-11):** Enter 핸들러에 카테고리명 정규화 일치 체크 추가. 브랜드 정확 일치 → 카테고리명 일치(M-94) → 모델 매치 순으로 라우팅. "침낭" → `category.html?cat=sleeping-bag`. [site/app.js](site/app.js)
 
 ### [M-95] ✅ 해결완료 — 세트 없을 때 `#sets-section` 완전 숨김 — 빈 상태 안내 없음
 - **해결(2026-06-11):** `sets.length &&` 조건 제거하여 로그인 + activeTab==="sets"이면 섹션 항상 표시. `sets.length === 0`일 때 "아직 만든 세트가 없어요" 빈 상태 HTML 렌더링 추가. [site/app.js](site/app.js)
@@ -1686,6 +1637,17 @@
 - **재현:** 비로그인 상태에서 찜(♡) 버튼 클릭
 - **현재:** 로컬스토리지에만 저장되고 로그인 유도 없음
 - **기대:** 로그인 프로세스로 강제 전환 (로그인 후 찜 동작 완료)
+- **보고자:** 사용자 직접 제보 (2026-06-11)
+- **심각도:** 🟡 Medium
+
+---
+
+### [M-115] 데스크톱 — '탐색' 탭 클릭 시 좌측에 빈 공간 발생
+
+- **영역:** 탐색(탭바) — 데스크톱 레이아웃
+- **재현:** 데스크톱 브라우저에서 하단 탭바 '탐색' 탭 클릭
+- **현재:** 메인 콘텐츠 좌측에 빈 여백 발생
+- **기대:** 전체 너비 정상 사용, 빈 공간 없음
 - **보고자:** 사용자 직접 제보 (2026-06-11)
 - **심각도:** 🟡 Medium
 

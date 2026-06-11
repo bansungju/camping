@@ -181,6 +181,9 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .item-buynote{font-size:12px;color:var(--muted);margin:8px 0 0;max-width:320px}
 .item-set-btn{display:block;width:100%;max-width:320px;margin-top:8px;padding:11px;border:1.5px solid var(--accent);border-radius:11px;background:var(--card);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
 .item-set-btn:hover{background:var(--accent);color:#fff}
+.item-log-btn{display:block;width:100%;max-width:320px;margin-top:8px;padding:11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:14px;font-weight:600;text-align:center;text-decoration:none;transition:.15s}
+.item-log-btn:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:480px){.item-hero{flex-direction:column}.item-img{width:100%;height:auto;aspect-ratio:1;max-height:260px}}
 </style>
 </head>
 <body>
@@ -209,6 +212,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
         <span class="iw-label">찜하기</span>
       </button>
       <button id="item-set-add" class="item-set-btn" type="button">＋ 장비 꾸러미에 담기</button>
+      <a class="item-log-btn" href="../../community.html?open-log=1">📝 커뮤니티 장비 로그 작성</a>
       ${coupang_url
         ? `<a class="item-buy" href="${String(coupang_url).replace(/"/g, "%22")}" target="_blank" rel="nofollow sponsored noopener">🛒 쿠팡에서 구매하기</a>
       <p class="item-buynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</p>`
