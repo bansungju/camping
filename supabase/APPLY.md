@@ -17,6 +17,20 @@ Dashboard → Storage → Buckets에서 **`review-images`** 버킷을 **Public**
 그다음 **`migrations/003_storage_policies.sql`** 실행(소유자 폴더 업로드 정책).
 사진 경로 규칙: `review-images/{user_id}/{uuid}.{ext}`
 
+## 4. 집계 RPC (홈 "이번 주 인기" + 커뮤니티 인기 태그)
+미적용 시 RPC가 PostgREST 스키마 캐시에 없어 **404(PGRST202)** → 홈 "이번 주 인기"가
+하드코딩 fallback 노출(버그 H-01). SQL Editor에서 아래 두 파일을 실행하세요(멱등):
+- **`migrations/012_top_gear_tags_rpc.sql`** → `get_top_gear_tags(int)` + EXECUTE grant
+- **`migrations/013_hot_items_rpc.sql`** → `get_hot_items(int, int)` + EXECUTE grant
+
+> 적용 검증(익명 anon 키로):
+> ```
+> curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/get_hot_items" \
+>   -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+>   -H "Content-Type: application/json" -d '{"days_n":7,"limit_n":30}'
+> ```
+> 200 + JSON 배열이면 성공(빈 배열 `[]`은 클릭 데이터 부재 — 정상). 404면 미적용.
+
 ## 검증
 1. 로그인 → 닉네임 설정 → 커뮤니티 "글쓰기"로 글 작성(사진 포함) → 피드/상세 표시
 2. 좋아요 토글 / 댓글 작성 / 신고 동작 확인

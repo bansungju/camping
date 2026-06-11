@@ -12,3 +12,6 @@ AS $$
   ORDER BY cnt DESC
   LIMIT limit_n;
 $$;
+
+-- PostgREST(anon/authenticated) RPC 호출 허용 — 명시 EXECUTE 부여.
+GRANT EXECUTE ON FUNCTION get_top_gear_tags(int) TO anon, authenticated;

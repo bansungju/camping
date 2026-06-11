@@ -48,6 +48,7 @@
 | 34 | 검색 (6순환) | 2026-06-11 | 4건 (M-25 근접 중복 제외) |
 | 35 | 계정/로그인 (6순환) | 2026-06-11 | 5건 (M-52·L-39 중복·설계의도 제외) |
 | 36 | 커뮤니티/소셜 (6순환) | 2026-06-11 | 1건 (M-10/M-13/L-10/L-11 중복 제외) |
+| 37 | 홈/메인 (7순환) | 2026-06-11 | 4건 (L-14 중복·인프라·설계 제외) |
 
 ---
 
@@ -66,11 +67,14 @@
 - **증상:** 데스크톱 `.tabbar`는 "📊비교 / 💬커뮤니티 / 👤내 정보" 3개 탭만 존재. 모바일 `.bottom-nav`에는 "탐색" 탭이 있어 카테고리로 직접 이동 가능하지만, 데스크톱에서는 해당 탭이 없어 상단 nav에서 카테고리 탐색으로 바로 진입할 방법이 없음. "📊비교" 탭은 index.html(홈)로 이동하며 비교 UI도 없음 (M-22). M-10과 연관이나, 데스크톱에서 핵심 탐색 기능이 nav에서 완전 누락이라는 점에서 High.
 - **재현:** 데스크톱(≥768px) → 임의 페이지 → 상단 tabbar 확인 → "탐색/카테고리" 탭 없음
 
-### [H-01] 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
+### [H-01] 🔧 코드수정 완료·대시보드 적용 대기 — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
 - **URL:** https://www.gear-forest.com/
 - **증상:** 페이지 로드 시 Supabase RPC `get_hot_items` 호출이 404 반환. '이번 주 인기' 섹션이 실제 데이터 대신 하드코딩된 4개 항목(백패킹텐트, 침낭, 버너, 랜턴)을 표시. 콘솔에 에러 노출.
 - **재현:** https://gear-forest.com 접속 → 브라우저 콘솔 확인 → 'Failed to load resource: 404' 확인
+- **원인(2026-06-11, 라이브 검증):** anon 키로 `POST /rest/v1/rpc/get_hot_items` 호출 시 **404 PGRST202** — "함수가 스키마 캐시에 없음". 즉 `migrations/013_hot_items_rpc.sql`이 **라이브 DB에 적용된 적 없음**(같은 이유로 `012_top_gear_tags_rpc`도 404 동일 확인). 마이그레이션은 CI가 아니라 **Supabase 대시보드 SQL Editor에서 수동 적용**하는 구조인데, `supabase/APPLY.md` 체크리스트에 RPC 마이그레이션(012/013) 적용 단계가 누락되어 라이브 반영이 빠짐. 더해 013에는 anon 호출용 `GRANT EXECUTE`도 부재(PUBLIC 기본 grant 의존).
+- **수정(코드):** ① `013_hot_items_rpc.sql`에 `GRANT EXECUTE ... TO anon, authenticated` + SECURITY DEFINER `SET search_path = public` 추가. ② `012_top_gear_tags_rpc.sql`에도 동일 EXECUTE grant 추가. ③ `supabase/APPLY.md`에 "4. 집계 RPC" 적용 단계 + 익명 curl 검증 절차 추가. [supabase/migrations/013_hot_items_rpc.sql](supabase/migrations/013_hot_items_rpc.sql), [supabase/migrations/012_top_gear_tags_rpc.sql](supabase/migrations/012_top_gear_tags_rpc.sql), [supabase/APPLY.md](supabase/APPLY.md)
+- **⚠️ 남은 작업(대시보드 1회 적용 필요):** anon/publishable 키로는 DDL 실행 불가 → 사용자가 Supabase SQL Editor에서 012·013 실행해야 라이브 404 해소. 적용 후 위 curl이 HTTP 200이면 완료(빈 배열은 클릭데이터 부재로 정상, fallback 유지).
 
 ### [H-21] ✅ 해결완료 — https://gear-forest.com 직접 접근 시 ERR_TOO_MANY_REDIRECTS
 - **영역:** 홈/메인
@@ -354,6 +358,17 @@
 - **URL:** https://gear-forest.com/brand.html?b=헬리녹스
 - **증상:** 브랜드 검색창(`input#bq`)에 텍스트를 입력해도 브랜드 칩 필터링·자동완성·하이라이트 등 실시간 피드백 전혀 없음. Enter를 눌러도 무반응. 결과적으로 검색창 자체가 완전히 비동작 상태. 6순환 탐색에서 oninput 이벤트 핸들러도 동작하지 않는 것으로 추가 확인됨.
 - **재현:** brand.html?b=헬리녹스 → bq 검색창에 "코베아" 입력 → 브랜드 칩 변화 없음 → Enter → 무반응
+
+### [M-75] 다크모드 FOUC — `initTheme()`이 `<body>` 끝 app.js에서 실행
+- **영역:** 홈/메인 (전체 페이지)
+- **URL:** https://gear-forest.com/
+- **증상:** 다크모드 저장 사용자가 페이지 로드 시 순간적으로 라이트 테마가 렌더링됐다가 다크로 전환되는 FOUC(Flash of Unstyled Content) 발생. `initTheme()` IIFE가 `app.js`(body 끝 위치) 내부에 있어 HTML·CSS 파싱·렌더링 후에야 `data-theme="dark"`가 적용됨.
+- **수정 방향:** `<head>` 안에 `<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>` 인라인 1줄 추가
+
+### [M-76] `search.json` 캐시 버스팅 파라미터 없음 — 배포 후 최대 10분간 구 데이터 서빙
+- **영역:** 홈/메인 (검색 DB)
+- **URL:** https://gear-forest.com/data/search.json
+- **증상:** `app.js?v=hash`, `style.css?v=hash`는 버전 파라미터로 캐시 무효화되나 `search.json`은 `max-age=600`(10분)만 설정되고 버전 파라미터 없음. 상품 데이터 업데이트 후 최대 10분간 구 데이터가 노출됨.
 
 ### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치)
 - **영역:** 계정/세트
@@ -756,6 +771,16 @@
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
 - **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
 
+### [L-50] 동적 생성 이미지 `width`/`height` 속성 누락 — CLS 유발
+- **영역:** 홈/메인 (전체 상품 카드)
+- **URL:** https://gear-forest.com/
+- **증상:** JS로 생성된 상품 카드 `<img>` 태그에 `width`/`height` 속성이 없어 브라우저가 이미지 크기를 미리 예약하지 못함. 이미지 로드 완료 시 레이아웃이 밀리는 CLS 발생. M-44(LCP fetchpriority 누락)와 연관이나 별도 문제.
+
+### [L-51] `sitemap.xml` 클린 URL — 실제 서빙 경로(`category.html?cat=`)와 불일치 (SEO)
+- **영역:** SEO
+- **URL:** https://gear-forest.com/sitemap.xml
+- **증상:** sitemap.xml에 `gear-forest.com/category/backpacking-tent` 형태 클린 URL 기재. 실제 접근 시 `category.html?cat=backpacking-tent`로 이동됨(301). sitemap canonical과 실제 URL이 달라 Google이 리다이렉트 후 URL을 정규 URL로 처리할 수 있음.
+
 ### [L-49] 구글 로그인 버튼 `type="submit"` — `<form>` 없이 submit 타입 설정
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
@@ -994,4 +1019,4 @@
 
 ---
 
-*다음 회차: 홈/메인 (7순환)*
+*다음 회차: 카테고리/목록 (7순환)*
