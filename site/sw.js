@@ -48,7 +48,10 @@ self.addEventListener("fetch", (e) => {
         const c = await caches.open(CACHE); c.put(req, net.clone());
         return net;
       } catch (err) {
-        return (await caches.match(req)) || (await caches.match(new URL("index.html", location.origin).href)) ||
+        // 캐시 폴백 — 쿼리스트링 무시(H-19): category.html?cat=X 가 캐시된 category.html 에 매치되도록.
+        // (ignoreSearch 없으면 ?cat= URL이 캐시 miss → index.html 폴백 → 엉뚱한 홈 화면 노출)
+        return (await caches.match(req, { ignoreSearch: true })) ||
+          (await caches.match("index.html")) ||
           new Response("오프라인입니다.", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
       }
     })());
