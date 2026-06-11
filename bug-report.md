@@ -751,11 +751,14 @@
 - **원인(2026-06-11):** view-set 핸들러 가드가 존재하지 않는 ID `acc-section`을 검사 → 항상 false → 분기 미진입. account.html의 실제 섹션 ID는 `auth-section`(account 전용, 타 페이지엔 없음).
 - **해결:** 가드를 `getElementById("auth-section")`으로 변경(account.html 전용 정확 스코프). 로컬 프리뷰 검증 — `?view-set=BASE64` 접근 시 공유세트 모달 오픈(이름·항목·총무게 1.3kg 표시), '내 세트에 추가' 클릭 시 localStorage gear_sets에 저장·모달 닫힘, index.html 등 비-account 페이지에선 미발동(가드 정상)·콘솔 에러 없음. [site/app.js](site/app.js)
 
-### [H-31] 커뮤니티 댓글 수정·삭제 기능 완전 없음
+### [H-31] 🔧 백엔드/클라이언트 레이어 완료·UI 와이어링 대기 — 커뮤니티 댓글 수정·삭제 기능 완전 없음
 - **영역:** 커뮤니티/소셜 — 댓글
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `renderComments()`에서 댓글 행이 텍스트만 렌더링되고 수정·삭제 버튼이 없음. 게시글에는 삭제 버튼이 있으나 댓글은 작성 후 수정·삭제 불가. account.html 내 로그 섹션(my-log-edit/del)과 기능 불일치.
 - **재현:** 로그인 → 댓글 작성 → 댓글 행 확인 — 수정·삭제 버튼 없음
+- **백엔드 점검(2026-06-11):** DB 레이어는 **이미 완비** — 본인 댓글 수정·소프트삭제용 RLS `comments_update_own`(001, USING `user_id=auth.uid() AND deleted_at IS NULL` / WITH CHECK `user_id=auth.uid()`) + `GRANT UPDATE ON comments TO authenticated`(004, 적용 확인됨) + body 길이검증 트리거(002, INSERT/UPDATE) + 소프트삭제 카운트 트리거([H-34] 015). 추가 DB 작업 불필요.
+- **수정(클라이언트 데이터 레이어):** `supabaseClient.js`에 `editComment(id, body)`(본인 댓글 body UPDATE)·`deleteComment(id)`(deleted_at 소프트삭제) 추가 — createComment와 동일 패턴, user_id 가드 + RLS 이중 방어. [site/supabaseClient.js](site/supabaseClient.js)
+- **⚠️ 남은 작업(프론트엔드, 본 백엔드 세션 범위 밖):** `community.html`의 `renderComments()`에 본인 댓글 한정 수정·삭제 버튼 + 핸들러(editComment/deleteComment 호출) 와이어링 필요. DB·클라이언트 함수는 준비 완료라 UI만 붙이면 동작.
 
 ### [H-27] privacy.html에 카카오 로그인 기재 — 실제 구현은 Google 단독 (오기재)
 - **영역:** privacy.html (정보 정확성)
