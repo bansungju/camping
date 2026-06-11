@@ -212,6 +212,7 @@ function setWish(a) {
 function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
 // 찜 버튼 아이콘 — 북마크(채움 여부는 버튼 .on 클래스 + CSS가 처리)
 const BOOKMARK_SVG = '<svg class="wish-ico" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/></svg>';
+const SHARE_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
 function inWish(key) { return getWish().some(x => x.key === key); }
 function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
   const a = getWish(), i = a.findIndex(x => x.key === item.key);
@@ -443,7 +444,7 @@ async function renderHub() {
   setupHomeSearch();
   document.getElementById("foot").innerHTML = OPS
     ? `운영자 모드 · 자동생성 LIMITS 기반 · 측정값만 · 추측 없음.`
-    : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반.`;
+    : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
 }
 
 async function setupHomeSearch() {
@@ -477,12 +478,13 @@ async function setupHomeSearch() {
   };
   const run = () => {
     const q = inp.value.trim().toLowerCase();
-    if (q.length < 1) { closeBox(); return; }
-    // 브랜드 단위 매치(가로지르기) — "헬리녹스 전체 39개 →"를 상단에
+    const terms = q.split(/\s+/).filter(Boolean);
+    if (!terms.length) { closeBox(); return; }
+    // 브랜드 단위 매치 — 첫 번째 토큰으로 브랜드 히트, 전체 토큰 AND로 상품 히트
     const bcount = {};
-    idx.forEach(x => { if (x.b.toLowerCase().includes(q)) bcount[x.b] = (bcount[x.b] || 0) + 1; });
+    idx.forEach(x => { if (terms[0] && x.b.toLowerCase().includes(terms[0])) bcount[x.b] = (bcount[x.b] || 0) + 1; });
     const brandHits = Object.entries(bcount).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const hits = idx.filter(x => (x.b + " " + x.m).toLowerCase().includes(q)).slice(0, 30);
+    const hits = idx.filter(x => { const text = (x.b + " " + x.m).toLowerCase(); return terms.every(t => text.includes(t)); }).slice(0, 30);
     box.style.display = "block";
     const brandHtml = brandHits.map(([b, n]) =>
       `<a class="sres sbrand" href="brand.html?b=${encodeURIComponent(b)}">
@@ -1292,16 +1294,26 @@ function openProduct(m) {
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
+  const pcode = wishKey(m.brand, m.model, m.capacity);
   modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true" aria-labelledby="pm-title">
      <button class="pmx" aria-label="닫기">✕</button>
      <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
      ${imgHtml}
      <div class="pmbody">
        <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
-       <div class="pmname" id="pm-title">${esc(m.model)}</div>
+       <div class="pmname-row">
+         <h2 class="pmname" id="pm-title">${esc(m.model)}</h2>
+         <div class="pmname-tools">
+           <button class="pmtool pmshare" type="button" aria-label="공유하기" title="공유하기">${SHARE_SVG}</button>
+           <button class="pmtool pmreport" type="button" aria-label="제품 정보 오류 신고" title="제품 정보 오류 신고">⚠️</button>
+         </div>
+       </div>
        <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
        <div class="pmprice-note">제품은 최저가를 표기하고 있습니다. 링크의 가격과 다를 수 있습니다.</div>
-       <div class="pmspecs">${specRows}</div>
+       <div class="pmspecs">
+         <div class="pmspec pmspec-user"><span class="pml">유저 평가</span><span class="pmv" id="pm-userrating"><span class="nd">—</span></span></div>
+         ${specRows}
+       </div>
        ${m.coupang_url
          ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>
        <div class="pmbuynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</div>`
@@ -1311,7 +1323,14 @@ function openProduct(m) {
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
        ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
-       <button class="pmreport" type="button">⚠️ 제품 정보 오류 신고</button>
+       <section class="pmrv" aria-label="유저 후기">
+         <div class="pmrv-head">
+           <span class="pmrv-title">유저 후기<span class="pmrv-cnt" id="pmrv-cnt"></span></span>
+           <button class="pmrv-add" type="button">✍️ 후기 남기기</button>
+         </div>
+         <div class="pmrv-formbox" id="pmrv-formbox" hidden></div>
+         <div class="pmrv-list" id="pmrv-list"><div class="pmrv-empty">후기를 불러오는 중…</div></div>
+       </section>
      </div></div>`;
   modal.classList.add("on");
   const buyBtn = modal.querySelector(".pmbuy-active");
@@ -1343,6 +1362,26 @@ function openProduct(m) {
     const body = encodeURIComponent(`제품명: ${m.brand} ${m.model}\n\n오류 내용:\n`);
     window.open(`mailto:bangsungju@gmail.com?subject=${subject}&body=${body}`, "_self");
   };
+  // 공유 — 정적 상세페이지 URL(공유·즐겨찾기용)을 우선, 없으면 현재 주소. Web Share → 실패 시 클립보드 복사.
+  const shareBtn = modal.querySelector(".pmshare");
+  if (shareBtn) shareBtn.onclick = async () => {
+    const idx = d.models.indexOf(m);
+    const url = STATE.slug && idx >= 0
+      ? `${location.origin}/item/${STATE.slug}/item-${idx}.html`
+      : location.href;
+    const title = `${m.brand} ${m.model} — 장비의 숲`;
+    const text = `${m.brand} ${m.model} 스펙·후기 보러가기`;
+    try {
+      if (navigator.share) { await navigator.share({ title, text, url }); return; }
+      throw new Error("no-share");
+    } catch (err) {
+      if (err && err.name === "AbortError") return;   // 사용자가 공유 취소 — 폴백 금지
+      try { await navigator.clipboard.writeText(url); showToast("링크를 복사했어요 📋 주변에 공유해보세요!"); }
+      catch (_) { window.prompt("아래 링크를 복사해 공유하세요", url); }
+    }
+  };
+  // 유저 후기 — 목록·평균 별점 로드 + '후기 남기기' 폼 연결
+  wireReviews(modal, m, pcode);
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
   const close = () => {
     modal.classList.remove("on");
@@ -1365,6 +1404,130 @@ function openProduct(m) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
   document.addEventListener("keydown", onKey);
+}
+
+/* ── 유저 후기 (reviews 테이블) ──────────────────────────────
+   product_pcode = wishKey(brand|model|cap) — 찜·세트와 동일 키 스킴.
+   목록·평균별점은 anon도 읽기 가능(RLS reviews_select_public). 작성은 로그인 필요. */
+function _reviewDate(iso) {
+  return new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+}
+
+async function loadReviews(modal, pcode) {
+  const listEl = modal.querySelector("#pmrv-list");
+  const cntEl = modal.querySelector("#pmrv-cnt");
+  const ratingEl = modal.querySelector("#pm-userrating");
+  try {
+    const { supabase } = await import("./supabaseClient.js");
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("rating, body, created_at, user_id, profiles(nickname)")
+      .eq("product_pcode", pcode)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    const rv = data || [];
+    if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
+    if (ratingEl) {
+      if (rv.length) {
+        const avg = Math.round((rv.reduce((a, r) => a + r.rating, 0) / rv.length) * 10) / 10;
+        ratingEl.innerHTML = `${stars(avg)} <span class="pmrv-avgn">${avg.toFixed(1)} · ${rv.length}명</span>`;
+      } else {
+        ratingEl.innerHTML = `<span class="nd">아직 평가 없음</span>`;
+      }
+    }
+    if (!listEl) return;
+    if (!rv.length) {
+      listEl.innerHTML = `<div class="pmrv-empty">아직 후기가 없어요. 첫 후기를 남겨보세요!</div>`;
+      return;
+    }
+    listEl.innerHTML = rv.map(r => {
+      const nick = r.profiles?.nickname || "익명";
+      return `<div class="pmrv-item">
+        <div class="pmrv-meta"><span class="pmrv-nick">${esc(nick)}</span> <span class="pmrv-stars">${stars(r.rating)}</span><span class="pmrv-date">${_reviewDate(r.created_at)}</span></div>
+        <div class="pmrv-body">${esc(r.body)}</div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    if (ratingEl) ratingEl.innerHTML = `<span class="nd">—</span>`;
+    if (listEl) listEl.innerHTML = `<div class="pmrv-empty">후기를 불러오지 못했어요.</div>`;
+  }
+}
+
+function wireReviews(modal, m, pcode) {
+  loadReviews(modal, pcode);
+  const addBtn = modal.querySelector(".pmrv-add");
+  const formbox = modal.querySelector("#pmrv-formbox");
+  if (!addBtn || !formbox) return;
+  let open = false;
+  const reset = () => { formbox.hidden = true; formbox.innerHTML = ""; open = false; addBtn.textContent = "✍️ 후기 남기기"; };
+  addBtn.onclick = async () => {
+    if (open) { reset(); return; }
+    // 로그인 확인 — reviews_insert_own 정책상 authenticated만 작성 가능
+    let user = null;
+    try { const { supabase } = await import("./supabaseClient.js"); ({ data: { user } } = await supabase.auth.getUser()); } catch (_) {}
+    if (!user) {
+      formbox.innerHTML = `<div class="pmrv-login">후기 작성은 로그인 후 이용할 수 있어요. <a class="pmlink" href="account.html">로그인하러 가기 ›</a></div>`;
+      formbox.hidden = false; open = true; addBtn.textContent = "닫기";
+      return;
+    }
+    formbox.innerHTML = `<form class="pmrv-form">
+      <div class="pmrv-rate" role="radiogroup" aria-label="별점 선택">
+        ${[1,2,3,4,5].map(n => `<button type="button" class="pmrv-star" data-v="${n}" role="radio" aria-checked="false" aria-label="${n}점">★</button>`).join("")}
+        <span class="pmrv-rate-hint">별점을 선택하세요</span>
+      </div>
+      <textarea class="pmrv-ta" rows="3" minlength="10" maxlength="2000" placeholder="제품을 사용한 솔직한 후기를 남겨주세요 (10자 이상)"></textarea>
+      <div class="pmrv-form-foot"><span class="pmrv-ta-cnt">0 / 2000</span><button type="submit" class="pmrv-submit">등록</button></div>
+    </form>`;
+    formbox.hidden = false; open = true; addBtn.textContent = "닫기";
+
+    const form = formbox.querySelector(".pmrv-form");
+    const ta = form.querySelector(".pmrv-ta");
+    const taCnt = form.querySelector(".pmrv-ta-cnt");
+    const rateHint = form.querySelector(".pmrv-rate-hint");
+    const starBtns = [...form.querySelectorAll(".pmrv-star")];
+    let rating = 0;
+    const paint = v => starBtns.forEach((b, i) => {
+      b.classList.toggle("on", i < v);
+      b.setAttribute("aria-checked", (i + 1) === rating ? "true" : "false");
+    });
+    starBtns.forEach(b => {
+      b.onmouseenter = () => paint(+b.dataset.v);
+      b.onclick = () => { rating = +b.dataset.v; paint(rating); rateHint.textContent = `${rating}점`; };
+    });
+    form.onmouseleave = () => paint(rating);
+    ta.oninput = () => { taCnt.textContent = `${ta.value.length} / 2000`; };
+
+    form.onsubmit = async e => {
+      e.preventDefault();
+      const body = ta.value.trim();
+      if (!rating) { showToast("별점을 선택해주세요"); return; }
+      if (body.length < 10) { showToast("후기는 10자 이상 입력해주세요"); return; }
+      const submitBtn = form.querySelector(".pmrv-submit");
+      submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
+      try {
+        const { supabase, getErrorMessage } = await import("./supabaseClient.js");
+        const { data: { user: u } } = await supabase.auth.getUser();
+        if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; submitBtn.textContent = "등록"; return; }
+        const { error } = await supabase.from("reviews").insert({
+          user_id: u.id, product_pcode: pcode, rating, body
+        });
+        if (error) {
+          const msg = (getErrorMessage && getErrorMessage(error)) || "후기를 등록하지 못했어요.";
+          showToast(msg);
+          submitBtn.disabled = false; submitBtn.textContent = "등록";
+          return;
+        }
+        showToast("후기가 등록됐어요. 고마워요! 🌲");
+        reset();
+        loadReviews(modal, pcode);
+      } catch (_) {
+        showToast("후기를 등록하지 못했어요.");
+        submitBtn.disabled = false; submitBtn.textContent = "등록";
+      }
+    };
+    ta.focus();
+  };
 }
 
 /* ---- 비교 기능 ---- */
@@ -1569,7 +1732,7 @@ function draw() {
 
   document.getElementById("foot").innerHTML = OPS
     ? `카드를 누르면 이미지·전체 스펙 · 정렬은 위 ‘정렬’ 메뉴 · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
-    : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준.`;
+    : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
 }
 
 /* ---------- 브랜드 가로지르기 (전 카테고리 한 브랜드 모아보기) ---------- */
@@ -1648,7 +1811,7 @@ async function renderBrand() {
 
   draw(bname);
   renderChips();
-  document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음.`;
+  document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
 }
 
 /* ---------- 캠핑 스타일 추천 ---------- */
@@ -1713,7 +1876,7 @@ async function renderRecommend() {
        <div class="rgrid">${cards}</div></section>`;
   }).join("");
   document.getElementById("recs").innerHTML = sections || `<p class="nd">추천할 데이터가 없습니다.</p>`;
-  document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음.`;
+  document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
 }
 
 /* ---------- 이번 주 인기: 카테고리별 랭킹 ---------- */
@@ -2051,10 +2214,17 @@ function renderAccount() {
   const setsEl = document.getElementById("setslist");
   const setsCnt = document.getElementById("setscount");
   if (setsSec) {
-    setsSec._accHasContent = sets.length > 0;
-    setsSec.style.display = (isLoggedIn && sets.length && activeTab === "sets") ? "block" : "none";
+    setsSec._accHasContent = true;
+    setsSec.style.display = (isLoggedIn && activeTab === "sets") ? "block" : "none";
   }
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
+  if (setsEl && !sets.length) {
+    setsEl.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted)">
+      <div style="font-size:32px;margin-bottom:10px">🎒</div>
+      <div>아직 만든 세트가 없어요</div>
+      <div style="font-size:12px;margin-top:6px">카테고리 상품 카드의 '꾸러미에 담기' 버튼으로 추가해 보세요</div>
+    </div>`;
+  }
   if (setsEl && sets.length) {
     const totalPrice = items => items.reduce((s, x) => s + (x.p || 0) * (x.qty || 1), 0);
     const totalWeight = items => { const w = items.reduce((s, x) => x.weight_g != null ? s + x.weight_g * (x.qty || 1) : s, 0); return w > 0 ? w : null; };
