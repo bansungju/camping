@@ -46,6 +46,8 @@
 | 32 | 카테고리/목록 (6순환) | 2026-06-11 | 1건 (사용자 제보 포함, 추가 탐색 병행) |
 | 33 | 상품상세 (6순환) | 2026-06-11 | 3건 (H-01 중복 제외) |
 | 34 | 검색 (6순환) | 2026-06-11 | 4건 (M-25 근접 중복 제외) |
+| 35 | 계정/로그인 (6순환) | 2026-06-11 | 5건 (M-52·L-39 중복·설계의도 제외) |
+| 36 | 커뮤니티/소셜 (6순환) | 2026-06-11 | 1건 (M-10/M-13/L-10/L-11 중복 제외) |
 
 ---
 
@@ -57,6 +59,12 @@
 - **증상:** 비로그인 상태에서 `/rest/v1/posts?select=*%2Cauthor:profiles...` 요청이 401 Unauthorized 반환. 공개 피드(누구나 읽어야 하는 콘텐츠)가 완전히 로드되지 않음. Supabase anon key RLS 설정 불비 또는 GRANT 미적용이 원인(소셜 백엔드 state: migration 004 GRANT 수동적용 필요).
 - **재현:** 비로그인 → community.html → 콘솔 확인 → 401 @ supabase.co/rest/v1/posts
 - **해결(2026-06-11, 백엔드 GRANT/RLS 적용으로 해소):** anon GRANT(migration 004)가 적용되어 401이 사라짐. 라이브 익명 검증 — `GET /rest/v1/posts`(단순 select)·`profiles`·앱 임베드 쿼리(`*,author:profiles!posts_user_id_fkey(...)`) 모두 **HTTP 200**(curl), 실브라우저 익명 community.html에서 동일 임베드 쿼리 `order=created_at.desc&limit=30` → **[200] OK**·콘솔 에러 0. RLS는 `posts_select_public`(anon, authenticated)로 공개 글 읽기 허용. 현재 `[]`는 401이 아니라 공개 게시글이 아직 없는 정상 빈 상태. (코드 변경 없음 — 백엔드 적용 후 재현 불가 확인) [supabase/migrations/004_grants_and_wishlist.sql](supabase/migrations/004_grants_and_wishlist.sql)
+
+### [H-37] 데스크톱 nav에 카테고리 탐색 탭 없음 — 데스크톱 사용자 탐색 진입 경로 부재
+- **영역:** 네비게이션 (전체 페이지)
+- **URL:** https://gear-forest.com/ (데스크톱 768px 이상)
+- **증상:** 데스크톱 `.tabbar`는 "📊비교 / 💬커뮤니티 / 👤내 정보" 3개 탭만 존재. 모바일 `.bottom-nav`에는 "탐색" 탭이 있어 카테고리로 직접 이동 가능하지만, 데스크톱에서는 해당 탭이 없어 상단 nav에서 카테고리 탐색으로 바로 진입할 방법이 없음. "📊비교" 탭은 index.html(홈)로 이동하며 비교 UI도 없음 (M-22). M-10과 연관이나, 데스크톱에서 핵심 탐색 기능이 nav에서 완전 누락이라는 점에서 High.
+- **재현:** 데스크톱(≥768px) → 임의 페이지 → 상단 tabbar 확인 → "탐색/카테고리" 탭 없음
 
 ### [H-01] 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
@@ -298,17 +306,19 @@
 - **증상:** 홈 검색창에서 브랜드명(예: "헬리녹스") 입력 후 Enter 시 첫 번째 자동완성 결과의 카테고리(`category.html?cat=backpacking-tent&q=헬리녹스`)로 강제 이동. 해당 브랜드의 의자·타프 등 다른 카테고리 제품은 누락됨. 사용자 의도와 다른 범위로 검색됨.
 - **재현:** 홈 → "헬리녹스" 입력 → Enter → backpacking-tent 카테고리로만 이동
 
-### [M-49] 홈 검색창 한글 IME 조합 중 자동완성 연속 트리거 — `isComposing` 미처리
+### [M-49] ✅ 해결완료 — 홈 검색창 한글 IME 조합 중 자동완성 연속 트리거 — `isComposing` 미처리
 - **영역:** 검색 (홈)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `oninput` 핸들러에 `e.isComposing` 체크가 없어 한글 자모 입력 단계마다 검색이 실행됨. "ㅎ"→"헤"→"헬"→"헬리" 각 단계에서 `run()` 호출 → 검색창 깜빡임 + 불완전 자모로 매치 시도.
 - **재현:** 홈 검색창에서 한글 검색어 천천히 입력 → DevTools 콘솔에서 `run()` 연속 호출 확인
+- **해결(2026-06-11):** `setupHomeSearch()`의 `oninput`을 `e => { if (e.isComposing) return; run(); }`으로 변경하고 `compositionend` 이벤트에 `run` 연결 → 조합 중엔 자동완성 미발동, 조합 완료 시 1회 실행. 로컬 프리뷰 검증 — `isComposing:true` input 시 드롭다운 미오픈, `compositionend` 후 드롭다운 오픈(옵션 31개). [site/app.js](site/app.js)
 
-### [M-50] 홈 검색창 한글 Enter 조합완료 + 검색실행 동시 발생 — `isComposing` 미처리
+### [M-50] ✅ 해결완료 — 홈 검색창 한글 Enter 조합완료 + 검색실행 동시 발생 — `isComposing` 미처리
 - **영역:** 검색 (홈)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `keydown` Enter 핸들러에 `e.isComposing` 체크가 없어, 한글 IME에서 마지막 글자 조합 완료(Enter) 시 즉시 `location.href` 이동이 실행됨. 조합이 완료된 글자가 검색어에 반영되기 전에 페이지 이동 발생.
 - **재현:** 홈 검색창에서 한글 마지막 글자 입력 → Enter 1회 → 의도치 않게 바로 페이지 이동
+- **해결(2026-06-11):** `setupHomeSearch()`의 keydown 핸들러 최상단에 `if (e.isComposing || e.keyCode === 229) return;` 추가 → 조합완료 Enter·화살표·Esc 등 IME 처리 키가 검색/탐색을 발동시키지 않음. 로컬 프리뷰 검증 — `isComposing:true` Enter·keyCode 229 Enter 모두 미이동, 일반 Enter(조합 아님)는 `category.html?cat=...&q=` 정상 이동(회귀 없음). [site/app.js](site/app.js)
 
 ### [M-52] 계정 탭 URL 해시 딥링크 무시 — Back/Forward 탭 전환 불가
 - **영역:** 계정/로그인
@@ -344,6 +354,30 @@
 - **URL:** https://gear-forest.com/brand.html?b=헬리녹스
 - **증상:** 브랜드 검색창(`input#bq`)에 텍스트를 입력해도 브랜드 칩 필터링·자동완성·하이라이트 등 실시간 피드백 전혀 없음. Enter를 눌러도 무반응. 결과적으로 검색창 자체가 완전히 비동작 상태. 6순환 탐색에서 oninput 이벤트 핸들러도 동작하지 않는 것으로 추가 확인됨.
 - **재현:** brand.html?b=헬리녹스 → bq 검색창에 "코베아" 입력 → 브랜드 칩 변화 없음 → Enter → 무반응
+
+### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치)
+- **영역:** 계정/세트
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 비로그인 상태에서 `#sets-section`이 표시되지만 찜 섹션(`#wish-synchint`)과 달리 "로그인하면 세트가 동기화됩니다" 류의 안내 문구가 없음. 세트가 로컬스토리지에만 저장되고 로그인 후 동기화되지 않음을 사용자가 모름.
+- **재현:** 비로그인 → account.html → 세트 섹션 확인 → 동기화 힌트 없음 확인
+
+### [M-72] 세트 자동 생성 이름에 날짜만 포함 — 같은 날 복수 저장 시 이름 중복
+- **영역:** 계정/세트
+- **URL:** https://gear-forest.com/account.html
+- **증상:** "찜 목록 세트 6. 11." 형식으로 날짜만 포함. 같은 날 여러 세트 저장 시 이름이 동일해지고 구별 불가. 세트 이름 편집 UI도 없음.
+- **재현:** 같은 날 세트 2개 저장 → 세트 목록에서 이름 구별 불가
+
+### [M-73] 세트 카드 클릭 시 구성 장비 목록 확인 불가
+- **영역:** 계정/세트
+- **URL:** https://gear-forest.com/account.html
+- **증상:** `.acc-set` 카드에 `role="button"` 및 `tabindex="0"`이 있어 클릭 가능해 보이지만, 클릭 시 세트 상세(구성 장비 목록) 진입 동작이 없음. 저장한 세트의 내용을 확인하는 방법이 없음.
+- **재현:** account.html → 세트 탭 → 세트 카드 클릭 → 아무 반응 없음
+
+### [M-74] 모바일 375px에서 account.html `<nav>` 렌더 크기 0×0 — 탭바 hit area 없음
+- **영역:** 계정/로그인 (반응형)
+- **URL:** https://gear-forest.com/account.html (375px)
+- **증상:** 모바일 뷰포트(375px)에서 `<nav>` 요소 `getBoundingClientRect()` 결과 `width:0, height:0`. 탭바가 시각적으로 보여도 클릭 영역이 없어 탭 전환 불가 가능성. `position:sticky`이지만 실제 점유 면적 없음.
+- **재현:** 375px 뷰포트 → account.html → nav.getBoundingClientRect() 확인
 
 ### [M-70] 영문 원어 모델명으로 검색 불가 — 한국어 표기만 인덱싱됨
 - **영역:** 검색 — 홈 전역 검색
@@ -722,6 +756,12 @@
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
 - **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
 
+### [L-49] 구글 로그인 버튼 `type="submit"` — `<form>` 없이 submit 타입 설정
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** `#btn-google` 버튼의 `type="submit"`으로 설정되어 있으나 감싸는 `<form>` 요소가 없음. 의도치 않은 폼 제출 동작 유발 가능성. `type="button"`이어야 함.
+- **재현:** account.html → `#btn-google` 요소 → `type` 속성 확인
+
 ### [L-46] 자동완성 정확 일치 모델이 접두어 부분 일치보다 후순위 표시
 - **영역:** 검색 — 홈 자동완성
 - **URL:** https://gear-forest.com/
@@ -954,4 +994,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (6순환)*
+*다음 회차: 홈/메인 (7순환)*
