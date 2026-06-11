@@ -635,12 +635,39 @@ function renderCategorySkeleton() {
   ).join("");
 }
 
+/* 탐색 랜딩 — cat= 없이 진입(GNB '탐색') 시 검색창 + 전체 카테고리 그리드 */
+async function renderBrowse() {
+  let m;
+  try { m = await getJSON("data/manifest.json"); }
+  catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
+  document.title = "탐색 — 장비의 숲";
+  const crumb = document.getElementById("crumbName"); if (crumb) crumb.textContent = "탐색";
+  document.getElementById("title").textContent = "무엇을 찾으세요?";
+  const lead = document.getElementById("lead");
+  if (lead) lead.innerHTML = `<b>${m.categories.reduce((s,c)=>s+(c.count||0),0).toLocaleString()}개</b> 모델 · ${m.categories.length}개 카테고리`;
+  // 상단 검색창(홈 검색과 동일 동작) — 카테고리 내 검색용 #q 입력은 숨김
+  const tb = document.querySelector(".toolbar"); if (tb) tb.style.display = "none";
+  const sc = document.getElementById("sortchips"); if (sc) sc.innerHTML = "";
+  // 카테고리 그리드를 #list에 렌더(홈과 동일 카드)
+  const list = document.getElementById("list");
+  list.className = "grid";
+  list.innerHTML = m.categories.map(c => `
+    <a class="card" href="category.html?cat=${c.slug}">
+      <div class="icon" style="background:${catTint(c.name)}">${catIcon(c.name)}</div>
+      <div class="ct"><h3>${c.name}</h3>${OPS ? gradeBadge(c.grade) : ""}</div>
+      <div class="meta">${c.count.toLocaleString()}개 모델</div>
+    </a>`).join("");
+  renderCatNav("");
+}
+
 async function renderCategory() {
   renderCategorySkeleton();
   const params = new URLSearchParams(location.search);
   // 클린 URL /category/{slug} 또는 ?cat= 파라미터 두 방식 모두 지원
   const pathMatch = location.pathname.match(/^\/category\/([a-z0-9-]+)/);
   const slug = params.get("cat") || (pathMatch && pathMatch[1]);
+  // cat= 없이 진입 → 탐색 랜딩(카테고리 그리드)
+  if (!slug) { return renderBrowse(); }
   let d;
   try { d = await getJSON(`data/${slug}.json`); }
   catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
