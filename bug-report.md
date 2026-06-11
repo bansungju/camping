@@ -27,6 +27,9 @@
 | 15 | 상품 상세 (3순환) | 2026-06-11 | 5건 (중복 1건 보완) |
 | 16 | 검색 (3순환) | 2026-06-11 | 3건 (중복 1건 보완) |
 | 17 | 계정/로그인 (3순환) | 2026-06-11 | 1건 (코드버그 2건 즉시수정, 중복 1건) |
+| 18 | 커뮤니티/소셜 (3순환) | 2026-06-11 | 4건 (중복 2건 제외) |
+| 19 | 홈/메인 (4순환) | 2026-06-11 | 2건 (중복·저영향 제외, L-27 보완) |
+| + | 컴플라이언스 감사 | 2026-06-11 | 5건 (H-23~H-27, L-19 승격 포함) |
 
 ---
 
@@ -82,10 +85,12 @@
 - **증상:** 자동완성 표시 중 Esc 누르면 드롭다운 닫힘과 동시에 입력값이 빈 문자열로 지워짐. 기대 동작은 드롭다운만 닫히고 입력값 유지.
 - **해결(2026-06-11):** `setupHomeSearch()`의 keydown 핸들러에 Escape 분기 추가. `input[type=search]`의 네이티브 Esc=초기화 동작을 `e.preventDefault()`로 차단하고 드롭다운만 닫도록 처리. 로컬 프리뷰 검증 — Esc 시 드롭다운 display block→none, 입력값 '헬리녹스' 유지 확인. [site/app.js](site/app.js)
 
-### [H-19] Service Worker 오프라인 폴백 — `category.html?cat=...` URL 캐시 miss → 홈 서빙
+### [H-19] ✅ 해결완료 — Service Worker 오프라인 폴백 — `category.html?cat=...` URL 캐시 miss → 홈 서빙
 - **영역:** 검색 (PWA)
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
 - **증상:** SW 캐시에 쿼리스트링 없는 `category.html`만 저장됨. 네트워크 불안정 시 `?cat=backpacking-tent` URL이 캐시 miss → `index.html` 폴백 → 홈 화면 노출. `caches.match(req, { ignoreSearch: true })` 로 해결 가능.
+- **해결(2026-06-11):** `sw.js` 네비게이션 핸들러의 캐시 폴백을 `caches.match(req, { ignoreSearch: true })`로 변경 — `category.html?cat=X`가 캐시된 `category.html`에 매치되어 엉뚱한 홈 폴백을 방지. apex 클라이언트는 SW 스크립트 변경분을 정상 업데이트(network-first·skipWaiting·clients.claim 기존 구현 유지). [site/sw.js](site/sw.js)
+- **⚠️ 관련 인프라 이슈(별도):** `www.gear-forest.com/sw.js`가 301 리다이렉트되어, 과거 www 도메인에서 SW를 등록한 기기(특히 모바일)는 SW 자가 업데이트 불가 → 구버전 캐시 셸 서빙으로 화면 깨짐. 코드 배포(apex 서빙)로는 해결 불가 — 기기에서 사이트 데이터 삭제/PWA 재설치 또는 www의 sw.js 리다이렉트 제거(인프라) 필요. [H-21]과 동일 www↔apex 이전 근본원인.
 
 ### [H-16] backpacking-tent 카테고리 상품 상세 전체 접근 불가 — 홈 HTML 서빙
 - **영역:** 상품 상세
@@ -165,6 +170,24 @@
 ---
 
 ## 🟡 Medium
+
+### [M-44] LCP 이미지에 `loading="lazy"` + `fetchpriority` 없음 — LCP 점수 저해
+- **영역:** 홈/메인 (성능)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 최근 본 상품 등 뷰포트 내 LCP 대상 이미지(`/images/922.jpg` 등)에 `loading="lazy"` 설정 및 `fetchpriority="high"` 누락. lazy 이미지는 브라우저가 뷰포트 진입 전까지 로드를 지연하여 LCP 점수를 직접 악화시킴. 또한 LCP 이미지에 대한 `<link rel="preload" as="image">` 힌트도 없어 JS 실행 후 늦게 요청됨.
+- **재현:** DevTools → Performance 탭 LCP 확인 또는 `document.querySelector('img[src*="922.jpg"]').loading` → `"lazy"`
+
+### [M-42] 글쓰기 폼 `<label>` — `for` 속성 없어 스크린리더 필드 인식 불가
+- **영역:** 커뮤니티/소셜 — 글쓰기 폼
+- **URL:** https://www.gear-forest.com/community.html#new
+- **증상:** `renderCompose()`가 생성하는 폼의 제목·내용·사진 `<label>` 3개 모두 `for` 속성 없음. 대응 input/textarea에 `id="cm-t"`, `id="cm-b"`가 있지만 label과 프로그래밍적으로 연결되지 않아 스크린리더가 필드를 올바르게 읽지 못함.
+- **재현:** 로그인 + 닉네임 설정 → 글쓰기 폼 열기 → DevTools Accessibility 탭에서 label 연결 미확인
+
+### [M-43] 커뮤니티 게시글 카드 `<a>`에 `href` 없음 — 키보드/스크린리더 탐색 불가
+- **영역:** 커뮤니티/소셜 — 피드 목록
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 피드 게시글 카드가 `<a class="cm-post" data-id="…">` (href 없음)으로 렌더링됨. href 없는 `<a>`는 Tab 포커스 순서에 포함되지 않아 키보드만으로 진입 불가. onclick 핸들러만 동작.
+- **재현:** 커뮤니티 피드 → Tab 키 탐색 → 게시글 카드 포커스 불가
 
 ### [M-41] 세트 섹션 — 0개일 때 완전 숨김, 빈 상태 안내 없음
 - **영역:** 계정/세트 섹션
@@ -408,10 +431,36 @@
 
 ## 🟢 Low
 
-### [L-19] 계정 삭제/탈퇴 기능 미존재 — 법적 의무 가능성
+### [H-23] 계정삭제 UI 부재 — delete-account 엣지함수 존재하나 버튼 없음, privacy.html 안내와 모순
+- **영역:** 계정/로그인 (법적 컴플라이언스)
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** `delete-account` Supabase 엣지함수와 RPC는 구현되어 있으나 account.html에 삭제 버튼·UI가 전혀 없음. privacy.html은 "계정 삭제 링크"를 안내하는데 실제 UI 없어 모순. Google OAuth API 정책·개인정보보호법상 계정 삭제 기능 UI 노출 의무.
+- **이전:** L-19에서 승격
+
+### [H-24] Supabase 국외 개인정보 이전 고지 누락 — 한국 PIPA 제28조의8 위반 가능성
+- **영역:** privacy.html (법적 컴플라이언스)
+- **URL:** https://www.gear-forest.com/privacy.html
+- **증상:** Supabase(미국 서버)로 이메일·닉네임·찜목록·게시글이 이전됨에도 privacy.html에 국외이전 고지(이전 국가·항목·기간·거부방법)가 없음. 개인정보보호법 제28조의8에 따라 국외이전 시 정보주체 고지 또는 동의 의무.
+
+### [H-25] privacy.html에 쿠팡 어필리에이트 추적 고지 누락
+- **영역:** privacy.html (법적 컴플라이언스)
+- **URL:** https://www.gear-forest.com/privacy.html
+- **증상:** 쿠팡 파트너스(어필리에이트) 링크 클릭 시 추적 쿠키·파라미터가 수집됨에도 privacy.html에 제3자 어필리에이트 추적에 대한 언급이 0건. 한국 개인정보보호법(제3자 제공·위탁) 및 공정위 추천보증지침상 고지 필요. 또한 어필리에이트 관계는 링크 바로 옆에 상시 표시해야 함('더보기' 내부 고지는 부적격).
+
+### [H-26] terms.html(이용약관) 미존재 + UGC 게시 전 약관 동의 플로 없음
+- **영역:** 전체 서비스 (법적 컴플라이언스)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 서비스 이용약관 페이지(`terms.html`) 자체가 없음. 커뮤니티에 UGC(글·사진)를 게시하는 플로에서 약관 동의 UI 없이 바로 제출 가능. 정보통신망법 제23조 및 콘텐츠산업진흥법상 이용약관 명시 의무.
+
+### [H-27] privacy.html에 카카오 로그인 기재 — 실제 구현은 Google 단독 (오기재)
+- **영역:** privacy.html (정보 정확성)
+- **URL:** https://www.gear-forest.com/privacy.html
+- **증상:** privacy.html에 카카오 로그인 관련 개인정보 처리 항목이 기재되어 있으나 실제 코드는 Google OAuth만 구현됨. 개인정보 처리방침이 실제 처리 현황과 불일치.
+
+### [L-19] ~~계정 삭제/탈퇴 기능 미존재~~ → [H-23]으로 승격
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
-- **증상:** 계정 삭제·서비스 탈퇴 UI 전혀 없음. 개인정보보호법 및 Google OAuth API 이용 정책상 계정 삭제 기능 요구.
+- **증상:** H-23 참조.
 
 ### [L-20] 닉네임 설정/변경 UI 미존재
 - **영역:** 계정/로그인
@@ -529,6 +578,23 @@
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** '내한온도(ISO하한)' 등 긴 레이블이 375px 화면에서 단어 중간(`ISO하` / `한`)에서 줄바꿈되어 셀 높이가 59px로 불균일. `word-break:keep-all` 또는 `overflow-wrap` 조정으로 해결 가능.
 
+### [L-32] 댓글 textarea — 연결된 `<label>` 없음
+- **영역:** 커뮤니티/소셜 — 댓글 폼
+- **URL:** https://www.gear-forest.com/community.html#post={id}
+- **증상:** 댓글 작성 textarea(`id="cm-ct"`, `placeholder="댓글 달기…"`)에 연결된 `<label>` 없음. placeholder만으로는 WCAG 2.1 SC 1.3.1 미충족.
+
+### [L-34] `<meta name="theme-color">` 다크모드 변형 없음
+- **영역:** 홈/메인 (PWA/다크모드)
+- **URL:** https://www.gear-forest.com/
+- **증상:** `theme-color` 메타태그가 라이트모드 색상(`#2f7a4e`) 하나만 존재. `media="(prefers-color-scheme: dark)"` 변형이 없어 다크모드 기기에서 브라우저 주소창·상태바가 라이트 그린으로 고정됨.
+- **재현:** 다크모드 기기에서 접속 → 브라우저 UI 색상 확인
+
+### [L-33] 커뮤니티 뒤로가기 시 URL에 trailing `#` 잔존
+- **영역:** 커뮤니티/소셜 — 라우팅
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 글 상세·작성 폼에서 "← 목록으로" 클릭 시 `location.hash = ''` 실행으로 URL이 `community.html#`으로 변경됨. 주소창에 `#`이 잔존하고 URL 공유 시 `community.html#` 형태로 전달됨. `history.pushState('','',location.pathname)` 사용이 올바른 처리.
+- **재현:** 글 클릭 → "← 목록으로" → 주소창 `community.html#` 확인
+
 ### [L-31] 카테고리 내 검색에서 다른 카테고리 결과 존재 안내 없음
 - **영역:** 검색 (카테고리 페이지)
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
@@ -555,8 +621,8 @@
 ### [L-27] 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
 - **영역:** 홈/메인 — 공통 푸터
 - **URL:** https://www.gear-forest.com/
-- **증상:** 하단 푸터에 '개인정보처리방침', '이용약관' 링크가 없음. 국내 개인정보보호법·정보통신망법상 서비스 운영 시 필수 고지 항목.
+- **증상:** 하단 푸터에 '개인정보처리방침', '이용약관' 링크가 없음. 국내 개인정보보호법·정보통신망법상 서비스 운영 시 필수 고지 항목. 저작권 표시(`© 2024 장비의 숲`)와 연락처 정보도 전무.
 
 ---
 
-*다음 회차: 커뮤니티/소셜 (3순환)*
+*다음 회차: 카테고리/목록 (4순환)*
