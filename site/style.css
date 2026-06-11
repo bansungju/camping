@@ -286,8 +286,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .achip.clear{border-color:var(--line);color:var(--muted)}
 .achip.clear:hover{background:var(--card);color:var(--txt)}
 
-/* 탭바 — 데스크탑: 헤더 아래 가로 탭 / 모바일: 화면 하단 고정 */
-.tabbar{border-bottom:1px solid var(--line);background:var(--card)}
+/* 탭바 — 데스크탑: 헤더 아래 sticky 가로 탭(스크롤해도 떠 있음) / 모바일: 숨김(하단 bottom-nav가 대체) */
+.tabbar{border-bottom:1px solid var(--line);background:var(--card);
+  position:sticky;top:66px;z-index:9}
 .tabbar-in{display:flex;gap:2px}
 .tabbar .tab{display:inline-flex;align-items:center;gap:7px;padding:12px 18px;font-size:14px;
   font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
@@ -515,15 +516,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 
 /* 모바일 반응형 — 하드코딩 sticky offset 충돌 제거 */
 @media (max-width:640px){
-  /* 탭바: 화면 하단 고정(앱 느낌) + 콘텐츠 가림 방지 패딩 */
-  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;border-bottom:0;border-top:1px solid var(--line);
-    background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
-    padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -1px 10px rgba(0,0,0,.06)}
-  .tabbar-in{padding:0;gap:0}
-  .tabbar .tab{flex:1;flex-direction:column;gap:3px;justify-content:center;padding:7px 4px;
-    font-size:11px;border-bottom:0;margin-bottom:0}
-  .tabbar .tab .ti{font-size:21px}
-  .tabbar .tab.on{border-bottom:0}
+  /* 탭바: 모바일은 하단 bottom-nav가 floating 내비를 담당 → 중복 탭바 숨김 */
+  .tabbar{display:none}
   body{padding-bottom:62px}
   .pli{gap:11px;padding:10px 12px}
   .pli-thumb,.pli-noimg{width:62px;height:62px}
