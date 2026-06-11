@@ -335,7 +335,9 @@ function pushRecent(item) {
 /* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
    로그인·커뮤니티는 계획 단계라 '준비중' 플레이스홀더로 연결. */
 const TABS = [
-  { href: "index.html", icon: "📊", label: "비교", match: ["index.html", "", "category.html", "brand.html", "recommend.html"] },
+  { href: "index.html", icon: "📊", label: "비교", match: ["index.html", ""] },
+  // 탐색 탭(H-37): 데스크톱에도 카테고리 탐색 진입 경로 추가(모바일 .bottom-nav와 일치)
+  { href: "category.html", icon: "🧭", label: "탐색", match: ["category.html", "brand.html", "recommend.html"] },
   { href: "community.html", icon: "💬", label: "커뮤니티", match: ["community.html"] },
   { href: "account.html", icon: "👤", label: "내 정보", match: ["account.html"] },
 ];
