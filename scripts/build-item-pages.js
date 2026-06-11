@@ -195,7 +195,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   </nav>
 
   <div class="item-hero">
-    ${img ? `<img class="item-img" src="../../${img}" alt="${brand} ${modelName}" loading="lazy">` : ""}
+    ${img ? `<img class="item-img" src="../../${img}" alt="${brand} ${modelName}" fetchpriority="high">` : ""}
     <div class="item-info">
       <h1 class="item-title">${modelName}</h1>
       <p class="item-brand">${brand}</p>

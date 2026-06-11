@@ -385,7 +385,8 @@
 - **재현:** 카테고리 페이지 접근 → 접근성 트리 확인: `select` 요소 accessibleName = "" (공백)
 - **해결(2026-06-11):** `buildFilters`의 정렬 select에 `aria-label="정렬 기준 선택"`, 브랜드 select에 `aria-label="브랜드 필터 선택"` 추가. 로컬 프리뷰 검증 — 두 select accessibleName이 각 레이블로 해석, 레이블 없는 `.fsel` 0개, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-44] LCP 이미지에 `loading="lazy"` + `fetchpriority` 없음 — LCP 점수 저해
+### [M-44] ✅ 해결완료 — LCP 이미지에 `loading="lazy"` + `fetchpriority` 없음 — LCP 점수 저해
+- **해결(2026-06-11):** `build-item-pages.js` 히어로 이미지에서 `loading="lazy"` 제거 + `fetchpriority="high"` 추가. 2277개 상세 페이지 재빌드. 카테고리 카드는 뷰포트 외 이미지이므로 lazy 유지. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **영역:** 홈/메인 (성능)
 - **URL:** https://www.gear-forest.com/
 - **증상:** 최근 본 상품 등 뷰포트 내 LCP 대상 이미지(`/images/922.jpg` 등)에 `loading="lazy"` 설정 및 `fetchpriority="high"` 누락. lazy 이미지는 브라우저가 뷰포트 진입 전까지 로드를 지연하여 LCP 점수를 직접 악화시킴. 또한 LCP 이미지에 대한 `<link rel="preload" as="image">` 힌트도 없어 JS 실행 후 늦게 요청됨.
@@ -403,7 +404,8 @@
 - **증상:** 피드 게시글 카드가 `<a class="cm-post" data-id="…">` (href 없음)으로 렌더링됨. href 없는 `<a>`는 Tab 포커스 순서에 포함되지 않아 키보드만으로 진입 불가. onclick 핸들러만 동작.
 - **재현:** 커뮤니티 피드 → Tab 키 탐색 → 게시글 카드 포커스 불가
 
-### [M-41] 세트 섹션 — 0개일 때 완전 숨김, 빈 상태 안내 없음
+### [M-41] ✅ 해결완료(M-95 동시 수정) — 세트 섹션 — 0개일 때 완전 숨김, 빈 상태 안내 없음
+- **해결(2026-06-11):** M-95 수정으로 동시 해결. sets.length 조건 제거 + 빈 상태 안내 HTML 추가. [site/app.js](site/app.js)
 - **영역:** 계정/세트 섹션
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 세트가 0개이면 `#sets-section`이 완전히 숨겨지고 빈 상태 안내("세트가 없어요")나 CTA도 없음. 찜 섹션과 달리 기능 존재 자체를 알 수 없음.
@@ -532,11 +534,8 @@
 - **증상:** 게시글 클릭 시 모달이 열리나 `history.pushState` 없어 URL이 변하지 않음. 특정 게시글 URL 공유 불가, 공유 버튼도 없음. M-59(계정 탭 해시)와 동일 패턴의 별도 영역 버그.
 - **재현:** 게시글 클릭 → 모달 오픈 → 주소창 확인 → URL 그대로
 
-### [M-63] 세트 저장 후 안내 메시지 — 비로그인 시 "세트 탭" 존재하지 않아 오도
-- **영역:** 계정/로그인 — 찜·세트
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** 비로그인 상태에서 "찜한 N개 → 새 세트로 저장" 클릭 시 버튼이 "✅ 세트 저장됨 — 마이페이지 세트 탭에서 확인"으로 바뀌나, 비로그인 상태에서는 세트 탭이 숨겨져 있어 안내대로 이동 불가. 사용자가 세트 확인 방법을 알 수 없음.
-- **재현:** 비로그인 + 찜 1개 이상 → account.html → "새 세트로 저장" 클릭 → 안내 메시지 확인
+### [M-63] ✅ 해결완료(M-108 동시 수정) — 세트 저장 후 안내 메시지 — 비로그인 시 "세트 탭" 존재하지 않아 오도
+- **해결(2026-06-11):** M-108로 비로그인 시 wish-section 자체가 숨겨짐 → "찜한 N개 → 새 세트로 저장" 버튼 진입 경로 차단됨. 비로그인 사용자는 해당 버튼 미노출. [site/app.js](site/app.js), [site/account.html](site/account.html)
 
 ### [M-62] ✅ 해결완료 — 홈 검색 `?q=` URL 직접 진입 시 검색창 pre-fill 없음
 - **해결(2026-06-11):** `setupHomeSearch()` 함수 끝에 `new URLSearchParams(location.search).get("q")` 읽기 추가 — 값 있으면 `inp.value` 설정 후 `run()` 호출하여 자동완성 드롭다운 표시. [site/app.js](site/app.js)
@@ -545,7 +544,8 @@
 - **증상:** `input#homeq` 초기값을 URL params에서 읽는 코드 없음. `?q=검색어` URL로 공유받아도 검색창이 항상 빈 칸. M-40(타이핑 시 URL 미반영)의 반대 방향 케이스.
 - **재현:** `/?q=헬리녹스` 직접 접근 → homeq 입력창 빈 칸 확인
 
-### [M-60] 비교 모달 `role="dialog"` / `aria-modal` 완전 누락
+### [M-60] ✅ 해결완료 — 비교 모달 `role="dialog"` / `aria-modal` 완전 누락
+- **해결(2026-06-11):** `#cmp-modal` 생성 시 `role="dialog"`, `aria-modal="true"`, `aria-labelledby="cmp-modal-title"` 추가. 내부 `<h2>`에 `id="cmp-modal-title"` 추가. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 비교 기능
 - **URL:** category.html → ⚖ 버튼 2개 선택 → 비교하기
 - **증상:** `#cmp-modal` 및 내부 `.pmbox`에 `role="dialog"`, `aria-modal`, `aria-labelledby` 모두 없음. 주 상품 모달과 달리 비교 모달은 접근성 속성 전무.

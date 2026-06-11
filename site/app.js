@@ -1573,7 +1573,7 @@ function openCmpModal(rows) {
   if (items.length < 2) return;
 
   let modal = document.getElementById("cmp-modal");
-  if (!modal) { modal = document.createElement("div"); modal.id = "cmp-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  if (!modal) { modal = document.createElement("div"); modal.id = "cmp-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); modal.setAttribute("aria-labelledby","cmp-modal-title"); document.body.appendChild(modal); }
 
   // 각 지표별 최선값 계산
   const best = {};
@@ -1605,7 +1605,7 @@ function openCmpModal(rows) {
   const catLabel = d.name || STATE.slug || "";
   modal.innerHTML = `<div class="pmbox" style="max-width:600px;width:100%;padding:20px;overflow-x:auto">
     <button class="pmx" aria-label="닫기">✕</button>
-    <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">📊 스펙 비교</h2>
+    <h2 id="cmp-modal-title" style="font-size:16px;font-weight:700;margin-bottom:16px">📊 스펙 비교</h2>
     <div style="display:flex;gap:12px;align-items:flex-start">${cols}</div>
     <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">✓ 표시: 해당 지표 최선값</p>
     <button type="button" id="cmp-save-set" style="margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">🎒 선택 장비를 세트로 저장</button>
