@@ -681,22 +681,14 @@
 ### [M-14] ✅ 해결완료(2026-06-11) — 검색 input aria-label 없음
 - **해결(2026-06-11):** `inp.setAttribute("aria-label", "장비 검색")` 추가. [site/app.js](site/app.js)
 
-### [M-15] 검색창이 `<form>` 태그로 감싸지지 않아 Enter 키 제출 동작 비표준
-- **영역:** 홈/메인 (접근성)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 검색 input이 `<form>` 안에 없어 표준 HTML 폼 제출 동작 없음. WCAG 2.1 SC 2.1.1 비준수.
+### [M-15] ✅ 해결완료(2026-06-11) — 검색창이 `<form>` 태그로 감싸지지 않아 Enter 키 제출 동작 비표준
+- **해결(2026-06-11):** `index.html`의 `.homesearch` `<div>` → `<form role="search" onsubmit="return false">` 로 교체. [site/index.html](site/index.html)
 
-### [M-24] 유효하지 않은 카테고리 접근 시 빈 필터바 함께 노출
-- **영역:** 카테고리/목록
-- **URL:** https://www.gear-forest.com/category.html?cat=nonexistent
-- **증상:** 존재하지 않는 `cat` 값으로 접근 시 '카테고리를 찾을 수 없습니다' 메시지가 표시되지만 빈 필터바(슬라이더, 브랜드 목록 등)가 함께 노출되어 오해를 줌. 에러 상태에서 필터 UI는 숨겨야 함.
-- **재현:** `category.html?cat=doesnotexist` 접속 → 에러 메시지 아래 빈 필터 확인
+### [M-24] ✅ 해결완료(2026-06-11) — 유효하지 않은 카테고리 접근 시 빈 필터바 함께 노출
+- **해결(2026-06-11):** `renderCategory()` 에러 catch 블록에 `.toolbar` hide + `#sortchips` 초기화 추가. [site/app.js](site/app.js)
 
-### [M-22] 데스크톱 탭바 '📊비교' 탭 — 비교 UI 미구현
-- **영역:** 홈/메인 (데스크톱)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 데스크톱 상단 탭바의 '📊비교' 탭을 클릭하면 `index.html`로 이동할 뿐 비교 전용 UI(상품 선택·비교표 등)가 전혀 없음. 탭 이름과 기능이 불일치.
-- **재현:** 데스크톱(≥768px)에서 상단 탭바 '📊비교' 클릭 → 홈 화면만 로드
+### [M-22] ✅ 해결완료(H-37 동시 수정) — 데스크톱 탭바 '📊비교' 탭 레이블 불일치
+- **해결(2026-06-11):** H-37에서 TABS 재편 시 TABS[0]이 `label: "홈"`으로 변경되어 "📊비교" 레이블 불일치 해소. [site/app.js](site/app.js)
 
 ### [M-23] ✅ 해결완료(2026-06-11) — 비활성 nav aria-current="false" 위반
 - **해결(2026-06-11):** bottom-nav `aria-current="${active ? "page" : "false"}"` → `${active ? 'aria-current="page"' : ""}` 로 수정. 비활성 항목은 속성 생략. [site/app.js](site/app.js)

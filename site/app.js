@@ -845,6 +845,8 @@ async function renderCategory() {
          <p class="nd">잠시 후 다시 시도하거나 다른 카테고리를 둘러보세요.</p>
          <a class="cat-error-link" href="category.html">전체 카테고리 보기 ›</a>
        </div>`;
+    const tbEl = document.querySelector(".toolbar"); if (tbEl) tbEl.style.display = "none";
+    const scEl = document.getElementById("sortchips"); if (scEl) scEl.innerHTML = "";
     return;
   }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
