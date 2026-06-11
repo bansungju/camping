@@ -86,7 +86,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   const { brand, model: modelName, price_min, price_max, img, specs, capacity } = model;
   const pageSlug = slugify(brand, modelName, idx);
   const canonicalUrl = `${SITE_URL}/item/${catSlug}/${pageSlug}.html`;
-  const catUrl = `${SITE_URL}/category/${catSlug}/`;
+  const catUrl = `${SITE_URL}/category.html?cat=${catSlug}`;
   const imgUrl = img ? `${SITE_URL}/${img}` : `${SITE_URL}/og-image.png`;
   const title = `${brand} ${modelName} — ${catLabel} 스펙 비교 | 장비의 숲`;
   const desc = `${brand} ${modelName} 정량 스펙 실측 데이터. ${catLabel} 내 ${rank}위/${total}개 비교. 무게·가격 등 실측값 기반 별점.`;
@@ -173,7 +173,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <main class="wrap">
   <nav style="font-size:12px;color:var(--muted);margin-top:16px;margin-bottom:4px">
     <a href="../../index.html" style="color:var(--muted);text-decoration:none">홈</a> ›
-    <a href="../../category/${catSlug}/" style="color:var(--muted);text-decoration:none">${catLabel}</a> ›
+    <a href="../../category.html?cat=${catSlug}" style="color:var(--muted);text-decoration:none">${catLabel}</a> ›
     ${brand} ${modelName}
   </nav>
 
@@ -194,7 +194,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   </table>
 
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
-  <a class="back-link" href="../../category/${catSlug}/">← ${catLabel} 전체 비교 보기</a>
+  <a class="back-link" href="../../category.html?cat=${catSlug}">← ${catLabel} 전체 비교 보기</a>
 </main>
 
 <footer><div class="wrap">정량 스펙 기반 정직 비교 · <a href="${canonicalUrl}" style="color:inherit">${brand} ${modelName}</a></div></footer>

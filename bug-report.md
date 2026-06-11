@@ -170,11 +170,13 @@
 - **참고:** `category.html?cat=backpacking-tent` 방식은 정상. [H-02]와 동일 근본 원인 — 검색 자동완성 링크 href가 아직 구 clean URL 형식 사용 중
 - **해결(2026-06-11, 환경/라우팅 변화로 해소):** 자동완성 클릭·Enter 모두 `category.html?cat=` 사용, 코드에 clean URL 링크 없음(grep 확인). [H-02]와 동일 근본. 재현 안 됨.
 
-### [H-06] 상세 페이지 탭바 링크 상대경로 오류 — 서비스 점검 페이지로 이동
+### [H-06] ✅ 해결완료 — 상세 페이지 네비 링크가 구 clean URL `category/{slug}/`로 이동 → 404
 - **영역:** 상품 상세
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** 상세 페이지 탭바의 '비교', '커뮤니티', '내 정보' 링크가 상대경로(index.html, community.html, account.html)로 하드코딩되어 `/item/{category}/index.html` 등으로 이동. 해당 URL은 '서비스 점검 중입니다' 오류 페이지 반환.
 - **재현:** 상세 페이지 진입 후 탭바 아무 탭 클릭
+- **원인(2026-06-11):** 현재 item 상세 페이지엔 옛 탭바가 없고, 대신 breadcrumb·back-link가 구 clean URL `../../category/{slug}/`로 걸려 있었음. 클린 URL이 제거된 뒤라 라이브에서 `/category/{slug}/` → **404**(반면 `category.html?cat={slug}` → 200). [H-02]와 동일 근본. 생성기 `scripts/build-item-pages.js`가 해당 링크를 만들고 2277개 파일 전부 영향.
+- **해결:** `scripts/build-item-pages.js`의 breadcrumb·back-link·catUrl을 `../../category.html?cat=${catSlug}` 형식으로 수정 후 **2277개 상세 페이지 전체 재생성**(+sitemap 갱신). 로컬 프리뷰 검증 — item-52 breadcrumb·back-link href가 `category.html?cat=backpacking-tent`, 구 clean URL 잔존 0, back-link 클릭 시 카테고리 페이지(백패킹텐트·상품 137개) 정상 이동·콘솔 에러 없음. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [H-07] 상세 페이지에 찜하기(북마크) 버튼 없음
 - **영역:** 상품 상세
