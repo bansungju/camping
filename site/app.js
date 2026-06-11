@@ -156,7 +156,9 @@ function stars(n) {
     else if (i === full && half) h += "◐";
     else h += '<span class="e">★</span>';
   }
-  return `<span class="stars" title="★${n}">${h}</span>`;
+  // role=img + aria-label로 별점을 하나의 그래픽으로 노출 — 개별 별(빈 별 포함)은
+  // AT에서 숨겨져 "별 5개"로 오독되지 않고 "별점 N / 5"로 정확히 읽힌다 (M-48)
+  return `<span class="stars" role="img" aria-label="별점 ${n} / 5" title="★${n}">${h}</span>`;
 }
 
 const GRADE_LEGEND = `
