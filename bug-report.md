@@ -61,6 +61,8 @@
 | 47 | 계정/로그인 (8순환) | 2026-06-11 | 5건 |
 | 48 | 커뮤니티/소셜 (8순환) | 2026-06-11 | 7건 (L-32 계열 별도 기록) |
 | 49 | 홈/메인 (9순환) | 2026-06-11 | 2건 |
+| 50 | 카테고리/목록 (9순환) | 2026-06-11 | 4건 |
+| 51 | 상품상세 (9순환) | 2026-06-11 | 4건 (LCP 중복 제외) |
 
 ---
 
@@ -102,6 +104,20 @@
 - **재현:** item/*.html 직접 접근 → 탭바 링크 클릭 → 404
 - **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
 - **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
+
+### [H-42] 모바일 상품상세 페이지 네비게이션 완전 소실
+- **영역:** 상품상세 (모바일)
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html (390px 뷰포트)
+- **증상:** 모바일(≤640px)에서 상세 페이지에 탭바가 전혀 없음. CSS가 `.tabbar`를 `display:none`으로 숨기고, `insertBottomNav()`는 `/item/` 경로 감지 시 `return` 조기 종료하여 `.bottom-nav`도 삽입하지 않음. 브레드크럼 링크만 남아 모바일 사용자의 다른 섹션 이동 경로 전무.
+- **원인:** `app.js`의 `insertBottomNav()`에서 `if (isItem) return;`로 상세 페이지를 제외 처리. 데스크톱은 `.tabbar`(이미 H-38에서 절대경로 수정됨)를 사용하지만, 모바일은 `.bottom-nav`가 item 페이지에 삽입되지 않아 데스크톱 tabbar의 모바일 대체 수단도 없음.
+- **재현:** 모바일 390px 뷰포트 → `/item/*.html` 직접 접근 → 페이지 어디에도 탭바 없음
+
+### [H-41] 경량 우선 프리셋 kg/g 단위 불일치 — 결과 항상 0건 + URL 공유 시에도 재현
+- **영역:** 카테고리/목록 — 필터 프리셋
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** 🪶 경량 우선 프리셋 클릭 시 결과가 항상 0건. 무게 슬라이더도 0.0kg 극소값으로 표시. URL 공유(`weight_min__max=1.1`) 후 새 탭 접근해도 동일 0건.
+- **원인:** `buildFilters` 프리셋 fn()이 `STATE.range[weightMeta.key] = { max: +(p33 / 1000).toFixed(1) }`로 kg 단위(예: 1.1) 저장. 그러나 `passRange`는 `m.specs[key].value`(g 단위, 예: 800)와 직접 비교 → `800 > 1.1` → 모든 제품 탈락. 슬라이더 이벤트의 `toStateVal`(kg→g 변환)을 프리셋 코드가 우회함. `serializeState`도 단위 변환 없이 직렬화하여 URL에도 kg값(`weight_min__max=1.1`)이 기록됨. `restoreState`에 isWeight 판별 없어 복원 시에도 동일.
+- **재현:** `category.html?cat=backpacking-tent` → 빠른 설정 🪶 경량 우선 클릭 → 결과 0건, 슬라이더 0.0kg
 
 ### [H-40] `sort` 파라미터 단독 URL 직접 접근 시 간헐적 리다이렉트 루프
 - **영역:** 카테고리/목록
@@ -426,11 +442,13 @@
 - **재현:** `?cat=Backpacking-Tent` URL 직접 접근
 - **해결(2026-06-11):** `renderCategory`에서 slug를 `.toLowerCase()`로 정규화(클린 URL 정규식도 `i` 플래그) → 대문자 cat도 `data/{소문자}.json` 로드. 로컬 프리뷰 검증 — `?cat=Backpacking-Tent` 접근 시 백패킹텐트 정상 로드(상품 137개·에러 없음), URL은 `?cat=backpacking-tent`로 정규화, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-59] `?sort=price_min` URL에 `sa` 파라미터 없을 때 정렬 방향 역전
+### [M-59] ✅ 해결완료 — `?sort=price_min` URL에 `sa` 파라미터 없을 때 정렬 방향 역전
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent&sort=price_min
 - **증상:** UI에서 "가격 낮은순" 선택 시 `sa=1`(오름차순)이 함께 붙어 정상 동작. 그러나 `sa` 없이 `sort=price_min`만 포함된 공유 URL로 진입하면 `sa=0`(내림차순)이 기본값으로 적용되어 비싼 것부터 표시. 공유 URL 재현 시 결과가 다름.
 - **재현:** `?cat=backpacking-tent&sort=price_min` URL 직접 접근 → 정렬 방향 확인
+- **원인:** `restoreState`가 `STATE.sortAsc = params.get("sa") === "1"`로만 처리 → `sa` 부재 시 무조건 false(내림차순).
+- **해결(2026-06-11):** `sa` 부재 시 정렬키의 자연 기본방향 적용 — `params.has("sa") ? sa==="1" : (srt==="value" ? false : defaultAsc(srt))`. UI의 `applySort`와 동일 규칙(value=내림, price_min·spec=defaultAsc). 로컬 프리뷰 검증 — `?sort=price_min`(sa없음) → 오름차순(23,370→57,600→95,750원, 싼것부터)·URL `sa=1`로 정규화 / `?sort=value`(sa없음) → `sa=0`(가성비 높은순)·콘솔 에러 0. [site/app.js](site/app.js)
 
 ### [M-61] brand.html `bq` 검색창 입력·Enter 모두 무반응 — input 이벤트 핸들러 미동작
 - **영역:** 검색 — brand.html
@@ -1392,12 +1410,52 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
+### [M-103] JSON-LD Product `name`에 브랜드명 중복 포함
+- **영역:** 상품상세 — 구조화 데이터
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** JSON-LD `name` 필드가 `"니모이큅먼트 호넷 엘리트 오스모 1P"`(브랜드+모델명)이고 `brand.name`도 `"니모이큅먼트"`로 별도 존재. Schema.org 권장은 `name`=모델명, `brand`=브랜드 분리. 구글 리치 결과에서 브랜드명 중복 노출 가능.
+- **원인:** 상세 HTML 생성기(`build-item-pages.js`)가 JSON-LD `name`에 `브랜드명 + 모델명` 조합으로 삽입.
+- **재현:** 상세 페이지 → DevTools 콘솔 → `document.querySelector('script[type="application/ld+json"]').textContent` → name에 브랜드명 포함 확인
+
+### [M-101] 캠핑 스타일 칩 ON 상태에서 경량 우선 프리셋 적용 후 스타일 리드 텍스트 불일치
+- **영역:** 카테고리/목록 — 스타일 칩·프리셋 상호작용
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent&style=backpacking
+- **증상:** 백패킹 스타일 칩 ON → 경량 우선 프리셋 클릭 시, `clearPresetFilters()`가 `STATE.campStyle`을 초기화하지 않아 상단 리드 텍스트가 '🏕 백패킹 기준'으로 남음. 프리셋 버튼은 ON 표시인데 스타일 칩도 ON인 모순 상태. (0건의 근본원인은 H-41 kg/g 불일치)
+- **원인:** `clearPresetFilters(line 968-972)`가 weightMeta.key·price·cap만 초기화하고 `STATE.campStyle`은 건드리지 않음. M-89와 동일 계열이나 campStyle 대상.
+- **재현:** 백패킹 칩 클릭 → 경량 우선 클릭 → 리드 텍스트 '백패킹 기준' 유지, 경량우선 ON 표시 동시 공존
+
+### [M-102] 스타일 칩 적용 후 정렬 드롭다운이 '기본'으로 표시 — 실제 정렬(weight_min) 미반영
+- **영역:** 카테고리/목록 — 스타일 칩·정렬 UI
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&style=backpacking
+- **증상:** 백패킹 스타일 칩 클릭 시 실제 정렬은 weight_min(가벼운순)으로 바뀌지만, 정렬 드롭다운은 '기본(주력지표)'으로 표시. 사용자가 정렬 기준이 변경됐음을 인지할 수 없음.
+- **원인:** `applyStyleSort`가 `STATE.sortKey = 'spec:weight_min'`으로 세팅하지만 `syncFilterUI`가 스타일 정렬 반영 후 호출되지 않아 셀렉트 UI 미갱신. 정렬 value가 option에 없으면 드롭다운이 '기본'처럼 보임.
+- **재현:** `?cat=sleeping-bag` 접속(기본 정렬≠weight_min) → 백패킹 칩 클릭 → 목록 재정렬됨, 드롭다운은 '기본' 유지
+
 ### [M-100] 페르소나 카드 '4인 가족'과 '오토/맥시멀' 동일 URL로 연결
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
 - **URL:** https://gear-forest.com/
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
 - **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
 - **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [L-84] 상품상세 페이지 `twitter:site` 메타태그 누락
+- **영역:** 상품상세 — SNS 메타
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** `twitter:card`·`twitter:title`·`twitter:image`는 있으나 `twitter:site`(@계정) 없음. Twitter/X 공유 카드에 사이트 계정이 표시되지 않음.
+- **재현:** 상세 페이지 → `document.querySelector('meta[name="twitter:site"]')` → null
+
+### [L-83] 상품상세 페이지 스크롤-투-탑 버튼 없음
+- **영역:** 상품상세
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 긴 스펙 테이블·관련 상품 섹션까지 스크롤 후 상단 복귀 수단이 없음. fixed position 스크롤-투-탑 버튼 미구현.
+- **재현:** 상세 페이지 → 맨 아래 스크롤 → 상단 이동 버튼 없음
+
+### [L-82] 비교 모달 '세트로 저장' 버튼 더블클릭 시 동일 세트 중복 저장
+- **영역:** 카테고리/목록 — 비교 모달
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** 비교 모달의 '세트로 저장' 버튼을 빠르게 더블클릭하면 동일 세트가 2개 저장됨.
+- **원인:** onclick 핸들러 진입 시 on-entry guard(플래그)가 없어 브라우저가 두 클릭 이벤트를 큐에 넣어 연속 실행 가능.
+- **재현:** 2~3개 제품 비교 선택 → 비교하기 → '세트로 저장' 빠른 더블클릭 → 마이페이지에 동일 세트 2개
 
 ### [L-81] 홈 검색 combobox `aria-label` / `aria-labelledby` 누락
 - **영역:** 홈/메인 — 전역 검색
@@ -1412,4 +1470,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (9순환)*
+*다음 회차: 검색 (9순환)*
