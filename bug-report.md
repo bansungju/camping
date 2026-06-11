@@ -55,10 +55,19 @@
 | 41 | 계정/로그인 (7순환) | 2026-06-11 | 6건 (H-23·L-39 중복 제외) |
 | 42 | 커뮤니티/소셜 (7순환) | 2026-06-11 | 4건 (L-32·L-10 중복 제외, H-35 엣지케이스 재현) |
 | 43 | 홈/메인 (8순환) | 2026-06-11 | 3건 (H-01 해소 확인, 기존 L-01·L-02·L-27·L-34·L-40·L-41·L-50 재확인·중복 제외) |
+| 44 | 카테고리/목록 (8순환) | 2026-06-11 | 5건 + M-68 보완 (M-08·L-35 재확인) |
+| 45 | 상품상세 (8순환) | 2026-06-11 | 6건 (L-52·L-54 중복 제외) |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
+
+### [H-39] 🔴 Google 로그인 후 비로그인 복귀 — Supabase Site URL이 `localhost:3000` 방치 (대시보드 설정)
+- **영역:** 계정/로그인 (Supabase Auth 설정)
+- **URL:** https://gear-forest.com/account.html
+- **증상:** "Google로 로그인" → 구글 인증까지는 정상 진행되나, 사이트로 돌아오면 **여전히 비로그인 상태**. 세션이 생성되지 않음.
+- **원인(2026-06-11, 라이브 진단):** Supabase Auth의 **Site URL이 기본값 `http://localhost:3000`으로 방치**됨 — `/auth/v1/callback`을 잘못된 code로 호출 시 `Location: http://localhost:3000?error=...`로 폴백되는 것으로 확인. OAuth 콜백이 최종 목적지를 Redirect URLs 허용목록과 대조하는데 apex `auth-callback.html`이 목록에 없으면 Site URL(localhost)로 폴백 → 코드 교환 페이지에 도달 못 해 세션 미생성. 코드(`SITE_BASE`=apex, redirectTo, handle_new_user 트리거)는 모두 정상 검증됨 — 순수 대시보드 설정 문제. (provider google=true, authorize→Google 302 정상, redirect_uri=supabase/callback 정상도 확인)
+- **⚠️ 해결(대시보드, 코드변경 불필요):** Supabase → **Authentication → URL Configuration** — ① **Site URL** = `https://gear-forest.com` ② **Redirect URLs**에 `https://gear-forest.com/**` 추가. 저장 후 재로그인 시 해소 예상. Google Cloud 측 redirect URI(`…supabase.co/auth/v1/callback`)는 authorize 정상 302로 보아 이미 정상.
 
 ### [H-38] 🔧 코드수정 완료·대시보드 적용 대기 — 커뮤니티 쓰기(글/댓글/좋아요/리뷰) 전면 차단 — rate-limit 트리거 42501
 - **영역:** 커뮤니티/소셜 — 작성 (백엔드)
@@ -89,6 +98,12 @@
 - **재현:** item/*.html 직접 접근 → 탭바 링크 클릭 → 404
 - **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
 - **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
+
+### [H-40] `sort` 파라미터 단독 URL 직접 접근 시 간헐적 리다이렉트 루프
+- **영역:** 카테고리/목록
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&sort=price_min
+- **증상:** `sa` 파라미터 없이 `sort`만 포함된 URL로 직접 접근 시 일부 환경에서 `ERR_TOO_MANY_REDIRECTS` 발생. 외부에서 공유된 정렬 URL이 사용자를 완전 차단할 수 있음. 재현은 타이밍 의존적(간헐적)이며 `sa=0`이 자동 추가될 때는 정상 로드됨.
+- **재현:** `category.html?cat=sleeping-bag&sort=price_min` 직접 접근 → 일부 환경에서 리다이렉트 루프
 
 ### [H-39] 홈 검색 Enter — 브랜드명 입력 시 브랜드 페이지 대신 단일 카테고리로 오이동
 - **영역:** 홈/메인 — 전역 검색 (`#homeq`)
@@ -272,6 +287,7 @@
 - **재현:** 카테고리 페이지 → "경량 우선" 클릭 → "저가 우선" 클릭 → 결과가 훨씬 적거나 빈 목록
 - **7순환 추가 확인:** 실제 재현 — 경량→저가 전환 시 결과 0/244개. 또한 동일 프리셋 재클릭 시 ON 상태에서 OFF 토글이 안 됨(URL에 누적된 파라미터 제거 불가).
 - **해결(2026-06-11):** ① `clearPresetFilters()`(무게range·가격range·cap 삭제)를 각 프리셋 적용 전에 호출 → 상호배타(누적 제거). ② 각 프리셋에 `isOn()` 판정 추가, `fn()`을 토글식으로(켜져 있으면 끄기) 변경 → 동일 프리셋 재클릭 시 OFF + URL 파라미터 제거. ③ 클릭 핸들러가 `isOn()` 상태 기반으로 `.on` 표시 동기화(초기 URL 복원 시 활성 강조 포함). 로컬 프리뷰 검증 — 경량ON(weight_min__max=1.1)→저가 전환 시 무게 제거·가격만(price__max), 경량 재클릭 시 필터·URL 모두 제거, `.on` 표시 정확, 콘솔 에러 0. [site/app.js](site/app.js)
+- **8순환 추가 확인:** `clearPresetFilters()`가 무게·가격·cap만 삭제하고 `comfort_temp__max`·`brands` URL 파라미터는 삭제하지 않음. 다른 필터를 함께 설정한 상태에서 프리셋 전환 시 temperature/brand 필터가 잔존하여 여전히 누적됨. → M-89 참조.
 
 ### [M-77] ✅ 해결완료 — 카드 `role="button"`에 `aria-label` 없음 — 스크린리더 상품명 미읽기
 - **영역:** 카테고리/목록 — 상품 카드
@@ -792,6 +808,12 @@
 - **증상:** 쿠팡 파트너스(AF6034597) 제휴 링크를 포함한 서비스에서 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다" 문구 또는 동등 공시가 전혀 없음. 쿠팡 파트너스 운영정책·공정거래위원회 추천·보증 고시상 의무 사항.
 - **재현:** 사이트 전체 푸터·상품 카드·상세 모달 어디에도 파트너스 공시 문구 없음
 
+### [M-89] 프리셋 전환 시 `comfort_temp`·`brands` URL 파라미터 미초기화 — M-68 미해결 잔여
+- **영역:** 카테고리/목록 — 필터바 빠른 설정
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** M-68 수정으로 무게·가격·cap은 `clearPresetFilters()`로 초기화되지만, `comfort_temp__max`·`brands` URL 파라미터는 삭제 대상에 포함되지 않아 해당 필터를 설정한 채 프리셋 전환 시 여전히 누적됨. 또한 프리셋 버튼 클릭 후 `.on` 클래스가 부여되지 않아 어떤 프리셋이 활성화됐는지 시각적으로 알 수 없음.
+- **재현:** 내한온도·브랜드 필터 설정 후 프리셋 클릭 → URL에 `comfort_temp__max`·`brands` 잔존, 버튼에 `.on` 없음
+
 ---
 
 ## 🟢 Low
@@ -970,6 +992,24 @@
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `authorBlock()` 함수가 날짜를 `<span>${timeAgo(iso)}</span>` 형태로 렌더링. `<time datetime="ISO-8601">` 요소가 아니어서 스크린리더의 기계가독 날짜 파악 불가, 검색엔진의 날짜 메타데이터 인식 불가. M-10(날짜 포맷 불일치)과 연관되나 시맨틱 마크업 누락은 별도 문제.
 - **재현:** 커뮤니티 피드 HTML 소스 확인 → `<span>3일 전</span>` 형태, `<time>` 요소 없음
+
+### [L-68] 무게 슬라이더 URL 파라미터 부동소수점 오류 — `2015.0000000000002` 등 삽입
+- **영역:** 카테고리/목록 — 무게 필터 슬라이더
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&weight_min__max=2015.0000000000002
+- **증상:** 무게 슬라이더를 2.0kg로 설정하면 URL에 `weight_min__max=2015.0000000000002` 같은 부동소수점 오류값이 삽입됨. kg→g 변환(×1000) 시 JavaScript 부동소수점 연산 오류. 가격(정수)·온도(raw float)는 정상.
+- **재현:** 카테고리 페이지 → 최소무게 슬라이더 이동 → URL 파라미터 확인
+
+### [L-69] 정렬·브랜드 `<select>` 요소에 `aria-label` 없음
+- **영역:** 카테고리/목록 — 필터바
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** `[data-sort]` 정렬 선택과 `[data-brandsel]` 브랜드 추가 select 모두 `aria-label`·`aria-labelledby`·`id` 없음. 스크린리더가 "콤보박스" 이상의 컨텍스트를 읽지 못함.
+- **재현:** DOM 검사 → `select[data-sort]`, `select[data-brandsel]` aria-label null 확인
+
+### [L-70] 범위 슬라이더 `<input type="range">` `aria-label`·`aria-valuetext` 없음
+- **영역:** 카테고리/목록 — 필터 슬라이더
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** `.dsl-input` range input 전체(가격·무게·온도·충전량 min/max 8개)에 `aria-label`과 `aria-valuetext` 없음. 스크린리더가 어떤 필터의 min/max인지 알 수 없고 단위 없는 숫자만 읽힘.
+- **재현:** DOM 검사 → `input[type="range"].dsl-input` 8개 모두 aria-label null
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1224,4 +1264,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (8순환)*
+*다음 회차: 상품상세 (8순환)*
