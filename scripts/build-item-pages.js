@@ -21,7 +21,8 @@ const CSS_V = _assetV("style.css");
 const CAT_LABELS = {
   "backpacking-tent": "백패킹 텐트",
   "auto-tent": "오토캠핑 텐트",
-  "other-tent": "기타 텐트",
+  "shelter": "쉘터",
+  "misc": "기타용품",
   "tarp": "타프",
   "sleeping-bag": "침낭",
   "mat": "매트",

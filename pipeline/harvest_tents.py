@@ -67,11 +67,13 @@ def parse_results(html):
 
 def classify(tags, name):
     t = " ".join(tags) + " " + name
+    if any(x in t for x in ("TPU창", "샤워", "윈드 스크린", "윈드스크린")):
+        return "기타용품"        # 텐트 아닌 부속
+    if any(x in t for x in ("그늘막", "쉐이드", "선쉐", "어반쉐")):
+        return "쉘터"            # 그늘막/선쉐이드
     if "백패킹" in t:
         return "백패킹텐트"
-    if any(x in t for x in ("오토캠핑", "거실형", "리빙쉘", "차박")):
-        return "오토캠핑텐트"
-    return "기타텐트"   # 그늘막/팝업/돔/터널 등 미분류
+    return "오토캠핑텐트"   # 오토캠핑/편의형/대형 등 미분류 기본값
 
 
 PART_WORDS = ("이너용", "루프플라이", "야전침대용품", "풋프린트", "그라운드시트",

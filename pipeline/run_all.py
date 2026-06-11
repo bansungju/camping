@@ -35,7 +35,7 @@ import pipeline as P
 # 각 블록: 수확 검색어 / 완비 핵심지표(core) / 인원 필요여부
 CATEGORIES = {
     "텐트": {
-        "subcats": ["백패킹텐트", "오토캠핑텐트", "기타텐트"],
+        "subcats": ["백패킹텐트", "오토캠핑텐트", "쉘터", "기타용품"],
         "queries": ["백패킹텐트", "텐트", "초경량텐트", "돔텐트"],
         "harvester": "harvest_tents.py",          # 텐트 전용(하위분류 자동)
         "core": ["weight_min", "floor_area"],     # 내수압=일부 브랜드 미공개(힐레베르그/콜맨)→선택, 별점엔 반영

@@ -9,6 +9,8 @@
   // 레거시 클린 URL 호환: /category/{slug}[?필터] → /category.html?cat={slug}[&필터]
   (function () {
     var p = location.pathname;
+    // 해체된 기타텐트(other-tent): 제품이 백패킹/오토캠핑/쉘터/기타용품으로 분산 → 홈으로
+    if (p.indexOf("other-tent") !== -1) { location.replace("/index.html"); return; }
     var m = p.match(/^\/category\/([a-z0-9-]+)\/?$/);
     if (m) {
       var extra = location.search ? location.search.replace(/^\?/, "&") : "";

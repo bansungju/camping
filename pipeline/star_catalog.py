@@ -23,7 +23,7 @@ DIRECTION = {
 WEIGHTS = {
     "백패킹텐트": {"weight_min": 2, "water_head": 1.5, "floor_area": 1.5, "price": 1.5},
     "오토캠핑텐트": {"floor_area": 2, "water_head": 1.5, "weight_min": 0.5, "price": 1.5},
-    "기타텐트": {"weight_min": 1.5, "water_head": 1.5, "floor_area": 1.5, "price": 1.5},
+    "쉘터": {"floor_area": 2, "water_head": 1.5, "weight_min": 0.5, "price": 1.5},
     "침낭": {"comfort_temp": 2, "weight_min": 1.5, "fill_weight": 1, "price": 1.5},
     "매트": {"r_value": 2, "thickness": 1, "weight_min": 1.5, "price": 1.5},
     "의자": {"weight_min": 2, "max_load": 1.5, "price": 1.5},
