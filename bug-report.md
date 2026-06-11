@@ -54,10 +54,19 @@
 | 40 | 검색 (7순환) | 2026-06-11 | 6건 (L-31 재확인, M-25 해소 확인) |
 | 41 | 계정/로그인 (7순환) | 2026-06-11 | 6건 (H-23·L-39 중복 제외) |
 | 42 | 커뮤니티/소셜 (7순환) | 2026-06-11 | 4건 (L-32·L-10 중복 제외, H-35 엣지케이스 재현) |
+| 43 | 홈/메인 (8순환) | 2026-06-11 | 3건 (H-01 해소 확인, 기존 L-01·L-02·L-27·L-34·L-40·L-41·L-50 재확인·중복 제외) |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
+
+### [H-38] 🔧 코드수정 완료·대시보드 적용 대기 — 커뮤니티 쓰기(글/댓글/좋아요/리뷰) 전면 차단 — rate-limit 트리거 42501
+- **영역:** 커뮤니티/소셜 — 작성 (백엔드)
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 로그인 사용자가 글·댓글·좋아요·리뷰를 작성하면 DB에서 **42501 permission denied**로 실패. 라이브에 공개 게시글이 0건인 것과 정합(사실상 아무도 쓸 수 없는 상태).
+- **원인(2026-06-11, 코드감사):** `reviews/comments/likes/posts` INSERT 시 BEFORE INSERT 트리거 `check_{review,comment,like,post}_rate_limit`(002)가 `INSERT INTO rate_limit_log`를 실행하는데, ① 004가 rate_limit_log에 **의도적으로 GRANT를 주지 않음**(주석: "트리거/service_role 전용, 우회 방지") → authenticated는 직접 INSERT 불가, ② 그런데 트리거 함수가 **SECURITY DEFINER가 아님** → 호출자 권한으로 실행되어 42501 → 작성 트랜잭션 전체 abort. 설계 의도(트리거 전용 기록)와 구현(비-DEFINER)의 모순. [016]과 동일 부류의 누락이나 영향이 훨씬 큼(쓰기 전면 차단).
+- **수정:** 신규 `017_rate_limit_security_definer.sql` — 4개 rate-limit 트리거 함수를 `SECURITY DEFINER + SET search_path=public`으로 재정의(트리거 유지·멱등). 소유자 권한으로 rate_limit_log 기록 → 사용자 직접 GRANT 없이 동작, 우회 방지 의도 유지. [supabase/migrations/017_rate_limit_security_definer.sql](supabase/migrations/017_rate_limit_security_definer.sql)
+- **⚠️ 남은 작업(대시보드 1회 적용·우선순위 높음):** SQL Editor에서 `017` 실행해야 라이브 커뮤니티 쓰기가 열림. (같은 부류 `016`도 함께 적용 권장 — APPLY.md 6·8단계)
 
 ### [H-36] ✅ 해결완료 — Supabase `posts` API 401 — 비로그인 커뮤니티 피드 완전 불능
 - **영역:** 커뮤니티/소셜
@@ -80,6 +89,13 @@
 - **재현:** item/*.html 직접 접근 → 탭바 링크 클릭 → 404
 - **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
 - **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
+
+### [H-39] 홈 검색 Enter — 브랜드명 입력 시 브랜드 페이지 대신 단일 카테고리로 오이동
+- **영역:** 홈/메인 — 전역 검색 (`#homeq`)
+- **URL:** https://gear-forest.com/
+- **증상:** "헬리녹스" 같은 브랜드명 단독 입력 후 Enter 시 `brand.html?b=헬리녹스`가 아닌 `category.html?cat=backpacking-tent&q=헬리녹스`로 이동. 브랜드가 여러 카테고리에 걸쳐 있을 때 인덱스에서 가장 먼저 매칭된 모델의 카테고리만 표시되어 나머지 카테고리(침낭·의자 등) 제품이 누락됨.
+- **원인:** `app.js` — `idx.find()`로 모델 매치가 먼저 걸리면 브랜드 분기에 도달하지 않음. 브랜드명이 모델 인덱스에 포함된 항목이 있을 경우 카테고리 이동이 우선됨.
+- **재현:** 홈 검색창에 "헬리녹스" 입력 → Enter → `brand.html` 대신 `category.html?cat=backpacking-tent` 이동 확인
 
 ### [H-01] ✅ 해결완료(라이브 검증) — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **해결확인(2026-06-11):** 사용자가 `APPLY-NOW.sql`(008→013→015) 대시보드 1회 적용. 라이브 익명 검증 — `POST /rest/v1/rpc/get_hot_items` → **HTTP 200**(현재 `[]`는 구매클릭 로그 부재로 정상, 홈은 fallback 유지). click_events 테이블 생성됨(익명 select 401은 RLS "본인 클릭만" 의도된 차단). 한 트랜잭션 COMMIT 성공 = 013·008·015 동시 반영 확정.
@@ -762,6 +778,18 @@
 - **증상:** 비로그인 상태에서 `open-log=1` 진입 후 `account.html`로 이동해 로그인하면, 커뮤니티 JS 컨텍스트가 소멸되고 복귀 시 파라미터가 없어 글쓰기 폼이 열리지 않음. H-35는 "해결완료"로 기록되어 있으나, 비로그인→로그인 경유 경로는 여전히 단절됨. 로그인 후 리다이렉트 URL에 `?open-log=1` 파라미터를 포함해야 복원 가능.
 - **재현:** 비로그인 → `community.html?open-log=1` → 로그인 클릭 → `account.html` → 로그인 완료 → 커뮤니티 복귀 → 글쓰기 폼 미열림
 
+### [M-87] "이번 주 인기" API 200 응답임에도 항상 fallback — 최소 클릭 임계값 미충족
+- **영역:** 홈/메인 — `#hot-section`
+- **URL:** https://gear-forest.com/
+- **증상:** `get_hot_items` RPC가 HTTP 200을 반환하지만, `app.js`의 필터 조건(`items.length >= 2`, 카테고리별 최소 2회 클릭 필요)을 충족하는 카테고리가 없어 실제 랭킹 대신 하드코딩 fallback chips(백패킹텐트·침낭·버너·랜턴)만 노출됨. API가 살아있음에도 저트래픽 단계에서는 항상 fallback을 보이는 구조.
+- **재현:** 홈 접속 → DevTools Network → `get_hot_items` 200 확인 → `#hot-list`에 `.hot-rank-row` 없고 `.hot-chip` 4개만 존재
+
+### [M-88] 쿠팡 파트너스 파트너 공시 미표시 — 제휴 의무 미이행
+- **영역:** 홈/메인 — 푸터 (전체 페이지)
+- **URL:** https://gear-forest.com/
+- **증상:** 쿠팡 파트너스(AF6034597) 제휴 링크를 포함한 서비스에서 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다" 문구 또는 동등 공시가 전혀 없음. 쿠팡 파트너스 운영정책·공정거래위원회 추천·보증 고시상 의무 사항.
+- **재현:** 사이트 전체 푸터·상품 카드·상세 모달 어디에도 파트너스 공시 문구 없음
+
 ---
 
 ## 🟢 Low
@@ -1194,4 +1222,4 @@
 
 ---
 
-*다음 회차: 홈/메인 (8순환)*
+*다음 회차: 카테고리/목록 (8순환)*

@@ -57,6 +57,16 @@ SQL Editor에서 **`migrations/016_trigger_security_definer.sql`** 실행(멱등
 
 > 015를 먼저 적용했어도 016이 `update_comment_count`를 DEFINER 버전으로 최종 대체하므로 무방.
 
+## 8. 🔴 커뮤니티 쓰기 차단 해소 — rate-limit 트리거 DEFINER (H-38, 우선순위 높음)
+글/댓글/좋아요/리뷰 작성 시 BEFORE 트리거가 `rate_limit_log`에 기록하는데, 004가
+그 테이블에 GRANT를 의도적으로 안 주는 반면 트리거 함수는 SECURITY DEFINER가 아니라
+**42501로 작성이 전면 실패**(라이브 공개글 0건의 원인). SQL Editor에서
+**`migrations/017_rate_limit_security_definer.sql`** 실행(멱등): 4개 rate-limit 트리거를
+`SECURITY DEFINER`로 교체 → 소유자 권한으로 기록, 사용자 직접 grant 없이 동작.
+
+> 016(이력/카운트/숨김)과 017(쓰기 차단)은 같은 부류(트리거 SECURITY DEFINER 누락).
+> **둘 다 적용 권장.** 둘 다 CREATE OR REPLACE라 재실행 안전.
+
 ## 7. (선택) 세트 원격 동기화 활성화 (M-71/M-63)
 앱은 `gear_sets` 테이블로 세트를 기기간 동기화하려 하지만 **테이블이 라이브 미적용**이라
 조용히 실패함(로컬스토리지에만 저장). 또 `006`은 테이블·RLS만 있고 **GRANT가 없어**
