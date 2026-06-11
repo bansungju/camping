@@ -2196,7 +2196,11 @@ function renderAccount() {
     }
     bulkBtn.textContent = `🎒 찜한 ${wishes.length}개 전체 → 새 세트로 저장`;
     bulkBtn.onclick = () => {
-      const setName = `찜 목록 세트 ${new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}`;
+      const dateStr = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
+      const base = `찜 목록 세트 ${dateStr}`;
+      const all0 = getSets();
+      const dup = all0.filter(s => s.title && s.title.startsWith(base)).length;
+      const setName = dup ? `${base} (${dup + 1})` : base;
       const setItems = wishes.map(x => ({ b: x.b, m: x.m, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null }));
       const s = { id: Date.now().toString(36), title: setName, style: "찜", items: setItems, created_at: new Date().toISOString() };
       const all = getSets(); all.unshift(s); saveSets(all);
