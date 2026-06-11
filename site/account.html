@@ -90,7 +90,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=2f07ece7"></script>
+<script src="app.js?v=a2cba818"></script>
 <script>
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
@@ -114,7 +114,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=17f2ba74'
+} from './supabaseClient.js?v=459d55e9'
 
 const section = document.getElementById('auth-section')
 
@@ -339,7 +339,10 @@ function renderProfile(profile) {
 
 // URL에 auth_error 파라미터 있으면 에러 안내
 const params = new URLSearchParams(location.search)
-if (params.get('auth_error')) {
+const authErrorParam = params.get('auth_error')
+if (authErrorParam) {
+  const errDetail = params.get('err') || ''
+  if (errDetail) console.error('[auth] exchangeCodeForSession 실패:', decodeURIComponent(errDetail))
   section.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:24px;font-size:14px">로그인 중 오류가 발생했습니다. 다시 시도해주세요.</p>`
   setTimeout(() => renderLogin(), 2000)
 }
@@ -348,7 +351,9 @@ await initAuth(async (user, event) => {
   window._accUser = user || null
   if (!user) {
     setSyncHint(false)
-    renderLogin()
+    // auth_error 표시 중엔 initAuth가 에러 메시지를 덮어쓰지 않도록 보호(M-96).
+    // 2초 setTimeout이 renderLogin()을 호출하므로 여기선 건너뜀.
+    if (!authErrorParam) renderLogin()
     if (typeof renderAccount === 'function') renderAccount()
     return
   }
