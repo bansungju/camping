@@ -41,10 +41,17 @@
 | 28 | 검색 (5순환) | 2026-06-11 | 2건 (Low 4건 제외) |
 | 29 | 계정/로그인 (5순환) | 2026-06-11 | 2건 (Medium 1건·Low 2건 별도) |
 | 30 | 커뮤니티/소셜 (5순환) | 2026-06-11 | 4건 (Low 1건 종속 제외) |
+| 31 | 홈/메인 (6순환) | 2026-06-11 | 4건 |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
+
+### [H-36] Supabase `posts` API 401 — 비로그인 커뮤니티 피드 완전 불능
+- **영역:** 커뮤니티/소셜
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 비로그인 상태에서 `/rest/v1/posts?select=*%2Cauthor:profiles...` 요청이 401 Unauthorized 반환. 공개 피드(누구나 읽어야 하는 콘텐츠)가 완전히 로드되지 않음. Supabase anon key RLS 설정 불비 또는 GRANT 미적용이 원인(소셜 백엔드 state: migration 004 GRANT 수동적용 필요).
+- **재현:** 비로그인 → community.html → 콘솔 확인 → 401 @ supabase.co/rest/v1/posts
 
 ### [H-01] 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
@@ -205,6 +212,18 @@
 
 ## 🟡 Medium
 - **해결(2026-06-11, 환경/라우팅 변화로 해소):** 코드가 이미 `category.html?cat=` 방식으로 전환 완료 — `site/app.js`·HTML 어디에도 구 clean URL(`category/{슬러그}`) 링크 잔존 없음(grep 확인). 더 이상 재현되지 않음.
+
+### [M-66] 페르소나 카드 `sort`/`sa` URL 파라미터 소실 — 공유 URL 정렬 상태 미복원
+- **영역:** 홈/메인 — 내 캠핑 스타일 섹션
+- **URL:** https://gear-forest.com/
+- **증상:** 홈 페르소나 카드(백패커·미니멀리스트 등) 클릭 시 `sort`·`sa` 파라미터가 URL에 포함되어야 하나, `serializeState()`가 해당 sort가 해당 카테고리의 기본 정렬값과 동일하면 URL에서 제외함(app.js). 결과: `?cat=backpacking-tent&cap=2`처럼 sort 없는 URL로 이동 → 공유 링크나 북마크 시 정렬 상태 미복원.
+- **재현:** 홈 → '🎒 백패커' 카드 클릭 → 주소창 URL에서 sort/sa 파라미터 없음 확인
+
+### [M-67] www. 서브도메인 DNS 미해석 — cdn-cgi/rum·이미지 요청 ERR_NAME_NOT_RESOLVED
+- **영역:** 홈/메인 (네트워크/런타임)
+- **URL:** https://gear-forest.com/
+- **증상:** 페이지 로드 시 `https://www.gear-forest.com/cdn-cgi/rum?` 및 `www.gear-forest.com/images/*.jpg` 요청이 `net::ERR_NAME_NOT_RESOLVED`로 반복 실패. 현재 정식 도메인은 apex(gear-forest.com)이며 www는 301 리다이렉트인데, 어떤 JS 또는 잔류 SW가 www. URL로 요청을 생성 중. Cloudflare Analytics 데이터 수집 불가, 이미지 로드 실패.
+- **재현:** 홈 접속 → 콘솔 → `ERR_NAME_NOT_RESOLVED @ www.gear-forest.com/...` 다수 확인
 
 ### [M-46] `role="dialog"`에 `aria-labelledby`/`aria-label` 없음 — 스크린리더 이름 불명
 - **영역:** 상품상세 모달 (접근성)
@@ -638,11 +657,13 @@
 - **증상:** `trg_comment_count` 트리거는 `AFTER INSERT OR DELETE`에만 반응하나, 앱이 댓글 삭제를 `deleted_at = now()`로 UPDATE 처리. UPDATE는 트리거가 감지 못해 `comment_count`가 감소하지 않고 누적 증가. DB 정합성 오류.
 - **재현:** 로그인 → 댓글 작성 → ✕로 삭제 → 게시글 카드 💬 카운트 확인 — 감소 없음
 
-### [H-35] `community.html?open-log=1&set=N` 파라미터 처리 누락 — 원클릭 연결 기능 미동작
+### [H-35] ✅ 해결완료 — `community.html?open-log=1&set=N` 파라미터 처리 누락 — 원클릭 연결 기능 미동작
 - **영역:** 커뮤니티/소셜 — 글쓰기 연동
 - **URL:** https://www.gear-forest.com/community.html?open-log=1&set=0
 - **증상:** account.html 세트 상세 → "커뮤니티에 공유" 버튼이 `community.html?open-log=1&set=N`으로 이동시키지만, community.html DOMContentLoaded에서 `open-log` 파라미터를 읽는 코드가 전혀 없어 글쓰기 모달이 자동으로 열리지 않음. 의도된 원클릭 연결 기능(커밋 a95b92a)이 절반만 구현된 상태.
 - **재현:** account.html → 세트 상세 → "커뮤니티에 공유" 클릭 → 글쓰기 모달 미오픈
+- **원인(2026-06-11):** community.html `route()`는 해시(`#new`)만 처리하고 `open-log`/`set` 쿼리는 미처리. 인증이 비동기 확정(초기 `canParticipate()=false`)이라 단순 init 처리로는 비로그인 분기(renderCompose가 해시 클리어)에 막힘.
+- **해결:** community.html에 `open-log` 처리 추가 — 진입 시 파라미터 캡처+URL 정리(replaceState로 새로고침 중복 방지), `tryOpenLog()`를 **initAuth 콜백(인증 확정 후)** 에서 호출해 `canParticipate()` 시 `renderCompose()` 자동 오픈. `set=N`이면 localStorage `gear_sets[N]`의 장비를 제목·본문에 미리 채움(글자수 카운터 갱신). 로컬 프리뷰 검증 — `?open-log=1&set=0` 진입 시 URL 정리·무크래시, 비로그인 시 컴포즈 미오픈(가드 정상), prefill 포맷 정확("백패킹 1박 공유" / "· 헬리녹스 체어원 / · 니모 호넷 1P ×2"), 콘솔 에러 없음. [site/community.html](site/community.html)
 
 ### [H-33] ✅ 해결완료 — 세트 공유 링크 수신 모달 완전 미동작 — dead code
 - **영역:** 계정/로그인 — 세트 공유
@@ -662,6 +683,12 @@
 - **영역:** privacy.html (정보 정확성)
 - **URL:** https://www.gear-forest.com/privacy.html
 - **증상:** privacy.html에 카카오 로그인 관련 개인정보 처리 항목이 기재되어 있으나 실제 코드는 Google OAuth만 구현됨. 개인정보 처리방침이 실제 처리 현황과 불일치.
+
+### [L-43] 데스크톱에서 footer에 불필요한 `padding-bottom: 64px` 잔류
+- **영역:** 홈/메인 (전체 페이지 공통)
+- **URL:** https://gear-forest.com/
+- **증상:** `insertBottomNav()`가 화면 너비 조건 없이 항상 `<footer>`에 `style="padding-bottom:64px"` 인라인 주입. 데스크톱(≥768px)에서 `.bottom-nav`는 CSS로 `display:none`이나 footer padding은 그대로 남아 페이지 하단에 불필요한 64px 공백 발생.
+- **재현:** 1280px 뷰포트 → footer 요소 → `style.paddingBottom === "64px"` 확인
 
 ### [L-19] ~~계정 삭제/탈퇴 기능 미존재~~ → [H-23]으로 승격
 - **영역:** 계정/로그인
@@ -871,4 +898,4 @@
 
 ---
 
-*다음 회차: 홈/메인 (6순환)*
+*다음 회차: 카테고리/목록 (6순환)*

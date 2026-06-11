@@ -385,6 +385,37 @@ function route() {
 
 window.addEventListener('hashchange', route)
 
+// ── 원클릭 로그 작성 (account 세트 → "커뮤니티에 공유") (H-35) ───────────────
+// community.html?open-log=1&set=N 으로 진입하면 글쓰기 폼을 자동으로 열고,
+// set=N 이 있으면 해당 세트(localStorage gear_sets[N])의 장비를 본문에 미리 채운다.
+// 인증이 비동기로 확정되므로(초기엔 canParticipate=false) auth 콜백에서도 재시도한다.
+const _qp = new URLSearchParams(location.search)
+const _openLog = _qp.get('open-log') === '1'
+const _openLogSet = _openLog ? _qp.get('set') : null
+if (_openLog) history.replaceState(null, '', location.pathname)  // 새로고침 중복 오픈 방지
+let _openLogDone = false
+function tryOpenLog() {
+  if (_openLogDone || !_openLog) return
+  if (!canParticipate()) return            // 로그인+닉네임 확정 전이면 보류(콜백에서 재시도)
+  _openLogDone = true
+  location.hash = ''                        // 해시 라우팅과 충돌 방지
+  renderCompose()
+  if (_openLogSet != null && typeof getSets === 'function') {
+    const set = getSets()[+_openLogSet]
+    if (set) {
+      const t = document.getElementById('cm-t')
+      const b = document.getElementById('cm-b')
+      if (t && !t.value) t.value = `${set.title || '내 세트'} 공유`
+      if (b) {
+        const lines = (set.items || []).map(x =>
+          `· ${`${x.b || ''} ${x.m || ''}`.trim()}${x.qty > 1 ? ` ×${x.qty}` : ''}`).join('\n')
+        b.value = `[${set.title || '세트'}] 장비 구성\n${lines}\n\n`
+        b.dispatchEvent(new Event('input'))   // 글자수 카운터 갱신
+      }
+    }
+  }
+}
+
 // 피드/상세는 공개 데이터라 인증을 기다릴 필요가 없다 → 즉시 1차 렌더.
 // (supabase-js 로딩·getSession 완료를 기다리지 않으므로 "불러오는 중"이 길게 보이지 않음)
 route()
@@ -401,6 +432,7 @@ await initAuth(async (user) => {
     me = null; myProfileNick = null
   }
   if (before !== canParticipate()) route()
+  tryOpenLog()   // 인증 확정 후 원클릭 로그 작성 처리 (H-35)
 })
 </script>
 </body>
