@@ -51,6 +51,7 @@
 | 37 | 홈/메인 (7순환) | 2026-06-11 | 4건 (L-14 중복·인프라·설계 제외) |
 | 38 | 카테고리/목록 (7순환) | 2026-06-11 | 3건 + M-68 보완 (H-01·M-69 중복 제외) |
 | 39 | 상품상세 (7순환) | 2026-06-11 | 8건 (중복 제외) |
+| 40 | 검색 (7순환) | 2026-06-11 | 6건 (L-31 재확인, M-25 해소 확인) |
 
 ---
 
@@ -78,7 +79,8 @@
 - **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
 - **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [H-01] 🔧 코드수정 완료·대시보드 적용 대기 — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
+### [H-01] ✅ 해결완료(라이브 검증) — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
+- **해결확인(2026-06-11):** 사용자가 `APPLY-NOW.sql`(008→013→015) 대시보드 1회 적용. 라이브 익명 검증 — `POST /rest/v1/rpc/get_hot_items` → **HTTP 200**(현재 `[]`는 구매클릭 로그 부재로 정상, 홈은 fallback 유지). click_events 테이블 생성됨(익명 select 401은 RLS "본인 클릭만" 의도된 차단). 한 트랜잭션 COMMIT 성공 = 013·008·015 동시 반영 확정.
 - **영역:** 홈/메인
 - **URL:** https://www.gear-forest.com/
 - **증상:** 페이지 로드 시 Supabase RPC `get_hot_items` 호출이 404 반환. '이번 주 인기' 섹션이 실제 데이터 대신 하드코딩된 4개 항목(백패킹텐트, 침낭, 버너, 랜턴)을 표시. 콘솔에 에러 노출.
@@ -711,6 +713,24 @@
 - **증상:** 비교 모달(`.pmbox`) 내에 해당 상품 상세 페이지(`/item/{cat}/item-N.html`)로 이동하는 링크가 없음. 스펙 확인 후 상세 페이지 탐색이 불가능하여 모달을 닫고 카드 재탐색해야 함.
 - **재현:** 카드 클릭 → 비교 모달 → 상세 링크 없음 확인
 
+### [M-80] 홈 검색창(`#homeq`) 결과 변화 `aria-live` 누락 — 스크린리더 결과 고지 불가
+- **영역:** 검색 — 홈 전역 검색
+- **URL:** https://gear-forest.com/
+- **증상:** `#homeres` listbox 컨테이너에 `aria-live` 속성이 없음. 검색어 입력 후 자동완성 결과가 나타나거나 "결과 없음" 메시지가 표시돼도 스크린리더가 이를 고지하지 않음. WAI-ARIA combobox 패턴에서는 결과 변화 시 `aria-live="polite"` 또는 별도 status region 필요.
+- **재현:** VoiceOver 활성화 → 검색창 입력 → 결과 드롭다운 열려도 스크린리더 무반응
+
+### [M-81] 카테고리 검색창(`#q`) 접근성 속성 완전 누락 — role·aria-label·aria-autocomplete 없음
+- **영역:** 검색 — 카테고리 내 검색
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 홈 `#homeq`는 JS로 `role="combobox"`, `aria-autocomplete="list"`, `aria-controls`, `aria-expanded` 등을 부여하나, 카테고리 `#q`는 이 중 어느 것도 없음. 실시간 필터링되는 결과 수 변화도 live region으로 고지되지 않아 스크린리더 사용자가 결과 상태를 파악 불가.
+- **재현:** `#q` 접근성 검사: `document.querySelector('#q').getAttribute('role')` → null
+
+### [M-82] 홈 검색 `?q=` URL 파라미터 복원 미지원 — 공유 링크 접근 시 검색창 비어있음
+- **영역:** 검색 — 홈 전역 검색
+- **URL:** https://gear-forest.com/?q=헬리녹스
+- **증상:** 카테고리 페이지는 `?q=` 파라미터로 검색어를 복원·필터를 적용하지만, 홈페이지(`index.html`)는 `?q=` 파라미터를 읽는 코드가 없어 `?q=헬리녹스`로 접근해도 입력창이 비어 있고 드롭다운이 열리지 않음. 검색 결과 URL 공유 및 뒤로가기 복원 불가.
+- **재현:** `https://gear-forest.com/?q=헬리녹스` 직접 접속 → `#homeq` 비어있음 확인
+
 ---
 
 ## 🟢 Low
@@ -759,7 +779,8 @@
 - **원인(2026-06-11):** 모바일 미디어쿼리에서 `.pmbox{max-height:none}`가 base의 `max-height:90vh`를 덮어씀. `.pmodal`이 `position:fixed`라 모달이 뷰포트를 넘쳐도 내부 스크롤이 안 생겨 하단 버튼이 화면 밖으로 잘림.
 - **해결:** 모바일 `.pmbox`의 `max-height:none`을 `calc(100dvh - 88px - env(safe-area-inset-bottom))`로 교체(상14+하72 패딩 제외, vh 폴백 동반). `overflow-y:auto`와 결합해 모달이 뷰포트 안에 갇히고 내부 스크롤로 하단 버튼 도달 가능. 로컬 프리뷰 검증(375×812) — 모달 height 724px·뷰포트 내 fit, 내부 스크롤(scrollHeight 841>client 724), 스크롤 시 하단 '오류 신고' 버튼 완전 노출·콘솔 에러 없음. [site/style.css](site/style.css)
 
-### [H-34] 🔧 코드수정 완료·대시보드 적용 대기 — 커뮤니티 댓글 소프트삭제 → `comment_count` 불감소 (DB 트리거 미스매치)
+### [H-34] ✅ 해결완료(라이브 적용) — 커뮤니티 댓글 소프트삭제 → `comment_count` 불감소 (DB 트리거 미스매치)
+- **해결확인(2026-06-11):** `APPLY-NOW.sql` 한 트랜잭션에 015 포함, COMMIT 성공(동일 txn의 get_hot_items가 라이브 200) = 트리거 `trg_comment_count`가 `UPDATE OF deleted_at`까지 반영하도록 교체됨 + 기존 드리프트 재집계 완료. 이후 댓글 소프트삭제 시 💬 카운트 정상 감소.
 - **영역:** 커뮤니티/소셜 — 댓글
 - **증상:** `trg_comment_count` 트리거는 `AFTER INSERT OR DELETE`에만 반응하나, 앱이 댓글 삭제를 `deleted_at = now()`로 UPDATE 처리. UPDATE는 트리거가 감지 못해 `comment_count`가 감소하지 않고 누적 증가. DB 정합성 오류.
 - **재현:** 로그인 → 댓글 작성 → ✕로 삭제 → 게시글 카드 💬 카운트 확인 — 감소 없음
@@ -834,6 +855,24 @@
 ### [L-58] 비교 바(`#cmp-bar`) `aria-live` 없음 — 스크린리더 비교 추가 알림 불가
 - **영역:** 카테고리/목록 — 비교 바
 - **증상:** 상품 비교 선택 시 화면 하단에 비교 바가 나타나나 `aria-live="polite"` 속성 없어 스크린리더가 상태 변화를 고지하지 않음.
+
+### [L-59] 카테고리 검색창 IME `isComposing` 가드 없음 — 한글 조합 중 즉시 필터링
+- **영역:** 검색 — 카테고리 내 검색
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** `#q` oninput 핸들러에 `e.isComposing` 가드가 없어 한글 입력 중 "ㅎ"→"헤"→"헬" 각 조합 단계마다 필터가 즉시 실행되어 결과가 깜빡임. 홈 `#homeq`는 M-49 수정으로 가드가 이미 적용됨.
+- **재현:** 카테고리 검색창에 "헬리녹스" 천천히 타이핑 → 중간 조합 단계마다 카드 재필터링 확인
+
+### [L-60] 홈 검색 "결과 없음" div에 `role="option"` 없음 — listbox 내 메시지 스크린리더 미인식
+- **영역:** 검색 — 홈 전역 검색
+- **URL:** https://gear-forest.com/
+- **증상:** 결과 0건일 때 `#homeres`(role=listbox) 안에 삽입되는 "결과 없음" div에 `role="option"`이 없어 listbox 컨텍스트에서 스크린리더가 이를 항목으로 인식하지 않음. aria-live도 없어 외부 고지도 불가.
+- **재현:** 검색창에 "zzzznotexist" 입력 → `#homeres` 내부 div role 확인 → null
+
+### [L-61] 홈 검색 Enter 키 — 결과 없을 때 아무 피드백 없음
+- **영역:** 검색 — 홈 전역 검색
+- **URL:** https://gear-forest.com/
+- **증상:** 존재하지 않는 검색어 입력 후 Enter를 누르면 이동도, 흔들림 애니메이션도, 토스트 메시지도 없이 아무 반응이 없음. 사용자가 Enter가 처리됐는지 알 수 없음.
+- **재현:** 검색창에 "zzzznotexistxxx" 입력 → Enter → 반응 없음
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1088,4 +1127,4 @@
 
 ---
 
-*다음 회차: 검색 (7순환)*
+*다음 회차: 계정/로그인 (7순환)*
