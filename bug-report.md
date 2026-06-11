@@ -42,16 +42,19 @@
 | 29 | 계정/로그인 (5순환) | 2026-06-11 | 2건 (Medium 1건·Low 2건 별도) |
 | 30 | 커뮤니티/소셜 (5순환) | 2026-06-11 | 4건 (Low 1건 종속 제외) |
 | 31 | 홈/메인 (6순환) | 2026-06-11 | 4건 |
+| + | 사용자 직접 제보 | 2026-06-11 | 1건 |
+| 32 | 카테고리/목록 (6순환) | 2026-06-11 | 1건 (사용자 제보 포함, 추가 탐색 병행) |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
 
-### [H-36] Supabase `posts` API 401 — 비로그인 커뮤니티 피드 완전 불능
+### [H-36] ✅ 해결완료 — Supabase `posts` API 401 — 비로그인 커뮤니티 피드 완전 불능
 - **영역:** 커뮤니티/소셜
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 비로그인 상태에서 `/rest/v1/posts?select=*%2Cauthor:profiles...` 요청이 401 Unauthorized 반환. 공개 피드(누구나 읽어야 하는 콘텐츠)가 완전히 로드되지 않음. Supabase anon key RLS 설정 불비 또는 GRANT 미적용이 원인(소셜 백엔드 state: migration 004 GRANT 수동적용 필요).
 - **재현:** 비로그인 → community.html → 콘솔 확인 → 401 @ supabase.co/rest/v1/posts
+- **해결(2026-06-11, 백엔드 GRANT/RLS 적용으로 해소):** anon GRANT(migration 004)가 적용되어 401이 사라짐. 라이브 익명 검증 — `GET /rest/v1/posts`(단순 select)·`profiles`·앱 임베드 쿼리(`*,author:profiles!posts_user_id_fkey(...)`) 모두 **HTTP 200**(curl), 실브라우저 익명 community.html에서 동일 임베드 쿼리 `order=created_at.desc&limit=30` → **[200] OK**·콘솔 에러 0. RLS는 `posts_select_public`(anon, authenticated)로 공개 글 읽기 허용. 현재 `[]`는 401이 아니라 공개 게시글이 아직 없는 정상 빈 상태. (코드 변경 없음 — 백엔드 적용 후 재현 불가 확인) [supabase/migrations/004_grants_and_wishlist.sql](supabase/migrations/004_grants_and_wishlist.sql)
 
 ### [H-01] 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
@@ -212,6 +215,14 @@
 
 ## 🟡 Medium
 - **해결(2026-06-11, 환경/라우팅 변화로 해소):** 코드가 이미 `category.html?cat=` 방식으로 전환 완료 — `site/app.js`·HTML 어디에도 구 clean URL(`category/{슬러그}`) 링크 잔존 없음(grep 확인). 더 이상 재현되지 않음.
+
+### [M-68] "빠른 설정" 프리셋 전환 시 이전 필터 미초기화 — 필터 누적 AND 적용
+- **영역:** 카테고리/목록 — 필터바 빠른 설정
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag 등
+- **증상:** "빠른 설정"의 🪶경량 우선 클릭 후 💰저가 우선으로 전환 시, 경량 우선이 설정한 `STATE.range[weightKey]`가 초기화되지 않은 채 가격 필터(`STATE.range.price`)가 추가됨. 두 필터가 AND 누적 적용되어 결과가 비정상적으로 적어짐. 반대 방향(저가→경량)도 동일.
+- **제보:** 사용자 직접 제보
+- **원인:** 각 프리셋 `fn()`이 자신의 `STATE.range` 항목만 설정하고 다른 프리셋 항목을 리셋하지 않음 (app.js:959~970)
+- **재현:** 카테고리 페이지 → "경량 우선" 클릭 → "저가 우선" 클릭 → 결과가 훨씬 적거나 빈 목록
 
 ### [M-66] 페르소나 카드 `sort`/`sa` URL 파라미터 소실 — 공유 URL 정렬 상태 미복원
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
@@ -898,4 +909,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (6순환)*
+*다음 회차: 상품상세 (6순환)*
