@@ -81,6 +81,15 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--muted);font-size:12px}
 .disc{display:block;margin-top:6px;font-size:11px;opacity:.7}
 body:has(.pmodal.on){overflow:hidden}
+/* 세트 슬롯 도장판 */
+.set-slots{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px}
+.set-slot{font-size:17px;opacity:.15;transition:opacity .15s;cursor:default;line-height:1}
+.set-slot.on{opacity:1}
+/* 세트 수량 컨트롤 */
+.qty-ctrl{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.qty-ctrl button{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.qty-ctrl button:disabled{opacity:.28;cursor:not-allowed}
+.qty-num{font-size:13px;font-weight:700;min-width:16px;text-align:center}
 .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;
   font-size:12.5px;color:var(--muted);margin:0 0 18px}
 .note b{color:var(--txt)}
@@ -161,15 +170,36 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-ta-cnt{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .pmrv-submit{border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:8px 18px;cursor:pointer}
 .pmrv-submit:disabled{opacity:.5;cursor:default}
-.pmrv-list{display:flex;flex-direction:column;gap:12px}
+/* 작성 폼 — 사진 업로더 */
+.pmrv-photos{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pmrv-thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.pmrv-thumb{position:relative;width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.pmrv-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pmrv-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pmrv-addphoto{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--accent);border:1.5px dashed var(--accent);border-radius:9px;padding:8px 12px;cursor:pointer}
+.pmrv-photohint{color:var(--muted);font-weight:400;font-size:11px}
+
+/* 후기 목록 — 사진 중심 메이슨리 그리드(2열) */
+.pmrv-list.pmrv-grid{column-count:2;column-gap:8px}
 .pmrv-empty{font-size:13px;color:var(--muted);padding:6px 0}
-.pmrv-item{border-bottom:1px solid var(--line);padding-bottom:11px}
-.pmrv-item:last-child{border-bottom:0;padding-bottom:0}
-.pmrv-meta{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.pmrv-nick{font-size:12.5px;font-weight:700}
-.pmrv-stars{font-size:12px}
-.pmrv-date{font-size:11px;color:var(--muted);margin-left:auto}
-.pmrv-body{font-size:13px;line-height:1.65;color:var(--fg);white-space:pre-wrap;word-break:break-word}
+.pmrv-card{display:block;width:100%;text-align:left;border:0;background:none;padding:0;margin:0 0 8px;cursor:pointer;break-inside:avoid;-webkit-column-break-inside:avoid}
+.pmrv-photowrap{position:relative;display:block;border-radius:11px;overflow:hidden;background:var(--card2)}
+.pmrv-photo{width:100%;display:block;object-fit:cover}
+.pmrv-more{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px}
+.pmrv-card.textcard .pmrv-q{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:13px;line-height:1.55;color:var(--fg)}
+.pmrv-cap{display:flex;align-items:center;gap:6px;padding:5px 2px 0;flex-wrap:wrap}
+.pmrv-nick{font-size:12px;font-weight:700;color:var(--fg)}
+.pmrv-stars{font-size:11px}
+.pmrv-date{font-size:11px;color:var(--muted)}
+
+/* 후기 상세 라이트박스 */
+.pmrvd-box{max-width:420px}
+.pmrvd-imgs{display:flex;flex-direction:column;gap:2px;background:#000;border-radius:18px 18px 0 0;overflow:hidden}
+.pmrvd-img{width:100%;display:block;object-fit:contain;max-height:70vh;background:#000}
+.pmrvd-body{padding:14px 18px 20px}
+.pmrvd-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.pmrvd-meta .pmrv-date{margin-left:auto}
+.pmrv-fulltext{font-size:14px;line-height:1.7;color:var(--fg);white-space:pre-wrap;word-break:break-word}
 
 /* 운영자 모드 배너 — static(헤더 sticky와 top:0 충돌 방지) */
 .opsbar{background:#fff3d6;border-bottom:1px solid #e8d196;color:#7a5b00;

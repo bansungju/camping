@@ -61,6 +61,25 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 })();
 const OPS = localStorage.getItem("ops") === "1";
 
+/* 세트 수량 한도: 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
+const SET_QTY_MAX = {
+  "backpacking-tent": 1, "auto-tent": 1, "other-tent": 1, "tarp": 1,
+  "sleeping-bag": 1, "mat": 1, "cot": 1,
+};
+const qtyMax = slug => SET_QTY_MAX[slug] ?? (slug === "chair" ? 4 : slug === "table" ? 2 : 4);
+
+/* 세트 슬롯 도장판 — 8개 슬롯, 해당 카테고리 장비가 있으면 불 들어옴 */
+const SET_SLOTS = [
+  { slugs: ["backpacking-tent","auto-tent","other-tent","tarp"], icon: "⛺", label: "텐트" },
+  { slugs: ["sleeping-bag"], icon: "🛌", label: "침낭" },
+  { slugs: ["mat","cot"], icon: "🧘", label: "매트" },
+  { slugs: ["burner"], icon: "🔥", label: "버너" },
+  { slugs: ["cookware"], icon: "🍳", label: "코펠" },
+  { slugs: ["chair"], icon: "🪑", label: "의자" },
+  { slugs: ["table"], icon: "🪵", label: "테이블" },
+  { slugs: ["lantern"], icon: "🔦", label: "랜턴" },
+];
+
 /* 운영자 모드일 땐 눈에 띄는 배너+끄기 버튼(조용히 갇히는 것 방지) */
 if (OPS) window.addEventListener("DOMContentLoaded", () => {
   const b = document.createElement("div");
@@ -264,7 +283,7 @@ function addToSet(setId, item) {
   const a = getSets(), s = a.find(x => x.id === setId);
   if (!s) return;
   const i = s.items.findIndex(x => x.pcode === item.pcode);
-  if (i >= 0) s.items[i].qty = (s.items[i].qty || 1) + 1;
+  if (i >= 0) { const cur = s.items[i].qty || 1; if (cur < qtyMax(s.items[i].s)) s.items[i].qty = cur + 1; }
   else s.items.push({ ...item, qty: 1 });
   saveSets(a);
 }
@@ -1408,11 +1427,61 @@ function openProduct(m) {
   document.addEventListener("keydown", onKey);
 }
 
-/* ── 유저 후기 (reviews 테이블) ──────────────────────────────
+/* ── 유저 후기 (reviews 테이블) — 사진 중심 메이슨리 그리드 ──────
    product_pcode = wishKey(brand|model|cap) — 찜·세트와 동일 키 스킴.
-   목록·평균별점은 anon도 읽기 가능(RLS reviews_select_public). 작성은 로그인 필요. */
+   목록·평균별점은 anon도 읽기 가능(RLS reviews_select_public). 작성은 로그인 필요.
+   사진은 review-images 버킷 업로드 + reviews.image_urls(마이그 020). 사진은 선택. */
+const REVIEW_MAX_PHOTOS = 4;
+
 function _reviewDate(iso) {
   return new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+}
+
+// image_urls 컬럼은 마이그(020) 적용 전이면 없을 수 있다 → 있으면 쓰고, 없으면 우아하게 제외(기존 후기 안 깨짐).
+async function _fetchReviews(supabase, pcode) {
+  const base = "rating, body, created_at, user_id, profiles(nickname)";
+  let res = await supabase.from("reviews").select(base + ", image_urls")
+    .eq("product_pcode", pcode).order("created_at", { ascending: false }).limit(40);
+  if (res.error && /image_urls/i.test(res.error.message || "")) {
+    res = await supabase.from("reviews").select(base)
+      .eq("product_pcode", pcode).order("created_at", { ascending: false }).limit(40);
+  }
+  if (res.error) throw res.error;
+  return (res.data || []).map(r => ({ ...r, image_urls: Array.isArray(r.image_urls) ? r.image_urls : [] }));
+}
+
+function _reviewCard(r, i) {
+  const nick = esc(r.profiles?.nickname || "익명");
+  const cap = `<span class="pmrv-cap"><span class="pmrv-nick">${nick}</span><span class="pmrv-stars">${stars(r.rating)}</span></span>`;
+  if (r.image_urls.length) {
+    const more = r.image_urls.length > 1 ? `<span class="pmrv-more">+${r.image_urls.length - 1}</span>` : "";
+    return `<button type="button" class="pmrv-card has-photo" data-i="${i}">
+      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(r.image_urls[0])}" alt="" loading="lazy">${more}</span>
+      ${cap}</button>`;
+  }
+  return `<button type="button" class="pmrv-card textcard" data-i="${i}">
+    <span class="pmrv-q">${esc(r.body)}</span>${cap}</button>`;
+}
+
+// 후기 상세 라이트박스 — 큰 사진 + 별점 + 전체 텍스트
+function openReviewDetail(r) {
+  let ov = document.getElementById("pmrv-detail");
+  if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }
+  const nick = esc(r.profiles?.nickname || "익명");
+  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy">`).join("");
+  ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">
+    <button class="pmx" aria-label="닫기">✕</button>
+    ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}
+    <div class="pmrvd-body">
+      <div class="pmrvd-meta"><span class="pmrv-nick">${nick}</span><span class="pmrv-stars">${stars(r.rating)}</span><span class="pmrv-date">${_reviewDate(r.created_at)}</span></div>
+      <div class="pmrv-fulltext">${esc(r.body)}</div>
+    </div></div>`;
+  ov.classList.add("on");
+  const close = () => { ov.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  ov.onclick = e => { if (e.target === ov) close(); };
+  ov.querySelector(".pmx").onclick = close;
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
 }
 
 async function loadReviews(modal, pcode) {
@@ -1421,14 +1490,7 @@ async function loadReviews(modal, pcode) {
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
     const { supabase } = await import("./supabaseClient.js");
-    const { data, error } = await supabase
-      .from("reviews")
-      .select("rating, body, created_at, user_id, profiles(nickname)")
-      .eq("product_pcode", pcode)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    if (error) throw error;
-    const rv = data || [];
+    const rv = await _fetchReviews(supabase, pcode);
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
       if (rv.length) {
@@ -1440,19 +1502,18 @@ async function loadReviews(modal, pcode) {
     }
     if (!listEl) return;
     if (!rv.length) {
-      listEl.innerHTML = `<div class="pmrv-empty">아직 후기가 없어요. 첫 후기를 남겨보세요!</div>`;
+      listEl.className = "pmrv-list";
+      listEl.innerHTML = `<div class="pmrv-empty">아직 후기가 없어요. 사진과 함께 첫 후기를 남겨보세요! 📷</div>`;
       return;
     }
-    listEl.innerHTML = rv.map(r => {
-      const nick = r.profiles?.nickname || "익명";
-      return `<div class="pmrv-item">
-        <div class="pmrv-meta"><span class="pmrv-nick">${esc(nick)}</span> <span class="pmrv-stars">${stars(r.rating)}</span><span class="pmrv-date">${_reviewDate(r.created_at)}</span></div>
-        <div class="pmrv-body">${esc(r.body)}</div>
-      </div>`;
-    }).join("");
+    listEl.className = "pmrv-list pmrv-grid";
+    listEl.innerHTML = rv.map((r, i) => _reviewCard(r, i)).join("");
+    listEl.querySelectorAll(".pmrv-card").forEach(card => {
+      card.onclick = () => openReviewDetail(rv[+card.dataset.i]);
+    });
   } catch (e) {
     if (ratingEl) ratingEl.innerHTML = `<span class="nd">—</span>`;
-    if (listEl) listEl.innerHTML = `<div class="pmrv-empty">후기를 불러오지 못했어요.</div>`;
+    if (listEl) { listEl.className = "pmrv-list"; listEl.innerHTML = `<div class="pmrv-empty">후기를 불러오지 못했어요.</div>`; }
   }
 }
 
@@ -1478,6 +1539,11 @@ function wireReviews(modal, m, pcode) {
         ${[1,2,3,4,5].map(n => `<button type="button" class="pmrv-star" data-v="${n}" role="radio" aria-checked="false" aria-label="${n}점">★</button>`).join("")}
         <span class="pmrv-rate-hint">별점을 선택하세요</span>
       </div>
+      <div class="pmrv-photos">
+        <div class="pmrv-thumbs"></div>
+        <label class="pmrv-addphoto">📷 사진 추가 <span class="pmrv-photohint">(최대 ${REVIEW_MAX_PHOTOS}장)</span>
+          <input type="file" accept="image/*" multiple hidden></label>
+      </div>
       <textarea class="pmrv-ta" rows="3" minlength="10" maxlength="2000" placeholder="제품을 사용한 솔직한 후기를 남겨주세요 (10자 이상)"></textarea>
       <div class="pmrv-form-foot"><span class="pmrv-ta-cnt">0 / 2000</span><button type="submit" class="pmrv-submit">등록</button></div>
     </form>`;
@@ -1488,7 +1554,11 @@ function wireReviews(modal, m, pcode) {
     const taCnt = form.querySelector(".pmrv-ta-cnt");
     const rateHint = form.querySelector(".pmrv-rate-hint");
     const starBtns = [...form.querySelectorAll(".pmrv-star")];
+    const fileInput = form.querySelector('input[type=file]');
+    const thumbsEl = form.querySelector(".pmrv-thumbs");
     let rating = 0;
+    let photos = [];   // File[]
+
     const paint = v => starBtns.forEach((b, i) => {
       b.classList.toggle("on", i < v);
       b.setAttribute("aria-checked", (i + 1) === rating ? "true" : "false");
@@ -1500,22 +1570,56 @@ function wireReviews(modal, m, pcode) {
     form.onmouseleave = () => paint(rating);
     ta.oninput = () => { taCnt.textContent = `${ta.value.length} / 2000`; };
 
+    function renderThumbs() {
+      thumbsEl.innerHTML = photos.map((f, i) =>
+        `<span class="pmrv-thumb"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" class="pmrv-thumb-x" data-i="${i}" aria-label="사진 삭제">✕</button></span>`
+      ).join("");
+      thumbsEl.querySelectorAll(".pmrv-thumb-x").forEach(btn =>
+        btn.onclick = () => { photos.splice(+btn.dataset.i, 1); renderThumbs(); });
+      form.querySelector(".pmrv-addphoto").style.display = photos.length >= REVIEW_MAX_PHOTOS ? "none" : "";
+    }
+    fileInput.onchange = () => {
+      for (const f of fileInput.files) {
+        if (photos.length >= REVIEW_MAX_PHOTOS) { showToast(`사진은 최대 ${REVIEW_MAX_PHOTOS}장까지 가능해요`); break; }
+        if (!f.type.startsWith("image/")) { showToast("이미지 파일만 추가할 수 있어요"); continue; }
+        if (f.size > 5 * 1024 * 1024) { showToast("이미지는 5MB 이하만 가능해요"); continue; }
+        photos.push(f);
+      }
+      fileInput.value = "";
+      renderThumbs();
+    };
+
     form.onsubmit = async e => {
       e.preventDefault();
       const body = ta.value.trim();
       if (!rating) { showToast("별점을 선택해주세요"); return; }
       if (body.length < 10) { showToast("후기는 10자 이상 입력해주세요"); return; }
       const submitBtn = form.querySelector(".pmrv-submit");
-      submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
+      submitBtn.disabled = true;
       try {
-        const { supabase, getErrorMessage } = await import("./supabaseClient.js");
+        const { supabase, getErrorMessage, uploadImage } = await import("./supabaseClient.js");
         const { data: { user: u } } = await supabase.auth.getUser();
-        if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; submitBtn.textContent = "등록"; return; }
-        const { error } = await supabase.from("reviews").insert({
-          user_id: u.id, product_pcode: pcode, rating, body
-        });
+        if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
+        // 사진 업로드(순차)
+        const urls = [];
+        if (photos.length) {
+          submitBtn.textContent = "사진 올리는 중…";
+          for (const f of photos) {
+            const { url, error } = await uploadImage(f);
+            if (error) { showToast((getErrorMessage && getErrorMessage(error)) || "사진 업로드 실패"); submitBtn.disabled = false; submitBtn.textContent = "등록"; return; }
+            urls.push(url);
+          }
+        }
+        submitBtn.textContent = "등록 중…";
+        const row = { user_id: u.id, product_pcode: pcode, rating, body };
+        if (urls.length) row.image_urls = urls;
+        const { error } = await supabase.from("reviews").insert(row);
         if (error) {
-          const msg = (getErrorMessage && getErrorMessage(error)) || "후기를 등록하지 못했어요.";
+          // image_urls 컬럼 미적용(마이그 020 전) 감지 → 명확한 안내
+          const colMissing = /image_urls/i.test(error.message || "") || error.code === "PGRST204";
+          const msg = colMissing
+            ? "사진 후기 기능이 아직 준비 중이에요. 잠시 후 다시 시도해주세요."
+            : ((getErrorMessage && getErrorMessage(error)) || "후기를 등록하지 못했어요.");
           showToast(msg);
           submitBtn.disabled = false; submitBtn.textContent = "등록";
           return;
@@ -1972,6 +2076,81 @@ function _accActiveTab() {
   const t = sessionStorage.getItem("acc-tab");
   return (t === "wish" || t === "sets" || t === "logs") ? t : "wish";
 }
+/* 세트 상세 모달 — 수량 ± 편집 포함 */
+function openSetDetail(si) {
+  const sets = getSets();
+  const s = sets[si];
+  if (!s) return;
+  const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
+  const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
+  const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
+  const rows = s.items.map((x, ii) => {
+    const w = x.weight_g != null ? fmtW(x.weight_g * (x.qty || 1)) : "—";
+    const p = x.p != null ? won(x.p * (x.qty || 1)) : "—";
+    const qty = x.qty || 1;
+    const max = qtyMax(x.s);
+    return `<tr>
+      <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px">${esc(x.b || "")} ${esc(x.m || "")}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${w}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--accent)">${p}</td>
+      <td style="padding:4px 8px;border-bottom:1px solid var(--line)">
+        <div class="qty-ctrl">
+          <button class="qty-dec" data-ii="${ii}" aria-label="수량 감소">−</button>
+          <span class="qty-num">${qty}</span>
+          <button class="qty-inc" data-ii="${ii}" aria-label="수량 증가"${qty >= max ? ' disabled' : ''}>＋</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+  let modal = document.getElementById("set-detail-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  modal.innerHTML = `<div class="pmbox" style="max-width:520px;width:100%;padding:20px">
+    <button class="pmx" aria-label="닫기">✕</button>
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">수량</th>
+      </tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">장비가 없어요</td></tr>'}</tbody>
+      <tfoot><tr>
+        <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
+        <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtW(tw) : "—"}</td>
+        <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tp ? won(tp) : "—"}</td>
+        <td></td>
+      </tr></tfoot>
+    </table>
+    <button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>
+  </div>`;
+  modal.classList.add("on");
+  modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
+  modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+  modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    const arr = getSets(); const set = arr[si]; if (!set) return;
+    const ii = +btn.dataset.ii; const item = set.items[ii]; if (!item) return;
+    if ((item.qty || 1) <= 1) set.items.splice(ii, 1);
+    else item.qty = (item.qty || 1) - 1;
+    saveSets(arr); renderAccount(); openSetDetail(si);
+  });
+  modal.querySelectorAll(".qty-inc").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    const arr = getSets(); const set = arr[si]; if (!set) return;
+    const ii = +btn.dataset.ii; const item = set.items[ii]; if (!item) return;
+    if ((item.qty || 1) >= qtyMax(item.s)) return;
+    item.qty = (item.qty || 1) + 1;
+    saveSets(arr); renderAccount(); openSetDetail(si);
+  });
+  modal.querySelector("#set-to-log-btn").onclick = () => {
+    modal.classList.remove("on");
+    if (document.getElementById("log-modal")) openLogModal(si);
+    else location.href = `community.html?open-log=1&set=${si}`;
+  };
+}
+
 function _accSetTab(tab) {
   sessionStorage.setItem("acc-tab", tab);
   document.querySelectorAll(".acc-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
@@ -2255,20 +2434,26 @@ function renderAccount() {
         : `<button type="button" class="set-goal-set" data-si="${s.id}">🎯 무게 목표 설정</button>`;
       return goalHtml;
     };
-    setsEl.innerHTML = sets.map((s, si) =>
-      `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
+    setsEl.innerHTML = sets.map((s, si) => {
+      const cats = new Set(s.items.map(x => x.s));
+      const slotBadges = SET_SLOTS.map(slot => {
+        const has = slot.slugs.some(sg => cats.has(sg));
+        return `<span class="set-slot${has ? " on" : ""}" title="${slot.label}">${slot.icon}</span>`;
+      }).join("");
+      return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
         <div class="pli-info">
           <div class="pli-top">${esc(s.style || "세트")}</div>
           <div class="pli-name">${esc(s.title)}</div>
           <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비 ${weightBadge(totalWeight(s.items))}</div>
           ${goalBar(s)}
+          <div class="set-slots">${slotBadges}</div>
         </div>
         <div class="pli-side">
           <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
           <button type="button" class="acc-set-share" data-si="${si}" aria-label="링크 복사" title="공유 링크 복사">🔗</button>
           <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
-        </div></div>`
-    ).join("");
+        </div></div>`;
+    }).join("");
     // 무게 목표 설정 버튼
     setsEl.querySelectorAll(".set-goal-set").forEach(btn => btn.onclick = e => {
       e.stopPropagation();
@@ -2319,57 +2504,9 @@ function renderAccount() {
       saveSets(arr); renderAccount();
     });
 
-    // 세트 카드 클릭 → 아이템 상세 모달 (무게·예산 내역)
+    // 세트 카드 클릭 → 상세 모달 (수량 ± 편집 포함)
     setsEl.querySelectorAll(".acc-set").forEach(card => {
-      card.onclick = () => {
-        const si = +card.dataset.si;
-        const s = sets[si];
-        if (!s) return;
-        const tw = totalWeight(s.items);
-        const tp = totalPrice(s.items);
-        const rows = s.items.map(x => {
-          const w = x.weight_g != null ? fmtWeight(x.weight_g * (x.qty || 1)) : "—";
-          const p = x.p != null ? won(x.p * (x.qty || 1)) : "—";
-          const qty = (x.qty || 1) > 1 ? ` ×${x.qty}` : "";
-          return `<tr>
-            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px">${esc(x.b || "")} ${esc(x.m || "")}${qty}</td>
-            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${w}</td>
-            <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--accent)">${p}</td>
-          </tr>`;
-        }).join("");
-        let modal = document.getElementById("set-detail-modal");
-        if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
-        modal.innerHTML = `<div class="pmbox" style="max-width:480px;width:100%;padding:20px">
-          <button class="pmx" aria-label="닫기">✕</button>
-          <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
-          <table style="width:100%;border-collapse:collapse">
-            <thead><tr>
-              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
-              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
-              <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-            <tfoot><tr>
-              <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
-              <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtWeight(tw) : "—"}</td>
-              <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tp ? won(tp) : "—"}</td>
-            </tr></tfoot>
-          </table>
-          <button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>
-        </div>`;
-        modal.classList.add("on");
-        modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
-        modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
-        modal.querySelector("#set-to-log-btn").onclick = () => {
-          modal.classList.remove("on");
-          if (document.getElementById("log-modal")) {
-            openLogModal(si);
-          } else {
-            location.href = `community.html?open-log=1&set=${si}`;
-          }
-        };
-      };
+      card.onclick = () => openSetDetail(+card.dataset.si);
     });
   }
 
