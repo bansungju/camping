@@ -251,6 +251,12 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .fchk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted);cursor:pointer}
 .fchk input{accent-color:var(--accent)}
 /* 최근 본 상품(홈 가로 스크롤) */
+.cat-error{text-align:center;padding:48px 20px;color:var(--muted)}
+.cat-error-t{font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px}
+.cat-error .nd{margin:0 0 14px}
+.cat-error-link{display:inline-block;color:var(--accent);font-weight:600;text-decoration:none;
+  border:1px solid var(--line);border-radius:10px;padding:8px 16px}
+.cat-error-link:hover{background:var(--card2)}
 .recent:empty{display:none}
 .recent-row{display:flex;gap:12px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:thin;margin-bottom:14px}
 .recent-row::-webkit-scrollbar{height:5px}
