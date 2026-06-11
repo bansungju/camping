@@ -33,6 +33,8 @@
 | 20 | 카테고리/목록 (4순환) | 2026-06-11 | 3건 (중복 2건 제외) |
 | 21 | 상품상세 (4순환) | 2026-06-11 | 5건 (중복 2건 제외) |
 | 22 | 검색 (4순환) | 2026-06-11 | 3건 (Low 3건 중복·파생 제외) |
+| 23 | 계정/로그인 (4순환) | 2026-06-11 | 2건 (Low 3건 별도 기록) |
+| 24 | 커뮤니티/소셜 (4순환) | 2026-06-11 | 4건 (Low 2건 제외) |
 
 ---
 
@@ -145,10 +147,12 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `supabaseClient.js`의 `SITE_BASE`가 `https://gear-forest.com`으로 고정. 실제 사이트는 `https://www.gear-forest.com`으로 리다이렉트되므로 Google OAuth 콜백 URL이 불일치할 경우 로그인 실패.
 
-### [H-11] 다크모드 토글이 '정비 중'이라고 표시되면서 클릭 가능 상태로 렌더링
+### [H-11] ✅ 해결완료 — 다크모드 토글이 '정비 중'이라고 표시되면서 클릭 가능 상태로 렌더링
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 설정 섹션에 '정비 중'이라고 안내하지만 토글은 `disabled=false`·`pointerEvents=auto` 상태로 실제 클릭 가능. 초기 `data-theme=dark` 적용으로 `checked=true`까지 표시되어 상태가 모순.
+- **원인(2026-06-11):** 다크 모드는 실제로 완전히 구현·동작함 — `app.js`의 `initTheme()`이 모든 페이지에서 localStorage 테마를 적용하고, `window.setTheme()`이 적용+영속화, `#theme-switch`가 이를 호출하며 `.switch[aria-checked=true]` CSS로 시각 상태(초록·knob 이동)도 정상. 즉 '(정비 중)' 라벨만 잘못된 표기였음(라벨↔동작 모순).
+- **해결:** account.html 설정의 다크 모드 설명에서 '(정비 중)' 문구 제거 → 라벨과 실제 동작 일치. 로컬 프리뷰 검증(스크린샷) — 토글 시 페이지 다크 적용, 스위치 초록·knob 우측(ON), localStorage `theme=dark` 영속, 라벨 '어두운 테마로 전환합니다'. [site/account.html](site/account.html)
 
 ### [H-09] 검색 자동완성 클릭/Enter 시 clean URL로 이동 → CSS·JS MIME 오류, 페이지 완전 파손
 - **영역:** 검색
@@ -248,6 +252,34 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** `keydown` Enter 핸들러에 `e.isComposing` 체크가 없어, 한글 IME에서 마지막 글자 조합 완료(Enter) 시 즉시 `location.href` 이동이 실행됨. 조합이 완료된 글자가 검색어에 반영되기 전에 페이지 이동 발생.
 - **재현:** 홈 검색창에서 한글 마지막 글자 입력 → Enter 1회 → 의도치 않게 바로 페이지 이동
+
+### [M-52] 계정 탭 URL 해시 딥링크 무시 — Back/Forward 탭 전환 불가
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html#sets 등
+- **증상:** `account.html#sets`, `#logs`, `#settings` 등 해시로 직접 접근 시 해시 무시, 항상 wish 탭 표시. `_accSetTab()`이 `sessionStorage("acc-tab")`만 읽고 `location.hash` 미참조, `hashchange` 핸들러도 없음. 딥링크 공유·브라우저 Back/Forward 탭 전환 모두 불가.
+- **재현:** `account.html#logs` 직접 접근 → wish 탭 표시됨
+
+### [M-54] 커뮤니티 게시글 수정 기능 없음 — 삭제만 존재
+- **영역:** 커뮤니티/소셜 — 게시글 상세
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** `renderDetail()` toolbar에 삭제 버튼만 있고 수정 버튼 없음. 오타·내용 수정을 위해서는 삭제 후 재작성 필요.
+- **재현:** 내 게시글 클릭 → 상세 모달 → toolbar 확인
+
+### [M-55] 커뮤니티 카테고리 필터 없음 — 게시글 증가 시 탐색 불가
+- **영역:** 커뮤니티/소셜 — 피드
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 피드에 카테고리(팁/후기/질문 등) 또는 태그 필터 UI 전혀 없음. 게시글 수 증가 시 원하는 글을 찾을 수 없음.
+
+### [M-56] 커뮤니티 피드 30개 하드코딩 — 이후 게시글 접근 불가
+- **영역:** 커뮤니티/소셜 — 피드
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** `listPosts`에 `limit: 30` 하드코딩. 31번째 이후 게시글은 표시되지 않고, 더 불러오기 버튼이나 무한스크롤도 없음. 끝 도달 안내도 없어 사용자가 게시글이 30개뿐인지 더 있는지 알 수 없음.
+
+### [M-53] 계정 찜 탭에서 상품 카드 클릭 시 카테고리 페이지로 이탈
+- **영역:** 계정/로그인 — 찜 탭
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 찜 탭의 상품 카드 클릭 시 계정 페이지 위에서 모달이 열리지 않고 `category.html?cat=...&q=상품명`으로 페이지 이동. 계정 컨텍스트 완전 이탈, 돌아오려면 Back 필요.
+- **재현:** 로그인 또는 찜 있는 비로그인 상태 → account.html → 찜 탭 → 상품 카드 클릭
 
 ### [M-51] 홈 검색 Enter 시 브랜드 정확 매칭 우선순위 역전 — 카테고리로 잘못 이동
 - **영역:** 검색 (홈)
@@ -521,6 +553,12 @@
 - **재현:** 상품 모달 → 상세 페이지 링크 복사 → 새 탭에서 직접 접근
 - **해결(2026-06-11):** [H-28]과 동일 근본원인(SW가 www→apex 301 리다이렉트 응답을 캐싱 → 캐시 히트 시 redirect 루프). [H-28] 수정(리다이렉트 응답 캐싱 금지 + CACHE 무효화 `camping-11b6a30a`)으로 해소. 검증 — 라이브 apex `item/backpacking-tent/item-52.html` 직접 접근 시 200·정상 제목('니모이큅먼트 호넷 엘리트 오스모 1P …') 렌더, 리다이렉트 루프 없음(curl·실브라우저 확인). [site/sw.js](site/sw.js)
 
+### [H-31] 커뮤니티 댓글 수정·삭제 기능 완전 없음
+- **영역:** 커뮤니티/소셜 — 댓글
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** `renderComments()`에서 댓글 행이 텍스트만 렌더링되고 수정·삭제 버튼이 없음. 게시글에는 삭제 버튼이 있으나 댓글은 작성 후 수정·삭제 불가. account.html 내 로그 섹션(my-log-edit/del)과 기능 불일치.
+- **재현:** 로그인 → 댓글 작성 → 댓글 행 확인 — 수정·삭제 버튼 없음
+
 ### [H-27] privacy.html에 카카오 로그인 기재 — 실제 구현은 Google 단독 (오기재)
 - **영역:** privacy.html (정보 정확성)
 - **URL:** https://www.gear-forest.com/privacy.html
@@ -687,6 +725,20 @@
 - **증상:** `<a href="#main" class="skip-to-content">` 등 메인 콘텐츠 바로가기 링크가 없어 키보드 사용자가 Tab으로 탐색할 때 상단 nav 전체를 순회해야 함. WCAG 2.4.1(G1) 준수 미흡.
 - **재현:** 홈 접속 → Tab 키 반복 → 콘텐츠 바로가기 링크 없음 확인
 
+### [L-37] 계정 찜 탭 전체 삭제 기능 없음
+- **영역:** 계정/로그인 — 찜 탭
+- **증상:** 개별 찜 해제 버튼만 있고 "전체 삭제" 기능 없음. 다수 찜 항목을 일일이 해제해야 함.
+
+### [L-38] 다크모드 설정 설명에 "(정비 중)" 텍스트 잔존
+- **영역:** 계정/로그인 — 설정 탭
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 다크모드 토글 설명에 "어두운 테마로 전환합니다 (정비 중)" 문구가 사용자에게 그대로 노출됨. 기능 자체는 정상 동작(localStorage 저장, 새로고침 후 유지)하므로 "(정비 중)" 제거 필요.
+
+### [L-39] 비로그인 상태 `account.html#logs` 직접 접근 시 안내 없는 빈 화면
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html#logs
+- **증상:** 비로그인 상태로 직접 접근 시 해시 무시(M-52)로 wish 섹션만 표시, 왜 로그가 안 보이는지 안내 없음.
+
 ### [L-36] 상품 상세 모달 `@media print` 스타일 없음 — 인쇄 시 UI 전체 노출
 - **영역:** 상품상세 모달 (인쇄)
 - **증상:** `style.css`에 `@media print` 규칙 없음. 브라우저 인쇄 미리보기 시 오버레이 배경·탭바·필터 등 전체 UI가 함께 출력됨. 상품 스펙 정보만 선택적으로 인쇄 불가.
@@ -705,4 +757,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (4순환)*
+*다음 회차: 홈/메인 (5순환)*

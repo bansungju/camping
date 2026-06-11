@@ -138,8 +138,7 @@ const PERSONAS = [
 
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
-const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>'
-  : (a === b ? won(a) : `${won(a)}~${won(b)}`);
+const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>' : won(a);
 
 /* 값 표시: 무게(g) 1000↑ → kg, 부피(cm3) 1000↑ → L 환산 */
 function fmtVal(v, unit) {
@@ -1244,6 +1243,7 @@ function openProduct(m) {
        <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
        <div class="pmname">${esc(m.model)}</div>
        <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
+       <div class="pmprice-note">제품은 최저가를 표기하고 있습니다. 링크의 가격과 다를 수 있습니다.</div>
        <div class="pmspecs">${specRows}</div>
        ${m.coupang_url
          ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>`
@@ -1253,6 +1253,7 @@ function openProduct(m) {
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
        ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
+       <button class="pmreport" type="button">⚠️ 제품 정보 오류 신고</button>
      </div></div>`;
   modal.classList.add("on");
   const buyBtn = modal.querySelector(".pmbuy-active");
@@ -1278,6 +1279,12 @@ function openProduct(m) {
   };
   const setBtn = modal.querySelector(".pmset");
   if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug));
+  const reportBtn = modal.querySelector(".pmreport");
+  if (reportBtn) reportBtn.onclick = () => {
+    const subject = encodeURIComponent(`[오류 제보] ${m.brand} ${m.model}`);
+    const body = encodeURIComponent(`제품명: ${m.brand} ${m.model}\n\n오류 내용:\n`);
+    window.open(`mailto:bangsungju@gmail.com?subject=${subject}&body=${body}`, "_self");
+  };
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
   const close = () => {
     modal.classList.remove("on");
