@@ -743,6 +743,14 @@ async function renderCategory() {
   document.getElementById("q").value = params.get("q") || rawQ;   // 표시는 원본, 필터는 소문자
   document.getElementById("q").oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
   draw();
+  // 최근 본 상품·검색 결과·추천 카드처럼 brands+q로 단일 상품을 특정한 링크면
+  // 필터된 목록이 아니라 상품 상세 모달을 바로 연다. (H-20)
+  // 단일 브랜드(brands에 '|' 없음) + q가 모두 있을 때만 — 일반 검색(q만)은 제외.
+  const jumpB = params.get("brands"), jumpQ = params.get("q");
+  if (jumpB && jumpQ && !jumpB.includes("|")) {
+    const hit = d.models.find(m => m.brand === jumpB && m.model === jumpQ);
+    if (hit) openProduct(hit);
+  }
 }
 
 /* 필터 바 (카테고리 상단) — 범위·멀티브랜드·정렬·품질 */

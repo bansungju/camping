@@ -86,11 +86,13 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** `<link rel="canonical">`과 `og:url`이 `https://gear-forest.com/`(non-www)으로 설정되어 있으나 실제 서빙 URL은 `https://www.gear-forest.com/`. 검색엔진이 두 버전을 별개 문서로 인식해 PageRank 분산 위험. [H-10] OAuth 도메인 불일치와 같은 근본 원인(non-www/www 혼용).
 
-### [H-20] 최근 본 상품 카드 클릭 불가 — 링크/버튼 동작 없음
+### [H-20] ✅ 해결완료 — 최근 본 상품 카드 클릭 시 상품 상세로 이동하지 않음
 - **영역:** 홈/메인
 - **URL:** https://www.gear-forest.com/
 - **증상:** 홈의 '최근 본 상품' 섹션에서 카드를 클릭해도 상품 상세 페이지로 이동하지 않음. 클릭 이벤트가 연결되지 않았거나 링크 href가 누락된 것으로 추정.
 - **제보:** 사용자 직접 제보
+- **원인(2026-06-11):** recard 링크는 `category.html?cat=...&brands=...&q=...`(필터된 목록)으로만 이동하고, 카테고리 페이지는 brands+q로 단일 상품을 특정해도 상세 모달을 자동으로 열지 않았음. 사용자에겐 "상세로 안 감"으로 보임. (recent 항목엔 상품 id가 없어 직접 상세 URL 생성 불가)
+- **해결:** `renderCategory()`의 `draw()` 직후, 단일 브랜드(brands에 '|' 없음)+q가 모두 있으면 `d.models`에서 정확히 일치하는 모델을 찾아 `openProduct()`로 상세 모달을 자동 오픈. 검색 결과·추천 카드 등 brands+q 링크 전반이 함께 개선됨. 일반 검색(q만)은 제외. 로컬 프리뷰 검증 — brands+q 링크 시 모달 자동 오픈(네이처하이크 BE400…), q만 있는 일반 검색은 미오픈 확인. [site/app.js](site/app.js)
 
 ### [H-13] 최근 본 상품 섹션 이미지 403 — 썸네일 전체 깨짐
 - **영역:** 홈/메인
@@ -295,11 +297,6 @@
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** `a95b92a` 커밋('세트 상세 → 커뮤니티 로그 작성 원클릭 연결')이 머지됐으나 실제 상세 페이지에 해당 버튼이 없음.
 
-### [M-06] 상세 페이지에 다크모드 토글 버튼 없음
-- **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 카테고리 페이지 헤더에는 `.theme-toggle` 버튼이 있으나 상세 페이지에는 없음. 시스템 다크모드는 적용되지만 수동 전환 불가.
-
 ### [M-07] 모바일(375px)에서 상세 hero 섹션 레이아웃 미반응형
 - **영역:** 상품 상세
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
@@ -373,11 +370,6 @@
 - **영역:** 커뮤니티/소셜 (SEO)
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `DiscussionForumPosting`, `BreadcrumbList` 등 schema.org JSON-LD 전무. 검색 결과 리치 스니펫 노출 기회 손실. ([L-13] 홈과 동일 패턴)
-
-### [L-24] 비로그인 사용자 사이트 전역에서 다크모드 변경 불가
-- **영역:** 커뮤니티/소셜 (UI)
-- **URL:** https://gear-forest.com/community.html
-- **증상:** 다크모드 토글이 `account.html` 설정 탭에만 존재. 비로그인 사용자는 다크모드를 변경할 수 없음. 시스템 다크모드는 적용되지만 수동 전환 방법 없음. ([M-06], [M-17] 등 개별 페이지 미토글 버그의 근본 원인)
 
 ### [L-25] www·non-www 리다이렉트 동작이 경로마다 불일치
 - **영역:** 커뮤니티/소셜 (SEO)
