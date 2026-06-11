@@ -4,10 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>이동 중… — 장비의 숲</title>
+<title>페이지를 찾을 수 없습니다 — 장비의 숲</title>
 <script>
   // 레거시 클린 URL 호환: /category/{slug}[?필터] → /category.html?cat={slug}[&필터]
-  // (GitHub Pages는 클린 경로에서 상대 자산이 404 → 쿼리 형식으로 통일)
   (function () {
     var p = location.pathname;
     var m = p.match(/^\/category\/([a-z0-9-]+)\/?$/);
@@ -16,12 +15,22 @@
       location.replace("/category.html?cat=" + m[1] + extra + location.hash);
       return;
     }
+    // /item/ 경로는 리다이렉트하지 않고 404 안내 표시
+    if (p.match(/^\/item\//)) { document.getElementById("not-found").style.display="block"; return; }
     // 그 외 미존재 경로 → 홈으로
     location.replace("/index.html");
   })();
 </script>
 </head>
-<body>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#1a1a1a;margin:0">
+<div id="not-found" style="display:none;text-align:center;padding:80px 20px">
+  <div style="font-size:48px;margin-bottom:16px">🔍</div>
+  <h1 style="font-size:22px;font-weight:700;margin:0 0 10px">상품을 찾을 수 없습니다</h1>
+  <p style="color:#6e6e73;font-size:14px;margin:0 0 28px">링크가 잘못됐거나 상품이 제거되었을 수 있어요.</p>
+  <a href="/index.html" style="display:inline-block;padding:12px 24px;background:#2f7a4e;color:#fff;border-radius:11px;font-size:15px;font-weight:700;text-decoration:none">홈으로 돌아가기</a>
+  <span style="margin:0 12px;color:#d0d0d5">|</span>
+  <a href="javascript:history.back()" style="color:#2f7a4e;font-size:15px;font-weight:600;text-decoration:none">뒤로 가기</a>
+</div>
 <p style="font-family:system-ui,sans-serif;color:#6e6e73;padding:40px;text-align:center">페이지를 찾는 중입니다…</p>
 </body>
 </html>
