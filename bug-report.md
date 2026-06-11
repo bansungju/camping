@@ -24,6 +24,7 @@
 | 12 | 커뮤니티/소셜 (2순환) | 2026-06-11 | 5건 |
 | 13 | 홈/메인 (3순환) | 2026-06-11 | 5건 (중복 3건 제외) |
 | 14 | 카테고리/목록 (3순환) | 2026-06-11 | 3건 (중복 2건 제외) |
+| 15 | 상품 상세 (3순환) | 2026-06-11 | 5건 (중복 1건 보완) |
 
 ---
 
@@ -40,11 +41,13 @@
 - **URL:** https://gear-forest.com
 - **증상:** non-www 주소로 직접 진입하면 리다이렉트 루프(gear-forest.com↔www.gear-forest.com)로 페이지 열리지 않음. www로 진입 시에는 정상. SEO canonical·공유 링크가 non-www를 가리키므로 외부 유입 사용자가 진입 불가.
 
-### [H-22] style 필터 URL 공유·직접 진입 시 칩 active 복원 실패 + 필터 미적용
+### [H-22] ✅ 해결완료 — style 필터 URL 공유·직접 진입 시 칩 active 복원 실패 + 정렬 미적용
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag&style=backpacking
 - **증상:** URL에 `style=backpacking` 파라미터가 있어도 직접 진입·새로고침 시 ① 해당 칩 버튼이 active(.on) 상태가 아니고 ② 필터도 미적용되어 전체 목록이 표시됨. URL 공유 링크가 받는 사람에게 필터링된 결과를 보여주지 못함. `renderStyleChips(d)` 호출이 `restoreState(params)` 이전에 위치하여 STATE에 campStyle이 빈 값임.
 - **재현:** `?cat=sleeping-bag`에서 백패킹 칩 클릭 → URL 복사 → 새 탭에서 열기 → 칩 비활성·전체 목록 표시
+- **원인(2026-06-11):** ① `renderStyleChips(d)`가 `restoreState(params)` 이전에 호출되어 칩의 `.on`이 빈 campStyle로 그려짐. `syncFilterUI()`는 style 칩을 갱신하지 않아 복원 안 됨. ② `applyStyleSort(d)`가 칩 onclick 핸들러에서만 호출되고 초기 로드 경로엔 없어, sort 명시 없는 공유 URL은 스타일 정렬이 적용되지 않음. (style은 행을 거르는 필터가 아니라 핵심 스펙 기준 정렬을 바꾸는 동작)
+- **해결:** `renderCategory()` 초기화 순서 재정렬 — `renderStyleChips(d)`를 `restoreState(params)` **이후**로 이동(칩 .on 복원). restoreState 직후 `STATE.campStyle && !params.get("sort")`이면 `applyStyleSort(d)` 호출(스타일 기본 정렬 적용). 명시적 sort가 URL에 있으면 그것을 존중. 로컬 프리뷰 검증 — `?style=backpacking` 진입 시 칩 active + 최소무게 오름차순(215g→363g→…)·tip 표시 / `&sort=spec:comfort_temp` 동반 시 명시 정렬(13C→11C→…) 존중·칩 active 유지. [site/app.js](site/app.js)
 
 ### [H-03] tent·cooking 카테고리 JSON 503으로 페이지 로드 실패
 - **영역:** 카테고리/목록
@@ -159,6 +162,24 @@
 ---
 
 ## 🟡 Medium
+
+### [M-36] 모달 열림 상태에서 body 스크롤 잠금 없음
+- **영역:** 카테고리/목록 — 상품 모달
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 상품 카드 클릭 시 `.pmodal.on`이 열려도 `body` overflow가 유지되어 모달 뒤 배경 리스트가 함께 스크롤됨. 모달 조작 중 의도치 않은 배경 스크롤 발생.
+- **재현:** 카테고리 페이지 → 카드 클릭 → 모달 열린 상태에서 뒤 배경 스크롤 시도
+
+### [M-37] 존재하지 않는 상품 URL 접근 시 404 없이 홈으로 무음 리다이렉트
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-99999.html
+- **증상:** 잘못된 상품 번호로 직접 접근하면 404나 안내 없이 `index.html`로 리다이렉트. 공유 링크가 깨졌을 때 사용자가 이유를 알 수 없음.
+- **재현:** 존재하지 않는 item URL 직접 입력 → 홈 화면 이동
+
+### [M-38] 상세 페이지에 찜/세트 추가 버튼 없음 — 카드와 기능 불일치
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 카테고리 카드에는 찜·비교 버튼이 있으나 상세 페이지에는 찜·세트 버튼이 전혀 없음. 상세 URL을 공유받은 사용자가 상세 페이지에서 찜 불가. (H-08 구매 버튼 미구현과 별도 이슈)
+- **재현:** item-*.html 직접 접속 → 찜/세트 버튼 존재 확인 → 없음
 
 ### [M-31] 로그아웃 버튼 없음 — 로그인한 사용자가 로그아웃 불가
 - **영역:** 계정/로그인
@@ -387,9 +408,9 @@
 - **증상:** `#wish-section` 전체 `display:none` 처리. 비로그인 사용자가 찜 기능의 존재를 알 수 없으며 로그인 유도 CTA 없음.
 
 ### [L-17] 내한온도 스펙 값에 °(도) 기호 누락 — '-3C' 표시
-- **영역:** 상품 상세
+- **영역:** 상품 상세, 카테고리 카드, 모달 전체
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 스펙 테이블 내한온도 값이 '-3C'로 표시. 올바른 표기는 '-3°C'. 온도 값 있는 다른 상품도 동일 문제 가능성.
+- **증상:** 스펙 테이블 내한온도 값이 '-3C'로 표시. 카테고리 카드 리스트와 상품 모달에서도 동일하게 °기호 누락 및 단위 표기가 `(C)`로 잘못 표시됨. 전체 노출 영역에 걸친 데이터 포맷 문제.
 
 ### [L-18] h1 태그에 브랜드명 누락 — 제품명만 표시
 - **영역:** 상품 상세 (SEO)
@@ -446,10 +467,6 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 헤더에 로고만 있고 계정 아이콘 없음. 하단 탭바('내 정보')로만 계정 진입 가능. 일반적인 웹 UX 패턴과 다름.
 
-### [L-09] 소셜 로그인이 Google만 제공 (Kakao 없음)
-- **영역:** 계정/로그인
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** 한국 서비스임에도 카카오 로그인 없음. 미지원 여부가 UI에 명시되지 않아 사용자 혼란 가능.
 
 ### [L-06] 빈 문자열로 검색 시 아무 피드백 없음
 - **영역:** 검색
@@ -486,6 +503,16 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 모바일 375px에서 `.personas` 그리드가 단일 열로 렌더링되어 카드 4개가 세로로 쌓임. 2열 그리드가 더 자연스러운 UX.
 
+### [L-29] 모바일(375px) 상세 페이지 스펙 테이블 레이블 중간 줄바꿈
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** '내한온도(ISO하한)' 등 긴 레이블이 375px 화면에서 단어 중간(`ISO하` / `한`)에서 줄바꿈되어 셀 높이가 59px로 불균일. `word-break:keep-all` 또는 `overflow-wrap` 조정으로 해결 가능.
+
+### [L-30] category.html `<title>` 초기값 "카테고리 비교" — JS 실행 후 카테고리명으로 교체
+- **영역:** 카테고리/목록 (SEO)
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** HTML `<title>`이 "카테고리 비교 — 장비의 숲"으로 하드코딩. JS 실행 후 "침낭 비교"로 변경됨. JS 미실행 크롤러가 잘못된 타이틀 색인, 탭 타이틀 깜빡임 발생.
+
 ### [L-28] 상품 상세 모달에 role="dialog"·aria-modal 없음
 - **영역:** 카테고리/목록 — 상품 카드 모달
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
@@ -505,4 +532,4 @@
 
 ---
 
-*다음 회차: 상품 상세 (3순환)*
+*다음 회차: 검색 (3순환)*
