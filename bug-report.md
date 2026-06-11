@@ -60,6 +60,7 @@
 | 46 | 검색 (8순환) | 2026-06-11 | 2건 (L-60·L-61 중복 제외) |
 | 47 | 계정/로그인 (8순환) | 2026-06-11 | 5건 |
 | 48 | 커뮤니티/소셜 (8순환) | 2026-06-11 | 7건 (L-32 계열 별도 기록) |
+| 49 | 홈/메인 (9순환) | 2026-06-11 | 2건 |
 
 ---
 
@@ -418,11 +419,12 @@
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 피드에 카테고리(팁/후기/질문 등) 또는 태그 필터 UI 전혀 없음. 게시글 수 증가 시 원하는 글을 찾을 수 없음.
 
-### [M-58] `?cat=` 대소문자 미정규화 — 대문자 진입 시 카테고리 로드 실패
+### [M-58] ✅ 해결완료 — `?cat=` 대소문자 미정규화 — 대문자 진입 시 카테고리 로드 실패
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=Backpacking-Tent
 - **증상:** `cat` 파라미터가 대문자이면 `data/Backpacking-Tent.json` 요청이 실패해 "카테고리를 불러오지 못했습니다." 표시. 소문자 `backpacking-tent`는 정상. 외부 링크나 직접 입력 URL이 대문자인 경우 빈 화면.
 - **재현:** `?cat=Backpacking-Tent` URL 직접 접근
+- **해결(2026-06-11):** `renderCategory`에서 slug를 `.toLowerCase()`로 정규화(클린 URL 정규식도 `i` 플래그) → 대문자 cat도 `data/{소문자}.json` 로드. 로컬 프리뷰 검증 — `?cat=Backpacking-Tent` 접근 시 백패킹텐트 정상 로드(상품 137개·에러 없음), URL은 `?cat=backpacking-tent`로 정규화, 콘솔 에러 0. [site/app.js](site/app.js)
 
 ### [M-59] `?sort=price_min` URL에 `sa` 파라미터 없을 때 정렬 방향 역전
 - **영역:** 카테고리/목록
@@ -1390,6 +1392,19 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
+### [M-100] 페르소나 카드 '4인 가족'과 '오토/맥시멀' 동일 URL로 연결
+- **영역:** 홈/메인 — 내 캠핑 스타일 섹션
+- **URL:** https://gear-forest.com/
+- **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
+- **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
+- **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [L-81] 홈 검색 combobox `aria-label` / `aria-labelledby` 누락
+- **영역:** 홈/메인 — 전역 검색
+- **URL:** https://gear-forest.com/
+- **증상:** `id="homeq"` 검색 입력에 연결된 `<label>`, `aria-label`, `aria-labelledby` 모두 없음. `role="combobox"`, `aria-autocomplete="list"`는 있으나 레이블 연결 누락 — 스크린리더가 입력 목적을 인식하지 못함.
+- **재현:** DevTools → Elements → `#homeq` 확인 → `aria-label` 없음
+
 ### [L-27] 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
 - **영역:** 홈/메인 — 공통 푸터
 - **URL:** https://www.gear-forest.com/
@@ -1397,4 +1412,4 @@
 
 ---
 
-*다음 회차: 홈/메인 (9순환)*
+*다음 회차: 카테고리/목록 (9순환)*

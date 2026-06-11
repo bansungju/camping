@@ -748,8 +748,9 @@ async function renderCategory() {
   renderCategorySkeleton();
   const params = new URLSearchParams(location.search);
   // 클린 URL /category/{slug} 또는 ?cat= 파라미터 두 방식 모두 지원
-  const pathMatch = location.pathname.match(/^\/category\/([a-z0-9-]+)/);
-  const slug = params.get("cat") || (pathMatch && pathMatch[1]);
+  const pathMatch = location.pathname.match(/^\/category\/([a-z0-9-]+)/i);
+  // 슬러그는 소문자로 정규화 (M-58): cat=Backpacking-Tent 같은 대문자 URL도 data/backpacking-tent.json 로드
+  const slug = (params.get("cat") || (pathMatch && pathMatch[1]) || "").toLowerCase() || null;
   // cat= 없이 진입 → 탐색 랜딩(카테고리 그리드)
   if (!slug) { return renderBrowse(); }
   let d;
