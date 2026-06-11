@@ -960,25 +960,50 @@ function buildFilters(d, star) {
   const weightVals = weightMeta ? num(ms.map(x => x.specs[weightMeta.key] && x.specs[weightMeta.key].value)) : [];
   const priceVals = num(ms.map(m => m.price_min));
   const hasCap4 = ms.some(m => m.capacity != null && m.capacity >= 4);
+  // 프리셋이 관리하는 필터(무게range·가격range·cap)를 모두 리셋 — 프리셋끼리 상호배타로 동작 (M-68)
+  // (다른 프리셋의 잔여 필터가 AND 누적돼 결과가 비정상적으로 적어지던 문제 방지)
+  const clearPresetFilters = () => {
+    if (weightMeta) delete STATE.range[weightMeta.key];
+    delete STATE.range.price;
+    STATE.cap = "";
+  };
+  // 각 프리셋은 isOn()으로 현재 활성 여부를 판정하고, fn()은 토글(켜져 있으면 끄기) (M-68)
   const presets = [];
   if (weightVals.length >= 3) {
     const sorted = [...weightVals].sort((a, b) => a - b);
     const p33 = sorted[Math.floor(sorted.length * 0.33)];
-    presets.push({ label: "🪶 경량 우선", fn: () => {
-      const kg = +(p33 / 1000).toFixed(1);
-      STATE.range[weightMeta.key] = { max: kg };
-      syncFilterUI(); draw();
-    }});
+    presets.push({
+      label: "🪶 경량 우선",
+      isOn: () => !!STATE.range[weightMeta.key],
+      fn: () => {
+        const on = !!STATE.range[weightMeta.key];
+        clearPresetFilters();
+        if (!on) STATE.range[weightMeta.key] = { max: +(p33 / 1000).toFixed(1) };
+        syncFilterUI(); draw();
+      }});
   }
   if (priceVals.length >= 3) {
     const sorted = [...priceVals].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length * 0.5)];
-    presets.push({ label: "💰 저가 우선", fn: () => {
-      STATE.range.price = { max: median };
+    presets.push({
+      label: "💰 저가 우선",
+      isOn: () => !!STATE.range.price,
+      fn: () => {
+        const on = !!STATE.range.price;
+        clearPresetFilters();
+        if (!on) STATE.range.price = { max: median };
+        syncFilterUI(); draw();
+      }});
+  }
+  if (hasCap4) presets.push({
+    label: "👨‍👩‍👧 가족형",
+    isOn: () => STATE.cap === "4",
+    fn: () => {
+      const on = STATE.cap === "4";
+      clearPresetFilters();
+      if (!on) STATE.cap = "4";
       syncFilterUI(); draw();
     }});
-  }
-  if (hasCap4) presets.push({ label: "👨‍👩‍👧 가족형", fn: () => { STATE.cap = "4"; syncFilterUI(); draw(); } });
 
   if (presets.length) {
     parts.unshift(`<div class="fgrp fgrp-preset"><span class="flab">빠른 설정</span>` +
@@ -990,11 +1015,13 @@ function buildFilters(d, star) {
 
   // 프리셋 클릭 핸들러
   if (presets.length) {
+    const syncPresetOn = () => bar.querySelectorAll(".fpre").forEach(x =>
+      x.classList.toggle("on", presets[+x.dataset.pi].isOn()));
     bar.querySelectorAll(".fpre").forEach(b => b.onclick = () => {
       presets[+b.dataset.pi].fn();
-      bar.querySelectorAll(".fpre").forEach(x => x.classList.remove("on"));
-      b.classList.add("on");
+      syncPresetOn();   // 토글 결과(상호배타·재클릭 OFF)를 .on 표시에 반영 (M-68)
     });
+    syncPresetOn();     // 초기 진입 시(URL 복원 등) 활성 프리셋 강조
   }
 
   // 필터바 토글(모바일에서 노출). 기본은 펼침(default expanded) — 첫 화면에 필터가 바로 보이게.
