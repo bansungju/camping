@@ -38,6 +38,7 @@
 | 25 | 홈/메인 (5순환) | 2026-06-11 | 3건 (중복·낮은영향 제외) |
 | 26 | 카테고리/목록 (5순환) | 2026-06-11 | 2건 (Low 2건 제외) |
 | 27 | 상품상세 (5순환) | 2026-06-11 | 2건 (Low 3건 제외) |
+| 28 | 검색 (5순환) | 2026-06-11 | 2건 (Low 4건 제외) |
 
 ---
 
@@ -296,6 +297,18 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent&sort=price_min
 - **증상:** UI에서 "가격 낮은순" 선택 시 `sa=1`(오름차순)이 함께 붙어 정상 동작. 그러나 `sa` 없이 `sort=price_min`만 포함된 공유 URL로 진입하면 `sa=0`(내림차순)이 기본값으로 적용되어 비싼 것부터 표시. 공유 URL 재현 시 결과가 다름.
 - **재현:** `?cat=backpacking-tent&sort=price_min` URL 직접 접근 → 정렬 방향 확인
+
+### [M-61] brand.html `bq` 검색창 Enter 키 핸들러 없음
+- **영역:** 검색 — brand.html
+- **URL:** https://www.gear-forest.com/brand.html?b=헬리녹스
+- **증상:** 브랜드 검색창(`input#bq`)에 텍스트 입력 후 Enter 키 누르면 무반응. `oninput`만 처리되고 `keydown` 핸들러 없음. 마우스 클릭으로만 브랜드 칩 선택 가능.
+- **재현:** brand.html?b=헬리녹스 → bq 검색창에 입력 → Enter → 무반응
+
+### [M-62] 홈 검색 `?q=` URL 직접 진입 시 검색창 pre-fill 없음
+- **영역:** 검색 — 홈
+- **URL:** https://www.gear-forest.com/?q=헬리녹스
+- **증상:** `input#homeq` 초기값을 URL params에서 읽는 코드 없음. `?q=검색어` URL로 공유받아도 검색창이 항상 빈 칸. M-40(타이핑 시 URL 미반영)의 반대 방향 케이스.
+- **재현:** `/?q=헬리녹스` 직접 접근 → homeq 입력창 빈 칸 확인
 
 ### [M-60] 비교 모달 `role="dialog"` / `aria-modal` 완전 누락
 - **영역:** 상품상세 — 비교 기능
@@ -592,11 +605,13 @@
 - **재현:** 상품 모달 → 상세 페이지 링크 복사 → 새 탭에서 직접 접근
 - **해결(2026-06-11):** [H-28]과 동일 근본원인(SW가 www→apex 301 리다이렉트 응답을 캐싱 → 캐시 히트 시 redirect 루프). [H-28] 수정(리다이렉트 응답 캐싱 금지 + CACHE 무효화 `camping-11b6a30a`)으로 해소. 검증 — 라이브 apex `item/backpacking-tent/item-52.html` 직접 접근 시 200·정상 제목('니모이큅먼트 호넷 엘리트 오스모 1P …') 렌더, 리다이렉트 루프 없음(curl·실브라우저 확인). [site/sw.js](site/sw.js)
 
-### [H-32] 상품 모달 `.pmbox` `max-height` 없어 뷰포트 초과 — 하단 버튼 잘림
+### [H-32] ✅ 해결완료 — 상품 모달 `.pmbox` `max-height` 없어 뷰포트 초과 — 하단 버튼 잘림
 - **영역:** 상품상세 모달
 - **URL:** category.html → 상품 카드 클릭
 - **증상:** `.pmbox`에 `overflow-y:auto`는 있으나 `max-height`가 `none`이어서 내용이 많은 상품의 모달이 뷰포트를 초과해도 스크롤 영역이 생기지 않음. 844px 뷰포트 기기에서 모달 height 856px → 하단 제보 버튼 등이 화면 밖으로 밀림. iOS Safari에서 하단 버튼 완전히 접근 불가.
 - **재현:** 모바일 뷰포트(390px×844px)에서 스펙 항목 많은 상품 모달 열기 → 하단 버튼 잘림 확인
+- **원인(2026-06-11):** 모바일 미디어쿼리에서 `.pmbox{max-height:none}`가 base의 `max-height:90vh`를 덮어씀. `.pmodal`이 `position:fixed`라 모달이 뷰포트를 넘쳐도 내부 스크롤이 안 생겨 하단 버튼이 화면 밖으로 잘림.
+- **해결:** 모바일 `.pmbox`의 `max-height:none`을 `calc(100dvh - 88px - env(safe-area-inset-bottom))`로 교체(상14+하72 패딩 제외, vh 폴백 동반). `overflow-y:auto`와 결합해 모달이 뷰포트 안에 갇히고 내부 스크롤로 하단 버튼 도달 가능. 로컬 프리뷰 검증(375×812) — 모달 height 724px·뷰포트 내 fit, 내부 스크롤(scrollHeight 841>client 724), 스크롤 시 하단 '오류 신고' 버튼 완전 노출·콘솔 에러 없음. [site/style.css](site/style.css)
 
 ### [H-31] 커뮤니티 댓글 수정·삭제 기능 완전 없음
 - **영역:** 커뮤니티/소셜 — 댓글
@@ -812,4 +827,4 @@
 
 ---
 
-*다음 회차: 검색 (5순환)*
+*다음 회차: 계정/로그인 (5순환)*

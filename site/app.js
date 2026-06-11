@@ -1246,7 +1246,8 @@ function openProduct(m) {
        <div class="pmprice-note">제품은 최저가를 표기하고 있습니다. 링크의 가격과 다를 수 있습니다.</div>
        <div class="pmspecs">${specRows}</div>
        ${m.coupang_url
-         ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>`
+         ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>
+       <div class="pmbuynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</div>`
          : `<button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
        <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
        }

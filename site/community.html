@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://kavfzsdimsrhteohmirc.supabase.co" crossorigin>
 <link rel="modulepreload" href="supabaseClient.js?v=e6966f82">
-<link rel="stylesheet" href="style.css?v=e2dfb3c2">
+<link rel="stylesheet" href="style.css?v=f8d03601">
 <style>
   /* 커뮤니티 전용 — HTML은 네트워크 우선이라 항상 최신 */
   .cm-bar{display:flex;align-items:center;gap:10px;margin:22px 0 8px}
@@ -109,7 +109,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 커뮤니티는 닉네임으로 참여합니다. 실명·이메일은 공개되지 않아요.</div></footer>
 
-<script src="app.js?v=2e50aa2b"></script>
+<script src="app.js?v=14cbc502"></script>
 <script type="module">
 import {
   initAuth, getProfile, getErrorMessage,
@@ -208,6 +208,10 @@ function renderCompose() {
         <button type="button" class="addimg" id="cm-addimg">＋</button>
         <input type="file" id="cm-file" accept="image/*" multiple hidden>
       </div>
+      <p style="font-size:11.5px;color:var(--muted);line-height:1.5;margin:8px 0 0">
+        등록 시 <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.
+        욕설·혐오·불법·아동에게 유해한 콘텐츠는 무관용으로 삭제·제재되며, 부적절한 글은 신고할 수 있습니다.
+      </p>
       <div class="cm-actions">
         <button class="cm-btn ghost" id="cm-cancel2" type="button">취소</button>
         <button class="cm-btn" id="cm-submit" type="button">등록</button>
