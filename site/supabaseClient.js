@@ -5,8 +5,12 @@ const SUPABASE_URL = 'https://kavfzsdimsrhteohmirc.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_5_z5YGgiq4Fc1LeXHTZdGA_6JVd6ITY'
 const SITE_BASE   = 'https://gear-forest.com'
 
+// detectSessionInUrl:false — auth-callback.html이 exchangeCodeForSession을 직접 호출하므로
+// 자동 감지를 켜두면 클라이언트 생성 시 ?code=를 먼저 자동 교환하며 code verifier를
+// storage에서 소비·삭제한다. 그러면 우리 수동 교환이 "PKCE code verifier not found"로 실패한다.
+// 수동 교환 1회만 일어나도록 자동 감지를 끈다(PKCE SPA 표준 패턴).
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true }
+  auth: { flowType: 'pkce', detectSessionInUrl: false, persistSession: true }
 })
 
 // ── Auth ──────────────────────────────────────────────────────────────────
