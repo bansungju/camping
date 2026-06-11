@@ -551,13 +551,17 @@ async function setupHomeSearch() {
     if (active >= 0 && opts[active]) { location.href = opts[active].href; return; }
     const q = inp.value.trim();
     if (!q) return;
-    // 첫 번째 매치의 카테고리 슬러그로 이동
-    const first = idx.find(x => (x.b + " " + x.m).toLowerCase().includes(q.toLowerCase()));
+    // 브랜드명 정확 일치 우선 (H-39): "헬리녹스" 입력 시 brand.html 이동 (모델 매치보다 먼저)
+    const ql = q.toLowerCase();
+    const exactBrand = idx.find(x => x.b.toLowerCase() === ql);
+    if (exactBrand) { location.href = `brand.html?b=${encodeURIComponent(exactBrand.b)}`; return; }
+    // 첫 번째 모델 매치의 카테고리 슬러그로 이동
+    const first = idx.find(x => (x.b + " " + x.m).toLowerCase().includes(ql));
     if (first) {
       location.href = `category.html?cat=${first.s}&q=${encodeURIComponent(q)}`;
     } else {
-      // 브랜드 매치면 brand 페이지
-      const brandMatch = idx.find(x => x.b.toLowerCase().includes(q.toLowerCase()));
+      // 부분 브랜드 매치면 brand 페이지
+      const brandMatch = idx.find(x => x.b.toLowerCase().includes(ql));
       if (brandMatch) location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
     }
   });
@@ -987,7 +991,7 @@ function buildFilters(d, star) {
       fn: () => {
         const on = !!STATE.range[weightMeta.key];
         clearPresetFilters();
-        if (!on) STATE.range[weightMeta.key] = { max: +(p33 / 1000).toFixed(1) };
+        if (!on) STATE.range[weightMeta.key] = { max: p33 };
         syncFilterUI(); draw();
       }});
   }
@@ -2837,8 +2841,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // 모바일 하단 내비게이션 바 (동적 삽입)
   (function insertBottomNav() {
     const path = location.pathname;
-    const isItem = path.includes("/item/");
-    if (isItem) return;  // 상세 페이지는 네비 불필요
 
     // 라인 아이콘(24x24, stroke=currentColor → 활성 시 --accent 자동 상속)
     const SVG = {
@@ -2849,7 +2851,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const tabs = [
       { href: "/index.html",       icon: SVG.home,      label: "홈",    match: ["/", "/index.html"] },
-      { href: "/category.html",    icon: SVG.explore,   label: "탐색",  match: ["/category", "/brand", "/recommend"] },
+      { href: "/category.html",    icon: SVG.explore,   label: "탐색",  match: ["/category", "/brand", "/recommend", "/item"] },
       { href: "/community.html",   icon: SVG.community, label: "커뮤",  match: ["/community"] },
       { href: "/account.html",     icon: SVG.profile,   label: "마이",  match: ["/account"] },
     ];
