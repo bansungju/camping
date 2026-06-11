@@ -273,17 +273,19 @@
 - **7순환 추가 확인:** 실제 재현 — 경량→저가 전환 시 결과 0/244개. 또한 동일 프리셋 재클릭 시 ON 상태에서 OFF 토글이 안 됨(URL에 누적된 파라미터 제거 불가).
 - **해결(2026-06-11):** ① `clearPresetFilters()`(무게range·가격range·cap 삭제)를 각 프리셋 적용 전에 호출 → 상호배타(누적 제거). ② 각 프리셋에 `isOn()` 판정 추가, `fn()`을 토글식으로(켜져 있으면 끄기) 변경 → 동일 프리셋 재클릭 시 OFF + URL 파라미터 제거. ③ 클릭 핸들러가 `isOn()` 상태 기반으로 `.on` 표시 동기화(초기 URL 복원 시 활성 강조 포함). 로컬 프리뷰 검증 — 경량ON(weight_min__max=1.1)→저가 전환 시 무게 제거·가격만(price__max), 경량 재클릭 시 필터·URL 모두 제거, `.on` 표시 정확, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-77] 카드 `role="button"`에 `aria-label` 없음 — 스크린리더 상품명 미읽기
+### [M-77] ✅ 해결완료 — 카드 `role="button"`에 `aria-label` 없음 — 스크린리더 상품명 미읽기
 - **영역:** 카테고리/목록 — 상품 카드
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
 - **증상:** 상품 카드 div에 `role="button"` + `tabindex="0"`이 있으나 `aria-label` 없음. 스크린리더가 카드 포커스 시 "버튼"만 읽고 상품명을 읽지 못함. L-03(a 링크 없음)과 연관된 별개 접근성 문제.
 - **재현:** 카드 요소 → `aria-label` 속성 확인 → null
+- **해결(2026-06-11):** `.pli` 카드 div에 `aria-label="${브랜드} ${모델} 상세 보기"` 추가. 로컬 프리뷰 검증 — 카드 aria-label="큐물러스 매직 100 상세 보기" 확인, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-78] 카드 키보드 Enter 활성화 미동작 — `role="button"` ARIA 명세 위반
+### [M-78] ✅ 해결완료 — 카드 키보드 Enter 활성화 미동작 — `role="button"` ARIA 명세 위반
 - **영역:** 카테고리/목록 — 상품 카드
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `role="button"` + `tabindex="0"` 카드에 포커스 후 Enter/Space 키를 눌러도 상품 모달이 열리지 않음. ARIA 명세상 `role="button"` 요소는 Enter/Space로 활성화되어야 하나 keydown 핸들러 없음. WCAG 2.1 SC 4.1.2 위반.
 - **재현:** 카드에 Tab 포커스 → Enter → 모달 미열림
+- **해결(2026-06-11):** 리포트 시점 이후 `draw()`의 카드 키보드 핸들러가 이미 구현된 상태(`el.onkeydown`에서 `Enter`/`Space` → `e.preventDefault()` + `openProduct()`). 라이브 코드 재검증 — 카드 포커스 후 Enter·Space 모두 상품 상세 모달 정상 오픈(큐물러스 매직 100), 콘솔 에러 0. (별도 코드 추가 불필요, 동작 확인으로 해결 표기) [site/app.js](site/app.js)
 
 ### [M-69] www 서브도메인 직접 접근 시 이미지 403 + JS ReferenceError — 자산 로드 실패
 - **영역:** 상품상세 / 전체
