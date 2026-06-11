@@ -20,25 +20,39 @@
   <p>로그인 처리 중입니다…</p>
 </div>
 <script type="module">
-  import { supabase } from './supabaseClient.js?v=17f2ba74'
+  import { supabase } from './supabaseClient.js?v=459d55e9'
 
   // PKCE flow: ?code= 파라미터로 오는 경우 세션 교환
   const params = new URLSearchParams(location.search)
   const code = params.get('code')
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) { location.replace('./account.html?auth_error=1'); }
-    else        { location.replace('./account.html'); }
+    if (error) {
+      const msg = encodeURIComponent(error.message || error.status || 'unknown')
+      location.replace(`./account.html?auth_error=1&err=${msg}`)
+    } else {
+      location.replace('./account.html')
+    }
   } else {
-    // Implicit flow: hash fragment — onAuthStateChange로 세션 대기
+    // Implicit flow / hash fragment — onAuthStateChange로 세션 대기
+    // INITIAL_SESSION(null)은 클라이언트 초기화 시 항상 발화하므로 무시.
+    // SIGNED_IN 이벤트(실제 세션 생성)까지만 대기 후 이동.
+    let settled = false
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' && !session) return  // skip empty init event
+      if (settled) return
+      settled = true
       subscription.unsubscribe()
       if (session) { location.replace('./account.html'); }
       else         { location.replace('./account.html?auth_error=1'); }
     })
     // 이미 세션이 있으면 바로 이동
     const { data: { session } } = await supabase.auth.getSession()
-    if (session) { location.replace('./account.html'); }
+    if (session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }
+    // 15초 timeout — 세션 이벤트 미발화 시 auth_error 처리
+    setTimeout(() => {
+      if (!settled) { settled = true; subscription.unsubscribe(); location.replace('./account.html?auth_error=1'); }
+    }, 15000)
   }
 </script>
 </body>

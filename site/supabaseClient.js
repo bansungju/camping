@@ -5,7 +5,9 @@ const SUPABASE_URL = 'https://kavfzsdimsrhteohmirc.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_5_z5YGgiq4Fc1LeXHTZdGA_6JVd6ITY'
 const SITE_BASE   = 'https://gear-forest.com'
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true }
+})
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 let authSubscription = null
