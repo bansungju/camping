@@ -30,16 +30,24 @@ window.addEventListener("beforeinstallprompt", e => {
     <button type="button" class="pwa-install-btn">설치</button>
     <button type="button" class="pwa-dismiss-btn" aria-label="닫기">✕</button>
   </div>`;
-  banner.style.display = "block";
+  const showBanner = () => {
+    banner.style.display = "block";
+    document.documentElement.style.setProperty("--banner-h", banner.offsetHeight + "px");
+  };
+  const hideBanner = () => {
+    banner.style.display = "none";
+    document.documentElement.style.removeProperty("--banner-h");
+  };
+  showBanner();
   banner.querySelector(".pwa-install-btn").onclick = async () => {
     _pwaPrompt.prompt();
     const { outcome } = await _pwaPrompt.userChoice;
     if (outcome === "accepted") localStorage.setItem("pwa-dismissed", "1");
-    banner.style.display = "none";
+    hideBanner();
   };
   banner.querySelector(".pwa-dismiss-btn").onclick = () => {
     localStorage.setItem("pwa-dismissed", "1");
-    banner.style.display = "none";
+    hideBanner();
   };
 });
 const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
@@ -210,6 +218,19 @@ function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 f
   setWish(a);
   return i < 0;
 }
+// 비로그인 상태에서 처음 찜 추가 시 1회 로그인 유도 토스트
+function _showWishLoginHint() {
+  if (window._accUser || sessionStorage.getItem("wish-login-hint")) return;
+  sessionStorage.setItem("wish-login-hint", "1");
+  const msg = `🔖 찜 목록은 로그인하면 기기 간 동기화돼요 &nbsp;<a href="account.html" style="color:#fff;text-decoration:underline;font-weight:700">로그인</a>`;
+  showToast(msg, 4000, true);
+}
+function toggleWishWithHint(item, btn) {
+  const added = toggleWish(item);
+  if (added) _showWishLoginHint();
+  if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
+  return added;
+}
 // 모델·카테고리슬러그 → 위시/최근 항목(공용 형태)
 function wishItem(m, slug) {
   return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
@@ -220,15 +241,16 @@ function wishItem(m, slug) {
    세트 구조: {id, title, style, items:[{pcode,b,m,cap,s,p,img,weight_g,qty}], created_at} */
 function getSets() { try { return JSON.parse(localStorage.getItem("gear_sets") || "[]"); } catch (e) { return []; } }
 function saveSets(a) { localStorage.setItem("gear_sets", JSON.stringify(a)); }
-function showToast(msg, duration) {
+function showToast(msg, duration, isHtml) {
   let t = document.getElementById("app-toast");
   if (!t) {
     t = document.createElement("div"); t.id = "app-toast";
-    t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center";
+    t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;max-width:90vw;text-align:center";
     document.body.appendChild(t);
   }
   clearTimeout(t._tid);
-  t.textContent = msg;
+  if (isHtml) { t.innerHTML = msg; t.style.pointerEvents = "auto"; }
+  else { t.textContent = msg; t.style.pointerEvents = "none"; }
   requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
   t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; }, duration || 2400);
 }
@@ -455,10 +477,8 @@ async function setupHomeSearch() {
         e.preventDefault(); e.stopPropagation();
         const x = hits[+btn.dataset.hi];
         const item = { key: wishKey(x.b, x.m, x.cap || null), b: x.b, m: x.m, cap: x.cap || null, s: x.s, p: x.p, img: x.img };
-        const added = toggleWish(item);
-        btn.classList.toggle("on", added);
         btn.innerHTML = BOOKMARK_SVG;
-        btn.setAttribute("aria-pressed", added);
+        toggleWishWithHint(item, btn);
       };
     });
   };
@@ -746,11 +766,14 @@ async function renderCategory() {
   } else { note.style.display = "none"; }
 
   buildFilters(d, star);
-  renderStyleChips(d);
   STATE.hasCap = d.models.some(m => m.capacity != null);
   STATE.sortKey = "spec:" + (star[0] && star[0].key);
   STATE.sortAsc = defaultAsc(STATE.sortKey);   // 주력지표 '좋은 것 먼저'
   restoreState(params);                        // URL의 필터상태 복원(공유링크·뒤로가기)
+  // style= 파라미터로 직접 진입·공유 시 명시적 sort가 없으면 스타일 기본 정렬을 적용한다. (H-22 ②)
+  if (STATE.campStyle && !params.get("sort")) applyStyleSort(d);
+  // 칩 active(.on) 복원은 STATE.campStyle 복원 이후에 그려야 한다. (H-22 ①)
+  renderStyleChips(d);
   syncFilterUI();                              // 복원된 STATE를 컨트롤(칩·입력)에 반영
   document.getElementById("q").value = params.get("q") || rawQ;   // 표시는 원본, 필터는 소문자
   document.getElementById("q").oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
@@ -1206,9 +1229,8 @@ function openProduct(m) {
   }
   const wbtn = modal.querySelector(".pmwish");
   wbtn.onclick = () => {
-    const added = toggleWish(wishItem(m, STATE.slug));
-    wbtn.classList.toggle("on", added); wbtn.innerHTML = BOOKMARK_SVG;
-    wbtn.setAttribute("aria-pressed", added);
+    wbtn.innerHTML = BOOKMARK_SVG;
+    toggleWishWithHint(wishItem(m, STATE.slug), wbtn);
   };
   const setBtn = modal.querySelector(".pmset");
   if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug));
@@ -1395,9 +1417,8 @@ function draw() {
   // 찜 토글(카드 클릭=모달과 분리 → stopPropagation)
   document.querySelectorAll("#list .pli-wish").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
-    const added = toggleWish(wishItem(rows[+btn.dataset.mi], STATE.slug));
-    btn.classList.toggle("on", added); btn.innerHTML = BOOKMARK_SVG;
-    btn.setAttribute("aria-pressed", added);
+    btn.innerHTML = BOOKMARK_SVG;
+    toggleWishWithHint(wishItem(rows[+btn.dataset.mi], STATE.slug), btn);
   });
   document.querySelectorAll("#list .pli-cmp").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
@@ -1568,7 +1589,7 @@ async function renderRecommend() {
   document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음.`;
 }
 
-/* ---------- 최근 본 상품(홈, 가로 스크롤) ---------- */
+/* ---------- 이번 주 인기: 카테고리별 랭킹 ---------- */
 const HOT_FALLBACK = [
   { slug: "backpacking-tent", name: "백패킹텐트" },
   { slug: "sleeping-bag",     name: "침낭" },
@@ -1581,26 +1602,50 @@ async function renderHotSection(categories) {
   const listEl = document.getElementById("hot-list");
   if (!sec || !listEl) return;
 
-  // RPC로 최근 7일 클릭 TOP-8 개별 장비 집계
+  // RPC로 최근 7일 클릭 상위 30개 집계 (카테고리별 분류용으로 여유있게)
   try {
     const { supabase } = await import("./supabaseClient.js");
-    const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 8 });
+    const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });
     if (data && data.length >= 3) {
-      listEl.innerHTML = data.map(h => {
-        const catName = (categories || []).find(c => c.slug === h.cat)?.name || h.cat;
-        const tint = catTint(catName);
-        const icon = catIcon(catName);
-        return `<a class="hot-item" href="category.html?cat=${h.cat}&brands=${encodeURIComponent(h.brand)}&q=${encodeURIComponent(h.model)}">
-          <div class="hot-item-icon" style="background:${tint}">${icon}</div>
-          <div class="hot-item-info">
-            <div class="hot-item-brand">${esc(h.brand)}</div>
-            <div class="hot-item-model">${esc(h.model)}</div>
-          </div>
-          <div class="hot-item-cnt">${h.clicks}회</div>
-        </a>`;
-      }).join("");
-      sec.style.display = "block";
-      return;
+      // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
+      const catMap = new Map();
+      for (const h of data) {
+        if (!catMap.has(h.cat)) catMap.set(h.cat, []);
+        catMap.get(h.cat).push(h);
+      }
+      // 카테고리별 최대 3개씩, 최소 2개 항목 있는 카테고리만 표시
+      const sections = [...catMap.entries()]
+        .filter(([, items]) => items.length >= 2)
+        .slice(0, 5); // 최대 5개 카테고리
+
+      if (sections.length >= 1) {
+        listEl.innerHTML = sections.map(([cat, items]) => {
+          const catName = (categories || []).find(c => c.slug === cat)?.name || cat;
+          const icon = catIcon(catName);
+          const tint = catTint(catName);
+          const top3 = items.slice(0, 3);
+          const rowsHtml = top3.map((h, i) =>
+            `<a class="hot-rank-row" href="category.html?cat=${cat}&brands=${encodeURIComponent(h.brand)}&q=${encodeURIComponent(h.model)}">
+              <span class="hot-rank-num rank-${i + 1}">${i + 1}</span>
+              <span class="hot-rank-info">
+                <span class="hot-rank-brand">${esc(h.brand)}</span>
+                <span class="hot-rank-model">${esc(h.model)}</span>
+              </span>
+              <span class="hot-rank-cnt">${h.clicks}회</span>
+            </a>`
+          ).join("");
+          return `<div class="hot-cat-block">
+            <div class="hot-cat-header">
+              <span class="hot-cat-icon" style="background:${tint}">${icon}</span>
+              <span class="hot-cat-name">${esc(catName)}</span>
+              <a class="hot-cat-more" href="category.html?cat=${cat}">전체보기 ›</a>
+            </div>
+            <div class="hot-rank-list">${rowsHtml}</div>
+          </div>`;
+        }).join("");
+        sec.style.display = "block";
+        return;
+      }
     }
   } catch (_) {}
 
@@ -1819,10 +1864,30 @@ function renderAccount() {
   const wishEl = document.getElementById("wishlist");
   const cnt = document.getElementById("wishcount");
   if (wishSec) {
-    wishSec._accHasContent = wishes.length > 0;
-    wishSec.style.display = (wishes.length && (!isLoggedIn || activeTab === "wish")) ? "block" : "none";
+    wishSec._accHasContent = true;
+    wishSec.style.display = (!isLoggedIn || activeTab === "wish") ? "block" : "none";
   }
   if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
+  let wishEmptyEl = document.getElementById("wish-empty");
+  if (wishEl) {
+    if (!wishes.length) {
+      wishEl.innerHTML = "";
+      if (!wishEmptyEl) {
+        wishEmptyEl = document.createElement("div");
+        wishEmptyEl.id = "wish-empty";
+        wishEmptyEl.style.cssText = "text-align:center;padding:32px 0;color:var(--muted);font-size:14px";
+        wishEmptyEl.innerHTML = `<div style="font-size:32px;margin-bottom:10px">🔖</div>
+          <div>아직 찜한 상품이 없어요</div>
+          <div style="font-size:12px;margin-top:6px">상품 카드의 🔖 버튼으로 추가해보세요</div>
+          ${!isLoggedIn ? `<a href="account.html#login" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
+        wishEl.after(wishEmptyEl);
+      } else {
+        wishEmptyEl.style.display = "block";
+      }
+    } else {
+      if (wishEmptyEl) wishEmptyEl.style.display = "none";
+    }
+  }
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
