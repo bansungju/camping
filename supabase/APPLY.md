@@ -17,11 +17,14 @@ Dashboard → Storage → Buckets에서 **`review-images`** 버킷을 **Public**
 그다음 **`migrations/003_storage_policies.sql`** 실행(소유자 폴더 업로드 정책).
 사진 경로 규칙: `review-images/{user_id}/{uuid}.{ext}`
 
-## 4. 집계 RPC (홈 "이번 주 인기" + 커뮤니티 인기 태그)
-미적용 시 RPC가 PostgREST 스키마 캐시에 없어 **404(PGRST202)** → 홈 "이번 주 인기"가
-하드코딩 fallback 노출(버그 H-01). SQL Editor에서 아래 두 파일을 실행하세요(멱등):
-- **`migrations/012_top_gear_tags_rpc.sql`** → `get_top_gear_tags(int)` + EXECUTE grant
-- **`migrations/013_hot_items_rpc.sql`** → `get_hot_items(int, int)` + EXECUTE grant
+## 4. 홈 "이번 주 인기" RPC (버그 H-01) — ⭐ APPLY-NOW.sql 권장
+미적용 시 RPC가 PostgREST 스키마 캐시에 없어 **404** → 홈 "이번 주 인기"가
+하드코딩 fallback 노출. **단, 013은 `click_events`(008) 테이블에 의존**하는데
+라이브에 008이 미적용이라 013만 단독 실행하면 함수 생성이 실패함.
+
+→ **`supabase/APPLY-NOW.sql` 전체를 SQL Editor에 붙여넣고 RUN** 하세요(한 트랜잭션·멱등).
+   008(click_events 테이블·RLS·grant) → 013(get_hot_items) → 015(댓글 카운트)를 의존성
+   순서로 한 번에 적용합니다.
 
 > 적용 검증(익명 anon 키로):
 > ```
@@ -30,6 +33,10 @@ Dashboard → Storage → Buckets에서 **`review-images`** 버킷을 **Public**
 >   -H "Content-Type: application/json" -d '{"days_n":7,"limit_n":30}'
 > ```
 > 200 + JSON 배열이면 성공(빈 배열 `[]`은 클릭 데이터 부재 — 정상). 404면 미적용.
+
+> 🔶 **보류: 012 `get_top_gear_tags`(커뮤니티 인기 태그)** — `posts.tags`/`is_public`(007)
+> + `gear_sets`(006) 컬럼/테이블이 라이브에 없어 지금 적용 불가(`42703 column "tags"`).
+> 인기태그 기능을 켜려면 006 → 007 먼저 적용 후 012 실행. H-01/H-34와 무관한 부차 기능.
 
 ## 5. 댓글 소프트삭제 카운트 정합성 (버그 H-34)
 라이브 `trg_comment_count`(002)는 INSERT/DELETE만 반응하나 앱은 댓글을

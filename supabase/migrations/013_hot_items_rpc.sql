@@ -4,11 +4,12 @@ RETURNS TABLE(brand text, model text, cat text, clicks bigint)
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public  -- SECURITY DEFINER 함수 검색경로 고정(스키마 하이재킹 방지)
 AS $$
-  SELECT brand, model, cat, COUNT(*) AS clicks
+  -- click_events 컬럼은 slug(카테고리 슬러그) — 앱 렌더는 cat 키를 기대하므로 slug AS cat 매핑
+  SELECT brand, model, slug AS cat, COUNT(*) AS clicks
   FROM click_events
   WHERE created_at > NOW() - (days_n || ' days')::interval
     AND brand IS NOT NULL AND model IS NOT NULL
-  GROUP BY brand, model, cat
+  GROUP BY brand, model, slug
   ORDER BY clicks DESC
   LIMIT limit_n;
 $$;
