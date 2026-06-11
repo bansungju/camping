@@ -22,6 +22,8 @@
 | 11 | 계정/로그인 (2순환) | 2026-06-11 | 7건 |
 | + | 사용자 직접 제보 | 2026-06-11 | 4건 |
 | 12 | 커뮤니티/소셜 (2순환) | 2026-06-11 | 5건 |
+| 13 | 홈/메인 (3순환) | 2026-06-11 | 5건 (중복 3건 제외) |
+| 14 | 카테고리/목록 (3순환) | 2026-06-11 | 3건 (중복 2건 제외) |
 
 ---
 
@@ -32,6 +34,17 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 페이지 로드 시 Supabase RPC `get_hot_items` 호출이 404 반환. '이번 주 인기' 섹션이 실제 데이터 대신 하드코딩된 4개 항목(백패킹텐트, 침낭, 버너, 랜턴)을 표시. 콘솔에 에러 노출.
 - **재현:** https://gear-forest.com 접속 → 브라우저 콘솔 확인 → 'Failed to load resource: 404' 확인
+
+### [H-21] https://gear-forest.com 직접 접근 시 ERR_TOO_MANY_REDIRECTS
+- **영역:** 홈/메인
+- **URL:** https://gear-forest.com
+- **증상:** non-www 주소로 직접 진입하면 리다이렉트 루프(gear-forest.com↔www.gear-forest.com)로 페이지 열리지 않음. www로 진입 시에는 정상. SEO canonical·공유 링크가 non-www를 가리키므로 외부 유입 사용자가 진입 불가.
+
+### [H-22] style 필터 URL 공유·직접 진입 시 칩 active 복원 실패 + 필터 미적용
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag&style=backpacking
+- **증상:** URL에 `style=backpacking` 파라미터가 있어도 직접 진입·새로고침 시 ① 해당 칩 버튼이 active(.on) 상태가 아니고 ② 필터도 미적용되어 전체 목록이 표시됨. URL 공유 링크가 받는 사람에게 필터링된 결과를 보여주지 못함. `renderStyleChips(d)` 호출이 `restoreState(params)` 이전에 위치하여 STATE에 campStyle이 빈 값임.
+- **재현:** `?cat=sleeping-bag`에서 백패킹 칩 클릭 → URL 복사 → 새 탭에서 열기 → 칩 비활성·전체 목록 표시
 
 ### [H-03] tent·cooking 카테고리 JSON 503으로 페이지 로드 실패
 - **영역:** 카테고리/목록
@@ -45,10 +58,12 @@
 - **증상:** `/images/*.jpg` 요청이 403/503 다수 발생. 221개 이미지 전체 로드 실패, 카드에 '이미지 준비중' 대체 텍스트 표시.
 - **재현:** `/category.html?cat=sleeping-bag` 접속 후 네트워크 탭 확인
 
-### [H-05] 데이터 로드 실패 시 스켈레톤 카드 6개가 화면에 잔존
+### [H-05] ✅ 해결완료 — 데이터 로드 실패 시 스켈레톤 카드 6개가 화면에 잔존
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=tent
 - **증상:** JSON 로드 실패로 에러 메시지가 표시된 상태에서도 `.pli-skel` 스켈레톤 카드 6개가 시각적으로 남아 있음. aria-hidden=true 처리는 되어 있으나 에러 메시지 아래 회색 카드가 보임.
+- **원인(2026-06-11):** `renderCategory()`가 시작 시 `renderCategorySkeleton()`으로 #list에 스켈레톤 6개를 채우는데, JSON 로드 실패 catch 블록이 title 텍스트만 바꾸고 #list는 정리하지 않아 스켈레톤이 잔존.
+- **해결:** catch 블록에서 #list를 비우고 단일 에러 상태(`.cat-error` — 안내 문구 + '전체 카테고리 보기' 복구 링크, `role="alert"`)로 교체. CSS `.cat-error*` 추가. 로컬 프리뷰 검증 — 실패 카테고리에서 스켈레톤 0개·에러 상태 표시, 정상 카테고리(침낭 244개)는 회귀 없음. [site/app.js](site/app.js), [site/style.css](site/style.css)
 
 ### [H-17] 자동완성 드롭다운 키보드 탐색(↑↓) 미구현 — WAI-ARIA Combobox 패턴 미준수
 - **영역:** 검색 (접근성)
@@ -71,15 +86,17 @@
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** `/item/backpacking-tent/app.js` 및 `style.css`가 HTTP 504로 실패하여 상품 상세 내용이 없고 홈 페이지 콘텐츠(title: '장비의 숲 — 정량스펙 별점 DB')가 렌더링됨. 해당 카테고리 상품 상세 전체 접근 불가.
 
-### [H-14] 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 불가
+### [H-14] 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 불가 ⚠️ 미연결(의도적)
 - **영역:** 카테고리/목록 (모달)
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 상품 카드 클릭 시 열리는 모달의 '구매하기' 버튼이 `disabled` 상태 고정, '구매 링크를 준비 중입니다.' 안내만 표시. 침낭 244개 상품 전체 동일. 쿠팡 파트너스 수익화 핵심 기능 미작동. (상세 페이지 [H-08]과 동일 문제)
+- **비고:** 사용자 확인 — 쿠팡 파트너스 API 연결 전 의도적 disabled. 연결 시 수정 필요.
 
-### [H-15] 데이터 로드 실패 카테고리에서 h1이 오류 메시지·스켈레톤이 동시 노출
+### [H-15] ✅ 해결완료 — 데이터 로드 실패 카테고리에서 h1이 오류 메시지·스켈레톤이 동시 노출
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=stove
 - **증상:** JSON 503 카테고리에서 h1='카테고리를 찾을 수 없습니다.' 오류 메시지와 스켈레톤 카드 6개가 동시에 DOM에 존재. 이중 오류 상태로 사용자 혼란. ([H-05] 스켈레톤 잔존의 확장 사례)
+- **해결(2026-06-11):** [H-05]와 동일 수정으로 해결. catch 블록이 #list의 스켈레톤을 제거하고 단일 에러 상태로 교체하므로 h1 오류 메시지와 스켈레톤이 더 이상 공존하지 않음. [site/app.js](site/app.js)
 
 ### [H-12] canonical·og:url이 non-www인데 실제 서빙 URL은 www — SEO 중복 콘텐츠
 - **영역:** 홈/메인 (SEO)
@@ -245,6 +262,24 @@
 - **영역:** 홈/메인 (접근성)
 - **URL:** https://www.gear-forest.com/
 - **증상:** 검색 input이 `<form>` 안에 없어 표준 HTML 폼 제출 동작 없음. WCAG 2.1 SC 2.1.1 비준수.
+
+### [M-24] 유효하지 않은 카테고리 접근 시 빈 필터바 함께 노출
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=nonexistent
+- **증상:** 존재하지 않는 `cat` 값으로 접근 시 '카테고리를 찾을 수 없습니다' 메시지가 표시되지만 빈 필터바(슬라이더, 브랜드 목록 등)가 함께 노출되어 오해를 줌. 에러 상태에서 필터 UI는 숨겨야 함.
+- **재현:** `category.html?cat=doesnotexist` 접속 → 에러 메시지 아래 빈 필터 확인
+
+### [M-22] 데스크톱 탭바 '📊비교' 탭 — 비교 UI 미구현
+- **영역:** 홈/메인 (데스크톱)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 데스크톱 상단 탭바의 '📊비교' 탭을 클릭하면 `index.html`로 이동할 뿐 비교 전용 UI(상품 선택·비교표 등)가 전혀 없음. 탭 이름과 기능이 불일치.
+- **재현:** 데스크톱(≥768px)에서 상단 탭바 '📊비교' 클릭 → 홈 화면만 로드
+
+### [M-23] 비활성 nav 항목에 `aria-current="false"` 명시 — ARIA 명세 위반
+- **영역:** 홈/메인 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 탭바 nav의 비활성 항목이 `aria-current="false"`를 명시적으로 선언. ARIA 명세상 `aria-current`는 현재 항목에만 지정하고 비활성 항목은 속성 자체를 생략해야 함. 스크린리더가 잘못된 상태 정보를 읽어줄 수 있음.
+- **재현:** 홈 접속 → DevTools > Elements에서 `.tab-item` 확인 → `aria-current="false"` 속성 존재
 
 ### [M-16] 상단 탭바 홈 탭 레이블 '📊비교' — 하단 탭바 '홈'과 불일치
 - **영역:** 홈/메인 (UI)
@@ -451,6 +486,23 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 모바일 375px에서 `.personas` 그리드가 단일 열로 렌더링되어 카드 4개가 세로로 쌓임. 2열 그리드가 더 자연스러운 UX.
 
+### [L-28] 상품 상세 모달에 role="dialog"·aria-modal 없음
+- **영역:** 카테고리/목록 — 상품 카드 모달
+- **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** 상품 카드 클릭 시 열리는 모달(`.pmodal`)에 `role="dialog"`, `aria-modal`, `aria-labelledby` 속성 없음. 스크린리더가 모달 진입을 인식하지 못함.
+- **재현:** 카테고리 페이지에서 카드 클릭 → DevTools에서 `.pmodal` 속성 확인
+
+### [L-26] Skip-to-content 링크 미존재 — 키보드/스크린리더 접근성 미흡
+- **영역:** 홈/메인 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** `<a href="#main" class="skip-to-content">` 등 메인 콘텐츠 바로가기 링크가 없어 키보드 사용자가 Tab으로 탐색할 때 상단 nav 전체를 순회해야 함. WCAG 2.4.1(G1) 준수 미흡.
+- **재현:** 홈 접속 → Tab 키 반복 → 콘텐츠 바로가기 링크 없음 확인
+
+### [L-27] 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
+- **영역:** 홈/메인 — 공통 푸터
+- **URL:** https://www.gear-forest.com/
+- **증상:** 하단 푸터에 '개인정보처리방침', '이용약관' 링크가 없음. 국내 개인정보보호법·정보통신망법상 서비스 운영 시 필수 고지 항목.
+
 ---
 
-*다음 회차: 홈/메인 (3순환)*
+*다음 회차: 상품 상세 (3순환)*

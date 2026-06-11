@@ -681,7 +681,19 @@ async function renderCategory() {
   if (!slug) { return renderBrowse(); }
   let d;
   try { d = await getJSON(`data/${slug}.json`); }
-  catch (e) { document.getElementById("title").textContent = "카테고리를 찾을 수 없습니다."; return; }
+  catch (e) {
+    // 데이터 로드 실패 — 스켈레톤 잔존(H-05) 및 오류 메시지·스켈레톤 동시 노출(H-15) 방지.
+    // 목록을 비우고 단일 에러 상태 + 복구 경로를 표시한다.
+    document.getElementById("title").textContent = "카테고리를 불러오지 못했습니다.";
+    const listEl = document.getElementById("list");
+    if (listEl) listEl.innerHTML =
+      `<div class="cat-error" role="alert">
+         <p class="cat-error-t">데이터를 불러오지 못했어요.</p>
+         <p class="nd">잠시 후 다시 시도하거나 다른 카테고리를 둘러보세요.</p>
+         <a class="cat-error-link" href="category.html">전체 카테고리 보기 ›</a>
+       </div>`;
+    return;
+  }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
   STATE = { data: d, slug: slug, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
             sortKey: null, sortAsc: false, campStyle: "",
