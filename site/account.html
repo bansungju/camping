@@ -27,11 +27,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
-<link rel="stylesheet" href="style.css?v=f879cf43">
+<link rel="stylesheet" href="style.css?v=a76e2907">
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="logo" href="index.html">장비의 <b>숲</b></a>
+  <a class="logo" href="index.html"><img class="logo-mark" src="icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></a>
   <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
 </div></header>
 
@@ -47,6 +47,13 @@
         <div style="height:11px;background:var(--card2);border-radius:4px;width:40%"></div>
       </div>
     </div>
+  </div>
+
+  <!-- 탭 바 — 로그인 후 renderAccount()가 display:flex로 전환 -->
+  <div id="acc-tabs" class="acc-tabs" style="display:none">
+    <button class="acc-tab active" data-tab="wish" type="button">❤️ 찜목록</button>
+    <button class="acc-tab" data-tab="sets" type="button">🎒 내 세트</button>
+    <button class="acc-tab" data-tab="logs" type="button">📝 내 로그</button>
   </div>
 
   <!-- 찜한 상품 — 로그인 이후에만 표시 -->

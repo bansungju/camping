@@ -1364,18 +1364,19 @@ function openProduct(m) {
 }
 
 /* ---- 비교 기능 ---- */
-let _cmpSet = [];  // 선택된 모델 인덱스 배열 (최대 3)
+let _cmpSet = [];  // 선택된 '모델 객체' 배열 (최대 3). 인덱스가 아니라 객체 참조 —
+                   // 정렬·필터로 rows 순서가 바뀌어도 같은 제품을 가리킨다(M-110).
 
-function toggleCmp(mi, rows) {
-  const idx = _cmpSet.indexOf(mi);
+function toggleCmp(m, rows) {
+  const idx = _cmpSet.indexOf(m);
   if (idx >= 0) { _cmpSet.splice(idx, 1); }
-  else if (_cmpSet.length < 3) { _cmpSet.push(mi); }
+  else if (_cmpSet.length < 3) { _cmpSet.push(m); }
   else { return; }  // 3개 초과 무시
   updateCmpBar(rows);
   document.querySelectorAll("#list .pli-cmp").forEach(btn => {
-    const i = +btn.dataset.mi;
-    btn.classList.toggle("on", _cmpSet.includes(i));
-    btn.setAttribute("aria-pressed", _cmpSet.includes(i));
+    const cm = rows[+btn.dataset.mi];
+    btn.classList.toggle("on", _cmpSet.includes(cm));
+    btn.setAttribute("aria-pressed", _cmpSet.includes(cm));
   });
 }
 
@@ -1399,7 +1400,7 @@ function updateCmpBar(rows) {
 function openCmpModal(rows) {
   const d = STATE.data;
   const metrics = d.metrics.filter(m => m.is_star);
-  const items = _cmpSet.map(i => rows[i]).filter(Boolean);
+  const items = _cmpSet.filter(Boolean);
   if (items.length < 2) return;
 
   let modal = document.getElementById("cmp-modal");
@@ -1504,7 +1505,7 @@ function draw() {
         `${s.stars != null ? " " + stars(s.stars) : ""}${badge}</span>`;
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
-    const inCmp = _cmpSet.includes(i);
+    const inCmp = _cmpSet.includes(m);
     return `<div class="pli" role="button" tabindex="0" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
