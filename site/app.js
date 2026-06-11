@@ -4,30 +4,10 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 
-// 다크모드 토글 (localStorage 영속)
+// 다크모드 임시 비활성화 — 라이트모드 강제 고정, 토글 버튼 미노출 (#8)
+// TODO: 다크모드 색상 정비 후 토글 복원
 (function initTheme() {
-  const saved = localStorage.getItem("theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const dark = saved ? saved === "dark" : prefersDark;
-  if (dark) document.documentElement.setAttribute("data-theme", "dark");
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const header = document.querySelector("header .wrap") || document.querySelector("header");
-    if (!header) return;
-    const btn = document.createElement("button");
-    btn.className = "theme-toggle";
-    btn.setAttribute("aria-label", "다크모드 전환");
-    btn.title = "다크모드 전환";
-    const isDark = () => document.documentElement.getAttribute("data-theme") === "dark";
-    btn.textContent = isDark() ? "☀️" : "🌙";
-    btn.onclick = () => {
-      const nowDark = !isDark();
-      document.documentElement.setAttribute("data-theme", nowDark ? "dark" : "light");
-      localStorage.setItem("theme", nowDark ? "dark" : "light");
-      btn.textContent = nowDark ? "☀️" : "🌙";
-    };
-    header.appendChild(btn);
-  });
+  document.documentElement.setAttribute("data-theme", "light");
 }());
 
 // PWA 설치 유도 배너
