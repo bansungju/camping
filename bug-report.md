@@ -11,6 +11,16 @@
 |------|------|----------|-----------|
 | 1 | 홈/메인 | 2026-06-11 | 5건 |
 | 2 | 카테고리/목록 | 2026-06-11 | 7건 |
+| 3 | 상품 상세 | 2026-06-11 | 9건 |
+| 4 | 검색 | 2026-06-11 | 3건 (중복 2건 제외) |
+| 5 | 계정/로그인 | 2026-06-11 | 6건 (중복 1건 제외) |
+| 6 | 커뮤니티/소셜 | 2026-06-11 | 5건 (중복 1건 제외) |
+| 7 | 홈/메인 (2순환) | 2026-06-11 | 9건 |
+| 8 | 카테고리/목록 (2순환) | 2026-06-11 | 6건 |
+| 9 | 상품 상세 (2순환) | 2026-06-11 | 6건 (중복 1건 제외) |
+| 10 | 검색 (2순환) | 2026-06-11 | 7건 |
+| 11 | 계정/로그인 (2순환) | 2026-06-11 | 7건 |
+| + | 사용자 직접 제보 | 2026-06-11 | 4건 |
 
 ---
 
@@ -39,6 +49,86 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=tent
 - **증상:** JSON 로드 실패로 에러 메시지가 표시된 상태에서도 `.pli-skel` 스켈레톤 카드 6개가 시각적으로 남아 있음. aria-hidden=true 처리는 되어 있으나 에러 메시지 아래 회색 카드가 보임.
 
+### [H-17] 자동완성 드롭다운 키보드 탐색(↑↓) 미구현 — WAI-ARIA Combobox 패턴 미준수
+- **영역:** 검색 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** ↑↓ 키로 드롭다운 항목 간 이동 불가. `aria-expanded`, `aria-haspopup`, `aria-autocomplete`, `role="option"`, `aria-selected`, `aria-activedescendant` 등 ARIA 속성 전무. 스크린리더 사용자 자동완성 접근 불가.
+
+### [H-18] ✅ 해결완료 — Esc 키가 드롭다운 닫기와 동시에 검색 입력값 초기화
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 자동완성 표시 중 Esc 누르면 드롭다운 닫힘과 동시에 입력값이 빈 문자열로 지워짐. 기대 동작은 드롭다운만 닫히고 입력값 유지.
+- **해결(2026-06-11):** `setupHomeSearch()`의 keydown 핸들러에 Escape 분기 추가. `input[type=search]`의 네이티브 Esc=초기화 동작을 `e.preventDefault()`로 차단하고 드롭다운만 닫도록 처리. 로컬 프리뷰 검증 — Esc 시 드롭다운 display block→none, 입력값 '헬리녹스' 유지 확인. [site/app.js](site/app.js)
+
+### [H-19] Service Worker 오프라인 폴백 — `category.html?cat=...` URL 캐시 miss → 홈 서빙
+- **영역:** 검색 (PWA)
+- **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** SW 캐시에 쿼리스트링 없는 `category.html`만 저장됨. 네트워크 불안정 시 `?cat=backpacking-tent` URL이 캐시 miss → `index.html` 폴백 → 홈 화면 노출. `caches.match(req, { ignoreSearch: true })` 로 해결 가능.
+
+### [H-16] backpacking-tent 카테고리 상품 상세 전체 접근 불가 — 홈 HTML 서빙
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** `/item/backpacking-tent/app.js` 및 `style.css`가 HTTP 504로 실패하여 상품 상세 내용이 없고 홈 페이지 콘텐츠(title: '장비의 숲 — 정량스펙 별점 DB')가 렌더링됨. 해당 카테고리 상품 상세 전체 접근 불가.
+
+### [H-14] 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 불가
+- **영역:** 카테고리/목록 (모달)
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 상품 카드 클릭 시 열리는 모달의 '구매하기' 버튼이 `disabled` 상태 고정, '구매 링크를 준비 중입니다.' 안내만 표시. 침낭 244개 상품 전체 동일. 쿠팡 파트너스 수익화 핵심 기능 미작동. (상세 페이지 [H-08]과 동일 문제)
+
+### [H-15] 데이터 로드 실패 카테고리에서 h1이 오류 메시지·스켈레톤이 동시 노출
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=stove
+- **증상:** JSON 503 카테고리에서 h1='카테고리를 찾을 수 없습니다.' 오류 메시지와 스켈레톤 카드 6개가 동시에 DOM에 존재. 이중 오류 상태로 사용자 혼란. ([H-05] 스켈레톤 잔존의 확장 사례)
+
+### [H-12] canonical·og:url이 non-www인데 실제 서빙 URL은 www — SEO 중복 콘텐츠
+- **영역:** 홈/메인 (SEO)
+- **URL:** https://www.gear-forest.com/
+- **증상:** `<link rel="canonical">`과 `og:url`이 `https://gear-forest.com/`(non-www)으로 설정되어 있으나 실제 서빙 URL은 `https://www.gear-forest.com/`. 검색엔진이 두 버전을 별개 문서로 인식해 PageRank 분산 위험. [H-10] OAuth 도메인 불일치와 같은 근본 원인(non-www/www 혼용).
+
+### [H-20] 최근 본 상품 카드 클릭 불가 — 링크/버튼 동작 없음
+- **영역:** 홈/메인
+- **URL:** https://www.gear-forest.com/
+- **증상:** 홈의 '최근 본 상품' 섹션에서 카드를 클릭해도 상품 상세 페이지로 이동하지 않음. 클릭 이벤트가 연결되지 않았거나 링크 href가 누락된 것으로 추정.
+- **제보:** 사용자 직접 제보
+
+### [H-13] 최근 본 상품 섹션 이미지 403 — 썸네일 전체 깨짐
+- **영역:** 홈/메인
+- **URL:** https://www.gear-forest.com/
+- **증상:** localStorage에 저장된 최근 본 상품(images/105.jpg, images/922.jpg)을 불러올 때 403 반환. '최근 본 상품' 카드에 이미지 없이 '이미지 준비중'만 표시. [H-04] 이미지 서버 오류와 동일 근본 원인.
+
+### [H-10] OAuth redirectTo URL이 www 없는 도메인으로 하드코딩 — 로그인 실패 가능
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** `supabaseClient.js`의 `SITE_BASE`가 `https://gear-forest.com`으로 고정. 실제 사이트는 `https://www.gear-forest.com`으로 리다이렉트되므로 Google OAuth 콜백 URL이 불일치할 경우 로그인 실패.
+
+### [H-11] 다크모드 토글이 '정비 중'이라고 표시되면서 클릭 가능 상태로 렌더링
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 설정 섹션에 '정비 중'이라고 안내하지만 토글은 `disabled=false`·`pointerEvents=auto` 상태로 실제 클릭 가능. 초기 `data-theme=dark` 적용으로 `checked=true`까지 표시되어 상태가 모순.
+
+### [H-09] 검색 자동완성 클릭/Enter 시 clean URL로 이동 → CSS·JS MIME 오류, 페이지 완전 파손
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/category/backpacking-tent?q=%ED%85%90%ED%8A%B8
+- **증상:** 홈 검색창에서 자동완성 클릭 또는 Enter 시 `category/backpacking-tent?q=...` clean URL로 이동. `category/style.css`와 `category/app.js`가 MIME 오류로 로드 실패 → `ReferenceError: renderCategory is not defined` → 페이지가 '불러오는 중…'에서 영구 정지.
+- **재현:** 홈 → 검색창에 '텐트' 입력 → 자동완성 클릭 또는 Enter
+- **참고:** `category.html?cat=backpacking-tent` 방식은 정상. [H-02]와 동일 근본 원인 — 검색 자동완성 링크 href가 아직 구 clean URL 형식 사용 중
+
+### [H-06] 상세 페이지 탭바 링크 상대경로 오류 — 서비스 점검 페이지로 이동
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 상세 페이지 탭바의 '비교', '커뮤니티', '내 정보' 링크가 상대경로(index.html, community.html, account.html)로 하드코딩되어 `/item/{category}/index.html` 등으로 이동. 해당 URL은 '서비스 점검 중입니다' 오류 페이지 반환.
+- **재현:** 상세 페이지 진입 후 탭바 아무 탭 클릭
+
+### [H-07] 상세 페이지에 찜하기(북마크) 버튼 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 카테고리 목록 모달에는 찜하기 버튼이 있으나, 상세 페이지에는 완전히 누락됨.
+
+### [H-08] 상세 페이지에 구매하기(쿠팡 파트너스) 버튼 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 카테고리 모달에는 구매하기 버튼(disabled)이 있으나, 상세 페이지에는 구매 버튼 및 쿠팡 파트너스 링크 자체가 존재하지 않음.
+
 ### [H-02] 카테고리 링크 클릭 시 JS·CSS·manifest 404 — 페이지 렌더링 불가
 - **영역:** 홈/메인 → 카테고리 링크
 - **URL:** https://www.gear-forest.com/category/backpacking-tent
@@ -49,6 +139,155 @@
 ---
 
 ## 🟡 Medium
+
+### [M-31] 로그아웃 버튼 없음 — 로그인한 사용자가 로그아웃 불가
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 계정 페이지 어디에도 로그아웃 버튼이 표시되지 않음. 로그인 상태에서 세션 종료 방법이 없음.
+- **제보:** 사용자 직접 제보
+
+### [M-32] 내 정보 영역 근처에 불필요한 그래픽/UI 요소 존재
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** '내 정보' 섹션 부근에 의도하지 않은 것으로 보이는 그래픽 요소가 표시됨. 디자인 의도와 맞지 않는 잔여 UI로 추정.
+- **제보:** 사용자 직접 제보
+
+### [M-33] 데스크톱에서 카테고리 필터가 반응형으로 구현되지 않음
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 데스크톱 뷰에서 필터(정렬·스펙 필터 등)가 모바일 기준으로만 구현되어 있어 데스크톱 레이아웃에서도 모바일형 UI가 그대로 표시됨. 넓은 화면에 맞는 사이드바 필터 또는 가로형 레이아웃으로 전환되지 않음.
+- **제보:** 사용자 직접 제보
+
+### [M-28] account.html canonical non-www vs 실제 www 불일치 (SEO)
+- **영역:** 계정/로그인 (SEO)
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** canonical이 `https://gear-forest.com/account.html`(non-www). [H-12] 전 페이지 공통 이슈.
+
+### [M-29] auth_error=1 파라미터 도달 시 에러 메시지 미표시 — 로그인 실패 원인 안내 없음
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html?auth_error=1
+- **증상:** auth-callback.html 직접 접근 시 `account.html?auth_error=1`로 리다이렉트되지만 `#auth-error` 엘리먼트가 `display:none`이고 텍스트도 비어 있어 사용자에게 로그인 실패 원인이 전혀 표시되지 않음.
+
+### [M-30] 숨겨진 섹션 내 '+ 새 로그' 링크가 키보드/스크린리더로 포커스 가능 — 접근성 포커스 트랩
+- **영역:** 계정/로그인 (접근성)
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** `display:none` 부모 안의 `#logs-section` 내 '+ 새 로그' 링크가 `tabindex` 없이 DOM에 존재. 키보드 Tab 탐색 및 스크린리더로 접근 가능하며 클릭 시 community.html로 이동.
+
+### [M-24] 자동완성 모델명 검색어 하이라이트 미적용
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 브랜드명은 `<span class='sb'>`로 강조되지만 모델명 내 매칭 키워드는 강조 없음. 예: '알파인 돔' 검색 시 모델명 부분 미강조.
+
+### [M-25] 자동완성 전체 결과 개수 표시 없음
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 30개 이상 결과가 렌더링되어도 총 개수 표시 없음. 더보기 안내도 없어 결과가 잘리는지 알 수 없음.
+
+### [M-26] 검색창 커스텀 초기화(X) 버튼 없음 — iOS Safari 등에서 초기화 불가
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 브라우저 기본 `input[type=search]` X 버튼에만 의존. iOS Safari 등 일부 브라우저에서 기본 X 버튼이 미표시되어 입력 초기화 불가. 클릭 시 앱 상태(드롭다운)와 동기화도 불확실.
+
+### [M-27] search.html 전용 검색 결과 페이지 없음 — 검색어 URL 공유·북마크 불가 (SEO)
+- **영역:** 검색 (SEO)
+- **URL:** https://www.gear-forest.com/search.html
+- **증상:** `/search.html?q=키워드` 접근 시 index.html로 리다이렉트. 검색 결과를 URL로 공유·북마크 불가. 검색엔진 인덱싱도 불가.
+
+### [M-21] 상세 페이지 canonical URL non-www — 실제 서빙 www와 불일치 (SEO)
+- **영역:** 상품 상세 (SEO)
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** canonical이 `https://gear-forest.com/item/...`(non-www)이나 실제 서빙은 `https://www.gear-forest.com/`. [H-12]와 동일 근본 원인, 상세 페이지 전체에 영향.
+
+### [M-22] JSON-LD aggregateRating ratingCount에 스펙 항목 수를 사용자 리뷰 수로 오용
+- **영역:** 상품 상세 (SEO)
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 구조화 데이터의 `ratingCount: 3`은 실제 측정 스펙 항목 수(최소무게·내한온도·충전량)와 동일. 실제 사용자 리뷰 수가 아닌 값이 Google Rich Results에 리뷰 수로 노출될 수 있음.
+
+### [M-23] 상품 상세에 공유(share) 기능 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** SNS 공유, URL 복사, Web Share API 등 공유 버튼 없음. 특정 상품 스펙을 외부로 공유할 방법 없음.
+
+### [M-18] 데이터 로드 실패 카테고리에서 catnav 탭 활성화 미작동
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=stove
+- **증상:** JSON 503 실패 시 catnav에서 현재 카테고리 탭에 `on` 클래스 미적용, '📊비교'(홈 탭)가 잘못 활성화됨.
+
+### [M-19] 카테고리 페이지 meta description 모든 카테고리 동일한 generic 값 (SEO)
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 모든 카테고리 페이지 `<meta name="description">`이 동일한 서비스 소개 문구. 카테고리별 고유 description 없어 검색 유입 최적화 불가. ([L-13] JSON-LD 부재와 SEO 문제 연관)
+
+### [M-20] 상품 상세 모달 dialog에 aria-labelledby 없음
+- **영역:** 카테고리/목록 (접근성)
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** `role=dialog` 모달에 `aria-labelledby` 없음. 스크린 리더가 모달 제목을 안내하지 못함. 닫기 버튼에 `tabindex` 없어 키보드 포커스 순서 미보장.
+
+### [M-14] 검색 input에 aria-label·label 요소 없음
+- **영역:** 홈/메인 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** `#homeq` 검색창에 `<label>`, `aria-label`, `aria-labelledby` 모두 없음. placeholder는 접근성 이름으로 인정 안 됨.
+
+### [M-15] 검색창이 `<form>` 태그로 감싸지지 않아 Enter 키 제출 동작 비표준
+- **영역:** 홈/메인 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 검색 input이 `<form>` 안에 없어 표준 HTML 폼 제출 동작 없음. WCAG 2.1 SC 2.1.1 비준수.
+
+### [M-16] 상단 탭바 홈 탭 레이블 '📊비교' — 하단 탭바 '홈'과 불일치
+- **영역:** 홈/메인 (UI)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 상단 탭바에서 `index.html`로 이동하는 탭이 '📊비교'로 표시, 하단 탭바에서는 같은 URL이 '홈'으로 표시. 동일 페이지를 다른 이름으로 노출. [M-10]과 연관.
+
+### [M-17] 상단 탭바 `<nav>`에 aria-label 없음
+- **영역:** 홈/메인 (접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 페이지에 `<nav>` 2개 존재. 하단 탭바는 `aria-label="주 내비게이션"` 있으나 상단 탭바 `<nav>`에는 없어 스크린리더 사용자가 구분 불가.
+
+### [M-12] 커뮤니티 페이지 로드 시 posts API 중복 호출 (2회)
+- **영역:** 커뮤니티/소셜
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** `supabaseClient.js`의 `initAuth()`가 `getSession()` 동기 콜백과 `onAuthStateChange INITIAL_SESSION` 이벤트 두 번 모두 `renderFeed()`를 트리거해 `/rest/v1/posts` 요청이 매 페이지 로드마다 2회 발생.
+- **재현:** 네트워크 탭 열고 community.html 접속 → `/rest/v1/posts` 요청 2건 확인
+
+### [M-13] 비로그인 empty state에서 글쓰기 유도 문구와 액션 불일치
+- **영역:** 커뮤니티/소셜
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 글 없을 때 '첫 이야기를 남겨보세요!' 문구가 표시되지만 비로그인 사용자에게는 글쓰기 버튼이 없어 액션 불가. 로그인 유도 없이 단순 권유 문구만 표시.
+
+### [M-09] 로그인 후 프로필 영역에 실제 이메일 주소 노출 — 개인정보
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** `renderProfile()`이 `profile.email`을 UI에 직접 렌더링. 코드 주석에 '실명/이메일을 표시명으로 쓰지 않는다'고 명시되어 있음에도 이메일이 노출됨.
+
+### [M-10] 데스크톱·모바일 탭바 메뉴 구성 불일치
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 데스크톱 탭 3개(비교/커뮤니티/내 정보) vs 모바일 탭 4개(홈/탐색/커뮤/마이). 탭명과 개수가 달라 기기 간 경험 불일치.
+
+### [M-11] login.html 접근 시 '서비스 점검 중' 텍스트만 반환
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/login.html
+- **증상:** 별도 로그인 URL로 직접 접근 시 아무런 안내 없이 비어 보이는 점검 페이지 표시. 리다이렉트나 안내 링크 없음.
+
+### [M-05] 상세 페이지 커뮤니티 로그 연결 버튼 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** `a95b92a` 커밋('세트 상세 → 커뮤니티 로그 작성 원클릭 연결')이 머지됐으나 실제 상세 페이지에 해당 버튼이 없음.
+
+### [M-06] 상세 페이지에 다크모드 토글 버튼 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 카테고리 페이지 헤더에는 `.theme-toggle` 버튼이 있으나 상세 페이지에는 없음. 시스템 다크모드는 적용되지만 수동 전환 불가.
+
+### [M-07] 모바일(375px)에서 상세 hero 섹션 레이아웃 미반응형
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** `.item-hero`가 모바일에서도 `flex-direction: row` 유지. 이미지(200px 고정폭)와 상품 정보가 가로 배치되어 상품명·가격·순위 텍스트가 극도로 좁은 영역에 압축됨. `column` 전환 필요.
+
+### [M-08] 상세 페이지 이미지 403/503 오류 + fallback 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 메인 이미지 및 '비슷한 상품' 썸네일 다수가 403/503으로 로드 실패. `onerror` fallback 처리 없어 깨진 이미지 아이콘만 노출. (카테고리 목록의 [H-04]와 연관된 서버 측 이슈로 보임)
 
 ### [M-02] 모바일(375px)에서 스펙 레이블이 줄바꿈되어 카드 높이 불균일
 - **영역:** 카테고리/목록
@@ -74,6 +313,101 @@
 
 ## 🟢 Low
 
+### [L-19] 계정 삭제/탈퇴 기능 미존재 — 법적 의무 가능성
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 계정 삭제·서비스 탈퇴 UI 전혀 없음. 개인정보보호법 및 Google OAuth API 이용 정책상 계정 삭제 기능 요구.
+
+### [L-20] 닉네임 설정/변경 UI 미존재
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 커뮤니티 로그에 닉네임이 사용되는 구조임에도 닉네임 설정·변경 입력 필드 없음. 최초 자동 생성 닉네임 변경 불가 상태.
+
+### [L-21] account.html meta description 8자로 SEO 기준 미달
+- **영역:** 계정/로그인 (SEO)
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** meta description이 '구글 로그인·찜 목록 동기화'(8자)로 권장 50~160자 기준에 크게 미달.
+
+### [L-22] 비로그인 상태에서 찜 섹션 완전 은닉 — 기능 인지 불가
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** `#wish-section` 전체 `display:none` 처리. 비로그인 사용자가 찜 기능의 존재를 알 수 없으며 로그인 유도 CTA 없음.
+
+### [L-17] 내한온도 스펙 값에 °(도) 기호 누락 — '-3C' 표시
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 스펙 테이블 내한온도 값이 '-3C'로 표시. 올바른 표기는 '-3°C'. 온도 값 있는 다른 상품도 동일 문제 가능성.
+
+### [L-18] h1 태그에 브랜드명 누락 — 제품명만 표시
+- **영역:** 상품 상세 (SEO)
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** h1이 '매직 100'만 표시, 브랜드명 '큐물러스'는 별도 `p.item-brand`에만 있음. 페이지 title('큐물러스 매직 100 — 침낭 스펙 비교')과 불일치.
+
+### [L-16] 정렬 chip 버튼에 aria-pressed 속성 없음
+- **영역:** 카테고리/목록 (접근성)
+- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 활성 정렬 chip에 `on` 클래스는 붙지만 `aria-pressed` 속성 없음. 스크린 리더 사용자가 현재 선택된 정렬 상태 확인 불가.
+
+### [L-13] JSON-LD 구조화 데이터 없음 — 리치 스니펫 노출 불가
+- **영역:** 홈/메인 (SEO)
+- **URL:** https://www.gear-forest.com/
+- **증상:** schema.org JSON-LD 전혀 없음. Google 검색 결과에서 사이트링크 검색박스·상품 카드 등 리치 스니펫 노출 불가.
+
+### [L-14] search.json(298KB) 페이지 로드 시 즉시 선제 로딩
+- **영역:** 홈/메인 (성능)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 검색창 포커스 전에 `data/search.json` 298KB가 즉시 로드됨. 검색창 포커스 시점에 lazy load하는 것이 권장됨.
+
+### [L-15] PWA manifest start_url 상대경로 설정 — www·non-www 불일치와 복합
+- **영역:** 홈/메인 (PWA)
+- **URL:** https://www.gear-forest.com/manifest.webmanifest
+- **증상:** `start_url`이 `./index.html`(상대경로). [H-12] canonical non-www 불일치와 결합 시 PWA 설치 후 시작 URL·canonical·실제 서빙 URL이 3개로 분열될 수 있음.
+
+### [L-10] 비로그인 상태에서 `#new` 직접 접근 시 안내 없이 피드로 redirect
+- **영역:** 커뮤니티/소셜
+- **URL:** https://www.gear-forest.com/community.html#new
+- **증상:** 비로그인 상태에서 `community.html#new` 직접 접근 시 아무 안내 없이 `location.hash = ''`로 피드로 돌아감. 사용자가 이유를 알 수 없음.
+
+### [L-11] 모바일 탭바 '커뮤니티' 레이블이 '커뮤'로 잘림
+- **영역:** 커뮤니티/소셜
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 375px에서 `.bottom-nav` 커뮤니티 탭 레이블이 '커뮤'로 truncate. 다른 탭(홈/탐색/마이)은 정상 표시.
+
+### [L-12] 데스크톱·모바일 nav 두 개가 DOM에 동시 존재 — 유지보수 부담
+- **영역:** 커뮤니티/소셜 (전체 공통)
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** `.tabbar`(데스크톱)와 `.bottom-nav`(모바일) 두 nav가 DOM에 공존, CSS `display:none`으로 전환. 기능 추가 시 양쪽 모두 수정 필요.
+
+### [L-08] 헤더에 계정/로그인 진입 경로 없음
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 헤더에 로고만 있고 계정 아이콘 없음. 하단 탭바('내 정보')로만 계정 진입 가능. 일반적인 웹 UX 패턴과 다름.
+
+### [L-09] 소셜 로그인이 Google만 제공 (Kakao 없음)
+- **영역:** 계정/로그인
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 한국 서비스임에도 카카오 로그인 없음. 미지원 여부가 UI에 명시되지 않아 사용자 혼란 가능.
+
+### [L-06] 빈 문자열로 검색 시 아무 피드백 없음
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 검색창에 아무것도 입력하지 않고 Enter를 눌러도 페이지 이동·오류 메시지·포커스 안내 모두 없음. 버튼이 동작하지 않는다는 오해 유발 가능.
+
+### [L-07] 검색 결과 없음(no-results) 상태에서 대안 탐색 경로 미제공
+- **영역:** 검색
+- **URL:** https://www.gear-forest.com/
+- **증상:** 매칭 없는 검색어(예: 'sleeping bag') 입력 후 Enter 시 결과 없음 메시지만 표시, 카테고리 탐색 유도나 추천 검색어 등 대안 경로 없음.
+
+### [L-04] Cloudflare beacon.min.js 503 오류
+- **영역:** 상품 상세 (전체 페이지 공통으로 추정)
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 페이지 로드 시 Cloudflare Web Analytics beacon 스크립트가 503 반환. 분석 데이터 수집 불가.
+
+### [L-05] 스펙 배지가 모두 '참고'로 표시 — 공식/비공식 구분 없음
+- **영역:** 상품 상세
+- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 스펙 테이블의 모든 행에 '참고' 배지만 표시되어 공식 측정값과 참고값 구분 불가. 사용자가 데이터 신뢰도 판단 어려움.
+
 ### [L-03] 상품 카드가 `<a>` 링크 없이 role=button으로만 구현 — 접근성 미흡
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
@@ -91,4 +425,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 페이지*
+*다음 회차: 커뮤니티/소셜 (2순환)*
