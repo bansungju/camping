@@ -50,6 +50,7 @@
 | 36 | 커뮤니티/소셜 (6순환) | 2026-06-11 | 1건 (M-10/M-13/L-10/L-11 중복 제외) |
 | 37 | 홈/메인 (7순환) | 2026-06-11 | 4건 (L-14 중복·인프라·설계 제외) |
 | 38 | 카테고리/목록 (7순환) | 2026-06-11 | 3건 + M-68 보완 (H-01·M-69 중복 제외) |
+| 39 | 상품상세 (7순환) | 2026-06-11 | 8건 (중복 제외) |
 
 ---
 
@@ -68,6 +69,13 @@
 - **증상:** 데스크톱 `.tabbar`는 "📊비교 / 💬커뮤니티 / 👤내 정보" 3개 탭만 존재. 모바일 `.bottom-nav`에는 "탐색" 탭이 있어 카테고리로 직접 이동 가능하지만, 데스크톱에서는 해당 탭이 없어 상단 nav에서 카테고리 탐색으로 바로 진입할 방법이 없음. "📊비교" 탭은 index.html(홈)로 이동하며 비교 UI도 없음 (M-22). M-10과 연관이나, 데스크톱에서 핵심 탐색 기능이 nav에서 완전 누락이라는 점에서 High.
 - **해결(2026-06-11):** `app.js`의 데스크톱 탭바 `TABS` 배열에 "🧭 탐색"(`category.html`) 탭 추가 — 모바일 `.bottom-nav`와 일치하는 4탭 구성. 카테고리/브랜드/추천 페이지 매칭을 "비교"에서 "탐색"으로 이동(홈에선 비교, 탐색 페이지에선 탐색 강조). 로컬 프리뷰 검증 — index.html에서 비교 active·탐색 표시, category.html에서 탐색 active(`aria-current="page"`)·비교 비활성, 4탭 정상 렌더(스크린샷), 콘솔 에러 없음. [site/app.js](site/app.js)
 - **재현:** 데스크톱(≥768px) → 임의 페이지 → 상단 tabbar 확인 → "탐색/카테고리" 탭 없음
+
+### [H-38] 상세 페이지 하단 탭바 링크 4개 모두 404
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 상세 페이지에서 탭바(홈·탐색·비교·커뮤니티·내 정보) 링크가 `/item/sleeping-bag/index.html`, `/item/sleeping-bag/category.html` 등 서브디렉터리 기준 상대경로로 생성되어 모두 404. 실제 경로는 루트 기준 `/index.html`, `/category.html` 등이어야 함. 상세 페이지 진입 후 다른 영역으로 이동 불가.
+- **재현:** item/*.html 직접 접근 → 탭바 링크 클릭 → 404
+- **원인:** `insertBottomNav()` / 데스크톱 tabbar 생성 시 상대경로 href 사용. 상세 페이지는 루트 대비 2단계 하위 경로(`/item/{cat}/item-N.html`)이므로 상대경로 오류 발생.
 
 ### [H-01] 🔧 코드수정 완료·대시보드 적용 대기 — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
 - **영역:** 홈/메인
@@ -415,11 +423,12 @@
 - **증상:** "PocketRocket", "Elixir", "Reactor" 등 영문 원어 모델명으로 검색 시 결과 없음. 동일 제품을 "포켓로켓", "엘릭서"로 검색하면 정상 히트. search.json 인덱스가 한국어 표기만 포함하고 영문 원어명을 포함하지 않음. 외국 브랜드 제품을 영문으로 기억하는 사용자 유입 차단.
 - **재현:** 홈 검색창 → "PocketRocket" 입력 → 결과 없음 / "포켓로켓" 입력 → 정상 히트
 
-### [M-64] 비로그인 게시글 좋아요 — UI(♥)와 DB 카운트 불일치
+### [M-64] ✅ 해결완료(재현 불가·stale) — 비로그인 게시글 좋아요 — UI(♥)와 DB 카운트 불일치
 - **영역:** 커뮤니티/소셜 — 좋아요
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 비로그인 상태에서 좋아요 클릭 시 localStorage를 먼저 업데이트해 UI는 ♥로 변하나, Supabase RPC 호출은 RLS 권한 오류로 실패. 오류 핸들링 없어 UI와 DB 카운트가 불일치. 새로고침 시 ♡로 복귀.
 - **재현:** 비로그인 → 게시글 좋아요 클릭 → ♥ 표시 → 새로고침 → ♡로 복귀
+- **검증(2026-06-11, 백엔드+프론트 전수):** 증상이 현재 코드와 불일치 — ① community.html에 좋아요용 **localStorage 낙관적 업데이트 경로 없음**(localStorage는 gear_sets 전용, grep 확인). ② 피드 카드의 ❤️는 **표시 전용 `<span>`**이고 카드 클릭은 상세 모달만 오픈(`location.hash`). 좋아요 버튼(`#cm-like`)은 상세 모달에만 존재하며 **`canParticipate()` 가드**(비로그인 시 alert·DB 호출 안 함) + `r.error` 처리까지 완비(community.html:316~326). ③ 백엔드도 올바르게 제한적 — likes는 `likes_insert_own`(authenticated 전용) + GRANT INSERT가 anon에 없음. **라이브 익명 insert 검증: `POST /rest/v1/likes` → HTTP 401, 42501 permission denied**. 즉 비로그인은 UI상 누를 수 없고 DB도 차단되어 불일치가 발생하지 않음. (이전 구현 기준 리포트로, 현재 가드형 구현에서 해소) [site/community.html](site/community.html), [supabase/migrations/001_initial_schema.sql](supabase/migrations/001_initial_schema.sql)
 
 ### [M-65] 게시글 상세 딥링크(공유 URL) 없음
 - **영역:** 커뮤니티/소셜 — 게시글 상세
@@ -694,6 +703,12 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 두 카드 모두 `category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4` 로 연결. 다른 컨셉임에도 URL이 동일하여 4인 가족 전용 필터가 없거나 URL 설정 누락으로 보임.
 
+### [M-79] 비교 모달에 상품 상세 페이지 직접 링크 없음
+- **영역:** 카테고리/목록 — 비교 모달
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** 비교 모달(`.pmbox`) 내에 해당 상품 상세 페이지(`/item/{cat}/item-N.html`)로 이동하는 링크가 없음. 스펙 확인 후 상세 페이지 탐색이 불가능하여 모달을 닫고 카드 재탐색해야 함.
+- **재현:** 카드 클릭 → 비교 모달 → 상세 링크 없음 확인
+
 ---
 
 ## 🟢 Low
@@ -791,6 +806,32 @@
 - **URL:** 모든 페이지
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
 - **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
+
+### [L-53] 비교 모달 스펙 테이블 `<thead>/<th scope>` 없음
+- **영역:** 카테고리/목록 — 비교 모달 스펙 테이블
+- **증상:** 비교 모달(`.pmbox`) 스펙 테이블에 `<thead>` 및 `<th scope="col/row">` 속성 없음. 스크린리더가 헤더-셀 관계를 파악하지 못해 WCAG 1.3.1 위반.
+
+### [L-54] 상세 페이지 스펙 테이블 `<thead>/<th scope>` 없음
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 상세 페이지 스펙 테이블에도 `<thead>` 및 `<th scope>` 없음. L-53과 동일 패턴.
+
+### [L-55] 스펙 테이블 `<caption>` 없음
+- **영역:** 상품 상세 / 비교 모달
+- **증상:** 스펙 테이블에 `<caption>` 요소 없음. 스크린리더 사용자가 테이블 목적을 사전 파악 불가.
+
+### [L-56] 모달 닫기(✕) 버튼 `type="submit"` — 의도치 않은 폼 제출 위험
+- **영역:** 카테고리/목록 — 비교 모달 · 상품 상세 모달
+- **증상:** 모달 내 ✕ 닫기 버튼에 `type="button"` 대신 기본값(`type="submit"`)이 적용되어 있음. 폼 컨텍스트 내 포함될 경우 폼 제출 트리거 가능. 모든 닫기·UI 전용 버튼은 명시적 `type="button"` 필요.
+
+### [L-57] 오류 신고 버튼이 상세 페이지(`item/*.html`)에 없음
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** 카테고리 목록 비교 모달에는 "오류 신고" 버튼(`mailto:bangsungju@gmail.com`)이 있으나, 상세 페이지 직접 접근 시에는 해당 버튼이 없음. 상세 페이지 전용 오류 신고 경로 부재.
+
+### [L-58] 비교 바(`#cmp-bar`) `aria-live` 없음 — 스크린리더 비교 추가 알림 불가
+- **영역:** 카테고리/목록 — 비교 바
+- **증상:** 상품 비교 선택 시 화면 하단에 비교 바가 나타나나 `aria-live="polite"` 속성 없어 스크린리더가 상태 변화를 고지하지 않음.
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1045,4 +1086,4 @@
 
 ---
 
-*다음 회차: 상품상세 (7순환)*
+*다음 회차: 검색 (7순환)*
