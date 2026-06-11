@@ -38,6 +38,16 @@ Dashboard → Storage → Buckets에서 **`review-images`** 버킷을 **Public**
 > + `gear_sets`(006) 컬럼/테이블이 라이브에 없어 지금 적용 불가(`42703 column "tags"`).
 > 인기태그 기능을 켜려면 006 → 007 먼저 적용 후 012 실행. H-01/H-34와 무관한 부차 기능.
 
+## 4-1. 커뮤니티 로그에 장비 세트 첨부 (세트 스냅샷 컬럼)
+글쓰기 폼의 "내 세트 첨부" 드롭다운으로 세트를 선택해 로그에 첨부할 수 있으나,
+**`posts.gear_set_snapshot` 컬럼이 라이브 미적용** → 세트 첨부 시 INSERT 실패.
+SQL Editor에서 **`migrations/010_post_gear_snapshot.sql`** 실행(멱등):
+```sql
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS gear_set_snapshot jsonb;
+```
+> 기존 글에는 영향 없음(NULL 기본). 적용 후 로그 작성 → 세트 선택 → 등록 후
+> 피드 상세에서 🎒 세트 카드가 표시되면 성공.
+
 ## 5. 댓글 소프트삭제 카운트 정합성 (버그 H-34)
 라이브 `trg_comment_count`(002)는 INSERT/DELETE만 반응하나 앱은 댓글을
 `deleted_at` UPDATE로 소프트삭제 → 카운트가 안 줄고 누적 증가.
