@@ -743,10 +743,8 @@
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** `.item-hero`가 모바일에서도 `flex-direction: row` 유지. 이미지(200px 고정폭)와 상품 정보가 가로 배치되어 상품명·가격·순위 텍스트가 극도로 좁은 영역에 압축됨. `column` 전환 필요.
 
-### [M-08] 상세 페이지 이미지 403/503 오류 + fallback 없음
-- **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
-- **증상:** 메인 이미지 및 '비슷한 상품' 썸네일 다수가 403/503으로 로드 실패. `onerror` fallback 처리 없어 깨진 이미지 아이콘만 노출. (카테고리 목록의 [H-04]와 연관된 서버 측 이슈로 보임)
+### [M-08] ✅ 해결완료(2026-06-11) — 상세 페이지 이미지 403/503 오류 + fallback 없음
+- **해결(2026-06-11):** `.item-img` 태그에 `onerror="this.onerror=null;this.style.display='none'"` 추가. 이미지 로드 실패 시 깨진 아이콘 대신 요소 숨김 처리. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [M-02] 모바일(375px)에서 스펙 레이블이 줄바꿈되어 카드 높이 불균일
 - **영역:** 카테고리/목록
@@ -758,10 +756,8 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 모바일 375px에서 가로 탭바가 화면 너비를 초과해 뒷 탭들이 잘림. 스크롤 가능 여부가 시각적으로 불분명.
 
-### [M-04] breadcrumb가 '홈 › …'으로 표시됨 (데이터 로드 실패 시)
-- **영역:** 카테고리/목록
-- **URL:** https://www.gear-forest.com/category.html?cat=tent
-- **증상:** JSON 로드 실패 시 breadcrumb에 카테고리명 대신 '…'가 표시됨.
+### [M-04] ✅ 해결완료(2026-06-11) — breadcrumb가 '홈 › …'으로 표시됨 (데이터 로드 실패 시)
+- **해결(2026-06-11):** `renderCategory()` 에러 catch 블록에 `crumbName.textContent = slug` 추가. [site/app.js](site/app.js)
 
 ### [M-01] ✅ 해결완료(M-100 동시) — '오토/맥시멀'과 '4인 가족' 캠핑 스타일 카드가 동일한 URL
 - **해결(2026-06-11):** M-100 수정으로 family → recommend.html?p=family 분리. [site/app.js](site/app.js)
@@ -806,11 +802,8 @@
 - **증상:** 비로그인 상태에서 `open-log=1` 진입 후 `account.html`로 이동해 로그인하면, 커뮤니티 JS 컨텍스트가 소멸되고 복귀 시 파라미터가 없어 글쓰기 폼이 열리지 않음. H-35는 "해결완료"로 기록되어 있으나, 비로그인→로그인 경유 경로는 여전히 단절됨. 로그인 후 리다이렉트 URL에 `?open-log=1` 파라미터를 포함해야 복원 가능.
 - **재현:** 비로그인 → `community.html?open-log=1` → 로그인 클릭 → `account.html` → 로그인 완료 → 커뮤니티 복귀 → 글쓰기 폼 미열림
 
-### [M-87] "이번 주 인기" API 200 응답임에도 항상 fallback — 최소 클릭 임계값 미충족
-- **영역:** 홈/메인 — `#hot-section`
-- **URL:** https://gear-forest.com/
-- **증상:** `get_hot_items` RPC가 HTTP 200을 반환하지만, `app.js`의 필터 조건(`items.length >= 2`, 카테고리별 최소 2회 클릭 필요)을 충족하는 카테고리가 없어 실제 랭킹 대신 하드코딩 fallback chips(백패킹텐트·침낭·버너·랜턴)만 노출됨. API가 살아있음에도 저트래픽 단계에서는 항상 fallback을 보이는 구조.
-- **재현:** 홈 접속 → DevTools Network → `get_hot_items` 200 확인 → `#hot-list`에 `.hot-rank-row` 없고 `.hot-chip` 4개만 존재
+### [M-87] ✅ 해결완료(2026-06-11) — "이번 주 인기" API 200 응답임에도 항상 fallback
+- **해결(2026-06-11):** `data.length >= 3` → `>= 1`, 카테고리 필터 `items.length >= 2` → `>= 1`로 완화. 저트래픽 단계에서도 실제 클릭 데이터 노출. [site/app.js](site/app.js)
 
 ### [M-88] ✅ 해결완료 — 쿠팡 파트너스 파트너 공시 미표시 — 제휴 의무 미이행
 - **해결(2026-06-11):** 홈·카테고리·브랜드·추천 페이지 푸터에 `.disc` 클래스로 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다." 추가. 상세 모달(`pmbuynote`)은 기존 적용. [site/app.js](site/app.js), [site/style.css](site/style.css)
@@ -1603,23 +1596,13 @@
 - **원인(추정):** M-105 연관 — 세트 객체에서 `s.name`(undefined) 참조로 인한 TypeError, 또는 로그 작성 모달 초기화 중 null 참조 오류로 추정. `acc-nav`/`acc-tabs` HTML 미존재(L-87)와 복합 작용 가능.
 - **재현:** account.html → 세트 탭 → 저장된 세트의 '이 세트로 커뮤니티 로그 작성' 버튼 클릭 → 팅김
 
-### [M-111] 홈 검색 — 드롭다운엔 결과가 보이는데 Enter 누르면 아무 동작 없음 (토큰 매칭 불일치)
-- **영역:** 검색 — 홈 자동완성(`#homeq`)
-- **URL:** https://gear-forest.com/ (홈)
-- **증상:** 자동완성 드롭다운에는 결과가 정상 표시되는데, 항목을 ↓로 선택하지 않고 곧바로 Enter를 누르면 **아무 페이지로도 이동하지 않는다**(무반응). 검색어의 토큰 순서가 "브랜드 모델"이 아닐 때 발생 — 예: 브랜드와 카테고리어를 섞은 자연스러운 입력 `mier 텐트`, 또는 어순이 뒤집힌 `백패킹 mier`.
-- **원인:** 드롭다운 결과 산출 `run()`은 **토큰 AND 매칭**(app.js:487 `terms.every(t => (x.b+" "+x.m).includes(t))`)인데, Enter 핸들러의 폴백은 **통문자열 부분일치**(app.js:561 `(x.b+" "+x.m).includes(ql)`)를 쓴다. 토큰이 "브랜드 모델" 연속 부분문자열로 들어맞지 않으면 `first`·`exactBrand`·`brandMatch` 모두 실패 → `location.href` 미설정 → 무반응. 드롭다운은 매칭되므로 사용자에겐 "결과가 보이는데 Enter가 먹통"으로 체감.
-- **재현(프리뷰 실측):** 홈 검색에 `백패킹 mier` 입력 → 드롭다운 1건 표시(`MIER 울트라라이트 초경량 백패킹 1인용 텐트`)·"결과 없음" 아님 → Enter → 이동 대상 계산 결과 `NOTHING`(무반응) 확인. (`bugConfirmed: true`)
-- **권장:** Enter 폴백도 `run()`과 동일한 토큰 AND 매칭을 쓰거나, 활성 옵션이 없을 때 드롭다운 첫 결과(`hits[0]`)로 이동.
+### [M-111] ✅ 해결완료(2026-06-11) — 홈 검색 Enter 무반응 (토큰 매칭 불일치)
+- **해결(2026-06-11):** Enter 핸들러 폴백을 통문자열 includes 대신 토큰 AND 매칭(`terms2.every(tok => t.includes(tok))`)으로 교체. `run()`과 동일한 로직으로 `백패킹 mier` 입력 시에도 정상 이동. [site/app.js](site/app.js)
 
 ---
 
-### [M-113] 상품 상세 — '구매하기' 버튼 아래 "구매 링크를 준비 중입니다" 문구가 버튼 외부 텍스트로 노출됨
-
-- **영역:** 상품 상세 페이지
-- **재현:** 구매 링크가 없는 상품의 상세 페이지 접근 → '구매하기' 버튼 하단에 별도 텍스트 노출
-- **기대:** '구매하기' 버튼 자체를 "구매 링크 준비 중" 으로 표시 (버튼명 변경), 외부 텍스트 제거
-- **보고자:** 사용자 직접 제보 (2026-06-11)
-- **심각도:** 🟡 Medium
+### [M-113] ✅ 해결완료(2026-06-11) — '구매하기' 버튼 외부 "구매 링크를 준비 중입니다" 텍스트 노출
+- **해결(2026-06-11):** 쿠팡 링크 없는 경우 disabled 버튼 텍스트를 "🛒 구매 링크 준비 중"으로 변경하고 `<p class="item-buynote">` 제거. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ---
 

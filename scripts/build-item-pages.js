@@ -200,7 +200,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   </nav>
 
   <div class="item-hero">
-    ${img ? `<img class="item-img" src="../../${img}" alt="${brand} ${modelName}" fetchpriority="high">` : ""}
+    ${img ? `<img class="item-img" src="../../${img}" alt="${brand} ${modelName}" fetchpriority="high" onerror="this.onerror=null;this.style.display='none'">` : ""}
     <div class="item-info">
       <h1 class="item-title">${modelName}</h1>
       <p class="item-brand">${brand}</p>
@@ -216,8 +216,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
       ${coupang_url
         ? `<a class="item-buy" href="${String(coupang_url).replace(/"/g, "%22")}" target="_blank" rel="nofollow sponsored noopener">🛒 쿠팡에서 구매하기</a>
       <p class="item-buynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</p>`
-        : `<button class="item-buy" type="button" disabled aria-disabled="true">🛒 구매하기</button>
-      <p class="item-buynote">구매 링크를 준비 중입니다.</p>`}
+        : `<button class="item-buy" type="button" disabled aria-disabled="true">🛒 구매 링크 준비 중</button>`}
     </div>
   </div>
 
