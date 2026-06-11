@@ -116,7 +116,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
         "@type": "Offer",
         "priceCurrency": "KRW",
         "price": price_min,
-        "availability": "https://schema.org/InStock"
+        "availability": coupang_url ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
       }
     } : {}),
     "aggregateRating": (() => {

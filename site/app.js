@@ -806,6 +806,8 @@ async function renderCategory() {
     const el = document.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`);
     if (el) el.setAttribute("content", content);
   });
+  const metaDesc = document.querySelector("meta[name=description]");
+  if (metaDesc) metaDesc.setAttribute("content", shareDesc);
   const canonEl = document.querySelector("link[rel=canonical]");
   if (canonEl) canonEl.setAttribute("href", shareUrl);
   document.getElementById("title").innerHTML =

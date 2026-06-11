@@ -581,7 +581,8 @@
 - **증상:** 홈 검색창에서 검색어 입력 중 URL이 `https://gear-forest.com/`으로 유지됨. 자동완성 결과를 보는 상태를 URL로 공유·북마크 불가. 카테고리 페이지는 `?q=` 파라미터를 사용하는 것과 대조적.
 - **재현:** 홈 → "스노우피크" 입력 → URL 확인 → 변화 없음
 
-### [M-36] 모달 열림 상태에서 body 스크롤 잠금 없음
+### [M-36] ✅ 해결완료 — 모달 열림 상태에서 body 스크롤 잠금 없음
+- **해결(2026-06-11):** `style.css`에 `body:has(.pmodal.on){overflow:hidden}` 1줄 추가. CSS `:has()` 셀렉터로 JS 수정 없이 모달 열림 시 자동 스크롤 잠금. [site/style.css](site/style.css)
 - **영역:** 카테고리/목록 — 상품 모달
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 상품 카드 클릭 시 `.pmodal.on`이 열려도 `body` overflow가 유지되어 모달 뒤 배경 리스트가 함께 스크롤됨. 모달 조작 중 의도치 않은 배경 스크롤 발생.
@@ -683,7 +684,8 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=stove
 - **증상:** JSON 503 실패 시 catnav에서 현재 카테고리 탭에 `on` 클래스 미적용, '📊비교'(홈 탭)가 잘못 활성화됨.
 
-### [M-19] 카테고리 페이지 meta description 모든 카테고리 동일한 generic 값 (SEO)
+### [M-19] ✅ 해결완료 — 카테고리 페이지 meta description 모든 카테고리 동일한 generic 값 (SEO)
+- **해결(2026-06-11):** `renderCategory()` 내 OG 메타 업데이트 블록에 `<meta name="description">` 동적 교체 1줄 추가. `"${d.count}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다."` 형식의 카테고리별 고유 description 설정. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 모든 카테고리 페이지 `<meta name="description">`이 동일한 서비스 소개 문구. 카테고리별 고유 description 없어 검색 유입 최적화 불가. ([L-13] JSON-LD 부재와 SEO 문제 연관)
@@ -873,7 +875,8 @@
 - **증상:** M-68 수정으로 무게·가격·cap은 `clearPresetFilters()`로 초기화되지만, `comfort_temp__max`·`brands` URL 파라미터는 삭제 대상에 포함되지 않아 해당 필터를 설정한 채 프리셋 전환 시 여전히 누적됨. 또한 프리셋 버튼 클릭 후 `.on` 클래스가 부여되지 않아 어떤 프리셋이 활성화됐는지 시각적으로 알 수 없음.
 - **재현:** 내한온도·브랜드 필터 설정 후 프리셋 클릭 → URL에 `comfort_temp__max`·`brands` 잔존, 버튼에 `.on` 없음
 
-### [M-90] 상세 페이지 JSON-LD `availability: InStock`이지만 구매 버튼은 disabled — SEO 오신호
+### [M-90] ✅ 해결완료 — 상세 페이지 JSON-LD `availability: InStock`이지만 구매 버튼은 disabled — SEO 오신호
+- **해결(2026-06-11):** `build-item-pages.js` JSON-LD offers.availability를 `coupang_url` 존재 여부에 따라 InStock / PreOrder로 분기. 쿠팡 링크 없는 상품은 `PreOrder`로 표시. 2277개 재빌드. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **영역:** 상품 상세
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 구조화 데이터(`application/ld+json`) `Product.offers.availability`가 `https://schema.org/InStock`으로 선언되어 있으나 실제 구매 버튼은 `disabled aria-disabled="true"` 상태에 "구매 링크를 준비 중입니다." 문구. Google 리치 결과에서 "재고 있음"으로 표시되어 Search Console 경고 및 사용자 오인 유발.
