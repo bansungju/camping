@@ -49,6 +49,7 @@
 | 35 | 계정/로그인 (6순환) | 2026-06-11 | 5건 (M-52·L-39 중복·설계의도 제외) |
 | 36 | 커뮤니티/소셜 (6순환) | 2026-06-11 | 1건 (M-10/M-13/L-10/L-11 중복 제외) |
 | 37 | 홈/메인 (7순환) | 2026-06-11 | 4건 (L-14 중복·인프라·설계 제외) |
+| 38 | 카테고리/목록 (7순환) | 2026-06-11 | 3건 + M-68 보완 (H-01·M-69 중복 제외) |
 
 ---
 
@@ -61,10 +62,11 @@
 - **재현:** 비로그인 → community.html → 콘솔 확인 → 401 @ supabase.co/rest/v1/posts
 - **해결(2026-06-11, 백엔드 GRANT/RLS 적용으로 해소):** anon GRANT(migration 004)가 적용되어 401이 사라짐. 라이브 익명 검증 — `GET /rest/v1/posts`(단순 select)·`profiles`·앱 임베드 쿼리(`*,author:profiles!posts_user_id_fkey(...)`) 모두 **HTTP 200**(curl), 실브라우저 익명 community.html에서 동일 임베드 쿼리 `order=created_at.desc&limit=30` → **[200] OK**·콘솔 에러 0. RLS는 `posts_select_public`(anon, authenticated)로 공개 글 읽기 허용. 현재 `[]`는 401이 아니라 공개 게시글이 아직 없는 정상 빈 상태. (코드 변경 없음 — 백엔드 적용 후 재현 불가 확인) [supabase/migrations/004_grants_and_wishlist.sql](supabase/migrations/004_grants_and_wishlist.sql)
 
-### [H-37] 데스크톱 nav에 카테고리 탐색 탭 없음 — 데스크톱 사용자 탐색 진입 경로 부재
+### [H-37] ✅ 해결완료 — 데스크톱 nav에 카테고리 탐색 탭 없음 — 데스크톱 사용자 탐색 진입 경로 부재
 - **영역:** 네비게이션 (전체 페이지)
 - **URL:** https://gear-forest.com/ (데스크톱 768px 이상)
 - **증상:** 데스크톱 `.tabbar`는 "📊비교 / 💬커뮤니티 / 👤내 정보" 3개 탭만 존재. 모바일 `.bottom-nav`에는 "탐색" 탭이 있어 카테고리로 직접 이동 가능하지만, 데스크톱에서는 해당 탭이 없어 상단 nav에서 카테고리 탐색으로 바로 진입할 방법이 없음. "📊비교" 탭은 index.html(홈)로 이동하며 비교 UI도 없음 (M-22). M-10과 연관이나, 데스크톱에서 핵심 탐색 기능이 nav에서 완전 누락이라는 점에서 High.
+- **해결(2026-06-11):** `app.js`의 데스크톱 탭바 `TABS` 배열에 "🧭 탐색"(`category.html`) 탭 추가 — 모바일 `.bottom-nav`와 일치하는 4탭 구성. 카테고리/브랜드/추천 페이지 매칭을 "비교"에서 "탐색"으로 이동(홈에선 비교, 탐색 페이지에선 탐색 강조). 로컬 프리뷰 검증 — index.html에서 비교 active·탐색 표시, category.html에서 탐색 active(`aria-current="page"`)·비교 비활성, 4탭 정상 렌더(스크린샷), 콘솔 에러 없음. [site/app.js](site/app.js)
 - **재현:** 데스크톱(≥768px) → 임의 페이지 → 상단 tabbar 확인 → "탐색/카테고리" 탭 없음
 
 ### [H-01] 🔧 코드수정 완료·대시보드 적용 대기 — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
@@ -238,6 +240,19 @@
 - **제보:** 사용자 직접 제보
 - **원인:** 각 프리셋 `fn()`이 자신의 `STATE.range` 항목만 설정하고 다른 프리셋 항목을 리셋하지 않음 (app.js:959~970)
 - **재현:** 카테고리 페이지 → "경량 우선" 클릭 → "저가 우선" 클릭 → 결과가 훨씬 적거나 빈 목록
+- **7순환 추가 확인:** 실제 재현 — 경량→저가 전환 시 결과 0/244개. 또한 동일 프리셋 재클릭 시 ON 상태에서 OFF 토글이 안 됨(URL에 누적된 파라미터 제거 불가).
+
+### [M-77] 카드 `role="button"`에 `aria-label` 없음 — 스크린리더 상품명 미읽기
+- **영역:** 카테고리/목록 — 상품 카드
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** 상품 카드 div에 `role="button"` + `tabindex="0"`이 있으나 `aria-label` 없음. 스크린리더가 카드 포커스 시 "버튼"만 읽고 상품명을 읽지 못함. L-03(a 링크 없음)과 연관된 별개 접근성 문제.
+- **재현:** 카드 요소 → `aria-label` 속성 확인 → null
+
+### [M-78] 카드 키보드 Enter 활성화 미동작 — `role="button"` ARIA 명세 위반
+- **영역:** 카테고리/목록 — 상품 카드
+- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
+- **증상:** `role="button"` + `tabindex="0"` 카드에 포커스 후 Enter/Space 키를 눌러도 상품 모달이 열리지 않음. ARIA 명세상 `role="button"` 요소는 Enter/Space로 활성화되어야 하나 keydown 핸들러 없음. WCAG 2.1 SC 4.1.2 위반.
+- **재현:** 카드에 Tab 포커스 → Enter → 모달 미열림
 
 ### [M-69] www 서브도메인 직접 접근 시 이미지 403 + JS ReferenceError — 자산 로드 실패
 - **영역:** 상품상세 / 전체
@@ -777,6 +792,11 @@
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
 - **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
 
+### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
+- **영역:** 전체 (정적 리소스)
+- **URL:** https://gear-forest.com/favicon.ico
+- **증상:** favicon.ico 파일 없어 404 반환. `<link rel="icon" type="image/png" href="icon-192.png">`는 있으나 브라우저 기본 favicon.ico 자동 요청에 대한 응답 없음. 콘솔에 매 페이지마다 404 에러 노출.
+
 ### [L-50] 동적 생성 이미지 `width`/`height` 속성 누락 — CLS 유발
 - **영역:** 홈/메인 (전체 상품 카드)
 - **URL:** https://gear-forest.com/
@@ -1025,4 +1045,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (7순환)*
+*다음 회차: 상품상세 (7순환)*
