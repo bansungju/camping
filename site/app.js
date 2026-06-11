@@ -201,6 +201,8 @@ function setWish(a) {
   }
 }
 function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
+// 찜 버튼 아이콘 — 북마크(채움 여부는 버튼 .on 클래스 + CSS가 처리)
+const BOOKMARK_SVG = '<svg class="wish-ico" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/></svg>';
 function inWish(key) { return getWish().some(x => x.key === key); }
 function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
   const a = getWish(), i = a.findIndex(x => x.key === item.key);
@@ -443,7 +445,7 @@ async function setupHomeSearch() {
           ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
           <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
           <span class="scat">${esc(x.c)}</span></a>
-        <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+        <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       </div>`;
     }).join("")
       : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
@@ -455,7 +457,7 @@ async function setupHomeSearch() {
         const item = { key: wishKey(x.b, x.m, x.cap || null), b: x.b, m: x.m, cap: x.cap || null, s: x.s, p: x.p, img: x.img };
         const added = toggleWish(item);
         btn.classList.toggle("on", added);
-        btn.textContent = added ? "♥" : "♡";
+        btn.innerHTML = BOOKMARK_SVG;
         btn.setAttribute("aria-pressed", added);
       };
     });
@@ -1149,7 +1151,7 @@ function openProduct(m) {
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
   modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true">
      <button class="pmx" aria-label="닫기">✕</button>
-     <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+     <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
      ${imgHtml}
      <div class="pmbody">
        <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
@@ -1184,7 +1186,7 @@ function openProduct(m) {
   const wbtn = modal.querySelector(".pmwish");
   wbtn.onclick = () => {
     const added = toggleWish(wishItem(m, STATE.slug));
-    wbtn.classList.toggle("on", added); wbtn.textContent = added ? "♥" : "♡";
+    wbtn.classList.toggle("on", added); wbtn.innerHTML = BOOKMARK_SVG;
     wbtn.setAttribute("aria-pressed", added);
   };
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
@@ -1345,7 +1347,7 @@ function draw() {
     const inCmp = _cmpSet.includes(i);
     return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
-        aria-label="찜" aria-pressed="${wished}">${wished ? "♥" : "♡"}</button>
+        aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       <button type="button" class="pli-setadd" data-mi="${i}" aria-label="세트에 추가">⊕</button>
       ${thumbCell(m.img, m.model, tint, icon)}
       <div class="pli-info">
@@ -1372,7 +1374,7 @@ function draw() {
   document.querySelectorAll("#list .pli-wish").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     const added = toggleWish(wishItem(rows[+btn.dataset.mi], STATE.slug));
-    btn.classList.toggle("on", added); btn.textContent = added ? "♥" : "♡";
+    btn.classList.toggle("on", added); btn.innerHTML = BOOKMARK_SVG;
     btn.setAttribute("aria-pressed", added);
   });
   // 세트에 추가 버튼
@@ -1815,7 +1817,7 @@ function renderAccount() {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
       return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
-        <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">♥</button>
+        <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
         <div class="pli-info">
           <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>

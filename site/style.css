@@ -180,8 +180,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sres-wrap{display:flex;align-items:center;border-bottom:1px solid var(--line)}
 .sres-wrap .sres{flex:1;min-width:0;border-bottom:none}
 .sres-wish{border:none;background:none;font-size:17px;color:var(--muted);cursor:pointer;padding:6px 12px;flex-shrink:0;line-height:1}
-.sres-wish.on{color:#e5484d}
-.sres-wish:hover{color:#e5484d}
+.sres-wish.on{color:var(--accent)}
+.sres-wish:hover{color:var(--accent)}
 .sres{display:flex;align-items:center;gap:9px;padding:9px 15px;font-size:14px}
 .sres:hover{background:var(--card2)}
 .sres .sb{color:var(--muted)}
@@ -334,8 +334,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pli-wish{position:absolute;top:5px;left:5px;z-index:2;width:28px;height:28px;border:0;border-radius:50%;
   background:rgba(255,255,255,.85);color:var(--faint);font-size:16px;line-height:1;cursor:pointer;padding:0;
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease,color .12s ease}
-.pli-wish:hover{color:#e5484d;transform:scale(1.12)}
-.pli-wish.on{color:#e5484d}
+.pli-wish:hover{color:var(--accent);transform:scale(1.12)}
+.pli-wish.on{color:var(--accent)}
 .pli-setadd{position:absolute;top:5px;left:37px;z-index:2;width:28px;height:28px;border:0;border-radius:50%;
   background:rgba(255,255,255,.85);color:var(--accent);font-size:16px;line-height:1;cursor:pointer;padding:0;
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
@@ -482,8 +482,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmwish{position:absolute;top:10px;left:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;
   background:rgba(255,255,255,.9);color:var(--faint);font-size:18px;line-height:1;cursor:pointer;
   box-shadow:0 1px 4px rgba(0,0,0,.18)}
-.pmwish:hover{color:#e5484d}
-.pmwish.on{color:#e5484d}
+.pmwish:hover{color:var(--accent)}
+.pmwish.on{color:var(--accent)}
 
 /* 추천 카드 상품 이미지(아이콘 대체) */
 .rcard .rthumb{width:100%;aspect-ratio:1;border-radius:11px;object-fit:contain;
@@ -559,6 +559,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 }
 .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);padding:6px 0;transition:color .15s}
 .bnav-item.on{color:var(--accent)}
+/* 찜 버튼 북마크 아이콘 — 기본 외곽선, .on이면 채움 */
+.wish-ico{width:1em;height:1em;display:inline-block;vertical-align:-0.125em;fill:none}
+.on .wish-ico{fill:currentColor}
 /* 설정 행 + iOS 스타일 토글 스위치 */
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px}
