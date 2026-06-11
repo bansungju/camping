@@ -535,13 +535,19 @@ async function setupHomeSearch() {
       `<a class="sres sbrand" href="brand.html?b=${encodeURIComponent(b)}">
          <span class="sb">${esc(b)}</span> <b>전체 ${n}개</b> 모아보기
          <span class="scat">브랜드 →</span></a>`).join("");
+    // M-24: 검색어 하이라이트 헬퍼
+    const hlText = (text, tms) => {
+      if (!tms.length) return esc(text);
+      const re = new RegExp(`(${tms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+      return esc(text).replace(re, `<mark class="shl">$1</mark>`);
+    };
     box.innerHTML = (brandHtml || "") + (hits.length ? hits.map((x, i) => {
       const wk = wishKey(x.b, x.m, x.cap || null);
       const wished = inWish(wk);
       return `<div class="sres-wrap">
         <a class="sres" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
           ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "sres-thumb", "sres-noimg")}
-          <span class="stxt"><span class="sb">${esc(x.b)}</span> ${esc(x.m)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
+          <span class="stxt"><span class="sb">${hlText(x.b, terms)}</span> ${hlText(x.m, terms)}${x.cap ? ` <i>${x.cap}인</i>` : ""}</span>
           <span class="scat">${esc(x.c)}</span></a>
         <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       </div>`;
@@ -568,6 +574,9 @@ async function setupHomeSearch() {
     inp.setAttribute("aria-expanded", opts.length ? "true" : "false");
     inp.removeAttribute("aria-activedescendant");
     if (srStatus) srStatus.textContent = hits.length ? `${hits.length}개 결과` : (brandHits.length ? `브랜드 ${brandHits.length}개` : "결과 없음");
+    // M-40: URL ?q= 반영 (replaceState — 히스토리 오염 없이 공유 가능)
+    const qval = inp.value.trim();
+    try { history.replaceState(null, "", qval ? `?q=${encodeURIComponent(qval)}` : location.pathname); } catch (_) {};
   };
   clearBtn.onclick = () => { inp.value = ""; closeBox(); syncClearBtn(); inp.focus(); };
   // 한글 IME 조합 중에는 자동완성을 트리거하지 않고, 조합이 끝나면 1회 실행 (M-49)
@@ -903,8 +912,14 @@ async function renderCategory() {
   // 칩 active(.on) 복원은 STATE.campStyle 복원 이후에 그려야 한다. (H-22 ①)
   renderStyleChips(d);
   syncFilterUI();                              // 복원된 STATE를 컨트롤(칩·입력)에 반영
-  document.getElementById("q").value = params.get("q") || rawQ;   // 표시는 원본, 필터는 소문자
-  document.getElementById("q").oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
+  const qInp = document.getElementById("q");
+  if (qInp) {
+    qInp.value = params.get("q") || rawQ;
+    qInp.setAttribute("aria-label", `${d.name || "카테고리"} 내 모델·브랜드 검색`);
+    qInp.setAttribute("role", "searchbox");
+    qInp.setAttribute("aria-autocomplete", "list");
+    qInp.oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
+  }
   draw();
   // 최근 본 상품·검색 결과·추천 카드처럼 brands+q로 단일 상품을 특정한 링크면
   // 필터된 목록이 아니라 상품 상세 모달을 바로 연다. (H-20)
