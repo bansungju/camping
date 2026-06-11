@@ -58,6 +58,8 @@
 | 44 | 카테고리/목록 (8순환) | 2026-06-11 | 5건 + M-68 보완 (M-08·L-35 재확인) |
 | 45 | 상품상세 (8순환) | 2026-06-11 | 6건 (L-52·L-54 중복 제외) |
 | 46 | 검색 (8순환) | 2026-06-11 | 2건 (L-60·L-61 중복 제외) |
+| 47 | 계정/로그인 (8순환) | 2026-06-11 | 5건 |
+| 48 | 커뮤니티/소셜 (8순환) | 2026-06-11 | 7건 (L-32 계열 별도 기록) |
 
 ---
 
@@ -346,11 +348,12 @@
 - **재현:** 별점 요소 접근성 트리 확인 — `textContent` = "★★★★★" 고정
 - **해결(2026-06-11):** `stars()`가 만드는 `.stars` 컨테이너에 `role="img"` + `aria-label="별점 N / 5"` 부여 — 개별 별(빈 별 포함)이 AT에서 presentational로 숨겨지고 실제 점수만 읽힘(별도 `.e` aria-hidden보다 견고). 로컬 프리뷰 검증 — 카드별 aria-label이 "별점 5 / 5"·"별점 2 / 5"·"별점 1 / 5" 등 실제값 반영(시각 ★★★★★ 유지), 페이지 내 606개 모두 role=img 적용, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-45] 카테고리 필터 `<select>` 접근성 레이블 없음 — 스크린리더 목적 불명
+### [M-45] ✅ 해결완료 — 카테고리 필터 `<select>` 접근성 레이블 없음 — 스크린리더 목적 불명
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag 등
 - **증상:** 정렬 드롭다운 및 브랜드 필터 `<select class="fsel">` 2개에 `id`, `aria-label`, `<label for>`, `title` 중 어느 것도 없음. WCAG 4.1.2 위반 — 스크린리더 사용자가 드롭다운 목적을 알 수 없음.
 - **재현:** 카테고리 페이지 접근 → 접근성 트리 확인: `select` 요소 accessibleName = "" (공백)
+- **해결(2026-06-11):** `buildFilters`의 정렬 select에 `aria-label="정렬 기준 선택"`, 브랜드 select에 `aria-label="브랜드 필터 선택"` 추가. 로컬 프리뷰 검증 — 두 select accessibleName이 각 레이블로 해석, 레이블 없는 `.fsel` 0개, 콘솔 에러 0. [site/app.js](site/app.js)
 
 ### [M-44] LCP 이미지에 `loading="lazy"` + `fetchpriority` 없음 — LCP 점수 저해
 - **영역:** 홈/메인 (성능)
@@ -853,6 +856,38 @@
 - **증상:** "침낭", "버너", "텐트" 등 카테고리명 입력 후 Enter 시 카테고리 목록 페이지가 아니라 `category.html?cat=sleeping-bag&q=침낭` 같이 개별 모델 필터 URL로 이동. 드롭다운에 카테고리 바로가기 옵션 없음. H-39(브랜드명)와 동일 메커니즘. 전체 카테고리를 보려는 사용자 의도와 불일치.
 - **재현:** 홈 검색창 → "침낭" 입력 → Enter → `category.html?cat=sleeping-bag&q=침낭` 이동 (전체 침낭 목록 아님)
 
+### [M-95] 세트 없을 때 `#sets-section` 완전 숨김 — 빈 상태 안내 없음
+- **영역:** 계정/로그인 — 세트 탭
+- **URL:** https://gear-forest.com/account.html
+- **증상:** `gear_sets`가 비어있으면 `#sets-section` 전체가 `display:none`으로 숨겨짐. 찜 섹션에는 "아직 찜한 상품이 없어요" 빈 상태 안내가 있으나 세트 섹션은 섹션 자체가 사라져 사용자가 세트 기능 존재를 알 수 없음.
+- **원인:** `app.js` — `setsSec.style.display = (sets.length && ...) ? "block" : "none"`
+- **재현:** `localStorage.removeItem('gear_sets')` 후 `account.html` 새로고침 → 세트 섹션 완전 사라짐
+
+### [M-96] `auth_error=1` 에러 메시지가 `initAuth` 콜백에 즉시 덮어써져 표시 안 됨
+- **영역:** 계정/로그인 — OAuth 오류 처리
+- **URL:** https://gear-forest.com/account.html?auth_error=1
+- **증상:** `auth-callback.html` 실패 후 `auth_error=1` 파라미터로 리다이렉트 시 에러 메시지 삽입 직후 `initAuth` 콜백이 `user=null`로 `renderLogin()`을 즉시 호출해 덮어씀. 오류 메시지가 표시되지 않고 일반 로그인 화면만 나타남.
+- **원인:** `account.html` 에러 삽입 직후 `initAuth` 콜백이 선행 실행 순서 없이 덮어씀
+- **재현:** `account.html?auth_error=1` 접근 → 오류 메시지 없이 일반 로그인 UI만 표시
+
+### [M-97] `#post=비UUID` 접근 시 Supabase UUID 파싱 에러 코드 콘솔 노출
+- **영역:** 커뮤니티/소셜 — 글 상세
+- **URL:** https://gear-forest.com/community.html#post=99999
+- **증상:** UUID 형식 검증 없이 raw 문자열을 Supabase에 전달. 400 응답과 함께 콘솔에 `{code: 22P02, message: invalid input syntax for type uuid: "99999"}` DB 내부 에러가 노출됨. UI는 "글을 찾을 수 없어요"를 표시하나 내부 오류 코드/타입 정보가 노출됨.
+- **재현:** `community.html#post=99999` 접속 → 콘솔 확인 → Supabase 22P02 에러 확인
+
+### [M-98] 커뮤니티 피드 최신 30건 이후 페이지네이션·무한스크롤 없음
+- **영역:** 커뮤니티/소셜 — 피드
+- **URL:** https://gear-forest.com/community.html
+- **증상:** `renderFeed()`가 `listPosts({ limit: 30 })`을 1회만 호출. "더 보기" 버튼이나 무한스크롤 없어 글이 30개를 초과하면 초과분이 영구적으로 보이지 않음. `listPosts`에는 `before` 커서 파라미터가 이미 구현되어 있으나 UI에서 미활용.
+- **재현:** DB에 글 31개 이상 존재 → 피드 최하단까지 스크롤 → 추가 로드 없음
+
+### [M-99] 댓글 수 헤더(상세)와 피드 카드 `💬` 카운트 값 불일치 가능
+- **영역:** 커뮤니티/소셜 — 글 상세 + 피드
+- **URL:** https://gear-forest.com/community.html#post=<id>
+- **증상:** 피드 카드 `💬 N`은 DB `comment_count`(트리거 관리)를 사용하나, 상세 페이지 "댓글 N" 헤더는 JS 배열 `.length`(현재 쿼리 결과)로 렌더링. 소프트 삭제 댓글 존재 등 상황에서 두 숫자가 다르게 표시됨. H-34(소프트삭제 count 불감소)와 연관.
+- **재현:** 소프트 삭제 댓글 있는 글 → 피드 카드 `💬` 수 vs 상세 "댓글 N" 비교
+
 ---
 
 ## 🟢 Low
@@ -1067,6 +1102,47 @@
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 헤더의 "정량 스펙 별점 · 브랜드만 · 측정값만" 문구가 카테고리 페이지 필터 칩과 유사한 표현으로, 상세 페이지에서는 클릭 불가한 정적 텍스트임에도 인터랙티브 요소로 오인될 수 있음.
 - **재현:** 상세 페이지 → 헤더 슬로건 클릭 → 반응 없음
+
+### [L-74] `account.html#settings` URL hash가 실제 DOM ID `settings-section`과 불일치 — 스크롤 이동 불가
+- **영역:** 계정/로그인 — 설정 탭
+- **URL:** https://gear-forest.com/account.html#settings
+- **증상:** URL hash가 `#settings`이지만 DOM ID는 `settings-section`. 브라우저 기본 anchor 동작이 작동하지 않아 직접 접근·링크 공유 시 설정 섹션으로 자동 스크롤되지 않음. `#wish`, `#sets`, `#logs`도 동일 패턴 확인 필요.
+- **재현:** `account.html#settings` 직접 접근 → 최상단에 머무름, 설정 섹션 미스크롤
+
+### [L-75] 찜 카드 `div[role="button"]` 내부에 `<button>` 중첩 — HTML 명세 위반
+- **영역:** 계정/로그인 — 찜 탭
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 찜 카드 `<div role="button" tabindex="0">` 안에 `<button class="pli-wish">` 찜 해제 버튼이 중첩. Interactive content 안에 interactive content 포함이 HTML 명세 위반이며 보조기술에서 예측 불가한 동작 유발.
+- **재현:** 찜 목록 DOM 확인 → `.pli[role="button"] button.pli-wish` 중첩 구조
+
+### [L-76] 세트 공유 URL 열람 시 열람자 본인의 찜·세트 데이터가 모달 뒤에 노출
+- **영역:** 계정/로그인 — 세트 공유
+- **URL:** https://gear-forest.com/account.html?view-set=...
+- **증상:** 세트 공유 URL을 열면 공유 세트 모달과 함께 배경에 열람자 본인의 찜 목록·세트가 모두 노출됨. 수신자에게 자신의 개인 데이터가 공유 URL과 함께 표시되어 혼란 유발. 설계 의도 확인 필요.
+- **재현:** 세트 공유 링크 복사 → 브라우저에서 열기 → 공유 모달 + 본인 찜·세트 동시 노출
+
+### [L-77] 비로그인 빈 피드 — "첫 이야기를 남겨보세요!" CTA가 클릭 불가 텍스트
+- **영역:** 커뮤니티/소셜 — 피드
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 빈 피드에서 "첫 이야기를 남겨보세요!" 문구가 표시되나 로그인·글쓰기로 연결되는 링크·버튼이 없어 행동 유도 문구가 실제 행동 유도로 이어지지 않음.
+- **재현:** 비로그인 빈 피드 → "첫 이야기를 남겨보세요!" 텍스트 클릭 불가 확인
+
+### [L-78] 글 상세 본문 이미지 `alt` 빈 값 — 이미지 실패 시 대체 텍스트 없음
+- **영역:** 커뮤니티/소셜 — 글 상세
+- **URL:** https://gear-forest.com/community.html#post=<id>
+- **증상:** `renderDetail()`이 생성하는 `<img src="..." alt="">` 에 빈 `alt`. 피드 카드 썸네일(장식용)과 달리 본문 이미지는 콘텐츠 이미지이므로 설명이 필요. 이미지 오류 시 대체 텍스트 없어 스크린리더 사용자가 이미지 존재를 인지 불가.
+
+### [L-79] 글쓰기 폼 `<label>` 요소에 `for` 속성 없음 — 입력 필드와 미연결
+- **영역:** 커뮤니티/소셜 — 글쓰기 폼
+- **URL:** https://gear-forest.com/community.html#new
+- **증상:** `renderCompose()`가 생성하는 `<label>제목</label>`, `<label>내용</label>`에 `for` 속성 없음. 레이블 클릭 시 대응 입력 필드로 포커스 미이동, 스크린리더 연결 불가. L-32(댓글 textarea label 없음)와 동일 계열.
+- **재현:** 로그인 후 `#new` 진입 → "제목" 레이블 클릭 → 입력 필드 포커스 안 됨
+
+### [L-80] 좋아요 버튼에 `aria-label`·`aria-pressed` 없음 — 상태 변화 접근성 트리 미반영
+- **영역:** 커뮤니티/소셜 — 글 상세
+- **URL:** https://gear-forest.com/community.html#post=<id>
+- **증상:** 좋아요 버튼 `<button class="cm-like">🤍 <span>0</span></button>`에 `aria-label`과 `aria-pressed`가 없어 스크린리더가 "하트 0"으로만 읽음. 클릭 후 ❤️로 바뀌어도 상태 변화가 접근성 트리에 반영되지 않음.
+- **재현:** 글 상세 → 좋아요 버튼 DOM 검사 → aria-label·aria-pressed null
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1321,4 +1397,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (8순환)*
+*다음 회차: 홈/메인 (9순환)*

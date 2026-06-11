@@ -943,13 +943,13 @@ function buildFilters(d, star) {
   const top = sorted.slice(0, 12);
   parts.push(`<div class="fgrp"><span class="flab">브랜드</span>` +
     top.map(([b, n]) => `<button class="ftag" data-brand="${esc(b)}">${esc(b)} <i>${n}</i></button>`).join("") +
-    (sorted.length > 12 ? `<select class="fsel" data-brandsel>
+    (sorted.length > 12 ? `<select class="fsel" data-brandsel aria-label="브랜드 필터 선택">
        <option value="">＋ 브랜드 (${sorted.length})</option>` +
       sorted.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n})</option>`).join("") + `</select>` : "") + `</div>`);
 
   // 정렬 + 품질
   parts.push(`<div class="fgrp"><span class="flab">정렬</span>
-    <select class="fsel" data-sort>
+    <select class="fsel" data-sort aria-label="정렬 기준 선택">
       <option value="">기본(주력지표)</option>
       <option value="value">가성비순(${star[0] ? esc(star[0].label) : '별점'}/가격)</option>
       <option value="price_min">가격 낮은순</option>
