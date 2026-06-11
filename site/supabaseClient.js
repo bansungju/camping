@@ -154,6 +154,24 @@ export async function createComment({ post_id, body, parent_id = null }) {
     .select('*, author:profiles!comments_user_id_fkey(nickname, avatar_url)').maybeSingle()
 }
 
+// 본인 댓글 수정(body). RLS comments_update_own(USING deleted_at IS NULL) + user_id 가드.
+export async function editComment(id, body) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  return supabase.from('comments')
+    .update({ body }).eq('id', id).eq('user_id', user.id)
+    .select('*, author:profiles!comments_user_id_fkey(nickname, avatar_url)').maybeSingle()
+}
+
+// 본인 댓글 소프트삭제(deleted_at). 트리거 trg_comment_count(015)가 카운트 감소.
+export async function deleteComment(id) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'unauthorized' } }
+  const { error } = await supabase.from('comments')
+    .update({ deleted_at: new Date().toISOString() }).eq('id', id).eq('user_id', user.id)
+  return error ? { error } : { ok: true }
+}
+
 // 현재 사용자가 좋아요한 post id 집합(보이는 게시글 한정). likes RLS: 본인 것만 조회 가능.
 export async function getMyLikes(postIds) {
   const { data: { user } } = await supabase.auth.getUser()
