@@ -605,7 +605,8 @@
 - **증상:** '내 정보' 섹션 부근에 의도하지 않은 것으로 보이는 그래픽 요소가 표시됨. 디자인 의도와 맞지 않는 잔여 UI로 추정.
 - **제보:** 사용자 직접 제보
 
-### [M-33] 데스크톱에서 카테고리 필터가 반응형으로 구현되지 않음
+### [M-33] ✅ 해결완료 — 데스크톱에서 카테고리 필터가 반응형으로 구현되지 않음
+- **해결(2026-06-11):** `category.html`에 `#cat-layout`(flex) > `#cat-aside`(220px sticky 사이드바) + `#cat-body`(flex:1) 2단 레이아웃 추가. `style.css`에 `#cat-layout{display:flex}`, `#cat-aside{flex:0 0 220px;position:sticky;top:110px}`, `#cat-body{flex:1;min-width:0}` 추가; `@media(max-width:640px)`에서 `#cat-layout{display:block}`으로 모바일 세로 스택 복원. 로컬 프리뷰 검증 — 1200px에서 필터 사이드바·목록 2단 확인, 390px에서 세로 스택·필터 토글 버튼 정상 동작 스크린샷 확인. [site/category.html](site/category.html), [site/style.css](site/style.css)
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 데스크톱 뷰에서 필터(정렬·스펙 필터 등)가 모바일 기준으로만 구현되어 있어 데스크톱 레이아웃에서도 모바일형 UI가 그대로 표시됨. 넓은 화면에 맞는 사이드바 필터 또는 가로형 레이아웃으로 전환되지 않음.
@@ -1482,6 +1483,14 @@
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
 - **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
 - **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [M-107] ✅ 해결완료 — 찜 탭 '로그인하고 기기 간 동기화' 버튼이 로그인 후에도 표시됨
+- **해결(2026-06-11):** `renderWish()`에서 `wish-empty` div가 최초 생성 시 로그인 상태를 innerHTML에 굳혀 이후 재렌더 시 갱신하지 않던 문제 수정. 항상 현재 `isLoggedIn` 상태 기반으로 innerHTML을 재생성하도록 변경 — 로그인 상태면 동기화 버튼 미출력, 비로그인 상태에서만 출력. [site/app.js](site/app.js)
+- **영역:** 계정/로그인 — 찜 탭
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 로그인 상태에서 account.html 찜 탭에 "로그인하고 기기 간 동기화" 버튼이 사라지지 않고 계속 표시됨.
+- **원인:** `wish-empty` div가 최초 1회 생성 시 innerHTML을 굳혀서, 이후 로그인 상태가 바뀌어도 동기화 버튼 표시 여부가 업데이트되지 않음.
+- **제보:** 사용자 직접 제보
 
 ### [L-93] `manifest.webmanifest` `start_url`이 `./index.html`로 apex URL과 불일치
 - **영역:** 홈/메인 — PWA

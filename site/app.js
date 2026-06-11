@@ -1998,14 +1998,14 @@ function renderAccount() {
         wishEmptyEl = document.createElement("div");
         wishEmptyEl.id = "wish-empty";
         wishEmptyEl.style.cssText = "text-align:center;padding:32px 0;color:var(--muted);font-size:14px";
-        wishEmptyEl.innerHTML = `<div style="font-size:32px;margin-bottom:10px">🔖</div>
-          <div>아직 찜한 상품이 없어요</div>
-          <div style="font-size:12px;margin-top:6px">상품 카드의 🔖 버튼으로 추가해보세요</div>
-          ${!isLoggedIn ? `<a href="account.html#auth-section" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
         wishEl.after(wishEmptyEl);
-      } else {
-        wishEmptyEl.style.display = "block";
       }
+      // 로그인 상태가 바뀌어도 버튼 표시 여부가 반영되도록 항상 innerHTML 갱신
+      wishEmptyEl.innerHTML = `<div style="font-size:32px;margin-bottom:10px">🔖</div>
+        <div>아직 찜한 상품이 없어요</div>
+        <div style="font-size:12px;margin-top:6px">상품 카드의 🔖 버튼으로 추가해보세요</div>
+        ${!isLoggedIn ? `<a href="account.html#auth-section" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
+      wishEmptyEl.style.display = "block";
     } else {
       if (wishEmptyEl) wishEmptyEl.style.display = "none";
     }

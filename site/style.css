@@ -216,6 +216,11 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 /* 필터 펼치기/접기 토글(모바일 전용) */
 .filtoggle{display:none;width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
   padding:10px;border-radius:9px;font-size:13.5px;font-weight:600;margin:4px 0 10px;cursor:pointer}
+/* 카테고리 데스크톱 사이드바 2단 레이아웃 (M-33) */
+#cat-layout{display:flex;align-items:flex-start;gap:24px}
+#cat-aside{flex:0 0 220px;max-width:220px;position:sticky;top:110px;
+  max-height:calc(100vh - 120px);overflow-y:auto}
+#cat-body{flex:1;min-width:0}
 /* 필터 태그 바 */
 .filterbar{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px}
 .fgrp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -567,6 +572,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   .flab{width:auto}
   .filtoggle{display:block}            /* 모바일선 토글 노출 */
   .filterbar.collapsed{display:none}   /* 접힘 상태 — 표가 바로 보이게 */
+  /* 모바일: 사이드바 → 세로 스택 */
+  #cat-layout{display:block}
+  #cat-aside{max-width:none;position:static;max-height:none;overflow-y:visible}
 }
 @media (max-width:420px){
   .grid{grid-template-columns:1fr}
