@@ -65,13 +65,15 @@
 | 51 | 상품상세 (9순환) | 2026-06-11 | 4건 (LCP 중복 제외) |
 | 52 | 검색 (9순환) | 2026-06-11 | 3건 |
 | 53 | 계정/로그인 (9순환) | 2026-06-11 | 3건 |
+| 54 | 커뮤니티/소셜 (9순환) | 2026-06-11 | 4건 |
+| 55 | 홈/메인 (10순환) | 2026-06-11 | 2건 |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
 
-### [H-39] ✅ 해결완료(라이브 적용·검증) — Google 로그인 후 비로그인 복귀 — Supabase Site URL이 `localhost:3000` 방치
-- **해결적용(2026-06-11, Management API 직접):** `site_url` `http://localhost:3000` → **`https://gear-forest.com`**, `uri_allow_list`에 `https://gear-forest.com/**` 추가. API로 적용 후 재조회로 반영 확인. 재로그인 시 정상 세션 생성됨.
+### [H-39] ✅ 해결완료(백엔드+코드, 2026-06-11) — Google 로그인 후 비로그인 복귀
+- **해결적용(2026-06-11):** ① (백엔드) `site_url` `http://localhost:3000` → `https://gear-forest.com`, `uri_allow_list`에 `https://gear-forest.com/**` 추가. authorize REST 검증 — `redirect_to=gear-forest.com/auth-callback.html` 정상 통과 확인. ② (코드) `supabaseClient.js`에 `flowType: 'pkce'` 명시적 설정. `auth-callback.html` else 분기 `INITIAL_SESSION(null)` 즉시 이탈 버그 수정(supabase-js v2 첫 이벤트가 INITIAL_SESSION+null인데 바로 unsubscribe → auth_error 이동했음). ③ (코드) M-96 동시 수정: `initAuth(user=null)` 콜백이 에러 메시지를 덮어쓰는 버그 수정.
 - **영역:** 계정/로그인 (Supabase Auth 설정)
 - **URL:** https://gear-forest.com/account.html
 - **증상:** "Google로 로그인" → 구글 인증까지는 정상 진행되나, 사이트로 돌아오면 **여전히 비로그인 상태**. 세션이 생성되지 않음.
@@ -109,31 +111,35 @@
 - **원인:** 데스크톱 `.tabbar`(`TABS`)가 상대경로 href(`index.html` 등) 사용. app.js는 item 페이지에도 로드되어 탭바가 생성되는데, 상세는 `/item/{cat}/item-N.html`(2단계 하위)이므로 상대경로가 `/item/{cat}/index.html`로 해석돼 404. (모바일 `.bottom-nav`는 item에서 skip되고 이미 절대경로 사용)
 - **해결(2026-06-11):** `app.js`의 `TABS` href를 루트 절대경로(`/index.html`·`/category.html`·`/community.html`·`/account.html`)로 변경 — 어느 깊이에서나 정확히 해석, 모바일 nav와 동일 규칙. 매칭 로직(파일명 기준)은 불변이라 페이지별 active 강조 유지. 로컬 프리뷰 검증 — item-232 페이지에서 4탭 모두 루트 경로로 해석(`/item/` 잔존 0), 탐색 탭 클릭 시 `/category.html` 정상 이동·탐색 active, 일반 페이지 회귀 없음, 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [H-42] 모바일 상품상세 페이지 네비게이션 완전 소실
+### [H-42] ✅ 해결완료 — 모바일 상품상세 페이지 네비게이션 완전 소실
 - **영역:** 상품상세 (모바일)
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html (390px 뷰포트)
 - **증상:** 모바일(≤640px)에서 상세 페이지에 탭바가 전혀 없음. CSS가 `.tabbar`를 `display:none`으로 숨기고, `insertBottomNav()`는 `/item/` 경로 감지 시 `return` 조기 종료하여 `.bottom-nav`도 삽입하지 않음. 브레드크럼 링크만 남아 모바일 사용자의 다른 섹션 이동 경로 전무.
 - **원인:** `app.js`의 `insertBottomNav()`에서 `if (isItem) return;`로 상세 페이지를 제외 처리. 데스크톱은 `.tabbar`(이미 H-38에서 절대경로 수정됨)를 사용하지만, 모바일은 `.bottom-nav`가 item 페이지에 삽입되지 않아 데스크톱 tabbar의 모바일 대체 수단도 없음.
+- **해결(2026-06-11):** `insertBottomNav()`의 `if (isItem) return;` 조기 종료 제거 — item 페이지에도 `.bottom-nav` 삽입. 탭 href는 이미 절대경로(`/index.html` 등)라 2단계 하위 경로에서도 정확히 동작. 탐색 탭 match 목록에 `/item` 추가 → item 페이지에서 탐색 탭 active 표시. 로컬 프리뷰 검증 — `/item/sleeping-bag/item-232.html`에서 `.bottom-nav` 존재, 탐색 탭 `on`, 4개 탭 절대경로 링크 정상, 콘솔 에러 0. [site/app.js](site/app.js)
 - **재현:** 모바일 390px 뷰포트 → `/item/*.html` 직접 접근 → 페이지 어디에도 탭바 없음
 
-### [H-41] 경량 우선 프리셋 kg/g 단위 불일치 — 결과 항상 0건 + URL 공유 시에도 재현
+### [H-41] ✅ 해결완료 — 경량 우선 프리셋 kg/g 단위 불일치 — 결과 항상 0건 + URL 공유 시에도 재현
 - **영역:** 카테고리/목록 — 필터 프리셋
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
 - **증상:** 🪶 경량 우선 프리셋 클릭 시 결과가 항상 0건. 무게 슬라이더도 0.0kg 극소값으로 표시. URL 공유(`weight_min__max=1.1`) 후 새 탭 접근해도 동일 0건.
 - **원인:** `buildFilters` 프리셋 fn()이 `STATE.range[weightMeta.key] = { max: +(p33 / 1000).toFixed(1) }`로 kg 단위(예: 1.1) 저장. 그러나 `passRange`는 `m.specs[key].value`(g 단위, 예: 800)와 직접 비교 → `800 > 1.1` → 모든 제품 탈락. 슬라이더 이벤트의 `toStateVal`(kg→g 변환)을 프리셋 코드가 우회함. `serializeState`도 단위 변환 없이 직렬화하여 URL에도 kg값(`weight_min__max=1.1`)이 기록됨. `restoreState`에 isWeight 판별 없어 복원 시에도 동일.
+- **해결(2026-06-11):** 프리셋 fn()에서 `{ max: +(p33 / 1000).toFixed(1) }` → `{ max: p33 }`으로 수정 — `weightVals`는 이미 g 단위(`m.specs[key].value`)이므로 p33도 g 단위. `passRange`·`syncFilterUI`(toDisplay=v/1000)·`serializeState`가 모두 g 단위를 기대하여 변환 없이 직접 저장하면 전 경로 일치. 로컬 프리뷰 검증 — 경량 우선 클릭 시 `STATE.range.weight_min.max=1130`(g), 결과 81건(기존 0건), 슬라이더 1.1kg 표시 정상·URL `weight_min__max=1130`, 콘솔 에러 0. [site/app.js](site/app.js)
 - **재현:** `category.html?cat=backpacking-tent` → 빠른 설정 🪶 경량 우선 클릭 → 결과 0건, 슬라이더 0.0kg
 
-### [H-40] `sort` 파라미터 단독 URL 직접 접근 시 간헐적 리다이렉트 루프
+### [H-40] ✅ 해결완료(H-28·M-59 복합 해소) — `sort` 파라미터 단독 URL 직접 접근 시 간헐적 리다이렉트 루프
 - **영역:** 카테고리/목록
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&sort=price_min
 - **증상:** `sa` 파라미터 없이 `sort`만 포함된 URL로 직접 접근 시 일부 환경에서 `ERR_TOO_MANY_REDIRECTS` 발생. 외부에서 공유된 정렬 URL이 사용자를 완전 차단할 수 있음. 재현은 타이밍 의존적(간헐적)이며 `sa=0`이 자동 추가될 때는 정상 로드됨.
+- **해결(2026-06-11):** ① H-28 — SW가 www→apex 301 응답을 캐싱하던 버그 수정(`!net.redirected` 가드 추가) + CACHE 키 변경으로 오염 캐시 폐기. ② M-59 — `sa` 부재 시 정렬키 기본방향 적용(`defaultAsc(srt)`)으로 URL 안정화. 두 수정의 복합 효과로 리다이렉트 루프 재현 불가. `replaceState`는 페이지 리로드 없이 URL만 갱신하므로 코드 경로 자체에 루프 없음. 라이브 확인 재현 안 됨.
 - **재현:** `category.html?cat=sleeping-bag&sort=price_min` 직접 접근 → 일부 환경에서 리다이렉트 루프
 
-### [H-39] 홈 검색 Enter — 브랜드명 입력 시 브랜드 페이지 대신 단일 카테고리로 오이동
+### [H-39] ✅ 해결완료 — 홈 검색 Enter — 브랜드명 입력 시 브랜드 페이지 대신 단일 카테고리로 오이동
 - **영역:** 홈/메인 — 전역 검색 (`#homeq`)
 - **URL:** https://gear-forest.com/
 - **증상:** "헬리녹스" 같은 브랜드명 단독 입력 후 Enter 시 `brand.html?b=헬리녹스`가 아닌 `category.html?cat=backpacking-tent&q=헬리녹스`로 이동. 브랜드가 여러 카테고리에 걸쳐 있을 때 인덱스에서 가장 먼저 매칭된 모델의 카테고리만 표시되어 나머지 카테고리(침낭·의자 등) 제품이 누락됨.
 - **원인:** `app.js` — `idx.find()`로 모델 매치가 먼저 걸리면 브랜드 분기에 도달하지 않음. 브랜드명이 모델 인덱스에 포함된 항목이 있을 경우 카테고리 이동이 우선됨.
+- **해결(2026-06-11):** Enter 핸들러에 **브랜드명 정확 일치 체크를 모델 매치보다 앞에 추가** — `idx.find(x => x.b.toLowerCase() === ql)`로 정확 일치 브랜드를 먼저 탐색, 있으면 `brand.html?b=...`로 즉시 이동. 기존 모델 매치·부분 브랜드 매치는 폴백으로 유지. 로컬 프리뷰 검증 — "헬리녹스" Enter 시 exactBrand 히트 → `brand.html?b=헬리녹스` 이동 확인; 일반 모델 검색("체어원")은 category 이동 회귀 없음. [site/app.js](site/app.js)
 - **재현:** 홈 검색창에 "헬리녹스" 입력 → Enter → `brand.html` 대신 `category.html?cat=backpacking-tent` 이동 확인
 
 ### [H-01] ✅ 해결완료(라이브 검증) — 이번 주 인기 API (get_hot_items) 404 에러 — 하드코딩 fallback 노출
@@ -889,7 +895,8 @@
 - **원인:** `app.js` — `setsSec.style.display = (sets.length && ...) ? "block" : "none"`
 - **재현:** `localStorage.removeItem('gear_sets')` 후 `account.html` 새로고침 → 세트 섹션 완전 사라짐
 
-### [M-96] `auth_error=1` 에러 메시지가 `initAuth` 콜백에 즉시 덮어써져 표시 안 됨
+### [M-96] ✅ 해결완료(H-39 동시 수정) — `auth_error=1` 에러 메시지가 `initAuth` 콜백에 즉시 덮어써져 표시 안 됨
+- **해결(2026-06-11):** `account.html` — `authErrorParam` 플래그 도입, `initAuth(user=null)` 분기에서 `authErrorParam` 참이면 `renderLogin()` 호출 건너뜀. 2초 setTimeout이 에러 메시지 유지 후 renderLogin 처리.
 - **영역:** 계정/로그인 — OAuth 오류 처리
 - **URL:** https://gear-forest.com/account.html?auth_error=1
 - **증상:** `auth-callback.html` 실패 후 `auth_error=1` 파라미터로 리다이렉트 시 에러 메시지 삽입 직후 `initAuth` 콜백이 `user=null`로 `renderLogin()`을 즉시 호출해 덮어씀. 오류 메시지가 표시되지 않고 일반 로그인 화면만 나타남.
@@ -1416,6 +1423,13 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
+### [M-106] 데스크톱 탭바 홈 탭 레이블이 '비교'로 오표기
+- **영역:** 홈/메인 — 데스크톱 탭바
+- **URL:** https://gear-forest.com/
+- **증상:** 데스크톱(≥769px) 상단 `.tabbar`의 첫 번째 탭(홈/index.html)이 '📊비교'로 표시됨. 모바일 `.bottom-nav`는 '홈'으로 올바르게 표시되어 플랫폼 간 레이블 불일치.
+- **원인:** `app.js` line 341의 레거시 `TABS` 상수에 `label: '비교'`로 정의. 반면 `.bottom-nav` 탭 배열은 `label: '홈'`으로 정의 — 두 탭바 시스템이 서로 다른 레이블 사용.
+- **재현:** 데스크톱(≥769px) → `https://gear-forest.com/` → 상단 탭바 첫 번째 탭 레이블 '📊비교' 확인
+
 ### [M-105] 로그 작성 모달 세트 드롭다운 — `s.name` 참조로 항상 '이름 없는 세트' 표시
 - **영역:** 계정/로그인 — 커뮤니티 로그 작성 모달
 - **URL:** https://gear-forest.com/account.html (세트 → 커뮤니티 로그 작성 버튼)
@@ -1457,6 +1471,41 @@
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
 - **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
 - **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [L-93] `manifest.webmanifest` `start_url`이 `./index.html`로 apex URL과 불일치
+- **영역:** 홈/메인 — PWA
+- **URL:** https://gear-forest.com/manifest.webmanifest
+- **증상:** PWA 매니페스트 `start_url`이 `"./index.html"`로 설정되어 PWA 실행 시 `/index.html`로 시작. 표준 URL `https://gear-forest.com/`과 분리 집계. Lighthouse PWA 감사 경고 발생 가능.
+- **원인:** `manifest.webmanifest`의 `start_url: "./index.html"` — `"/"` 또는 `"./"` 로 수정 필요.
+- **재현:** `https://gear-forest.com/manifest.webmanifest` 접근 → `start_url` 값 `"./index.html"` 확인
+
+### [L-92] 커뮤니티 피드 카드 썸네일 이미지 `alt=""` 빈 값
+- **영역:** 커뮤니티/소셜 — 피드 카드
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 피드 카드 썸네일 `<img>` 태그가 `alt=""`로 렌더링됨. 콘텐츠 이미지임에도 스크린리더가 설명을 읽지 못함. (L-78은 글 상세 모달 이미지이며 피드 카드 썸네일은 별도)
+- **원인:** `community.html` line 180: `imgs.map(u => \`<img src="${esc(u)}" loading="lazy" alt="">\`)` — alt 하드코딩 빈 값
+- **재현:** 이미지 포함 게시글 피드 → 카드 img 요소 검사 → `alt=""` 확인
+
+### [L-91] 글쓰기 폼(`renderCompose`) `<label>` `for` 속성 누락
+- **영역:** 커뮤니티/소셜 — 글쓰기 폼
+- **URL:** https://gear-forest.com/community.html#new
+- **증상:** 글쓰기 폼의 제목·내용·사진 `<label>`에 `for` 속성이 없어 스크린리더가 레이블과 입력 필드를 연결하지 못함. (L-79는 app.js log-modal의 lf-label이 대상, community.html `renderCompose()`는 별도)
+- **원인:** `community.html` line 201~206에서 `<label>제목</label>` 등 for 속성 없이 생성. 입력 필드 id(cm-t, cm-b, cm-file)는 존재하나 레이블 연결 누락.
+- **재현:** 로그인 후 `community.html#new` → 폼 label 요소 검사 → `for` 속성 없음
+
+### [L-90] 글 상세 좋아요 버튼(`cm-like`) `aria-label`·`aria-pressed` 누락
+- **영역:** 커뮤니티/소셜 — 글 상세
+- **URL:** https://gear-forest.com/community.html#post=\<uuid\>
+- **증상:** 글 상세의 `<button class="cm-like">` 에 `aria-label`·`aria-pressed` 없어 스크린리더가 버튼 용도·상태를 읽지 못함. (L-80은 app.js `log-like-btn`이 대상, `community.html`의 `cm-like`는 별도 요소)
+- **원인:** `community.html` `renderDetail()` line 304에서 버튼 생성 시 aria 속성 미포함.
+- **재현:** 글 상세 URL 접속 → 좋아요 버튼 요소 검사 → `aria-label`, `aria-pressed` 없음
+
+### [L-89] `← 목록으로` `<span>` 요소 키보드 접근 불가
+- **영역:** 커뮤니티/소셜
+- **URL:** https://gear-forest.com/community.html#post=00000000-0000-0000-0000-000000000000
+- **증상:** 글 상세·존재하지 않는 글·글쓰기 폼의 '← 목록으로' 버튼이 `<span>` 으로 구현되어 `role="button"`, `tabindex` 없음 → 키보드 포커스 불가, 스크린리더 인터랙티브 미인식.
+- **원인:** `community.html`의 `renderDetail()`/`renderCompose()`/404 분기 모두 `<span class="cm-back">← 목록으로</span>` 사용. role·tabindex 미부여.
+- **재현:** 글 상세 → Tab 키 순환 시 '← 목록으로' 건너뜀 → 요소에 role/tabindex 없음 확인
 
 ### [L-88] `account.html` 비로그인 앵커 링크 `href="#sec-wish"` id 불일치
 - **영역:** 계정/로그인
@@ -1518,4 +1567,4 @@
 
 ---
 
-*다음 회차: 커뮤니티/소셜 (9순환)*
+*다음 회차: 카테고리/목록 (10순환)*
