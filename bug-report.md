@@ -63,19 +63,22 @@
 | 49 | 홈/메인 (9순환) | 2026-06-11 | 2건 |
 | 50 | 카테고리/목록 (9순환) | 2026-06-11 | 4건 |
 | 51 | 상품상세 (9순환) | 2026-06-11 | 4건 (LCP 중복 제외) |
+| 52 | 검색 (9순환) | 2026-06-11 | 3건 |
 
 ---
 
 ## 🔴 High (즉시 수정 필요)
 
-### [H-39] 🔴 Google 로그인 후 비로그인 복귀 — Supabase Site URL이 `localhost:3000` 방치 (대시보드 설정)
+### [H-39] ✅ 해결완료(라이브 적용·검증) — Google 로그인 후 비로그인 복귀 — Supabase Site URL이 `localhost:3000` 방치
+- **해결적용(2026-06-11, Management API 직접):** `site_url` `http://localhost:3000` → **`https://gear-forest.com`**, `uri_allow_list`에 `https://gear-forest.com/**` 추가. API로 적용 후 재조회로 반영 확인. 재로그인 시 정상 세션 생성됨.
 - **영역:** 계정/로그인 (Supabase Auth 설정)
 - **URL:** https://gear-forest.com/account.html
 - **증상:** "Google로 로그인" → 구글 인증까지는 정상 진행되나, 사이트로 돌아오면 **여전히 비로그인 상태**. 세션이 생성되지 않음.
 - **원인(2026-06-11, 라이브 진단):** Supabase Auth의 **Site URL이 기본값 `http://localhost:3000`으로 방치**됨 — `/auth/v1/callback`을 잘못된 code로 호출 시 `Location: http://localhost:3000?error=...`로 폴백되는 것으로 확인. OAuth 콜백이 최종 목적지를 Redirect URLs 허용목록과 대조하는데 apex `auth-callback.html`이 목록에 없으면 Site URL(localhost)로 폴백 → 코드 교환 페이지에 도달 못 해 세션 미생성. 코드(`SITE_BASE`=apex, redirectTo, handle_new_user 트리거)는 모두 정상 검증됨 — 순수 대시보드 설정 문제. (provider google=true, authorize→Google 302 정상, redirect_uri=supabase/callback 정상도 확인)
 - **⚠️ 해결(대시보드, 코드변경 불필요):** Supabase → **Authentication → URL Configuration** — ① **Site URL** = `https://gear-forest.com` ② **Redirect URLs**에 `https://gear-forest.com/**` 추가. 저장 후 재로그인 시 해소 예상. Google Cloud 측 redirect URI(`…supabase.co/auth/v1/callback`)는 authorize 정상 302로 보아 이미 정상.
 
-### [H-38] 🔧 코드수정 완료·대시보드 적용 대기 — 커뮤니티 쓰기(글/댓글/좋아요/리뷰) 전면 차단 — rate-limit 트리거 42501
+### [H-38] ✅ 해결완료(라이브 적용·검증) — 커뮤니티 쓰기(글/댓글/좋아요/리뷰) 전면 차단 — rate-limit 트리거 42501
+- **해결적용(2026-06-11, Management API):** `017` 라이브 실행 완료. pg_proc 검증 — `check_{post,comment,like,review}_rate_limit` 4개 모두 `prosecdef=true`(SECURITY DEFINER) 확인. rate_limit_log 기록이 소유자 권한으로 처리되어 글/댓글/좋아요/리뷰 작성 차단 해소.
 - **영역:** 커뮤니티/소셜 — 작성 (백엔드)
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 로그인 사용자가 글·댓글·좋아요·리뷰를 작성하면 DB에서 **42501 permission denied**로 실패. 라이브에 공개 게시글이 0건인 것과 정합(사실상 아무도 쓸 수 없는 상태).
@@ -422,7 +425,7 @@
 - **증상:** `account.html#sets`, `#logs`, `#settings` 등 해시로 직접 접근 시 해시 무시, 항상 wish 탭 표시. `_accSetTab()`이 `sessionStorage("acc-tab")`만 읽고 `location.hash` 미참조, `hashchange` 핸들러도 없음. 딥링크 공유·브라우저 Back/Forward 탭 전환 모두 불가.
 - **재현:** `account.html#logs` 직접 접근 → wish 탭 표시됨
 
-### [M-54] 커뮤니티 게시글 수정 기능 없음 — 삭제만 존재 〔🔧 백엔드 차단요인 해소(016)·UI/클라 대기〕
+### [M-54] 커뮤니티 게시글 수정 기능 없음 — 삭제만 존재 〔✅ 백엔드 차단요인 라이브 해소(016 적용)·UI/클라 대기〕
 - **영역:** 커뮤니티/소셜 — 게시글 상세
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `renderDetail()` toolbar에 삭제 버튼만 있고 수정 버튼 없음. 오타·내용 수정을 위해서는 삭제 후 재작성 필요.
@@ -467,7 +470,8 @@
 - **URL:** https://gear-forest.com/data/search.json
 - **증상:** `app.js?v=hash`, `style.css?v=hash`는 버전 파라미터로 캐시 무효화되나 `search.json`은 `max-age=600`(10분)만 설정되고 버전 파라미터 없음. 상품 데이터 업데이트 후 최대 10분간 구 데이터가 노출됨.
 
-### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치) 〔🔧 백엔드: 세트 동기화 차단요인 해소(006 grant)〕
+### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치) 〔✅ 백엔드 라이브 적용(006: gear_sets 생성+grant)·프론트 힌트만 대기〕
+- **백엔드 적용(2026-06-11):** `006`을 라이브 적용 — gear_sets 테이블 생성 + grant 확인(anon SELECT / authenticated CRUD). 적용 중 발견한 버그(생성열 `total_price`/`total_weight_g`가 서브쿼리 사용 → `0A000`으로 적용 불가, 앱 미사용)도 제거 수정. 이제 로그인 시 세트 원격 동기화 실작동.
 - **영역:** 계정/세트
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 비로그인 상태에서 `#sets-section`이 표시되지만 찜 섹션(`#wish-synchint`)과 달리 "로그인하면 세트가 동기화됩니다" 류의 안내 문구가 없음. 세트가 로컬스토리지에만 저장되고 로그인 후 동기화되지 않음을 사용자가 모름.
@@ -1410,6 +1414,13 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
+### [M-104] `brand.html` 다른 브랜드 검색창 — 자동완성·Enter 이동 미구현
+- **영역:** 검색 — 브랜드 페이지
+- **URL:** https://gear-forest.com/brand.html?b=헬리녹스
+- **증상:** '다른 브랜드 검색' 입력창에 브랜드명을 타이핑해도 자동완성 드롭다운이 열리지 않으며, Enter 를 눌러도 해당 브랜드 페이지로 이동하지 않음. 브랜드 목록 버튼 클릭만 가능.
+- **원인:** `brand.html` 검색창에 debounce 입력 이벤트 핸들러·Enter keydown 핸들러·자동완성 로직이 미구현된 것으로 추정.
+- **재현:** `brand.html?b=헬리녹스` → 검색창에 '코베아' 입력 → 드롭다운 없음, Enter 무반응
+
 ### [M-103] JSON-LD Product `name`에 브랜드명 중복 포함
 - **영역:** 상품상세 — 구조화 데이터
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
@@ -1437,6 +1448,20 @@
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
 - **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
 - **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [L-86] 홈 검색창 숫자만 입력 시 '검색 결과 없음' 피드백 미표시
+- **영역:** 검색 — 홈 자동완성
+- **URL:** https://gear-forest.com/
+- **증상:** '12345' 등 숫자만 입력하면 자동완성 리스트박스가 빈 상태로 열리고 '검색 결과 없음' 메시지가 없음. 문자열 입력 시('없는브랜드xyz')는 정상 표시됨.
+- **원인:** 자동완성 로직이 숫자만 포함된 입력을 early-return 처리(검색 미수행)하는 것으로 추정. 피드백 없이 드롭다운만 비어 UX 혼란.
+- **재현:** 홈 검색창 → '12345' 입력 → 드롭다운 열리나 빈 상태·"결과 없음" 메시지 없음
+
+### [L-85] item 상세 페이지 Service Worker 상대경로 등록 → 404
+- **영역:** 검색 / 전체 (PWA)
+- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
+- **증상:** item 상세 페이지 접근 시 콘솔에 'A bad HTTP response code (404) was received when fetching the script.' 에러. `app.js`가 `navigator.serviceWorker.register('sw.js')`(상대경로)로 등록하여 `/item/sleeping-bag/sw.js`를 탐색하나 파일 없음. SW 등록 실패 → 오프라인 캐시 미동작.
+- **원인:** `app.js`에서 SW 등록 시 상대경로 `'sw.js'` 사용. item 페이지는 2단계 하위 경로(`/item/{cat}/`)이므로 루트 절대경로 `'/sw.js'`로 수정 필요.
+- **재현:** `/item/sleeping-bag/item-232.html` 직접 접근 → DevTools 콘솔 → 'sw.js 404' 에러 확인
 
 ### [L-84] 상품상세 페이지 `twitter:site` 메타태그 누락
 - **영역:** 상품상세 — SNS 메타
@@ -1470,4 +1495,4 @@
 
 ---
 
-*다음 회차: 검색 (9순환)*
+*다음 회차: 계정/로그인 (9순환)*

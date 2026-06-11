@@ -12,20 +12,9 @@ CREATE TABLE IF NOT EXISTS gear_sets (
                               )),
   items         jsonb         NOT NULL DEFAULT '[]'::jsonb,
   -- items 구조: [{pcode, name, brand, price, weight_g, category, qty}]
-  total_price   bigint        GENERATED ALWAYS AS (
-                                COALESCE(
-                                  (SELECT SUM((el->>'price')::bigint * COALESCE((el->>'qty')::int,1))
-                                   FROM jsonb_array_elements(items) el),
-                                  0
-                                )
-                              ) STORED,
-  total_weight_g bigint       GENERATED ALWAYS AS (
-                                COALESCE(
-                                  (SELECT SUM((el->>'weight_g')::bigint * COALESCE((el->>'qty')::int,1))
-                                   FROM jsonb_array_elements(items) el),
-                                  0
-                                )
-                              ) STORED,
+  -- 주: total_price/total_weight_g 는 PostgreSQL 생성열에 서브쿼리 불가(0A000)라 제거.
+  --     앱은 이 컬럼을 쓰지 않으며(동기화는 id/title/style/items/completeness만 select),
+  --     합계가 필요하면 쿼리/뷰에서 jsonb_array_elements로 계산할 것.
   budget_goal   bigint        CHECK (budget_goal >= 0),
   completeness  smallint      NOT NULL DEFAULT 0 CHECK (completeness BETWEEN 0 AND 100),
   is_public     boolean       NOT NULL DEFAULT true,
