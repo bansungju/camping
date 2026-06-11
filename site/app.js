@@ -2642,11 +2642,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const isItem = path.includes("/item/");
     if (isItem) return;  // 상세 페이지는 네비 불필요
 
+    // 라인 아이콘(24x24, stroke=currentColor → 활성 시 --accent 자동 상속)
+    const SVG = {
+      home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/></svg>`,
+      explore: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"/></svg>`,
+      community: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5a6.5 6 0 0 1 13 0c0 3.3-2.9 6-6.5 6-.9 0-1.7-.1-2.5-.4L3.5 18.5l1-3A5.7 5.6 0 0 1 3 11.5z"/><path d="M16.5 8.2A5 4.8 0 0 1 21 13c0 1.5-.7 2.9-1.8 3.8l.8 2.4-2.6-1.2"/></svg>`,
+      profile: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+    };
     const tabs = [
-      { href: "/index.html",       icon: "🏕",  label: "홈",    match: ["/", "/index.html"] },
-      { href: "/category.html",    icon: "🔍",  label: "탐색",  match: ["/category", "/brand", "/recommend"] },
-      { href: "/community.html",   icon: "👥",  label: "커뮤",  match: ["/community"] },
-      { href: "/account.html",     icon: "👤",  label: "마이",  match: ["/account"] },
+      { href: "/index.html",       icon: SVG.home,      label: "홈",    match: ["/", "/index.html"] },
+      { href: "/category.html",    icon: SVG.explore,   label: "탐색",  match: ["/category", "/brand", "/recommend"] },
+      { href: "/community.html",   icon: SVG.community, label: "커뮤",  match: ["/community"] },
+      { href: "/account.html",     icon: SVG.profile,   label: "마이",  match: ["/account"] },
     ];
 
     const nav = document.createElement("nav");
