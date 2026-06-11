@@ -36,6 +36,8 @@
 | 23 | 계정/로그인 (4순환) | 2026-06-11 | 2건 (Low 3건 별도 기록) |
 | 24 | 커뮤니티/소셜 (4순환) | 2026-06-11 | 4건 (Low 2건 제외) |
 | 25 | 홈/메인 (5순환) | 2026-06-11 | 3건 (중복·낮은영향 제외) |
+| 26 | 카테고리/목록 (5순환) | 2026-06-11 | 2건 (Low 2건 제외) |
+| 27 | 상품상세 (5순환) | 2026-06-11 | 2건 (Low 3건 제외) |
 
 ---
 
@@ -178,10 +180,11 @@
 - **원인(2026-06-11):** 현재 item 상세 페이지엔 옛 탭바가 없고, 대신 breadcrumb·back-link가 구 clean URL `../../category/{slug}/`로 걸려 있었음. 클린 URL이 제거된 뒤라 라이브에서 `/category/{slug}/` → **404**(반면 `category.html?cat={slug}` → 200). [H-02]와 동일 근본. 생성기 `scripts/build-item-pages.js`가 해당 링크를 만들고 2277개 파일 전부 영향.
 - **해결:** `scripts/build-item-pages.js`의 breadcrumb·back-link·catUrl을 `../../category.html?cat=${catSlug}` 형식으로 수정 후 **2277개 상세 페이지 전체 재생성**(+sitemap 갱신). 로컬 프리뷰 검증 — item-52 breadcrumb·back-link href가 `category.html?cat=backpacking-tent`, 구 clean URL 잔존 0, back-link 클릭 시 카테고리 페이지(백패킹텐트·상품 137개) 정상 이동·콘솔 에러 없음. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [H-07] 상세 페이지에 찜하기(북마크) 버튼 없음
+### [H-07] ✅ 해결완료 — 상세 페이지에 찜하기(북마크) 버튼 없음
 - **영역:** 상품 상세
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 카테고리 목록 모달에는 찜하기 버튼이 있으나, 상세 페이지에는 완전히 누락됨.
+- **해결(2026-06-11):** 생성기 `scripts/build-item-pages.js`의 item-hero에 찜 버튼(`#item-wish`) + 인라인 와이어링 스크립트 추가. item 페이지가 이미 로드하는 `app.js`의 전역 찜 API(`wishKey`·`inWish`·`toggleWish`)를 재사용 — localStorage `wish`에 모달·카드와 **동일 포맷**으로 저장되어 account.html 찜 목록과 자동 연동. CSS `.item-wish`(.on=accent) 추가, 2277개 상세 페이지 전체 재생성. 로컬 프리뷰 검증 — 클릭 시 찜하기↔찜함 토글·aria-pressed 동기화·localStorage 저장/해제, account 포맷 일치(key·b·m·cap·s·p·img), 스크린샷으로 초록 활성 버튼 확인·콘솔 에러 없음. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [H-08] 상세 페이지에 구매하기(쿠팡 파트너스) 버튼 없음
 - **영역:** 상품 상세
@@ -281,6 +284,24 @@
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 피드에 카테고리(팁/후기/질문 등) 또는 태그 필터 UI 전혀 없음. 게시글 수 증가 시 원하는 글을 찾을 수 없음.
+
+### [M-58] `?cat=` 대소문자 미정규화 — 대문자 진입 시 카테고리 로드 실패
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=Backpacking-Tent
+- **증상:** `cat` 파라미터가 대문자이면 `data/Backpacking-Tent.json` 요청이 실패해 "카테고리를 불러오지 못했습니다." 표시. 소문자 `backpacking-tent`는 정상. 외부 링크나 직접 입력 URL이 대문자인 경우 빈 화면.
+- **재현:** `?cat=Backpacking-Tent` URL 직접 접근
+
+### [M-59] `?sort=price_min` URL에 `sa` 파라미터 없을 때 정렬 방향 역전
+- **영역:** 카테고리/목록
+- **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent&sort=price_min
+- **증상:** UI에서 "가격 낮은순" 선택 시 `sa=1`(오름차순)이 함께 붙어 정상 동작. 그러나 `sa` 없이 `sort=price_min`만 포함된 공유 URL로 진입하면 `sa=0`(내림차순)이 기본값으로 적용되어 비싼 것부터 표시. 공유 URL 재현 시 결과가 다름.
+- **재현:** `?cat=backpacking-tent&sort=price_min` URL 직접 접근 → 정렬 방향 확인
+
+### [M-60] 비교 모달 `role="dialog"` / `aria-modal` 완전 누락
+- **영역:** 상품상세 — 비교 기능
+- **URL:** category.html → ⚖ 버튼 2개 선택 → 비교하기
+- **증상:** `#cmp-modal` 및 내부 `.pmbox`에 `role="dialog"`, `aria-modal`, `aria-labelledby` 모두 없음. 주 상품 모달과 달리 비교 모달은 접근성 속성 전무.
+- **재현:** ⚖ 버튼 2개 클릭 → 비교 모달 열기 → 접근성 트리 확인
 
 ### [M-57] 탭바 JS 동적 삽입으로 CLS 발생 — 초기 HTML 미포함
 - **영역:** 홈/메인 (성능)
@@ -571,6 +592,12 @@
 - **재현:** 상품 모달 → 상세 페이지 링크 복사 → 새 탭에서 직접 접근
 - **해결(2026-06-11):** [H-28]과 동일 근본원인(SW가 www→apex 301 리다이렉트 응답을 캐싱 → 캐시 히트 시 redirect 루프). [H-28] 수정(리다이렉트 응답 캐싱 금지 + CACHE 무효화 `camping-11b6a30a`)으로 해소. 검증 — 라이브 apex `item/backpacking-tent/item-52.html` 직접 접근 시 200·정상 제목('니모이큅먼트 호넷 엘리트 오스모 1P …') 렌더, 리다이렉트 루프 없음(curl·실브라우저 확인). [site/sw.js](site/sw.js)
 
+### [H-32] 상품 모달 `.pmbox` `max-height` 없어 뷰포트 초과 — 하단 버튼 잘림
+- **영역:** 상품상세 모달
+- **URL:** category.html → 상품 카드 클릭
+- **증상:** `.pmbox`에 `overflow-y:auto`는 있으나 `max-height`가 `none`이어서 내용이 많은 상품의 모달이 뷰포트를 초과해도 스크롤 영역이 생기지 않음. 844px 뷰포트 기기에서 모달 height 856px → 하단 제보 버튼 등이 화면 밖으로 밀림. iOS Safari에서 하단 버튼 완전히 접근 불가.
+- **재현:** 모바일 뷰포트(390px×844px)에서 스펙 항목 많은 상품 모달 열기 → 하단 버튼 잘림 확인
+
 ### [H-31] 커뮤니티 댓글 수정·삭제 기능 완전 없음
 - **영역:** 커뮤니티/소셜 — 댓글
 - **URL:** https://www.gear-forest.com/community.html
@@ -785,4 +812,4 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (5순환)*
+*다음 회차: 검색 (5순환)*
