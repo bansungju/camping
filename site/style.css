@@ -155,8 +155,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .pmrv-title{font-size:14px;font-weight:700}
 .pmrv-cnt{color:var(--muted);font-weight:600}
-.pmrv-add{border:1.5px solid var(--accent);background:var(--card);color:var(--accent);font-size:12.5px;font-weight:700;border-radius:9px;padding:7px 12px;cursor:pointer;transition:.15s;white-space:nowrap}
-.pmrv-add:hover{background:var(--accent);color:#fff}
+.pmrv-add{border:1px solid var(--line);background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;border-radius:9px;padding:7px 12px;cursor:pointer;transition:.15s;white-space:nowrap}
+.pmrv-add:hover{border-color:var(--accent);color:var(--accent)}
 .pmrv-login{font-size:13px;color:var(--muted);padding:10px 12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
 .pmrv-login .pmlink{margin-top:0}
 .pmrv-formbox{margin-bottom:12px}
