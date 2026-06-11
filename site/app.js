@@ -467,6 +467,13 @@ async function setupHomeSearch() {
   inp.onblur = () => { setTimeout(() => { box.style.display = "none"; }, 150); }
   // 엔터 → category.html?q= 이동 (첫 번째 결과 카테고리 or 전체 검색)
   inp.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      // input[type=search]의 네이티브 Esc=입력값 초기화 동작 차단.
+      // Esc는 드롭다운만 닫고 입력값은 유지한다. (H-18)
+      e.preventDefault();
+      box.innerHTML = ""; box.style.display = "none";
+      return;
+    }
     if (e.key !== "Enter") return;
     e.preventDefault();
     const q = inp.value.trim();
