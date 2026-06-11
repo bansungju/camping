@@ -22,10 +22,16 @@
 <script type="module">
   import { supabase } from './supabaseClient.js?v=459d55e9'
 
-  // PKCE flow: ?code= 파라미터로 오는 경우 세션 교환
   const params = new URLSearchParams(location.search)
+  // OAuth 오류 리다이렉트 처리 (?error=access_denied 등)
+  const oauthError = params.get('error')
+  if (oauthError) {
+    const desc = encodeURIComponent(params.get('error_description') || oauthError)
+    location.replace(`./account.html?auth_error=1&err=${desc}`)
+  }
+  // PKCE flow: ?code= 파라미터로 오는 경우 세션 교환
   const code = params.get('code')
-  if (code) {
+  if (!oauthError && code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       const msg = encodeURIComponent(error.message || error.status || 'unknown')
@@ -33,7 +39,7 @@
     } else {
       location.replace('./account.html')
     }
-  } else {
+  } else if (!oauthError) {
     // Implicit flow / hash fragment — onAuthStateChange로 세션 대기
     // INITIAL_SESSION(null)은 클라이언트 초기화 시 항상 발화하므로 무시.
     // SIGNED_IN 이벤트(실제 세션 생성)까지만 대기 후 이동.
