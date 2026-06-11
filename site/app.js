@@ -1487,7 +1487,7 @@ function draw() {
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
     const inCmp = _cmpSet.includes(i);
-    return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
+    return `<div class="pli" role="button" tabindex="0" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       ${thumbCell(m.img, m.model, tint, icon)}
