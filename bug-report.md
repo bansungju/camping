@@ -247,7 +247,7 @@
 ## 🟡 Medium
 - **해결(2026-06-11, 환경/라우팅 변화로 해소):** 코드가 이미 `category.html?cat=` 방식으로 전환 완료 — `site/app.js`·HTML 어디에도 구 clean URL(`category/{슬러그}`) 링크 잔존 없음(grep 확인). 더 이상 재현되지 않음.
 
-### [M-68] "빠른 설정" 프리셋 전환 시 이전 필터 미초기화 — 필터 누적 AND 적용
+### [M-68] ✅ 해결완료 — "빠른 설정" 프리셋 전환 시 이전 필터 미초기화 — 필터 누적 AND 적용
 - **영역:** 카테고리/목록 — 필터바 빠른 설정
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag 등
 - **증상:** "빠른 설정"의 🪶경량 우선 클릭 후 💰저가 우선으로 전환 시, 경량 우선이 설정한 `STATE.range[weightKey]`가 초기화되지 않은 채 가격 필터(`STATE.range.price`)가 추가됨. 두 필터가 AND 누적 적용되어 결과가 비정상적으로 적어짐. 반대 방향(저가→경량)도 동일.
@@ -255,6 +255,7 @@
 - **원인:** 각 프리셋 `fn()`이 자신의 `STATE.range` 항목만 설정하고 다른 프리셋 항목을 리셋하지 않음 (app.js:959~970)
 - **재현:** 카테고리 페이지 → "경량 우선" 클릭 → "저가 우선" 클릭 → 결과가 훨씬 적거나 빈 목록
 - **7순환 추가 확인:** 실제 재현 — 경량→저가 전환 시 결과 0/244개. 또한 동일 프리셋 재클릭 시 ON 상태에서 OFF 토글이 안 됨(URL에 누적된 파라미터 제거 불가).
+- **해결(2026-06-11):** ① `clearPresetFilters()`(무게range·가격range·cap 삭제)를 각 프리셋 적용 전에 호출 → 상호배타(누적 제거). ② 각 프리셋에 `isOn()` 판정 추가, `fn()`을 토글식으로(켜져 있으면 끄기) 변경 → 동일 프리셋 재클릭 시 OFF + URL 파라미터 제거. ③ 클릭 핸들러가 `isOn()` 상태 기반으로 `.on` 표시 동기화(초기 URL 복원 시 활성 강조 포함). 로컬 프리뷰 검증 — 경량ON(weight_min__max=1.1)→저가 전환 시 무게 제거·가격만(price__max), 경량 재클릭 시 필터·URL 모두 제거, `.on` 표시 정확, 콘솔 에러 0. [site/app.js](site/app.js)
 
 ### [M-77] 카드 `role="button"`에 `aria-label` 없음 — 스크린리더 상품명 미읽기
 - **영역:** 카테고리/목록 — 상품 카드
@@ -753,6 +754,12 @@
 - **증상:** 브라우저가 PWA 설치 프롬프트(`beforeinstallprompt`)를 발생시키지만 앱에서 억제(preventDefault)만 하고 설정 섹션에 설치 버튼이 없어 사용자가 직접 설치할 방법이 없음. 브라우저 기본 메뉴를 직접 찾아야 함.
 - **재현:** `account.html` 콘솔 → `beforeinstallprompt` 억제 로그 확인 → 설정 섹션에 설치 버튼 없음
 
+### [M-86] `?open-log=1` 비로그인→로그인 경유 시 원클릭 흐름 단절 — H-35 엣지케이스
+- **영역:** 커뮤니티/소셜 — open-log 원클릭 연결
+- **URL:** https://gear-forest.com/community.html?open-log=1&set=0
+- **증상:** 비로그인 상태에서 `open-log=1` 진입 후 `account.html`로 이동해 로그인하면, 커뮤니티 JS 컨텍스트가 소멸되고 복귀 시 파라미터가 없어 글쓰기 폼이 열리지 않음. H-35는 "해결완료"로 기록되어 있으나, 비로그인→로그인 경유 경로는 여전히 단절됨. 로그인 후 리다이렉트 URL에 `?open-log=1` 파라미터를 포함해야 복원 가능.
+- **재현:** 비로그인 → `community.html?open-log=1` → 로그인 클릭 → `account.html` → 로그인 완료 → 커뮤니티 복귀 → 글쓰기 폼 미열림
+
 ---
 
 ## 🟢 Low
@@ -913,6 +920,24 @@
 - **URL:** https://gear-forest.com/account.html#logs
 - **증상:** `account.html#logs`에서 Google 로그인 버튼 클릭 시 OAuth `redirect_uri`에 원래 hash 정보가 없음. 로그인 완료 후 콜백이 `account.html`로 돌아오지만 `#logs` 위치로 복원되지 않음. M-52와 연관되나 OAuth 흐름 내 hash 보존 별도 문제.
 - **재현:** `account.html#logs` → Google 로그인 클릭 → OAuth URL state 파라미터 확인 → hash 없음 → 로그인 후 hash 복원 안 됨
+
+### [L-65] 커뮤니티 글 카드 `<a>`에 `href` 없음 — Tab 키 포커스 불가
+- **영역:** 커뮤니티/소셜 — 피드
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 글 카드가 `<a class="cm-post">` 태그이나 `href` 속성이 없고 클릭은 `onclick`으로만 처리됨. `href` 없는 `<a>`는 탭 포커스 순서에서 제외되어 키보드 사용자가 접근 불가. L-10(aria-label 없음)과 연관되나 `href` 자체 누락은 별도 접근성 문제.
+- **재현:** 커뮤니티 피드 → Tab 키 탐색 → 글 카드에 포커스 안 됨
+
+### [L-66] 비로그인 `community.html#new` 진입 시 로그인 안내 없이 피드로 조용히 이동
+- **영역:** 커뮤니티/소셜 — 글쓰기
+- **URL:** https://gear-forest.com/community.html#new
+- **증상:** 비로그인에서 `#new` 직접 접근 시 `canParticipate() === false`이면 `location.hash = ''` 실행 후 즉시 반환. "로그인이 필요합니다" 같은 안내 없이 피드 화면으로 조용히 전환됨. URL도 `community.html#`으로 trailing `#` 잔존(L-33 연동).
+- **재현:** 비로그인 → `community.html#new` 직접 접근 → 아무 안내 없이 피드로 이동, URL에 `#` 잔존
+
+### [L-67] 게시글·댓글 날짜가 `<time datetime="">` 아닌 `<span>`으로 렌더링 — 시맨틱 마크업 누락
+- **영역:** 커뮤니티/소셜 — 피드·글 상세·댓글
+- **URL:** https://gear-forest.com/community.html
+- **증상:** `authorBlock()` 함수가 날짜를 `<span>${timeAgo(iso)}</span>` 형태로 렌더링. `<time datetime="ISO-8601">` 요소가 아니어서 스크린리더의 기계가독 날짜 파악 불가, 검색엔진의 날짜 메타데이터 인식 불가. M-10(날짜 포맷 불일치)과 연관되나 시맨틱 마크업 누락은 별도 문제.
+- **재현:** 커뮤니티 피드 HTML 소스 확인 → `<span>3일 전</span>` 형태, `<time>` 요소 없음
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1167,4 +1192,4 @@
 
 ---
 
-*다음 회차: 커뮤니티/소셜 (7순환)*
+*다음 회차: 홈/메인 (8순환)*
