@@ -477,8 +477,33 @@ async function setupHomeSearch() {
   inp.setAttribute("aria-haspopup", "listbox");
   inp.setAttribute("aria-controls", "homeres");
   inp.setAttribute("aria-expanded", "false");
+  inp.setAttribute("aria-label", "장비 검색");  // M-14
   box.setAttribute("role", "listbox");
   box.setAttribute("aria-label", "검색 자동완성 결과");
+  // M-80: 스크린리더 결과 고지용 SR 전용 영역
+  let srStatus = document.getElementById("homeq-sr-status");
+  if (!srStatus) {
+    srStatus = document.createElement("span");
+    srStatus.id = "homeq-sr-status";
+    srStatus.setAttribute("aria-live", "polite");
+    srStatus.setAttribute("aria-atomic", "true");
+    srStatus.style.cssText = "position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden";
+    inp.parentNode.appendChild(srStatus);
+  }
+  // M-26: 커스텀 초기화 버튼 (iOS Safari 등 네이티브 X 버튼 없는 환경 대응)
+  let clearBtn = document.getElementById("homeq-clear");
+  if (!clearBtn) {
+    clearBtn = document.createElement("button");
+    clearBtn.id = "homeq-clear";
+    clearBtn.type = "button";
+    clearBtn.setAttribute("aria-label", "검색어 지우기");
+    clearBtn.style.cssText = "display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:0;background:none;cursor:pointer;font-size:14px;color:var(--muted);padding:0;line-height:1";
+    clearBtn.textContent = "✕";
+    const wrap = inp.parentNode;
+    if (getComputedStyle(wrap).position === "static") wrap.style.position = "relative";
+    wrap.appendChild(clearBtn);
+  }
+  const syncClearBtn = () => { clearBtn.style.display = inp.value ? "block" : "none"; };
   let opts = [], active = -1;   // 키보드 탐색 대상(선택 가능한 항목)과 현재 활성 인덱스
   const closeBox = () => {
     box.innerHTML = ""; box.style.display = "none";
@@ -496,6 +521,7 @@ async function setupHomeSearch() {
     el.scrollIntoView({ block: "nearest" });
   };
   const run = () => {
+    syncClearBtn();
     const q = inp.value.trim().toLowerCase();
     const terms = q.split(/\s+/).filter(Boolean);
     if (!terms.length) { closeBox(); return; }
@@ -541,7 +567,9 @@ async function setupHomeSearch() {
     });
     inp.setAttribute("aria-expanded", opts.length ? "true" : "false");
     inp.removeAttribute("aria-activedescendant");
+    if (srStatus) srStatus.textContent = hits.length ? `${hits.length}개 결과` : (brandHits.length ? `브랜드 ${brandHits.length}개` : "결과 없음");
   };
+  clearBtn.onclick = () => { inp.value = ""; closeBox(); syncClearBtn(); inp.focus(); };
   // 한글 IME 조합 중에는 자동완성을 트리거하지 않고, 조합이 끝나면 1회 실행 (M-49)
   inp.oninput = e => { if (e.isComposing) return; run(); };
   inp.addEventListener("compositionend", run);
@@ -576,6 +604,11 @@ async function setupHomeSearch() {
     const ql = q.toLowerCase();
     const exactBrand = idx.find(x => x.b.toLowerCase() === ql);
     if (exactBrand) { location.href = `brand.html?b=${encodeURIComponent(exactBrand.b)}`; return; }
+    // 카테고리명 정확 일치 (M-94): "침낭" → category.html?cat=sleeping-bag (공백 정규화)
+    const catMap = {};
+    idx.forEach(x => { if (x.c && x.s) catMap[x.c.replace(/\s/g,"").toLowerCase()] = x.s; });
+    const catSlugHit = catMap[ql.replace(/\s/g,"")];
+    if (catSlugHit) { location.href = `category.html?cat=${catSlugHit}`; return; }
     // 첫 번째 모델 매치의 카테고리 슬러그로 이동
     const first = idx.find(x => (x.b + " " + x.m).toLowerCase().includes(ql));
     if (first) {
@@ -1698,10 +1731,13 @@ function openCmpModal(rows) {
         <td style="padding:6px 8px;font-size:13px;font-weight:${isBest ? "700" : "400"};color:${isBest ? "var(--accent)" : "var(--txt)"};border-bottom:1px solid var(--line)">${cell}${isBest ? " ✓" : ""}</td></tr>`;
     }).join("");
     const tint = catTint(d.name), icon = catIcon(d.name);
+    const mi = STATE.data.models.indexOf(m);
+    const detailUrl = (STATE.slug && mi >= 0) ? `/item/${STATE.slug}/item-${mi}.html` : null;
     return `<div style="flex:1;min-width:0;max-width:${colWidth}">
       ${thumbCell(m.img, m.model, tint, icon, "cmp-thumb", "cmp-noimg")}
       <div style="font-size:11px;color:var(--muted);margin:6px 4px 2px">${esc(m.brand)}</div>
       <div style="font-size:13px;font-weight:700;margin:0 4px 8px;line-height:1.3">${esc(m.model)}</div>
+      ${detailUrl ? `<a href="${detailUrl}" style="display:inline-block;font-size:11px;color:var(--accent);margin:0 4px 8px;text-decoration:underline">상세 페이지 →</a>` : ""}
       <table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>
     </div>`;
   }).join('<div style="width:1px;background:var(--line);flex-shrink:0"></div>');

@@ -123,7 +123,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
       const starVals = Object.values(specs).map(s => s.stars).filter(v => v != null);
       if (!starVals.length) return undefined;
       const avg = (starVals.reduce((a, b) => a + b, 0) / starVals.length).toFixed(1);
-      return { "@type": "AggregateRating", "ratingValue": avg, "bestRating": "5", "ratingCount": starVals.length };
+      return { "@type": "AggregateRating", "ratingValue": avg, "bestRating": "5", "ratingCount": 1, "reviewCount": 1 };
     })()
   };
   Object.keys(jsonLd).forEach(k => jsonLd[k] === undefined && delete jsonLd[k]);
