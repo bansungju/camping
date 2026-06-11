@@ -1835,20 +1835,9 @@ function renderAccount() {
     }
   }
 
-  // 비로그인: 앵커 링크 fallback
-  if (navEl) {
-    if (!isLoggedIn && hasAny) {
-      const links = [];
-      if (wishes.length) links.push(`<a class="acc-anchor" href="#sec-wish">찜 ${wishes.length}</a>`);
-      if (sets.length) links.push(`<a class="acc-anchor" href="#sec-sets">세트 ${sets.length}</a>`);
-      navEl.innerHTML = links.join("");
-      navEl.style.display = "flex";
-    } else {
-      navEl.style.display = "none";
-    }
-  }
-
-  if (emptyEl) emptyEl.style.display = (!isLoggedIn && !hasAny) ? "block" : "none";
+  // 비로그인: navEl / emptyEl 모두 숨김 (찜·세트 섹션 자체가 비로그인 미표시)
+  if (navEl) navEl.style.display = "none";
+  if (emptyEl) emptyEl.style.display = "none";
 
   const activeTab = _accActiveTab();
 
@@ -1987,7 +1976,7 @@ function renderAccount() {
   const cnt = document.getElementById("wishcount");
   if (wishSec) {
     wishSec._accHasContent = true;
-    wishSec.style.display = (!isLoggedIn || activeTab === "wish") ? "block" : "none";
+    wishSec.style.display = (isLoggedIn && activeTab === "wish") ? "block" : "none";
   }
   if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
   let wishEmptyEl = document.getElementById("wish-empty");
@@ -2065,7 +2054,7 @@ function renderAccount() {
   const setsCnt = document.getElementById("setscount");
   if (setsSec) {
     setsSec._accHasContent = sets.length > 0;
-    setsSec.style.display = (sets.length && (!isLoggedIn || activeTab === "sets")) ? "block" : "none";
+    setsSec.style.display = (isLoggedIn && sets.length && activeTab === "sets") ? "block" : "none";
   }
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
   if (setsEl && sets.length) {

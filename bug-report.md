@@ -1492,6 +1492,21 @@
 - **원인:** `wish-empty` div가 최초 1회 생성 시 innerHTML을 굳혀서, 이후 로그인 상태가 바뀌어도 동기화 버튼 표시 여부가 업데이트되지 않음.
 - **제보:** 사용자 직접 제보
 
+### [M-108] ✅ 해결완료 — '내 정보' 탭 비로그인 시 찜·설정 섹션 표시됨
+- **해결(2026-06-11):** `account.html`의 `#wish-section`, `#settings-section` 초기값을 `display:none`으로 변경. `app.js`의 `renderAccount()`에서 비로그인 시 `wish-section`·`sets-section` 강제 표시 로직 제거(`!isLoggedIn` 조건 삭제). `account.html`에 `showLoggedInSections(show)` 헬퍼 추가 — `renderLogin()` 시 hide, `renderProfile()`·`renderNicknameModal()` 시 show. [site/account.html](site/account.html), [site/app.js](site/app.js)
+- **영역:** 계정/로그인 — 내 정보 페이지
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 비로그인 상태에서 account.html 접근 시 로그인 폼 아래에 '🔖 찜한 상품' 섹션과 '⚙️ 설정' 섹션이 그대로 표시됨. 로그인 이후에만 보여야 할 콘텐츠가 비로그인 상태에서 노출됨.
+- **제보:** 사용자 직접 제보
+
+### [M-109] 커뮤니티 사진 업로드 불가 — Supabase Storage 버킷 미설정
+- **영역:** 커뮤니티/소셜 — 글쓰기 사진 첨부
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 글쓰기에서 사진 첨부 시 업로드 실패. 프론트엔드 코드(`uploadImage`, `review-images` 버킷 경로)는 정상이나 Supabase Storage 버킷이 미생성 상태.
+- **원인:** Supabase Dashboard에서 `review-images` 버킷(Public)을 생성하지 않았고, `003_storage_policies.sql` 미적용 상태. `005_post_images.sql`(`posts.image_urls` 컬럼 추가)도 필요.
+- **해결방법(백엔드 수동 적용):** [supabase/APPLY.md](supabase/APPLY.md) §2(005_post_images.sql)·§3(review-images 버킷 생성 + 003_storage_policies.sql) 참고. 프론트엔드 코드 변경 불필요.
+- **제보:** 사용자 직접 제보
+
 ### [L-93] `manifest.webmanifest` `start_url`이 `./index.html`로 apex URL과 불일치
 - **영역:** 홈/메인 — PWA
 - **URL:** https://gear-forest.com/manifest.webmanifest

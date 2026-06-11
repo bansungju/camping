@@ -27,7 +27,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
-<link rel="stylesheet" href="style.css?v=f8d03601">
+<link rel="stylesheet" href="style.css?v=f879cf43">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -49,8 +49,8 @@
     </div>
   </div>
 
-  <!-- 찜한 상품 — 로그인 없이도 localStorage 기준으로 항상 표시 -->
-  <div id="wish-section">
+  <!-- 찜한 상품 — 로그인 이후에만 표시 -->
+  <div id="wish-section" style="display:none">
     <h2 class="sec">🔖 찜한 상품 <span class="nd" id="wishcount"></span></h2>
     <p id="wish-synchint" style="color:var(--muted);font-size:12.5px;margin:-4px 0 12px" hidden>
       로그인하면 찜 목록이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
@@ -73,8 +73,8 @@
     <div id="my-logs-list"></div>
   </div>
 
-  <!-- 설정 — 로그인 무관 항상 표시 -->
-  <div id="settings-section" style="margin-top:32px">
+  <!-- 설정 — 로그인 이후에만 표시 -->
+  <div id="settings-section" style="margin-top:32px;display:none">
     <h2 class="sec">⚙️ 설정</h2>
     <div class="set-row">
       <div class="set-row-label">
@@ -90,7 +90,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=514f581d"></script>
+<script src="app.js?v=ee3ae357"></script>
 <script>
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
@@ -180,6 +180,7 @@ async function syncWishlistOnLogin() {
 // 최초 로그인(또는 닉네임 미설정) 시 강제 닉네임 설정 모달. 소셜 실명 노출 차단.
 function renderNicknameModal() {
   window.onWishChange = null
+  showLoggedInSections(true)
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
       <div style="font-size:40px;margin-bottom:12px">🌲</div>
@@ -246,8 +247,16 @@ function renderNicknameModal() {
   setTimeout(() => input.focus(), 50)
 }
 
+function showLoggedInSections(show) {
+  const ws = document.getElementById('wish-section')
+  const ss = document.getElementById('settings-section')
+  if (ws) ws.style.display = show ? '' : 'none'
+  if (ss) ss.style.display = show ? '' : 'none'
+}
+
 function renderLogin() {
   window.onWishChange = null   // 로그아웃 상태에선 원격 동기화 안 함
+  showLoggedInSections(false)
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
       <div style="font-size:48px;margin-bottom:16px">🌲</div>
@@ -279,6 +288,7 @@ function renderLogin() {
 }
 
 function renderProfile(profile) {
+  showLoggedInSections(true)
   // 닉네임은 profiles 테이블이 단일 진실. 실명/이메일을 표시명으로 쓰지 않는다.
   const nickname = profile?.nickname ?? '사용자'
   const avatar = profile?.avatar_url
