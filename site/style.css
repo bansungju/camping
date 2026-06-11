@@ -122,6 +122,11 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:not-allowed;opacity:.4}
 .pmbuy.pmbuy-active{cursor:pointer;opacity:1}
 .pmbuynote{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+/* 내 세트에 추가 — 보조 액션(아웃라인 accent) */
+.pmset{width:100%;margin-top:10px;padding:12px;border:1.5px solid var(--accent);border-radius:11px;
+  background:var(--card);color:var(--accent);font-size:14.5px;font-weight:700;cursor:pointer;transition:.15s}
+.pmset:hover{background:var(--accent);color:#fff}
+.pmset:active{transform:translateY(1px)}
 .pmlink{display:inline-block;margin-top:14px;font-size:13px;color:var(--accent);font-weight:600}
 
 /* 운영자 모드 배너 — static(헤더 sticky와 top:0 충돌 방지) */
@@ -251,8 +256,6 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .recent-row::-webkit-scrollbar{height:5px}
 .recent-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .recard-wrap{flex:0 0 auto;width:130px;position:relative}
-.recard-setadd{position:absolute;top:6px;right:6px;width:22px;height:22px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;opacity:.85}
-.recard-setadd:hover{opacity:1;transform:scale(1.1)}
 .recard{width:100%;background:var(--card);border:1px solid var(--line);border-radius:13px;
   padding:10px;box-shadow:var(--shadow);transition:.15s ease;display:block}
 .recard:hover{transform:translateY(-2px);box-shadow:var(--shadow-h)}
@@ -343,10 +346,6 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease,color .12s ease}
 .pli-wish:hover{color:var(--accent);transform:scale(1.12)}
 .pli-wish.on{color:var(--accent)}
-.pli-setadd{position:absolute;top:5px;left:37px;z-index:2;width:28px;height:28px;border:0;border-radius:50%;
-  background:rgba(255,255,255,.85);color:var(--accent);font-size:16px;line-height:1;cursor:pointer;padding:0;
-  box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease}
-.pli-setadd:hover{transform:scale(1.12);background:var(--accent);color:#fff}
 /* 세트 선택 모달 */
 /* 커뮤니티 */
 .comm-write-btn{padding:7px 14px;border-radius:20px;border:0;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
