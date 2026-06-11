@@ -620,8 +620,9 @@ async function setupHomeSearch() {
     idx.forEach(x => { if (x.c && x.s) catMap[x.c.replace(/\s/g,"").toLowerCase()] = x.s; });
     const catSlugHit = catMap[ql.replace(/\s/g,"")];
     if (catSlugHit) { location.href = `category.html?cat=${catSlugHit}`; return; }
-    // 첫 번째 모델 매치의 카테고리 슬러그로 이동
-    const first = idx.find(x => (x.b + " " + x.m).toLowerCase().includes(ql));
+    // 첫 번째 모델 매치의 카테고리 슬러그로 이동 (드롭다운과 동일한 토큰 AND 매칭, M-111)
+    const terms2 = ql.split(/\s+/).filter(Boolean);
+    const first = idx.find(x => { const t = (x.b + " " + x.m).toLowerCase(); return terms2.every(tok => t.includes(tok)); });
     if (first) {
       location.href = `category.html?cat=${first.s}&q=${encodeURIComponent(q)}`;
     } else {
@@ -838,6 +839,7 @@ async function renderCategory() {
     // 데이터 로드 실패 — 스켈레톤 잔존(H-05) 및 오류 메시지·스켈레톤 동시 노출(H-15) 방지.
     // 목록을 비우고 단일 에러 상태 + 복구 경로를 표시한다.
     document.getElementById("title").textContent = "카테고리를 불러오지 못했습니다.";
+    const crumbEl = document.getElementById("crumbName"); if (crumbEl) crumbEl.textContent = slug || "카테고리";
     const listEl = document.getElementById("list");
     if (listEl) listEl.innerHTML =
       `<div class="cat-error" role="alert">
@@ -2057,16 +2059,16 @@ async function renderHotSection(categories) {
   try {
     const { supabase } = await import("./supabaseClient.js");
     const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });
-    if (data && data.length >= 3) {
+    if (data && data.length >= 1) {
       // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
       const catMap = new Map();
       for (const h of data) {
         if (!catMap.has(h.cat)) catMap.set(h.cat, []);
         catMap.get(h.cat).push(h);
       }
-      // 카테고리별 최대 3개씩, 최소 2개 항목 있는 카테고리만 표시
+      // 카테고리별 최대 3개씩, 최소 1개 항목 있는 카테고리만 표시 (M-87 저트래픽 단계 fallback 방지)
       const sections = [...catMap.entries()]
-        .filter(([, items]) => items.length >= 2)
+        .filter(([, items]) => items.length >= 1)
         .slice(0, 5); // 최대 5개 카테고리
 
       if (sections.length >= 1) {
