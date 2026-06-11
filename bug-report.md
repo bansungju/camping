@@ -25,6 +25,8 @@
 | 13 | 홈/메인 (3순환) | 2026-06-11 | 5건 (중복 3건 제외) |
 | 14 | 카테고리/목록 (3순환) | 2026-06-11 | 3건 (중복 2건 제외) |
 | 15 | 상품 상세 (3순환) | 2026-06-11 | 5건 (중복 1건 보완) |
+| 16 | 검색 (3순환) | 2026-06-11 | 3건 (중복 1건 보완) |
+| 17 | 계정/로그인 (3순환) | 2026-06-11 | 1건 (코드버그 2건 즉시수정, 중복 1건) |
 
 ---
 
@@ -68,10 +70,11 @@
 - **원인(2026-06-11):** `renderCategory()`가 시작 시 `renderCategorySkeleton()`으로 #list에 스켈레톤 6개를 채우는데, JSON 로드 실패 catch 블록이 title 텍스트만 바꾸고 #list는 정리하지 않아 스켈레톤이 잔존.
 - **해결:** catch 블록에서 #list를 비우고 단일 에러 상태(`.cat-error` — 안내 문구 + '전체 카테고리 보기' 복구 링크, `role="alert"`)로 교체. CSS `.cat-error*` 추가. 로컬 프리뷰 검증 — 실패 카테고리에서 스켈레톤 0개·에러 상태 표시, 정상 카테고리(침낭 244개)는 회귀 없음. [site/app.js](site/app.js), [site/style.css](site/style.css)
 
-### [H-17] 자동완성 드롭다운 키보드 탐색(↑↓) 미구현 — WAI-ARIA Combobox 패턴 미준수
+### [H-17] ✅ 해결완료 — 자동완성 드롭다운 키보드 탐색(↑↓) 미구현 — WAI-ARIA Combobox 패턴 미준수
 - **영역:** 검색 (접근성)
 - **URL:** https://www.gear-forest.com/
-- **증상:** ↑↓ 키로 드롭다운 항목 간 이동 불가. `aria-expanded`, `aria-haspopup`, `aria-autocomplete`, `role="option"`, `aria-selected`, `aria-activedescendant` 등 ARIA 속성 전무. 스크린리더 사용자 자동완성 접근 불가.
+- **증상:** ↑↓ 키로 드롭다운 항목 간 이동 불가. `aria-expanded`, `aria-haspopup`, `aria-autocomplete`, `role="option"`, `aria-selected`, `aria-activedescendant` 등 ARIA 속성 전무. 스크린리더 사용자 자동완성 접근 불가. Tab 키 입력 시에도 포커스가 BODY로 탈출하며 드롭다운이 즉시 닫혀 결과 선택 불가 — Tab 탐색도 미지원.
+- **해결(2026-06-11):** `setupHomeSearch()`에 WAI-ARIA combobox 패턴 구현. 입력창에 `role=combobox`·`aria-autocomplete=list`·`aria-haspopup=listbox`·`aria-controls`·`aria-expanded`(목록 표시에 따라 갱신)·`aria-activedescendant`, 목록 컨테이너에 `role=listbox`, 각 브랜드/상품 링크에 `role=option`·고유 id·`aria-selected` 부여. ↓/↑ 키로 옵션 간 순환 이동(시각 강조 `.sres-active` + `aria-selected=true` + activedescendant 갱신 + scrollIntoView), 활성 옵션에서 Enter 시 해당 링크로 이동. 입력 변경 시 활성 인덱스 리셋. CSS `.sres-active`(accent outline) 추가. 로컬 프리뷰 검증 — '헬리녹스' 입력 시 옵션 31개에 role/id 부여, ↓ 2회·↑ 1회로 activedescendant opt-0→opt-1→opt-0 이동, 활성 옵션 aria-selected=true·outline 2px·activedescendant 일치 확인. [site/app.js](site/app.js), [site/style.css](site/style.css)
 
 ### [H-18] ✅ 해결완료 — Esc 키가 드롭다운 닫기와 동시에 검색 입력값 초기화
 - **영역:** 검색
@@ -162,6 +165,24 @@
 ---
 
 ## 🟡 Medium
+
+### [M-41] 세트 섹션 — 0개일 때 완전 숨김, 빈 상태 안내 없음
+- **영역:** 계정/세트 섹션
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 세트가 0개이면 `#sets-section`이 완전히 숨겨지고 빈 상태 안내("세트가 없어요")나 CTA도 없음. 찜 섹션과 달리 기능 존재 자체를 알 수 없음.
+- **재현:** 세트 없는 상태에서 account.html 접속 → 세트 섹션 미표시
+
+### [M-39] 홈 검색 Enter 시 첫 번째 자동완성 결과의 단일 카테고리로 강제 이동
+- **영역:** 검색 (홈)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 홈 검색창에서 브랜드명(예: "헬리녹스") 입력 후 Enter 시 첫 번째 자동완성 결과의 카테고리(`category.html?cat=backpacking-tent&q=헬리녹스`)로 강제 이동. 해당 브랜드의 의자·타프 등 다른 카테고리 제품은 누락됨. 사용자 의도와 다른 범위로 검색됨.
+- **재현:** 홈 → "헬리녹스" 입력 → Enter → backpacking-tent 카테고리로만 이동
+
+### [M-40] 홈 검색 자동완성 상태에서 URL에 검색어 미반영 — 공유/북마크 불가
+- **영역:** 검색 (홈)
+- **URL:** https://www.gear-forest.com/
+- **증상:** 홈 검색창에서 검색어 입력 중 URL이 `https://gear-forest.com/`으로 유지됨. 자동완성 결과를 보는 상태를 URL로 공유·북마크 불가. 카테고리 페이지는 `?q=` 파라미터를 사용하는 것과 대조적.
+- **재현:** 홈 → "스노우피크" 입력 → URL 확인 → 변화 없음
 
 ### [M-36] 모달 열림 상태에서 body 스크롤 잠금 없음
 - **영역:** 카테고리/목록 — 상품 모달
@@ -508,6 +529,12 @@
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** '내한온도(ISO하한)' 등 긴 레이블이 375px 화면에서 단어 중간(`ISO하` / `한`)에서 줄바꿈되어 셀 높이가 59px로 불균일. `word-break:keep-all` 또는 `overflow-wrap` 조정으로 해결 가능.
 
+### [L-31] 카테고리 내 검색에서 다른 카테고리 결과 존재 안내 없음
+- **영역:** 검색 (카테고리 페이지)
+- **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** 카테고리 내 검색창은 해당 카테고리 내에서만 동작. "MSR 버너"처럼 다른 카테고리 제품 검색 시 "0건, 결과 없음"만 표시되고 "다른 카테고리에서 찾기" 등 전체 검색 안내 없음. 홈 전역 검색에서는 동일 검색어로 정상 반환.
+- **재현:** `?cat=backpacking-tent` → 검색창에 "MSR 버너" 입력 → 0건 → 전체검색 CTA 없음
+
 ### [L-30] category.html `<title>` 초기값 "카테고리 비교" — JS 실행 후 카테고리명으로 교체
 - **영역:** 카테고리/목록 (SEO)
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
@@ -532,4 +559,4 @@
 
 ---
 
-*다음 회차: 검색 (3순환)*
+*다음 회차: 커뮤니티/소셜 (3순환)*
