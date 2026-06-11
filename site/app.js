@@ -515,10 +515,14 @@ async function setupHomeSearch() {
     inp.setAttribute("aria-expanded", opts.length ? "true" : "false");
     inp.removeAttribute("aria-activedescendant");
   };
-  inp.oninput = run;
+  // 한글 IME 조합 중에는 자동완성을 트리거하지 않고, 조합이 끝나면 1회 실행 (M-49)
+  inp.oninput = e => { if (e.isComposing) return; run(); };
+  inp.addEventListener("compositionend", run);
   inp.onfocus = run;
   inp.onblur = () => { setTimeout(() => { box.style.display = "none"; inp.setAttribute("aria-expanded", "false"); }, 150); }
   inp.addEventListener("keydown", e => {
+    // IME 조합 중 키(특히 조합완료 Enter)는 검색/탐색을 발동시키지 않는다 (M-50)
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === "Escape") {
       // input[type=search]의 네이티브 Esc=입력값 초기화 동작 차단.
       // Esc는 드롭다운만 닫고 입력값은 유지한다. (H-18)
