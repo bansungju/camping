@@ -265,7 +265,7 @@ function openSetModal(item) {
   modal.innerHTML = `<div class="pmbox sm-box" role="dialog" aria-modal="true">
     <button class="pmx" aria-label="닫기">✕</button>
     <div class="sm-head">
-      <div class="sm-title">세트에 추가</div>
+      <div class="sm-title">장비 꾸러미에 담기</div>
       <div class="sm-item">${esc(item.b)} ${esc(item.m)}</div>
     </div>
     <div class="sm-list">${setListHtml}</div>
@@ -1156,7 +1156,7 @@ function openProduct(m) {
          : `<button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
        <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
        }
-       <button class="pmset" type="button">＋ 내 세트에 추가</button>
+       <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
        ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
      </div></div>`;
