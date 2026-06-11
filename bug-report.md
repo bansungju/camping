@@ -68,6 +68,7 @@
 | 54 | 커뮤니티/소셜 (9순환) | 2026-06-11 | 4건 |
 | 55 | 홈/메인 (10순환) | 2026-06-11 | 2건 |
 | 56 | 카테고리/목록 (10순환) | 2026-06-11 | 2건 |
+| 57 | 상품상세 (10순환) | 2026-06-11 | 2건 (GoTrueClient 경고=양성·LCP/aggregateRating 중복 제외) |
 
 ---
 
@@ -1620,6 +1621,21 @@
 - **원인:** 드롭다운 onchange(app.js:1070)가 `STATE.brands` 추가 후 `draw()`만 호출. `draw()`는 `syncFilterUI()`를 부르지 않아 `[data-brand].on` 동기화가 누락된다. (칩 직접 클릭 경로 app.js:1062는 자체적으로 `.on`을 토글해 일관)
 - **재현:** 브랜드 12개 초과 카테고리 → '＋브랜드' 드롭다운에서 상위 브랜드 선택 → 같은 브랜드의 칩 버튼이 비활성 표시 유지
 
+### [L-95] item 상세 페이지 app.js 캐시버스트 버전이 고착(stale) — 빌드 파이프라인 불일치
+- **영역:** 상품상세 (정적 `item/*.html` 2,277개)
+- **URL:** https://gear-forest.com/item/mat/item-24.html
+- **증상:** 모든 item 페이지가 `<script src="../../app.js?v=97a431c3">`로 **고정된 옛 app.js 버전**을 참조한다(현재 app.js 해시는 `8c7c7d75`). app.js를 고쳐도 item 페이지의 캐시버스트 쿼리는 갱신되지 않아, 이 페이지들에선 `?v=` 캐시버스팅이 사실상 무력화된다. (SW가 CACHE 빌드명 교체 시 옛 캐시를 통째 비우므로 실제 사용자 영향은 1로드 stale 수준으로 작지만, 빌드 일관성·캐시버스트 의도가 깨짐.)
+- **원인:** item 페이지는 `scripts/build-item-pages.js`가 **빌드 시점**의 app.js 내용 해시로 스탬프(`APP_V`, line 18·227). 이후 app.js를 수정하고 `pipeline/stamp_version.py`를 돌려도, 그 스크립트는 `os.listdir(SITE)`로 **site/ 최상위 HTML만** 순회하고 `item/` 하위는 제외하며, 정규식 `src="app\.js…"`도 item의 `src="../../app.js…"`(상대경로 접두사)를 매치하지 못한다. → app.js 변경 후 `build-item-pages.js`를 별도로 재실행하지 않으면 2,277개 item 페이지가 옛 버전에 고착. (style.css는 우연히 미변경이라 `a76e2907`로 일치 중)
+- **재현:** app.js 수정 → `stamp_version.py` 실행 → `grep -o 'app.js?v=[a-f0-9]*' site/item/mat/item-24.html` → 최상위 `category.html`의 버전과 불일치
+- **권장:** stamp 파이프라인에 `build-item-pages.js` 재실행 포함, 또는 stamp_version.py가 `item/**`도 순회하고 `(\.\./)*app\.js` 패턴을 매치하도록 확장.
+
+### [L-96] item 상세 페이지 BreadcrumbList 구조화 데이터 누락 (SEO)
+- **영역:** 상품상세 (정적 `item/*.html`)
+- **URL:** https://gear-forest.com/item/mat/item-24.html
+- **증상:** 페이지에 시각적 breadcrumb(홈 › 매트 › 상품명)은 있으나 대응하는 `BreadcrumbList` JSON-LD가 없다. `<head>`엔 `Product` 구조화 데이터만 존재. Google이 검색결과에 breadcrumb rich result를 그릴 근거가 없어 SEO 노출 기회를 놓친다.
+- **재현:** 상세 페이지 → `[...document.scripts].filter(s=>s.type==='application/ld+json').map(s=>s.textContent).join()` → `BreadcrumbList` 미포함
+- **권장:** `build-item-pages.js`에서 홈→카테고리→현재상품 3단계 `BreadcrumbList` JSON-LD 추가(시각 breadcrumb와 동일 구조).
+
 ---
 
-*다음 회차: 상품상세 (10순환)*
+*다음 회차: 검색 (10순환)*
