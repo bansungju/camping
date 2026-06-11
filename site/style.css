@@ -79,6 +79,7 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .b.데이터부족{color:var(--faint);font-style:italic}
 .nd{color:var(--faint);font-style:italic;font-size:12px}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--muted);font-size:12px}
+.disc{display:block;margin-top:6px;font-size:11px;opacity:.7}
 .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;
   font-size:12.5px;color:var(--muted);margin:0 0 18px}
 .note b{color:var(--txt)}

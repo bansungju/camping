@@ -823,7 +823,8 @@
 - **증상:** 카테고리 페이지는 `?q=` 파라미터로 검색어를 복원·필터를 적용하지만, 홈페이지(`index.html`)는 `?q=` 파라미터를 읽는 코드가 없어 `?q=헬리녹스`로 접근해도 입력창이 비어 있고 드롭다운이 열리지 않음. 검색 결과 URL 공유 및 뒤로가기 복원 불가.
 - **재현:** `https://gear-forest.com/?q=헬리녹스` 직접 접속 → `#homeq` 비어있음 확인
 
-### [M-83] 비로그인 시 찜·세트 섹션이 가림 없이 로그인 CTA와 동시 노출
+### [M-83] ✅ 해결완료(M-108 동시 수정) — 비로그인 시 찜·세트 섹션이 가림 없이 로그인 CTA와 동시 노출
+- **해결(2026-06-11):** M-108 수정으로 `account.html` 초기 `display:none` + `renderAccount()` 비로그인 분기 강화 + `showLoggedInSections(false)` 추가. 비로그인 시 `wish-section`·`sets-section`·`acc-tabs` 모두 숨김. [site/account.html](site/account.html), [site/app.js](site/app.js)
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 비로그인 상태에서 `auth-section`(로그인 CTA)과 `wish-section`·`sets-section`이 모두 `display:block`으로 동시 표시됨. 사용자는 로그인 없이 찜·세트 관리가 가능한 것으로 오인할 수 있으며, 로그인 전후 UI 구분이 없음.
@@ -853,7 +854,8 @@
 - **증상:** `get_hot_items` RPC가 HTTP 200을 반환하지만, `app.js`의 필터 조건(`items.length >= 2`, 카테고리별 최소 2회 클릭 필요)을 충족하는 카테고리가 없어 실제 랭킹 대신 하드코딩 fallback chips(백패킹텐트·침낭·버너·랜턴)만 노출됨. API가 살아있음에도 저트래픽 단계에서는 항상 fallback을 보이는 구조.
 - **재현:** 홈 접속 → DevTools Network → `get_hot_items` 200 확인 → `#hot-list`에 `.hot-rank-row` 없고 `.hot-chip` 4개만 존재
 
-### [M-88] 쿠팡 파트너스 파트너 공시 미표시 — 제휴 의무 미이행
+### [M-88] ✅ 해결완료 — 쿠팡 파트너스 파트너 공시 미표시 — 제휴 의무 미이행
+- **해결(2026-06-11):** 홈·카테고리·브랜드·추천 페이지 푸터에 `.disc` 클래스로 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다." 추가. 상세 모달(`pmbuynote`)은 기존 적용. [site/app.js](site/app.js), [site/style.css](site/style.css)
 - **영역:** 홈/메인 — 푸터 (전체 페이지)
 - **URL:** https://gear-forest.com/
 - **증상:** 쿠팡 파트너스(AF6034597) 제휴 링크를 포함한 서비스에서 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다" 문구 또는 동등 공시가 전혀 없음. 쿠팡 파트너스 운영정책·공정거래위원회 추천·보증 고시상 의무 사항.
@@ -884,7 +886,8 @@
 - **증상:** 페이지 로드 시 "A bad HTTP response code (404) was received when fetching the script." 에러가 콘솔에 발생. SW(`sw.js`)가 이미 삭제된 경로의 스크립트를 프리캐시 시도하는 것으로 추정. H-19/H-28 관련 잔여 이슈.
 - **재현:** 상세 페이지 접속 → DevTools 콘솔 → SW 스크립트 404 에러 확인
 
-### [M-93] 홈 검색에서 `#` 포함 검색어 입력 시 결과 없음 — 토크나이저 `#` 미처리
+### [M-93] ✅ 해결완료 — 홈 검색에서 `#` 포함 검색어 입력 시 결과 없음 — 토크나이저 `#` 미처리
+- **해결(2026-06-11):** `setupHomeSearch()` `run()` 함수에서 단일 `includes(q)` → 공백 분리 토큰 AND 매칭으로 변경. `q.split(/\s+/).filter(Boolean)` 후 `terms.every(t => text.includes(t))` 적용. "몽벨 #7" → terms=["몽벨","#7"] → 브랜드+모델명 모두 포함 시 히트. [site/app.js](site/app.js)
 - **영역:** 검색 — 홈 전역 검색
 - **URL:** https://gear-forest.com/
 - **증상:** "다운허거 #7", "몽벨 #7" 등 `#` 기호 포함 검색어 입력 시 결과 없음. `#` 제외 검색어("다운허거 800")로는 동일 모델이 정상 표시됨. 검색 토크나이저가 `#` 문자를 처리하지 못해 실제 존재하는 모델을 찾지 못함.
@@ -896,7 +899,8 @@
 - **증상:** "침낭", "버너", "텐트" 등 카테고리명 입력 후 Enter 시 카테고리 목록 페이지가 아니라 `category.html?cat=sleeping-bag&q=침낭` 같이 개별 모델 필터 URL로 이동. 드롭다운에 카테고리 바로가기 옵션 없음. H-39(브랜드명)와 동일 메커니즘. 전체 카테고리를 보려는 사용자 의도와 불일치.
 - **재현:** 홈 검색창 → "침낭" 입력 → Enter → `category.html?cat=sleeping-bag&q=침낭` 이동 (전체 침낭 목록 아님)
 
-### [M-95] 세트 없을 때 `#sets-section` 완전 숨김 — 빈 상태 안내 없음
+### [M-95] ✅ 해결완료 — 세트 없을 때 `#sets-section` 완전 숨김 — 빈 상태 안내 없음
+- **해결(2026-06-11):** `sets.length &&` 조건 제거하여 로그인 + activeTab==="sets"이면 섹션 항상 표시. `sets.length === 0`일 때 "아직 만든 세트가 없어요" 빈 상태 HTML 렌더링 추가. [site/app.js](site/app.js)
 - **영역:** 계정/로그인 — 세트 탭
 - **URL:** https://gear-forest.com/account.html
 - **증상:** `gear_sets`가 비어있으면 `#sets-section` 전체가 `display:none`으로 숨겨짐. 찜 섹션에는 "아직 찜한 상품이 없어요" 빈 상태 안내가 있으나 세트 섹션은 섹션 자체가 사라져 사용자가 세트 기능 존재를 알 수 없음.
