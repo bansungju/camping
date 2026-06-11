@@ -787,6 +787,10 @@ async function renderCategory() {
             sortKey: null, sortAsc: false, campStyle: "",
             dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])),
             unit: Object.fromEntries(d.metrics.map(m => [m.key, m.unit])) };
+  // 비교 세트는 카테고리 데이터에 종속 — 카테고리 진입 시 초기화(M-110: 이전 카테고리 잔존 방지)
+  _cmpSet = [];
+  const _prevCmpBar = document.getElementById("cmp-bar");
+  if (_prevCmpBar) _prevCmpBar.style.display = "none";
   renderCatNav(slug);
 
   document.getElementById("crumbName").textContent = d.name;
@@ -1538,7 +1542,7 @@ function draw() {
   });
   document.querySelectorAll("#list .pli-cmp").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
-    toggleCmp(+btn.dataset.mi, rows);
+    toggleCmp(rows[+btn.dataset.mi], rows);
   });
   const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
