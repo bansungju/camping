@@ -44,6 +44,8 @@
 | 31 | 홈/메인 (6순환) | 2026-06-11 | 4건 |
 | + | 사용자 직접 제보 | 2026-06-11 | 1건 |
 | 32 | 카테고리/목록 (6순환) | 2026-06-11 | 1건 (사용자 제보 포함, 추가 탐색 병행) |
+| 33 | 상품상세 (6순환) | 2026-06-11 | 3건 (H-01 중복 제외) |
+| 34 | 검색 (6순환) | 2026-06-11 | 4건 (M-25 근접 중복 제외) |
 
 ---
 
@@ -199,10 +201,11 @@
 - **증상:** 카테고리 목록 모달에는 찜하기 버튼이 있으나, 상세 페이지에는 완전히 누락됨.
 - **해결(2026-06-11):** 생성기 `scripts/build-item-pages.js`의 item-hero에 찜 버튼(`#item-wish`) + 인라인 와이어링 스크립트 추가. item 페이지가 이미 로드하는 `app.js`의 전역 찜 API(`wishKey`·`inWish`·`toggleWish`)를 재사용 — localStorage `wish`에 모달·카드와 **동일 포맷**으로 저장되어 account.html 찜 목록과 자동 연동. CSS `.item-wish`(.on=accent) 추가, 2277개 상세 페이지 전체 재생성. 로컬 프리뷰 검증 — 클릭 시 찜하기↔찜함 토글·aria-pressed 동기화·localStorage 저장/해제, account 포맷 일치(key·b·m·cap·s·p·img), 스크린샷으로 초록 활성 버튼 확인·콘솔 에러 없음. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [H-08] 상세 페이지에 구매하기(쿠팡 파트너스) 버튼 없음
+### [H-08] ✅ 해결완료 — 상세 페이지에 구매하기(쿠팡 파트너스) 버튼 없음
 - **영역:** 상품 상세
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 카테고리 모달에는 구매하기 버튼(disabled)이 있으나, 상세 페이지에는 구매 버튼 및 쿠팡 파트너스 링크 자체가 존재하지 않음.
+- **해결(2026-06-11):** 생성기 `scripts/build-item-pages.js` hero(찜 버튼 아래)에 구매 버튼 추가 — 모달과 동일 미러링: `model.coupang_url`이 있으면 활성 링크(`<a rel="nofollow sponsored noopener">🛒 쿠팡에서 구매하기` + 파트너스 고지), 없으면 disabled `🛒 구매하기` + '구매 링크를 준비 중입니다.'. 현재 데이터엔 coupang_url 필드가 없어 모달과 동일하게 disabled 상태(H-14 의도, API 연결 시 자동 활성화). CSS `.item-buy`(.item-buy[disabled] opacity .4) 추가, 2277개 상세 페이지 전체 재생성. 로컬 프리뷰 검증 — disabled 버튼·안내 문구·opacity 0.4·not-allowed, 찜+구매 버튼 공존, 스크린샷 확인·콘솔 에러 없음. (href escape는 `esc` 미정의 대비 `String().replace`로 안전 처리) [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [H-02] ✅ 해결완료 — 카테고리 링크 클릭 시 JS·CSS·manifest 404 — 페이지 렌더링 불가
 - **영역:** 홈/메인 → 카테고리 링크
@@ -223,6 +226,12 @@
 - **제보:** 사용자 직접 제보
 - **원인:** 각 프리셋 `fn()`이 자신의 `STATE.range` 항목만 설정하고 다른 프리셋 항목을 리셋하지 않음 (app.js:959~970)
 - **재현:** 카테고리 페이지 → "경량 우선" 클릭 → "저가 우선" 클릭 → 결과가 훨씬 적거나 빈 목록
+
+### [M-69] www 서브도메인 직접 접근 시 이미지 403 + JS ReferenceError — 자산 로드 실패
+- **영역:** 상품상세 / 전체
+- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** www.gear-forest.com으로 직접 접근 시 HTML은 301 리다이렉트 없이 서빙되나 이미지(`/images/*.jpg`)가 403, JS가 `ReferenceError: renderHub is not defined`로 실패해 페이지 렌더링 불가. H-21 해결 이후에도 www 직접 접근 경로에서 자산 서빙이 차단됨.
+- **재현:** www.gear-forest.com/item/backpacking-tent/item-52.html 직접 접근 → 콘솔 403·ReferenceError 확인
 
 ### [M-66] 페르소나 카드 `sort`/`sa` URL 파라미터 소실 — 공유 URL 정렬 상태 미복원
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
@@ -330,11 +339,17 @@
 - **증상:** UI에서 "가격 낮은순" 선택 시 `sa=1`(오름차순)이 함께 붙어 정상 동작. 그러나 `sa` 없이 `sort=price_min`만 포함된 공유 URL로 진입하면 `sa=0`(내림차순)이 기본값으로 적용되어 비싼 것부터 표시. 공유 URL 재현 시 결과가 다름.
 - **재현:** `?cat=backpacking-tent&sort=price_min` URL 직접 접근 → 정렬 방향 확인
 
-### [M-61] brand.html `bq` 검색창 Enter 키 핸들러 없음
+### [M-61] brand.html `bq` 검색창 입력·Enter 모두 무반응 — input 이벤트 핸들러 미동작
 - **영역:** 검색 — brand.html
-- **URL:** https://www.gear-forest.com/brand.html?b=헬리녹스
-- **증상:** 브랜드 검색창(`input#bq`)에 텍스트 입력 후 Enter 키 누르면 무반응. `oninput`만 처리되고 `keydown` 핸들러 없음. 마우스 클릭으로만 브랜드 칩 선택 가능.
-- **재현:** brand.html?b=헬리녹스 → bq 검색창에 입력 → Enter → 무반응
+- **URL:** https://gear-forest.com/brand.html?b=헬리녹스
+- **증상:** 브랜드 검색창(`input#bq`)에 텍스트를 입력해도 브랜드 칩 필터링·자동완성·하이라이트 등 실시간 피드백 전혀 없음. Enter를 눌러도 무반응. 결과적으로 검색창 자체가 완전히 비동작 상태. 6순환 탐색에서 oninput 이벤트 핸들러도 동작하지 않는 것으로 추가 확인됨.
+- **재현:** brand.html?b=헬리녹스 → bq 검색창에 "코베아" 입력 → 브랜드 칩 변화 없음 → Enter → 무반응
+
+### [M-70] 영문 원어 모델명으로 검색 불가 — 한국어 표기만 인덱싱됨
+- **영역:** 검색 — 홈 전역 검색
+- **URL:** https://gear-forest.com/
+- **증상:** "PocketRocket", "Elixir", "Reactor" 등 영문 원어 모델명으로 검색 시 결과 없음. 동일 제품을 "포켓로켓", "엘릭서"로 검색하면 정상 히트. search.json 인덱스가 한국어 표기만 포함하고 영문 원어명을 포함하지 않음. 외국 브랜드 제품을 영문으로 기억하는 사용자 유입 차단.
+- **재현:** 홈 검색창 → "PocketRocket" 입력 → 결과 없음 / "포켓로켓" 입력 → 정상 히트
 
 ### [M-64] 비로그인 게시글 좋아요 — UI(♥)와 DB 카운트 불일치
 - **영역:** 커뮤니티/소셜 — 좋아요
@@ -695,6 +710,36 @@
 - **URL:** https://www.gear-forest.com/privacy.html
 - **증상:** privacy.html에 카카오 로그인 관련 개인정보 처리 항목이 기재되어 있으나 실제 코드는 Google OAuth만 구현됨. 개인정보 처리방침이 실제 처리 현황과 불일치.
 
+### [L-44] 상세 페이지 스펙 단위 "m2" 텍스트 표기 — "m²" 상첨자 아님
+- **영역:** 상품상세 — 스펙 테이블
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html 등 바닥면적 있는 텐트 상세
+- **증상:** 스펙 테이블 바닥면적 셀이 "2.25m2"로 표시됨. 올바른 기호는 "m²"(유니코드 상첨자). 생성 스크립트(`scripts/build-item-pages.js`)가 JSON 원본 "m2" 값을 변환 없이 출력한 결과.
+- **재현:** 텐트 상세 페이지 → 스펙 테이블 바닥면적 행 확인
+
+### [L-45] SW 스크립트 404 콘솔 에러 — 매 페이지 로드마다 발생
+- **영역:** 전체 (PWA/서비스워커)
+- **URL:** 모든 페이지
+- **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
+- **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
+
+### [L-46] 자동완성 정확 일치 모델이 접두어 부분 일치보다 후순위 표시
+- **영역:** 검색 — 홈 자동완성
+- **URL:** https://gear-forest.com/
+- **증상:** "체어원" 검색 시 첫 번째 결과가 "헬리녹스 15주년 체어원"(접두어 포함 부분 일치)이고 "헬리녹스 체어원"(정확 일치)이 두 번째로 밀림. 정확 일치 우선 정렬 로직 부재로 추정됨.
+- **재현:** 홈 검색창 → "체어원" → 자동완성 1번 결과 확인
+
+### [L-47] 검색 결과 클릭 후 뒤로가기 시 홈 검색창 내용 미복원
+- **영역:** 검색 — 홈 내비게이션
+- **URL:** https://gear-forest.com/
+- **증상:** 홈 검색창에 검색어 입력 → 자동완성 클릭 → category.html 이동 → 브라우저 뒤로가기 시 홈 검색창이 빈 상태. sessionStorage나 history.state에 검색어를 보존하지 않아 직전 검색어를 처음부터 재입력해야 함.
+- **재현:** 홈 → "헬리녹스" 입력 → 자동완성 클릭 → 뒤로가기 → 검색창 값 "" 확인
+
+### [L-48] 오타 입력 시 유사어 제안 없음 — "헬리넉스" 검색 시 결과 없음만 표시
+- **영역:** 검색 — 홈 자동완성
+- **URL:** https://gear-forest.com/
+- **증상:** "헬리넉스"(헬리녹스 흔한 오타) 등 1글자 오타 입력 시 "검색 결과 없음"만 표시. "혹시 '헬리녹스'를 찾으셨나요?" 류의 단순 제안 안내도 없음.
+- **재현:** 홈 검색창 → "헬리넉스" 입력 → 결과 없음 확인
+
 ### [L-43] 데스크톱에서 footer에 불필요한 `padding-bottom: 64px` 잔류
 - **영역:** 홈/메인 (전체 페이지 공통)
 - **URL:** https://gear-forest.com/
@@ -909,4 +954,4 @@
 
 ---
 
-*다음 회차: 상품상세 (6순환)*
+*다음 회차: 계정/로그인 (6순환)*

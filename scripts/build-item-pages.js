@@ -83,7 +83,7 @@ function buildRelatedSection(catSlug, catLabel, model, allModels, currentIdx) {
 }
 
 function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModels) {
-  const { brand, model: modelName, price_min, price_max, img, specs, capacity } = model;
+  const { brand, model: modelName, price_min, price_max, img, specs, capacity, coupang_url } = model;
   const pageSlug = slugify(brand, modelName, idx);
   const canonicalUrl = `${SITE_URL}/item/${catSlug}/${pageSlug}.html`;
   const catUrl = `${SITE_URL}/category.html?cat=${catSlug}`;
@@ -167,6 +167,9 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .item-wish.on{border-color:var(--accent);background:var(--accent);color:#fff}
 .item-wish .wish-ico{width:18px;height:18px;fill:none}
 .item-wish.on .wish-ico{fill:#fff}
+.item-buy{display:block;width:100%;max-width:320px;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}
+.item-buy[disabled]{cursor:not-allowed;opacity:.4}
+.item-buynote{font-size:12px;color:var(--muted);margin:8px 0 0;max-width:320px}
 </style>
 </head>
 <body>
@@ -194,6 +197,11 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
         <svg class="wish-ico" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/></svg>
         <span class="iw-label">찜하기</span>
       </button>
+      ${coupang_url
+        ? `<a class="item-buy" href="${String(coupang_url).replace(/"/g, "%22")}" target="_blank" rel="nofollow sponsored noopener">🛒 쿠팡에서 구매하기</a>
+      <p class="item-buynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</p>`
+        : `<button class="item-buy" type="button" disabled aria-disabled="true">🛒 구매하기</button>
+      <p class="item-buynote">구매 링크를 준비 중입니다.</p>`}
     </div>
   </div>
 
