@@ -309,11 +309,15 @@
 - **증상:** www.gear-forest.com으로 직접 접근 시 HTML은 301 리다이렉트 없이 서빙되나 이미지(`/images/*.jpg`)가 403, JS가 `ReferenceError: renderHub is not defined`로 실패해 페이지 렌더링 불가. H-21 해결 이후에도 www 직접 접근 경로에서 자산 서빙이 차단됨.
 - **재현:** www.gear-forest.com/item/backpacking-tent/item-52.html 직접 접근 → 콘솔 403·ReferenceError 확인
 
-### [M-66] 페르소나 카드 `sort`/`sa` URL 파라미터 소실 — 공유 URL 정렬 상태 미복원
+### [M-66] ✅ 해결완료(재현불가) — 페르소나 카드 `sort`/`sa` URL 파라미터 소실 — 공유 URL 정렬 상태 미복원
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
 - **URL:** https://gear-forest.com/
 - **증상:** 홈 페르소나 카드(백패커·미니멀리스트 등) 클릭 시 `sort`·`sa` 파라미터가 URL에 포함되어야 하나, `serializeState()`가 해당 sort가 해당 카테고리의 기본 정렬값과 동일하면 URL에서 제외함(app.js). 결과: `?cat=backpacking-tent&cap=2`처럼 sort 없는 URL로 이동 → 공유 링크나 북마크 시 정렬 상태 미복원.
 - **재현:** 홈 → '🎒 백패커' 카드 클릭 → 주소창 URL에서 sort/sa 파라미터 없음 확인
+- **검증/판정(2026-06-11, 재현불가·실질 손실 없음):** 로컬 프리뷰로 페르소나별 실제 동작 확인 — **정렬 상태는 항상 올바르게 복원됨.**
+  - 백패커(backpacking-tent, weight_min asc): weight_min이 이 카테고리의 **기본 정렬**이라 `serializeState()`가 중복 파라미터를 생략 → URL은 `?cat=backpacking-tent&cap=2`. 하지만 공유 링크를 열면 기본 정렬(weight_min asc)로 **동일하게 복원**됨(첫 행 935g→1.13kg 오름차순, sortSelect="기본").
+  - 오토/맥시멀(auto-tent, floor_area desc): floor_area는 기본 정렬이 **아니므로** URL에 **명시 유지**됨(`...&sort=spec:floor_area&sa=0`, sortSelect="spec:floor_area").
+  - 즉 sort가 생략되는 경우는 "그 값이 곧 기본값"일 때뿐이라 공유 시 동일 결과로 복원되고, 비기본 sort는 URL에 보존됨 → 정렬 미복원 증상은 발생하지 않음. 리포트는 "파라미터가 URL에 없다"는 점만 보고 기본값이 복원한다는 사실을 누락한 false positive. (코드 변경 불필요)
 
 ### [M-67] www. 서브도메인 DNS 미해석 — cdn-cgi/rum·이미지 요청 ERR_NAME_NOT_RESOLVED
 - **영역:** 홈/메인 (네트워크/런타임)
@@ -321,11 +325,12 @@
 - **증상:** 페이지 로드 시 `https://www.gear-forest.com/cdn-cgi/rum?` 및 `www.gear-forest.com/images/*.jpg` 요청이 `net::ERR_NAME_NOT_RESOLVED`로 반복 실패. 현재 정식 도메인은 apex(gear-forest.com)이며 www는 301 리다이렉트인데, 어떤 JS 또는 잔류 SW가 www. URL로 요청을 생성 중. Cloudflare Analytics 데이터 수집 불가, 이미지 로드 실패.
 - **재현:** 홈 접속 → 콘솔 → `ERR_NAME_NOT_RESOLVED @ www.gear-forest.com/...` 다수 확인
 
-### [M-46] `role="dialog"`에 `aria-labelledby`/`aria-label` 없음 — 스크린리더 이름 불명
+### [M-46] ✅ 해결완료 — `role="dialog"`에 `aria-labelledby`/`aria-label` 없음 — 스크린리더 이름 불명
 - **영역:** 상품상세 모달 (접근성)
 - **URL:** category.html 내 상품 상세 모달
 - **증상:** `.pmbox[role="dialog"][aria-modal="true"]`에 `aria-labelledby`, `aria-label` 모두 없음. 스크린리더가 모달 진입 시 "이름 없는 대화상자"로 읽음. WCAG 4.1.2 위반.
 - **재현:** 상품 모달 열기 → 접근성 트리 확인 — dialog 요소의 accessibleName = ""
+- **해결(2026-06-11):** 상품 모달(`openProduct`)의 제목(`.pmname`)에 `id="pm-title"` 부여하고 `.pmbox[role="dialog"]`에 `aria-labelledby="pm-title"` 연결. 로컬 프리뷰 검증 — dialog accessibleName = "매직 100"(상품 모델명)으로 해석, 콘솔 에러 0. (M-20과 동일 수정으로 함께 해결) [site/app.js](site/app.js)
 
 ### [M-47] 비로그인 상태에서 "장비 꾸러미에 담기" 클릭 시 아무 피드백 없음
 - **영역:** 상품상세 모달
@@ -634,10 +639,11 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 모든 카테고리 페이지 `<meta name="description">`이 동일한 서비스 소개 문구. 카테고리별 고유 description 없어 검색 유입 최적화 불가. ([L-13] JSON-LD 부재와 SEO 문제 연관)
 
-### [M-20] 상품 상세 모달 dialog에 aria-labelledby 없음
+### [M-20] ✅ 해결완료 — 상품 상세 모달 dialog에 aria-labelledby 없음
 - **영역:** 카테고리/목록 (접근성)
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `role=dialog` 모달에 `aria-labelledby` 없음. 스크린 리더가 모달 제목을 안내하지 못함. 닫기 버튼에 `tabindex` 없어 키보드 포커스 순서 미보장.
+- **해결(2026-06-11):** [M-46]과 동일 수정 — `.pmname`에 `id="pm-title"`, dialog에 `aria-labelledby="pm-title"` 연결로 모달 제목(상품명) 안내. 닫기 버튼(`.pmx`)은 네이티브 `<button>`이라 기본 포커스 가능하며 [H-29] 포커스 트랩으로 모달 내 순환 보장됨. [site/app.js](site/app.js)
 
 ### [M-14] 검색 input에 aria-label·label 요소 없음
 - **영역:** 홈/메인 (접근성)
@@ -813,6 +819,24 @@
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** M-68 수정으로 무게·가격·cap은 `clearPresetFilters()`로 초기화되지만, `comfort_temp__max`·`brands` URL 파라미터는 삭제 대상에 포함되지 않아 해당 필터를 설정한 채 프리셋 전환 시 여전히 누적됨. 또한 프리셋 버튼 클릭 후 `.on` 클래스가 부여되지 않아 어떤 프리셋이 활성화됐는지 시각적으로 알 수 없음.
 - **재현:** 내한온도·브랜드 필터 설정 후 프리셋 클릭 → URL에 `comfort_temp__max`·`brands` 잔존, 버튼에 `.on` 없음
+
+### [M-90] 상세 페이지 JSON-LD `availability: InStock`이지만 구매 버튼은 disabled — SEO 오신호
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 구조화 데이터(`application/ld+json`) `Product.offers.availability`가 `https://schema.org/InStock`으로 선언되어 있으나 실제 구매 버튼은 `disabled aria-disabled="true"` 상태에 "구매 링크를 준비 중입니다." 문구. Google 리치 결과에서 "재고 있음"으로 표시되어 Search Console 경고 및 사용자 오인 유발.
+- **재현:** 상세 페이지 소스의 `ld+json` 블록 확인 → `"availability":"InStock"` + 구매 버튼 `disabled` 상태 동시 확인
+
+### [M-91] 상세 페이지에 "장비 꾸러미 담기" 버튼 없음 — 모달과 기능 불일치
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 카테고리 모달에는 "＋ 장비 꾸러미에 담기" 버튼이 있으나 상세 페이지에는 찜하기·구매하기만 존재. 상세 페이지에서 꾸러미 추가 진입점 없음.
+- **재현:** 상세 페이지 → 버튼 목록 확인 → 꾸러미 담기 없음 / 카테고리 카드 모달 → 꾸러미 담기 있음 (비교)
+
+### [M-92] SW 스크립트 404 에러 — 매 페이지 로드 시 콘솔에 반복 발생
+- **영역:** 상품 상세 (전체 페이지 공통)
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 페이지 로드 시 "A bad HTTP response code (404) was received when fetching the script." 에러가 콘솔에 발생. SW(`sw.js`)가 이미 삭제된 경로의 스크립트를 프리캐시 시도하는 것으로 추정. H-19/H-28 관련 잔여 이슈.
+- **재현:** 상세 페이지 접속 → DevTools 콘솔 → SW 스크립트 404 에러 확인
 
 ---
 
@@ -1010,6 +1034,24 @@
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `.dsl-input` range input 전체(가격·무게·온도·충전량 min/max 8개)에 `aria-label`과 `aria-valuetext` 없음. 스크린리더가 어떤 필터의 min/max인지 알 수 없고 단위 없는 숫자만 읽힘.
 - **재현:** DOM 검사 → `input[type="range"].dsl-input` 8개 모두 aria-label null
+
+### [L-71] 상세 페이지 별점 셀(`.spec-stars`)에 `aria-label` 없음 — 원시 유니코드 문자 읽힘
+- **영역:** 상품 상세 — 스펙 테이블
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** `.spec-stars` 셀에 `aria-label`이 없어 스크린리더가 "★★★★☆ (4)" 원시 유니코드를 읽음. ◐(반별)도 접근 가능한 텍스트 없음. "4점 만점에 3.5점" 같은 `aria-label` 필요.
+- **재현:** DOM 검사 → `document.querySelectorAll('.spec-stars')` → ariaLabel null
+
+### [L-72] 상세 페이지 — 같은 카테고리 이전/다음 상품 내비게이션 없음
+- **영역:** 상품 상세
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 카테고리 내 순차 탐색(`← 이전 상품` / `다음 상품 →`)이 없음. 하단 "비슷한 제품 3개" 링크와 카테고리 목록 복귀 링크만 있어 상품 간 순서 탐색 불가.
+- **재현:** 상세 페이지 → 이전/다음 이동 버튼 없음 확인
+
+### [L-73] 헤더 슬로건 텍스트가 필터 버튼으로 오인 유발 — 클릭 불가 정적 텍스트
+- **영역:** 상품 상세 — 헤더
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
+- **증상:** 헤더의 "정량 스펙 별점 · 브랜드만 · 측정값만" 문구가 카테고리 페이지 필터 칩과 유사한 표현으로, 상세 페이지에서는 클릭 불가한 정적 텍스트임에도 인터랙티브 요소로 오인될 수 있음.
+- **재현:** 상세 페이지 → 헤더 슬로건 클릭 → 반응 없음
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1264,4 +1306,4 @@
 
 ---
 
-*다음 회차: 상품상세 (8순환)*
+*다음 회차: 검색 (8순환)*
