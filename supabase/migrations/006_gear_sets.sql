@@ -68,3 +68,9 @@ CREATE POLICY gear_sets_update_own ON gear_sets
 -- 본인만 삭제 (soft delete: deleted_at 세팅)
 CREATE POLICY gear_sets_delete_own ON gear_sets
   FOR DELETE USING (user_id = auth.uid());
+
+-- 테이블 GRANT (필수) — PostgreSQL은 RLS 평가 전에 테이블수준 GRANT를 먼저 본다.
+--   GRANT가 없으면 정책이 아무리 맞아도 42501(permission denied)로 막힌다(004와 동일 함정).
+--   공개 세트 공유를 위해 SELECT는 anon 포함, 쓰기는 authenticated 한정.
+GRANT SELECT ON public.gear_sets TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.gear_sets TO authenticated;

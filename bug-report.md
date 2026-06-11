@@ -402,11 +402,13 @@
 - **URL:** https://gear-forest.com/data/search.json
 - **증상:** `app.js?v=hash`, `style.css?v=hash`는 버전 파라미터로 캐시 무효화되나 `search.json`은 `max-age=600`(10분)만 설정되고 버전 파라미터 없음. 상품 데이터 업데이트 후 최대 10분간 구 데이터가 노출됨.
 
-### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치)
+### [M-71] 비로그인 세트 섹션 — 로그인 안내·동기화 힌트 없음 (찜 섹션과 불일치) 〔🔧 백엔드: 세트 동기화 차단요인 해소(006 grant)〕
 - **영역:** 계정/세트
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 비로그인 상태에서 `#sets-section`이 표시되지만 찜 섹션(`#wish-synchint`)과 달리 "로그인하면 세트가 동기화됩니다" 류의 안내 문구가 없음. 세트가 로컬스토리지에만 저장되고 로그인 후 동기화되지 않음을 사용자가 모름.
 - **재현:** 비로그인 → account.html → 세트 섹션 확인 → 동기화 힌트 없음 확인
+- **백엔드 근본 차단요인 발견·수정(2026-06-11):** 로그인해도 **세트 원격 동기화가 실제로 동작 불가** 상태였음 — 앱은 `upsertGearSet`/`deleteRemoteGearSet`/fetchGearSets로 `gear_sets` 테이블에 동기화하는데, ① `gear_sets` 테이블이 **라이브 미적용**(REST 404 PGRST205), ② 게다가 `006_gear_sets.sql`이 테이블·RLS 정책만 있고 **GRANT 문이 전무** = 적용해도 004와 동일한 함정으로 모든 작업이 `42501`로 막힘. → `006`에 `GRANT SELECT TO anon,authenticated` + `GRANT INSERT,UPDATE,DELETE TO authenticated` 추가(grant 누락 보정). [supabase/migrations/006_gear_sets.sql](supabase/migrations/006_gear_sets.sql)
+- **⚠️ 남은 작업:** 세트 동기화를 켜려면 대시보드에서 `006`(grant 포함) 1회 적용(APPLY.md "7. 세트 동기화"). 적용 후엔 동기화가 실작동하므로 M-71/M-63의 "동기화 안내" 프론트 문구도 사실과 일치하게 됨(프론트 문구 추가는 별도).
 
 ### [M-72] 세트 자동 생성 이름에 날짜만 포함 — 같은 날 복수 저장 시 이름 중복
 - **영역:** 계정/세트
