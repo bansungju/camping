@@ -31,6 +31,15 @@ Dashboard → Storage → Buckets에서 **`review-images`** 버킷을 **Public**
 > ```
 > 200 + JSON 배열이면 성공(빈 배열 `[]`은 클릭 데이터 부재 — 정상). 404면 미적용.
 
+## 5. 댓글 소프트삭제 카운트 정합성 (버그 H-34)
+라이브 `trg_comment_count`(002)는 INSERT/DELETE만 반응하나 앱은 댓글을
+`deleted_at` UPDATE로 소프트삭제 → 카운트가 안 줄고 누적 증가.
+SQL Editor에서 **`migrations/015_comment_count_softdelete.sql`** 실행(멱등):
+트리거를 `UPDATE OF deleted_at`까지 확장 + 기존 드리프트 1회 재집계.
+
+> ⚠️ **`migrations/009_comments.sql`은 적용 금지** — 라이브와 비호환(content 컬럼)이며
+> 적용 시 중복 카운트 트리거 유발. 댓글 카운트 SSOT는 015.
+
 ## 검증
 1. 로그인 → 닉네임 설정 → 커뮤니티 "글쓰기"로 글 작성(사진 포함) → 피드/상세 표시
 2. 좋아요 토글 / 댓글 작성 / 신고 동작 확인

@@ -1,3 +1,7 @@
+-- ⚠️ DEPRECATED / 적용 금지 — 라이브 comments 테이블은 001_initial_schema(body·parent_id·hidden)
+--    스키마이며, 이 파일은 비호환 재정의(content 컬럼·parent_id 없음)라 적용된 적 없음.
+--    comment_count 소프트삭제 정합성은 015_comment_count_softdelete.sql 가 단일 진실(SSOT).
+--    이 파일을 실행하면 trg_inc/dec_comment_count 가 002 트리거와 중복가산을 일으킴 → 절대 적용 X.
 -- 댓글 테이블
 CREATE TABLE IF NOT EXISTS comments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

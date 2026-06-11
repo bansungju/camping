@@ -727,10 +727,13 @@
 - **원인(2026-06-11):** 모바일 미디어쿼리에서 `.pmbox{max-height:none}`가 base의 `max-height:90vh`를 덮어씀. `.pmodal`이 `position:fixed`라 모달이 뷰포트를 넘쳐도 내부 스크롤이 안 생겨 하단 버튼이 화면 밖으로 잘림.
 - **해결:** 모바일 `.pmbox`의 `max-height:none`을 `calc(100dvh - 88px - env(safe-area-inset-bottom))`로 교체(상14+하72 패딩 제외, vh 폴백 동반). `overflow-y:auto`와 결합해 모달이 뷰포트 안에 갇히고 내부 스크롤로 하단 버튼 도달 가능. 로컬 프리뷰 검증(375×812) — 모달 height 724px·뷰포트 내 fit, 내부 스크롤(scrollHeight 841>client 724), 스크롤 시 하단 '오류 신고' 버튼 완전 노출·콘솔 에러 없음. [site/style.css](site/style.css)
 
-### [H-34] 커뮤니티 댓글 소프트삭제 → `comment_count` 불감소 (DB 트리거 미스매치)
+### [H-34] 🔧 코드수정 완료·대시보드 적용 대기 — 커뮤니티 댓글 소프트삭제 → `comment_count` 불감소 (DB 트리거 미스매치)
 - **영역:** 커뮤니티/소셜 — 댓글
 - **증상:** `trg_comment_count` 트리거는 `AFTER INSERT OR DELETE`에만 반응하나, 앱이 댓글 삭제를 `deleted_at = now()`로 UPDATE 처리. UPDATE는 트리거가 감지 못해 `comment_count`가 감소하지 않고 누적 증가. DB 정합성 오류.
 - **재현:** 로그인 → 댓글 작성 → ✕로 삭제 → 게시글 카드 💬 카운트 확인 — 감소 없음
+- **원인(2026-06-11, 라이브 검증):** anon 키로 `comments?select=id,parent_id,deleted_at` → **HTTP 200**(컬럼 존재) = 라이브 comments는 **001/002 스키마**(`body`·`parent_id`·`hidden`). 따라서 활성 트리거는 002 `update_comment_count`(root만, INSERT/DELETE)이고 소프트삭제 UPDATE는 미처리 → 증상 그대로. `009_comments.sql`은 `content` 컬럼의 **비호환 재정의**라 적용된 적 없는 dead migration(`CREATE TABLE IF NOT EXISTS` no-op).
+- **수정(코드):** 신규 `015_comment_count_softdelete.sql` — ① `update_comment_count()`를 `UPDATE OF deleted_at`까지 처리하도록 확장(root 한정·삭제글 제외, 소프트삭제 −1·복원 +1 대칭). ② 트리거를 `AFTER INSERT OR DELETE OR UPDATE OF deleted_at`로 재생성. ③ 기존 누적 드리프트 1회 재집계(살아있는 root 댓글 수로 동기화). ④ 혹시 적용됐을 009의 중복 트리거(`trg_inc/dec_comment_count`) 안전 제거. + 009 상단에 적용금지 경고, APPLY.md에 5단계·검증 추가. [supabase/migrations/015_comment_count_softdelete.sql](supabase/migrations/015_comment_count_softdelete.sql), [supabase/migrations/009_comments.sql](supabase/migrations/009_comments.sql), [supabase/APPLY.md](supabase/APPLY.md)
+- **⚠️ 남은 작업(대시보드 1회 적용 필요):** anon 키로 DDL 불가 → 사용자가 Supabase SQL Editor에서 `015` 실행해야 라이브 정합성 해소(009는 적용 금지). 적용 후 댓글 작성→소프트삭제 시 💬 카운트 감소 확인.
 
 ### [H-35] ✅ 해결완료 — `community.html?open-log=1&set=N` 파라미터 처리 누락 — 원클릭 연결 기능 미동작
 - **영역:** 커뮤니티/소셜 — 글쓰기 연동
