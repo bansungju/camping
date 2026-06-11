@@ -901,17 +901,15 @@ function buildFilters(d, star) {
     });
   }
 
-  // 모바일: 필터바 기본접기+토글(첫 화면에 표 노출). 71R: 라벨을 실제 상태서 동기화 + 폭전환 대응
+  // 필터바 토글(모바일에서 노출). 기본은 펼침(default expanded) — 첫 화면에 필터가 바로 보이게.
   if (!document.getElementById("filtoggle")) {
     bar.insertAdjacentHTML("beforebegin",
       `<button id="filtoggle" class="filtoggle" type="button"></button>`);
     const tg = document.getElementById("filtoggle");
     const syncLabel = () => tg.textContent = bar.classList.contains("collapsed") ? "필터 펼치기 ▾" : "필터 접기 ▴";
     tg.onclick = () => { bar.classList.toggle("collapsed"); syncLabel(); };
-    const mq = window.matchMedia("(max-width:640px)");
-    const applyMq = () => { bar.classList.toggle("collapsed", mq.matches); syncLabel(); };
-    mq.addEventListener("change", applyMq);   // 640px 경계 넘나들 때 상태·라벨 재설정
-    applyMq();                                 // 초기: 모바일이면 접힘
+    bar.classList.remove("collapsed");   // 기본 펼침. 사용자가 토글로 접을 수 있음.
+    syncLabel();
   }
 
   // 인원
