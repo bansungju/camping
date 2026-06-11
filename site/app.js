@@ -1623,7 +1623,14 @@ async function renderBrand() {
       params.set("b", nb); draw(nb); renderChips(document.getElementById("bq").value.trim());
     });
   };
-  document.getElementById("bq").oninput = e => renderChips(e.target.value.trim());
+  const bqInput = document.getElementById("bq");
+  bqInput.oninput = e => renderChips(e.target.value.trim());
+  // Enter → 현재 필터된 첫 브랜드로 이동 (M-61: 입력 필터는 동작하나 Enter 핸들러 부재였음)
+  bqInput.onkeydown = e => {
+    if (e.key !== "Enter" || e.isComposing || e.keyCode === 229) return;
+    const firstChip = blist.querySelector("[data-b]");
+    if (firstChip) firstChip.click();
+  };
 
   draw(bname);
   renderChips();
