@@ -454,10 +454,11 @@
 - **원인:** `restoreState`가 `STATE.sortAsc = params.get("sa") === "1"`로만 처리 → `sa` 부재 시 무조건 false(내림차순).
 - **해결(2026-06-11):** `sa` 부재 시 정렬키의 자연 기본방향 적용 — `params.has("sa") ? sa==="1" : (srt==="value" ? false : defaultAsc(srt))`. UI의 `applySort`와 동일 규칙(value=내림, price_min·spec=defaultAsc). 로컬 프리뷰 검증 — `?sort=price_min`(sa없음) → 오름차순(23,370→57,600→95,750원, 싼것부터)·URL `sa=1`로 정규화 / `?sort=value`(sa없음) → `sa=0`(가성비 높은순)·콘솔 에러 0. [site/app.js](site/app.js)
 
-### [M-61] brand.html `bq` 검색창 입력·Enter 모두 무반응 — input 이벤트 핸들러 미동작
+### [M-61] ✅ 해결완료 — brand.html `bq` 검색창 입력·Enter 모두 무반응 — input 이벤트 핸들러 미동작
 - **영역:** 검색 — brand.html
 - **URL:** https://gear-forest.com/brand.html?b=헬리녹스
 - **증상:** 브랜드 검색창(`input#bq`)에 텍스트를 입력해도 브랜드 칩 필터링·자동완성·하이라이트 등 실시간 피드백 전혀 없음. Enter를 눌러도 무반응. 결과적으로 검색창 자체가 완전히 비동작 상태. 6순환 탐색에서 oninput 이벤트 핸들러도 동작하지 않는 것으로 추가 확인됨.
+- **검증/해결(2026-06-11):** ① **입력(oninput) 필터는 정상 동작** — 라이브 코드에 `renderBrand`의 `#bq` oninput 핸들러(`renderChips`)가 이미 존재. 프리뷰 재현 — "코베아" 입력 시 브랜드 칩이 1개로 실시간 필터, 없는 단어는 "브랜드 없음" 표시. (리포트의 'oninput 미동작'은 stale, 캐시된 구버전 관찰로 추정) ② **Enter 핸들러는 실제 부재** → `#bq`에 keydown 추가: Enter 시 현재 필터된 첫 브랜드 칩으로 이동(IME 조합 가드 포함). 프리뷰 검증 — "코베아"+Enter → 브랜드 페이지가 코베아로 전환(title "코베아 전 카테고리", URL `?b=코베아`), 콘솔 에러 0. [site/app.js](site/app.js)
 - **재현:** brand.html?b=헬리녹스 → bq 검색창에 "코베아" 입력 → 브랜드 칩 변화 없음 → Enter → 무반응
 
 ### [M-75] 다크모드 FOUC — `initTheme()`이 `<body>` 끝 app.js에서 실행
