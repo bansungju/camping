@@ -31,6 +31,12 @@ export async function signOut() {
   return supabase.auth.signOut()
 }
 
+// 계정 삭제(PIPA 탈퇴권) — delete-account Edge Function 호출.
+// 본인 JWT는 functions.invoke가 자동 첨부. 성공 시 프로필 익명화 + auth 물리삭제(30일 쿨다운).
+export async function deleteAccount() {
+  return supabase.functions.invoke('delete-account', { method: 'POST' })
+}
+
 export async function getUser() {
   const { data: { user } } = await supabase.auth.getUser()
   return user
