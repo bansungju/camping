@@ -4,11 +4,18 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 
-// 다크모드 임시 비활성화 — 라이트모드 강제 고정, 토글 버튼 미노출 (#8)
-// TODO: 다크모드 색상 정비 후 토글 복원
+// 테마: 기본 라이트. 다크는 '내 정보 > 설정'에서 명시적으로 켤 때만 적용(prefers-dark 자동 추종 안 함).
+// 헤더 토글 버튼은 제거됨(.theme-toggle CSS도 display:none). 토글 UI는 account.html 설정 섹션이 담당.
 (function initTheme() {
-  document.documentElement.setAttribute("data-theme", "light");
+  const saved = localStorage.getItem("theme");
+  document.documentElement.setAttribute("data-theme", saved === "dark" ? "dark" : "light");
 }());
+// 설정 토글에서 호출 — 테마 적용 + 영속화
+window.setTheme = function (mode) {
+  const dark = mode === "dark";
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
+};
 
 // PWA 설치 유도 배너
 let _pwaPrompt = null;

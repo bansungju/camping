@@ -72,11 +72,42 @@
     </div>
     <div id="my-logs-list"></div>
   </div>
+
+  <!-- 설정 — 로그인 무관 항상 표시 -->
+  <div id="settings-section" style="margin-top:32px">
+    <h2 class="sec">⚙️ 설정</h2>
+    <div class="set-row">
+      <div class="set-row-label">
+        <span class="set-row-title">다크 모드</span>
+        <span class="set-row-desc">어두운 테마로 전환합니다 (정비 중)</span>
+      </div>
+      <button id="theme-switch" type="button" class="switch" role="switch" aria-checked="false" aria-label="다크 모드">
+        <span class="switch-knob"></span>
+      </button>
+    </div>
+  </div>
 </main>
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
 <script src="app.js?v=f525266a"></script>
+<script>
+  // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
+  (function initThemeSwitch() {
+    const sw = document.getElementById('theme-switch');
+    if (!sw) return;
+    const sync = () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      sw.setAttribute('aria-checked', dark ? 'true' : 'false');
+    };
+    sync();
+    sw.addEventListener('click', () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (window.setTheme) window.setTheme(dark ? 'light' : 'dark');
+      sync();
+    });
+  })();
+</script>
 <script type="module">
 import {
   initAuth, signInWithOAuth, signOut, getErrorMessage,
