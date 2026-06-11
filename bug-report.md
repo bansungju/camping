@@ -35,6 +35,7 @@
 | 22 | 검색 (4순환) | 2026-06-11 | 3건 (Low 3건 중복·파생 제외) |
 | 23 | 계정/로그인 (4순환) | 2026-06-11 | 2건 (Low 3건 별도 기록) |
 | 24 | 커뮤니티/소셜 (4순환) | 2026-06-11 | 4건 (Low 2건 제외) |
+| 25 | 홈/메인 (5순환) | 2026-06-11 | 3건 (중복·낮은영향 제외) |
 
 ---
 
@@ -46,10 +47,11 @@
 - **증상:** 페이지 로드 시 Supabase RPC `get_hot_items` 호출이 404 반환. '이번 주 인기' 섹션이 실제 데이터 대신 하드코딩된 4개 항목(백패킹텐트, 침낭, 버너, 랜턴)을 표시. 콘솔에 에러 노출.
 - **재현:** https://gear-forest.com 접속 → 브라우저 콘솔 확인 → 'Failed to load resource: 404' 확인
 
-### [H-21] https://gear-forest.com 직접 접근 시 ERR_TOO_MANY_REDIRECTS
+### [H-21] ✅ 해결완료 — https://gear-forest.com 직접 접근 시 ERR_TOO_MANY_REDIRECTS
 - **영역:** 홈/메인
 - **URL:** https://gear-forest.com
 - **증상:** non-www 주소로 직접 진입하면 리다이렉트 루프(gear-forest.com↔www.gear-forest.com)로 페이지 열리지 않음. www로 진입 시에는 정상. SEO canonical·공유 링크가 non-www를 가리키므로 외부 유입 사용자가 진입 불가.
+- **해결(2026-06-11, 환경 변화로 해소):** apex 직접 접근 시 200·리다이렉트 0(루프 없음), www→apex 단일 301로 정상화. CT/GitHub Pages 인증서도 approved. 재현 안 됨.
 
 ### [H-28] ✅ 해결완료 — Service Worker 캐시로 인한 `cat=cooking` ERR_TOO_MANY_REDIRECTS
 - **영역:** 카테고리/목록
@@ -69,17 +71,19 @@
 - **원인(2026-06-11):** ① `renderStyleChips(d)`가 `restoreState(params)` 이전에 호출되어 칩의 `.on`이 빈 campStyle로 그려짐. `syncFilterUI()`는 style 칩을 갱신하지 않아 복원 안 됨. ② `applyStyleSort(d)`가 칩 onclick 핸들러에서만 호출되고 초기 로드 경로엔 없어, sort 명시 없는 공유 URL은 스타일 정렬이 적용되지 않음. (style은 행을 거르는 필터가 아니라 핵심 스펙 기준 정렬을 바꾸는 동작)
 - **해결:** `renderCategory()` 초기화 순서 재정렬 — `renderStyleChips(d)`를 `restoreState(params)` **이후**로 이동(칩 .on 복원). restoreState 직후 `STATE.campStyle && !params.get("sort")`이면 `applyStyleSort(d)` 호출(스타일 기본 정렬 적용). 명시적 sort가 URL에 있으면 그것을 존중. 로컬 프리뷰 검증 — `?style=backpacking` 진입 시 칩 active + 최소무게 오름차순(215g→363g→…)·tip 표시 / `&sort=spec:comfort_temp` 동반 시 명시 정렬(13C→11C→…) 존중·칩 active 유지. [site/app.js](site/app.js)
 
-### [H-03] tent·cooking 카테고리 JSON 503으로 페이지 로드 실패
+### [H-03] ✅ 해결완료 — tent·cooking 카테고리 JSON 503으로 페이지 로드 실패
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=tent
 - **증상:** `data/tent.json`, `data/cooking.json`이 503 반환 → 해당 카테고리에서 '카테고리를 찾을 수 없습니다.' 오류 표시. sleeping-bag은 정상.
 - **재현:** `/category.html?cat=tent` 또는 `?cat=cooking` 접속
+- **해결(2026-06-11, 환경 변화로 해소):** `tent`·`cooking`은 실제 존재하는 슬러그가 아님(실제: backpacking-tent·auto-tent·other-tent·burner·cookware 등). 코드 어디서도 해당 슬러그로 링크하지 않음(grep 확인). 정적 apex에서 존재 슬러그는 200(sleeping-bag), 없는 슬러그는 404 — 예전 503은 구 동적 호스팅 아티팩트. 재현 안 됨.
 
-### [H-04] 상품 이미지 대규모 403/503 오류 (sleeping-bag 기준 221개 전부 실패)
+### [H-04] ✅ 해결완료 — 상품 이미지 대규모 403/503 오류 (sleeping-bag 기준 221개 전부 실패)
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `/images/*.jpg` 요청이 403/503 다수 발생. 221개 이미지 전체 로드 실패, 카드에 '이미지 준비중' 대체 텍스트 표시.
 - **재현:** `/category.html?cat=sleeping-bag` 접속 후 네트워크 탭 확인
+- **해결(2026-06-11, 환경 변화로 해소):** apex 정적 호스팅 이전 + '상품 이미지 git 추적' 커밋 이후 이미지 정상 서빙 — 라이브 apex 샘플 5개(10·1003·1005·1008·1009.jpg) 전부 200. 재현 안 됨.
 
 ### [H-05] ✅ 해결완료 — 데이터 로드 실패 시 스켈레톤 카드 6개가 화면에 잔존
 - **영역:** 카테고리/목록
@@ -107,10 +111,11 @@
 - **해결(2026-06-11):** `sw.js` 네비게이션 핸들러의 캐시 폴백을 `caches.match(req, { ignoreSearch: true })`로 변경 — `category.html?cat=X`가 캐시된 `category.html`에 매치되어 엉뚱한 홈 폴백을 방지. apex 클라이언트는 SW 스크립트 변경분을 정상 업데이트(network-first·skipWaiting·clients.claim 기존 구현 유지). [site/sw.js](site/sw.js)
 - **⚠️ 관련 인프라 이슈(별도):** `www.gear-forest.com/sw.js`가 301 리다이렉트되어, 과거 www 도메인에서 SW를 등록한 기기(특히 모바일)는 SW 자가 업데이트 불가 → 구버전 캐시 셸 서빙으로 화면 깨짐. 코드 배포(apex 서빙)로는 해결 불가 — 기기에서 사이트 데이터 삭제/PWA 재설치 또는 www의 sw.js 리다이렉트 제거(인프라) 필요. [H-21]과 동일 www↔apex 이전 근본원인.
 
-### [H-16] backpacking-tent 카테고리 상품 상세 전체 접근 불가 — 홈 HTML 서빙
+### [H-16] ✅ 해결완료 — backpacking-tent 카테고리 상품 상세 전체 접근 불가 — 홈 HTML 서빙
 - **영역:** 상품 상세
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** `/item/backpacking-tent/app.js` 및 `style.css`가 HTTP 504로 실패하여 상품 상세 내용이 없고 홈 페이지 콘텐츠(title: '장비의 숲 — 정량스펙 별점 DB')가 렌더링됨. 해당 카테고리 상품 상세 전체 접근 불가.
+- **해결(2026-06-11, 환경 변화로 해소):** 라이브 apex에서 `item/backpacking-tent/item-52.html` 200·정상 상세 렌더(title '니모이큅먼트 호넷 엘리트 오스모 1P …'). 504/홈 서빙 재현 안 됨. ([H-30]과 동일 정적 호스팅 이전으로 해소)
 
 ### [H-14] 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 불가 ⚠️ 미연결(의도적)
 - **영역:** 카테고리/목록 (모달)
@@ -124,10 +129,11 @@
 - **증상:** JSON 503 카테고리에서 h1='카테고리를 찾을 수 없습니다.' 오류 메시지와 스켈레톤 카드 6개가 동시에 DOM에 존재. 이중 오류 상태로 사용자 혼란. ([H-05] 스켈레톤 잔존의 확장 사례)
 - **해결(2026-06-11):** [H-05]와 동일 수정으로 해결. catch 블록이 #list의 스켈레톤을 제거하고 단일 에러 상태로 교체하므로 h1 오류 메시지와 스켈레톤이 더 이상 공존하지 않음. [site/app.js](site/app.js)
 
-### [H-12] canonical·og:url이 non-www인데 실제 서빙 URL은 www — SEO 중복 콘텐츠
+### [H-12] ✅ 해결완료 — canonical·og:url이 non-www인데 실제 서빙 URL은 www — SEO 중복 콘텐츠
 - **영역:** 홈/메인 (SEO)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `<link rel="canonical">`과 `og:url`이 `https://gear-forest.com/`(non-www)으로 설정되어 있으나 실제 서빙 URL은 `https://www.gear-forest.com/`. 검색엔진이 두 버전을 별개 문서로 인식해 PageRank 분산 위험. [H-10] OAuth 도메인 불일치와 같은 근본 원인(non-www/www 혼용).
+- **해결(2026-06-11, 환경 변화로 해소):** canonical·og:url=`https://gear-forest.com/`가 **실제 서빙 도메인(apex)과 일치**. 도메인 이전으로 apex가 정식이 되어 중복 콘텐츠 문제 해소.
 
 ### [H-20] ✅ 해결완료 — 최근 본 상품 카드 클릭 시 상품 상세로 이동하지 않음
 - **영역:** 홈/메인
@@ -137,15 +143,17 @@
 - **원인(2026-06-11):** recard 링크는 `category.html?cat=...&brands=...&q=...`(필터된 목록)으로만 이동하고, 카테고리 페이지는 brands+q로 단일 상품을 특정해도 상세 모달을 자동으로 열지 않았음. 사용자에겐 "상세로 안 감"으로 보임. (recent 항목엔 상품 id가 없어 직접 상세 URL 생성 불가)
 - **해결:** `renderCategory()`의 `draw()` 직후, 단일 브랜드(brands에 '|' 없음)+q가 모두 있으면 `d.models`에서 정확히 일치하는 모델을 찾아 `openProduct()`로 상세 모달을 자동 오픈. 검색 결과·추천 카드 등 brands+q 링크 전반이 함께 개선됨. 일반 검색(q만)은 제외. 로컬 프리뷰 검증 — brands+q 링크 시 모달 자동 오픈(네이처하이크 BE400…), q만 있는 일반 검색은 미오픈 확인. [site/app.js](site/app.js)
 
-### [H-13] 최근 본 상품 섹션 이미지 403 — 썸네일 전체 깨짐
+### [H-13] ✅ 해결완료 — 최근 본 상품 섹션 이미지 403 — 썸네일 전체 깨짐
 - **영역:** 홈/메인
 - **URL:** https://www.gear-forest.com/
 - **증상:** localStorage에 저장된 최근 본 상품(images/105.jpg, images/922.jpg)을 불러올 때 403 반환. '최근 본 상품' 카드에 이미지 없이 '이미지 준비중'만 표시. [H-04] 이미지 서버 오류와 동일 근본 원인.
+- **해결(2026-06-11, 환경 변화로 해소):** 이미지 서버 정상화([H-04]와 동일 근본). 라이브 apex 이미지 200 확인. '최근 본 상품' 썸네일도 정상. 재현 안 됨.
 
-### [H-10] OAuth redirectTo URL이 www 없는 도메인으로 하드코딩 — 로그인 실패 가능
+### [H-10] ✅ 해결완료 — OAuth redirectTo URL이 www 없는 도메인으로 하드코딩 — 로그인 실패 가능
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `supabaseClient.js`의 `SITE_BASE`가 `https://gear-forest.com`으로 고정. 실제 사이트는 `https://www.gear-forest.com`으로 리다이렉트되므로 Google OAuth 콜백 URL이 불일치할 경우 로그인 실패.
+- **해결(2026-06-11, 환경 변화로 해소):** 도메인 이전으로 **apex(gear-forest.com)가 정식 서빙 도메인**이 됨(www→apex 301). 따라서 `SITE_BASE='https://gear-forest.com'`는 이제 정확한 값 — 더 이상 불일치 아님. [[domain-apex-canonical]]
 
 ### [H-11] ✅ 해결완료 — 다크모드 토글이 '정비 중'이라고 표시되면서 클릭 가능 상태로 렌더링
 - **영역:** 계정/로그인
@@ -154,12 +162,13 @@
 - **원인(2026-06-11):** 다크 모드는 실제로 완전히 구현·동작함 — `app.js`의 `initTheme()`이 모든 페이지에서 localStorage 테마를 적용하고, `window.setTheme()`이 적용+영속화, `#theme-switch`가 이를 호출하며 `.switch[aria-checked=true]` CSS로 시각 상태(초록·knob 이동)도 정상. 즉 '(정비 중)' 라벨만 잘못된 표기였음(라벨↔동작 모순).
 - **해결:** account.html 설정의 다크 모드 설명에서 '(정비 중)' 문구 제거 → 라벨과 실제 동작 일치. 로컬 프리뷰 검증(스크린샷) — 토글 시 페이지 다크 적용, 스위치 초록·knob 우측(ON), localStorage `theme=dark` 영속, 라벨 '어두운 테마로 전환합니다'. [site/account.html](site/account.html)
 
-### [H-09] 검색 자동완성 클릭/Enter 시 clean URL로 이동 → CSS·JS MIME 오류, 페이지 완전 파손
+### [H-09] ✅ 해결완료 — 검색 자동완성 클릭/Enter 시 clean URL로 이동 → CSS·JS MIME 오류, 페이지 완전 파손
 - **영역:** 검색
 - **URL:** https://www.gear-forest.com/category/backpacking-tent?q=%ED%85%90%ED%8A%B8
 - **증상:** 홈 검색창에서 자동완성 클릭 또는 Enter 시 `category/backpacking-tent?q=...` clean URL로 이동. `category/style.css`와 `category/app.js`가 MIME 오류로 로드 실패 → `ReferenceError: renderCategory is not defined` → 페이지가 '불러오는 중…'에서 영구 정지.
 - **재현:** 홈 → 검색창에 '텐트' 입력 → 자동완성 클릭 또는 Enter
 - **참고:** `category.html?cat=backpacking-tent` 방식은 정상. [H-02]와 동일 근본 원인 — 검색 자동완성 링크 href가 아직 구 clean URL 형식 사용 중
+- **해결(2026-06-11, 환경/라우팅 변화로 해소):** 자동완성 클릭·Enter 모두 `category.html?cat=` 사용, 코드에 clean URL 링크 없음(grep 확인). [H-02]와 동일 근본. 재현 안 됨.
 
 ### [H-06] 상세 페이지 탭바 링크 상대경로 오류 — 서비스 점검 페이지로 이동
 - **영역:** 상품 상세
@@ -177,7 +186,7 @@
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 카테고리 모달에는 구매하기 버튼(disabled)이 있으나, 상세 페이지에는 구매 버튼 및 쿠팡 파트너스 링크 자체가 존재하지 않음.
 
-### [H-02] 카테고리 링크 클릭 시 JS·CSS·manifest 404 — 페이지 렌더링 불가
+### [H-02] ✅ 해결완료 — 카테고리 링크 클릭 시 JS·CSS·manifest 404 — 페이지 렌더링 불가
 - **영역:** 홈/메인 → 카테고리 링크
 - **URL:** https://www.gear-forest.com/category/backpacking-tent
 - **증상:** 홈 카테고리 카드가 `category/backpacking-tent` 형식(구 SPA-like URL)을 사용. 해당 URL 직접 접근 시 `category/app.js`, `category/style.css`, `category/manifest.webmanifest` 모두 404 또는 MIME 오류. `renderCategory is not defined` ReferenceError 발생, 카테고리 목록 표시 안 됨.
@@ -187,6 +196,7 @@
 ---
 
 ## 🟡 Medium
+- **해결(2026-06-11, 환경/라우팅 변화로 해소):** 코드가 이미 `category.html?cat=` 방식으로 전환 완료 — `site/app.js`·HTML 어디에도 구 clean URL(`category/{슬러그}`) 링크 잔존 없음(grep 확인). 더 이상 재현되지 않음.
 
 ### [M-46] `role="dialog"`에 `aria-labelledby`/`aria-label` 없음 — 스크린리더 이름 불명
 - **영역:** 상품상세 모달 (접근성)
@@ -269,6 +279,12 @@
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 피드에 카테고리(팁/후기/질문 등) 또는 태그 필터 UI 전혀 없음. 게시글 수 증가 시 원하는 글을 찾을 수 없음.
+
+### [M-57] 탭바 JS 동적 삽입으로 CLS 발생 — 초기 HTML 미포함
+- **영역:** 홈/메인 (성능)
+- **URL:** https://www.gear-forest.com/
+- **증상:** `.tabbar`가 초기 HTML에 없고 `DOMContentLoaded` 시점에 JS로 삽입됨. 헤더 렌더 → `<main>` 콘텐츠 렌더 → 탭바(약 44px) 삽입되면서 콘텐츠 전체가 아래로 밀리는 CLS 발생. Lighthouse CLS 점수 영향.
+- **재현:** 홈 첫 로드 → DevTools Performance → Layout Shift 이벤트 확인
 
 ### [M-56] 커뮤니티 피드 30개 하드코딩 — 이후 게시글 접근 불가
 - **영역:** 커뮤니티/소셜 — 피드
@@ -734,6 +750,16 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 다크모드 토글 설명에 "어두운 테마로 전환합니다 (정비 중)" 문구가 사용자에게 그대로 노출됨. 기능 자체는 정상 동작(localStorage 저장, 새로고침 후 유지)하므로 "(정비 중)" 제거 필요.
 
+### [L-40] `manifest.webmanifest` `start_url`이 `./index.html` — canonical `/`과 불일치
+- **영역:** 홈/메인 (PWA)
+- **증상:** PWA로 실행 시 URL이 `gear-forest.com/index.html`로 집계되어 canonical(`gear-forest.com/`)과 달라 GA/분석에서 PWA 세션이 별도 경로로 기록됨. Lighthouse start_url ≠ canonical 경고 발생.
+- **재현:** manifest.webmanifest 확인 → `start_url: "./index.html"`
+
+### [L-41] `og:image:alt` / `twitter:image:alt` 메타태그 누락
+- **영역:** 홈/메인 (SEO·접근성)
+- **URL:** https://www.gear-forest.com/
+- **증상:** SNS 공유 시 og:image, twitter:image 존재하나 `og:image:alt`, `twitter:image:alt` 없음. 스크린리더 사용자가 SNS 공유 링크 접근 시 이미지 설명 없음.
+
 ### [L-39] 비로그인 상태 `account.html#logs` 직접 접근 시 안내 없는 빈 화면
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html#logs
@@ -757,4 +783,4 @@
 
 ---
 
-*다음 회차: 홈/메인 (5순환)*
+*다음 회차: 카테고리/목록 (5순환)*
