@@ -555,7 +555,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   .catnav-wrap{position:static;top:auto}
   /* 모달이 하단 고정 탭바(62px)에 가리지 않게 하단 여백 확보 */
   .pmodal{align-items:flex-start;padding:14px 14px calc(72px + env(safe-area-inset-bottom))}
-  .pmbox{max-height:none}
+  /* 뷰포트(상14+하72 패딩 제외) 안에 모달을 가두고 내부 스크롤 — 하단 버튼 잘림 방지 (H-32) */
+  .pmbox{max-height:calc(100vh - 88px - env(safe-area-inset-bottom));max-height:calc(100dvh - 88px - env(safe-area-inset-bottom))}
   .wrap{padding:0 14px}
   h1{font-size:22px}
   h2.sec{font-size:15px}
