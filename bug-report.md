@@ -90,7 +90,7 @@
 - **증상:** 로그인 사용자가 글·댓글·좋아요·리뷰를 작성하면 DB에서 **42501 permission denied**로 실패. 라이브에 공개 게시글이 0건인 것과 정합(사실상 아무도 쓸 수 없는 상태).
 - **원인(2026-06-11, 코드감사):** `reviews/comments/likes/posts` INSERT 시 BEFORE INSERT 트리거 `check_{review,comment,like,post}_rate_limit`(002)가 `INSERT INTO rate_limit_log`를 실행하는데, ① 004가 rate_limit_log에 **의도적으로 GRANT를 주지 않음**(주석: "트리거/service_role 전용, 우회 방지") → authenticated는 직접 INSERT 불가, ② 그런데 트리거 함수가 **SECURITY DEFINER가 아님** → 호출자 권한으로 실행되어 42501 → 작성 트랜잭션 전체 abort. 설계 의도(트리거 전용 기록)와 구현(비-DEFINER)의 모순. [016]과 동일 부류의 누락이나 영향이 훨씬 큼(쓰기 전면 차단).
 - **수정:** 신규 `017_rate_limit_security_definer.sql` — 4개 rate-limit 트리거 함수를 `SECURITY DEFINER + SET search_path=public`으로 재정의(트리거 유지·멱등). 소유자 권한으로 rate_limit_log 기록 → 사용자 직접 GRANT 없이 동작, 우회 방지 의도 유지. [supabase/migrations/017_rate_limit_security_definer.sql](supabase/migrations/017_rate_limit_security_definer.sql)
-- **⚠️ 남은 작업(대시보드 1회 적용·우선순위 높음):** SQL Editor에서 `017` 실행해야 라이브 커뮤니티 쓰기가 열림. (같은 부류 `016`도 함께 적용 권장 — APPLY.md 6·8단계)
+- **라이브 적용(2026-06-11):** SQL Editor에서 `017` 실행 완료. 커뮤니티 글/댓글/좋아요/리뷰 작성 정상화.
 
 ### [H-36] ✅ 해결완료 — Supabase `posts` API 401 — 비로그인 커뮤니티 피드 완전 불능
 - **영역:** 커뮤니티/소셜
@@ -1651,6 +1651,14 @@
 - **증상:** 페이지에 시각적 breadcrumb(홈 › 매트 › 상품명)은 있으나 대응하는 `BreadcrumbList` JSON-LD가 없다. `<head>`엔 `Product` 구조화 데이터만 존재. Google이 검색결과에 breadcrumb rich result를 그릴 근거가 없어 SEO 노출 기회를 놓친다.
 - **재현:** 상세 페이지 → `[...document.scripts].filter(s=>s.type==='application/ld+json').map(s=>s.textContent).join()` → `BreadcrumbList` 미포함
 - **권장:** `build-item-pages.js`에서 홈→카테고리→현재상품 3단계 `BreadcrumbList` JSON-LD 추가(시각 breadcrumb와 동일 구조).
+
+### [M-112] 🔴 내 세트 탭 → '이 세트로 커뮤니티 로그 작성' 클릭 시 앱 팅김(강제 종료/화면 멈춤)
+- **영역:** 계정/로그인 — 내 세트 탭
+- **URL:** https://gear-forest.com/account.html (세트 탭)
+- **증상:** 내 세트 탭에서 세트 카드의 '이 세트로 커뮤니티 로그 작성' 버튼 클릭 시 앱이 팅김(화면 멈춤 또는 강제 종료).
+- **제보:** 사용자 직접 제보
+- **원인(추정):** M-105 연관 — 세트 객체에서 `s.name`(undefined) 참조로 인한 TypeError, 또는 로그 작성 모달 초기화 중 null 참조 오류로 추정. `acc-nav`/`acc-tabs` HTML 미존재(L-87)와 복합 작용 가능.
+- **재현:** account.html → 세트 탭 → 저장된 세트의 '이 세트로 커뮤니티 로그 작성' 버튼 클릭 → 팅김
 
 ### [M-111] 홈 검색 — 드롭다운엔 결과가 보이는데 Enter 누르면 아무 동작 없음 (토큰 매칭 불일치)
 - **영역:** 검색 — 홈 자동완성(`#homeq`)
