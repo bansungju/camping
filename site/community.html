@@ -27,6 +27,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://kavfzsdimsrhteohmirc.supabase.co" crossorigin>
+<link rel="modulepreload" href="supabaseClient.js?v=e6966f82">
 <link rel="stylesheet" href="style.css?v=17005789">
 <style>
   /* 커뮤니티 전용 — HTML은 네트워크 우선이라 항상 최신 */
@@ -378,7 +381,14 @@ function route() {
 
 window.addEventListener('hashchange', route)
 
+// 피드/상세는 공개 데이터라 인증을 기다릴 필요가 없다 → 즉시 1차 렌더.
+// (supabase-js 로딩·getSession 완료를 기다리지 않으므로 "불러오는 중"이 길게 보이지 않음)
+route()
+
+// 인증은 병렬로 확인. 참여 가능 여부(글쓰기/좋아요 상태)가 실제로 바뀐 경우에만
+// 재렌더 → 같은 콜백이 두 번(INITIAL + INITIAL_SESSION) 불려도, 토큰이 갱신돼도 중복 fetch 없음.
 await initAuth(async (user) => {
+  const before = canParticipate()
   if (user) {
     me = { user }
     const profile = await getProfile()
@@ -386,7 +396,7 @@ await initAuth(async (user) => {
   } else {
     me = null; myProfileNick = null
   }
-  route()
+  if (before !== canParticipate()) route()
 })
 </script>
 </body>
