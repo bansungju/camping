@@ -339,7 +339,7 @@ function pushRecent(item) {
 // href는 루트 기준 절대경로(H-38): 상세 페이지(/item/{cat}/item-N.html, 2단계 하위)에서도
 // 상대경로 404 없이 동작. 모바일 .bottom-nav와 동일 규칙.
 const TABS = [
-  { href: "/index.html", icon: "📊", label: "비교", match: ["index.html", ""] },
+  { href: "/index.html", icon: "📊", label: "홈", match: ["index.html", ""] },
   // 탐색 탭(H-37): 데스크톱에도 카테고리 탐색 진입 경로 추가(모바일 .bottom-nav와 일치)
   { href: "/category.html", icon: "🧭", label: "탐색", match: ["category.html", "brand.html", "recommend.html"] },
   { href: "/community.html", icon: "💬", label: "커뮤니티", match: ["community.html"] },
@@ -693,6 +693,7 @@ function renderStyleChips(d) {
     const tipEl = document.getElementById("sc-tip-text");
     if (tipEl) tipEl.textContent = STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : "";
     applyStyleSort(d);
+    syncFilterUI();                  // 정렬 드롭다운 UI 동기화 (M-102)
     updateLeadText(d);
     serializeState();
     draw();
@@ -976,8 +977,9 @@ function buildFilters(d, star) {
   // 프리셋이 관리하는 필터(무게range·가격range·cap)를 모두 리셋 — 프리셋끼리 상호배타로 동작 (M-68)
   // (다른 프리셋의 잔여 필터가 AND 누적돼 결과가 비정상적으로 적어지던 문제 방지)
   const clearPresetFilters = () => {
-    if (weightMeta) delete STATE.range[weightMeta.key];
-    delete STATE.range.price;
+    STATE.range = {};                // 모든 range 초기화 (comfort_temp 등 누적 방지, M-89)
+    STATE.brands.clear();            // 브랜드 필터 초기화 (M-89)
+    STATE.campStyle = "";            // 스타일 칩 초기화 (M-101)
     STATE.cap = "";
   };
   // 각 프리셋은 isOn()으로 현재 활성 여부를 판정하고, fn()은 토글(켜져 있으면 끄기) (M-68)
@@ -2673,7 +2675,7 @@ function openLogModal(presetSetIndex) {
         <label class="lf-label" for="lf-set">내 세트 첨부 <span class="lf-hint">선택</span></label>
         <select id="lf-set" class="lf-input" style="cursor:pointer">
           <option value="">첨부 안 함</option>
-          ${sets.map((s, i) => `<option value="${i}">${esc(s.name || "이름 없는 세트")} (${(s.items || []).length}개)</option>`).join("")}
+          ${sets.map((s, i) => `<option value="${i}">${esc(s.title || "이름 없는 세트")} (${(s.items || []).length}개)</option>`).join("")}
         </select>
       </div>` : ""}
       <div class="lf-field">
