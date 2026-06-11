@@ -39,6 +39,8 @@
 | 26 | 카테고리/목록 (5순환) | 2026-06-11 | 2건 (Low 2건 제외) |
 | 27 | 상품상세 (5순환) | 2026-06-11 | 2건 (Low 3건 제외) |
 | 28 | 검색 (5순환) | 2026-06-11 | 2건 (Low 4건 제외) |
+| 29 | 계정/로그인 (5순환) | 2026-06-11 | 2건 (Medium 1건·Low 2건 별도) |
+| 30 | 커뮤니티/소셜 (5순환) | 2026-06-11 | 4건 (Low 1건 종속 제외) |
 
 ---
 
@@ -303,6 +305,24 @@
 - **URL:** https://www.gear-forest.com/brand.html?b=헬리녹스
 - **증상:** 브랜드 검색창(`input#bq`)에 텍스트 입력 후 Enter 키 누르면 무반응. `oninput`만 처리되고 `keydown` 핸들러 없음. 마우스 클릭으로만 브랜드 칩 선택 가능.
 - **재현:** brand.html?b=헬리녹스 → bq 검색창에 입력 → Enter → 무반응
+
+### [M-64] 비로그인 게시글 좋아요 — UI(♥)와 DB 카운트 불일치
+- **영역:** 커뮤니티/소셜 — 좋아요
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 비로그인 상태에서 좋아요 클릭 시 localStorage를 먼저 업데이트해 UI는 ♥로 변하나, Supabase RPC 호출은 RLS 권한 오류로 실패. 오류 핸들링 없어 UI와 DB 카운트가 불일치. 새로고침 시 ♡로 복귀.
+- **재현:** 비로그인 → 게시글 좋아요 클릭 → ♥ 표시 → 새로고침 → ♡로 복귀
+
+### [M-65] 게시글 상세 딥링크(공유 URL) 없음
+- **영역:** 커뮤니티/소셜 — 게시글 상세
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** 게시글 클릭 시 모달이 열리나 `history.pushState` 없어 URL이 변하지 않음. 특정 게시글 URL 공유 불가, 공유 버튼도 없음. M-59(계정 탭 해시)와 동일 패턴의 별도 영역 버그.
+- **재현:** 게시글 클릭 → 모달 오픈 → 주소창 확인 → URL 그대로
+
+### [M-63] 세트 저장 후 안내 메시지 — 비로그인 시 "세트 탭" 존재하지 않아 오도
+- **영역:** 계정/로그인 — 찜·세트
+- **URL:** https://www.gear-forest.com/account.html
+- **증상:** 비로그인 상태에서 "찜한 N개 → 새 세트로 저장" 클릭 시 버튼이 "✅ 세트 저장됨 — 마이페이지 세트 탭에서 확인"으로 바뀌나, 비로그인 상태에서는 세트 탭이 숨겨져 있어 안내대로 이동 불가. 사용자가 세트 확인 방법을 알 수 없음.
+- **재현:** 비로그인 + 찜 1개 이상 → account.html → "새 세트로 저장" 클릭 → 안내 메시지 확인
 
 ### [M-62] 홈 검색 `?q=` URL 직접 진입 시 검색창 pre-fill 없음
 - **영역:** 검색 — 홈
@@ -613,6 +633,25 @@
 - **원인(2026-06-11):** 모바일 미디어쿼리에서 `.pmbox{max-height:none}`가 base의 `max-height:90vh`를 덮어씀. `.pmodal`이 `position:fixed`라 모달이 뷰포트를 넘쳐도 내부 스크롤이 안 생겨 하단 버튼이 화면 밖으로 잘림.
 - **해결:** 모바일 `.pmbox`의 `max-height:none`을 `calc(100dvh - 88px - env(safe-area-inset-bottom))`로 교체(상14+하72 패딩 제외, vh 폴백 동반). `overflow-y:auto`와 결합해 모달이 뷰포트 안에 갇히고 내부 스크롤로 하단 버튼 도달 가능. 로컬 프리뷰 검증(375×812) — 모달 height 724px·뷰포트 내 fit, 내부 스크롤(scrollHeight 841>client 724), 스크롤 시 하단 '오류 신고' 버튼 완전 노출·콘솔 에러 없음. [site/style.css](site/style.css)
 
+### [H-34] 커뮤니티 댓글 소프트삭제 → `comment_count` 불감소 (DB 트리거 미스매치)
+- **영역:** 커뮤니티/소셜 — 댓글
+- **증상:** `trg_comment_count` 트리거는 `AFTER INSERT OR DELETE`에만 반응하나, 앱이 댓글 삭제를 `deleted_at = now()`로 UPDATE 처리. UPDATE는 트리거가 감지 못해 `comment_count`가 감소하지 않고 누적 증가. DB 정합성 오류.
+- **재현:** 로그인 → 댓글 작성 → ✕로 삭제 → 게시글 카드 💬 카운트 확인 — 감소 없음
+
+### [H-35] `community.html?open-log=1&set=N` 파라미터 처리 누락 — 원클릭 연결 기능 미동작
+- **영역:** 커뮤니티/소셜 — 글쓰기 연동
+- **URL:** https://www.gear-forest.com/community.html?open-log=1&set=0
+- **증상:** account.html 세트 상세 → "커뮤니티에 공유" 버튼이 `community.html?open-log=1&set=N`으로 이동시키지만, community.html DOMContentLoaded에서 `open-log` 파라미터를 읽는 코드가 전혀 없어 글쓰기 모달이 자동으로 열리지 않음. 의도된 원클릭 연결 기능(커밋 a95b92a)이 절반만 구현된 상태.
+- **재현:** account.html → 세트 상세 → "커뮤니티에 공유" 클릭 → 글쓰기 모달 미오픈
+
+### [H-33] ✅ 해결완료 — 세트 공유 링크 수신 모달 완전 미동작 — dead code
+- **영역:** 계정/로그인 — 세트 공유
+- **URL:** https://www.gear-forest.com/account.html?view-set=<BASE64>
+- **증상:** 세트 공유 링크를 받아 직접 접근해도 "공유된 세트" 모달이 열리지 않음. `app.js`의 view-set 처리 코드가 `document.getElementById("acc-section")` 존재 여부를 가드로 사용하는데, `account.html`에는 해당 ID가 없어(`auth-section`은 존재) 처리 분기 자체에 진입 못 함. 세트 공유 수신 기능 전체가 dead code.
+- **재현:** account.html에서 세트 공유 링크 복사 → 새 탭에서 해당 URL 직접 접근 → 모달 미표시
+- **원인(2026-06-11):** view-set 핸들러 가드가 존재하지 않는 ID `acc-section`을 검사 → 항상 false → 분기 미진입. account.html의 실제 섹션 ID는 `auth-section`(account 전용, 타 페이지엔 없음).
+- **해결:** 가드를 `getElementById("auth-section")`으로 변경(account.html 전용 정확 스코프). 로컬 프리뷰 검증 — `?view-set=BASE64` 접근 시 공유세트 모달 오픈(이름·항목·총무게 1.3kg 표시), '내 세트에 추가' 클릭 시 localStorage gear_sets에 저장·모달 닫힘, index.html 등 비-account 페이지에선 미발동(가드 정상)·콘솔 에러 없음. [site/app.js](site/app.js)
+
 ### [H-31] 커뮤니티 댓글 수정·삭제 기능 완전 없음
 - **영역:** 커뮤니티/소셜 — 댓글
 - **URL:** https://www.gear-forest.com/community.html
@@ -799,6 +838,11 @@
 - **증상:** PWA로 실행 시 URL이 `gear-forest.com/index.html`로 집계되어 canonical(`gear-forest.com/`)과 달라 GA/분석에서 PWA 세션이 별도 경로로 기록됨. Lighthouse start_url ≠ canonical 경고 발생.
 - **재현:** manifest.webmanifest 확인 → `start_url: "./index.html"`
 
+### [L-42] 글쓰기 모달 — 첨부 이미지 선택 취소 버튼 없음
+- **영역:** 커뮤니티/소셜 — 글쓰기
+- **증상:** 사진 선택 후 미리보기 표시되나 이미지 선택을 취소할 × 버튼 없음. 모달을 닫거나 다른 파일을 다시 선택하는 방법뿐.
+- **재현:** 글쓰기 → 사진 선택 → 미리보기 → 취소 버튼 없음 확인
+
 ### [L-41] `og:image:alt` / `twitter:image:alt` 메타태그 누락
 - **영역:** 홈/메인 (SEO·접근성)
 - **URL:** https://www.gear-forest.com/
@@ -827,4 +871,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (5순환)*
+*다음 회차: 홈/메인 (6순환)*

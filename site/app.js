@@ -2747,9 +2747,10 @@ function openLogModal(presetSetIndex) {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("comm-best-list")) renderCommunity();
 
-  // 공유 세트 URL 처리 (?view-set=BASE64)
+  // 공유 세트 URL 처리 (?view-set=BASE64) — account.html에서만 동작
+  // (H-33: 가드가 존재하지 않는 'acc-section'을 찾아 분기 진입 자체가 안 되던 dead code 수정)
   const vsParam = new URLSearchParams(location.search).get("view-set");
-  if (vsParam && document.getElementById("acc-section")) {
+  if (vsParam && document.getElementById("auth-section")) {
     try {
       const s = JSON.parse(decodeURIComponent(escape(atob(vsParam))));
       const modal = document.createElement("div");
