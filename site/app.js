@@ -370,6 +370,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const here = (location.pathname.split("/").pop() || "").toLowerCase();
   const nav = document.createElement("nav");
   nav.className = "tabbar";
+  nav.setAttribute("aria-label", "주 내비게이션");  // M-17
   nav.innerHTML = `<div class="wrap tabbar-in">` + TABS.map(t => {
     const on = t.match.includes(here);
     return `<a class="tab${on ? " on" : ""}" href="${t.href}"${on ? ' aria-current="page"' : ""}>` +
@@ -552,7 +553,8 @@ async function setupHomeSearch() {
         <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       </div>`;
     }).join("")
-      : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`));
+      : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`))
+      + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>` : "");
     // 찜 버튼 이벤트
     box.querySelectorAll(".sres-wish").forEach(btn => {
       btn.onclick = e => {
@@ -3217,7 +3219,7 @@ document.addEventListener("DOMContentLoaded", () => {
     nav.setAttribute("aria-label", "주 내비게이션");
     nav.innerHTML = tabs.map(t => {
       const active = t.match.some(m => path === m || path.startsWith(m + "?") || (m !== "/" && path.includes(m)));
-      return `<a class="bnav-item${active ? " on" : ""}" href="${t.href}" aria-current="${active ? "page" : "false"}">
+      return `<a class="bnav-item${active ? " on" : ""}" href="${t.href}"${active ? ' aria-current="page"' : ""}>
         <span class="bnav-icon">${t.icon}</span>
         <span class="bnav-label">${t.label}</span>
       </a>`;
