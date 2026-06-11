@@ -1288,7 +1288,17 @@ function openProduct(m) {
   const xbtn = modal.querySelector(".pmx");
   xbtn.onclick = close;
   xbtn.focus();
-  const onKey = e => { if (e.key === "Escape") close(); };
+  // 포커스 트랩 (H-29, WCAG 2.1.2) — Tab/Shift+Tab이 모달 밖으로 탈출하지 않고 순환.
+  const onKey = e => {
+    if (e.key === "Escape") { close(); return; }
+    if (e.key !== "Tab") return;
+    const box = modal.querySelector(".pmbox");
+    const f = box.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])');
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
   document.addEventListener("keydown", onKey);
 }
 
