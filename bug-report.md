@@ -852,7 +852,8 @@
 - **증상:** 쿠팡 파트너스(AF6034597) 제휴 링크를 포함한 서비스에서 "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다" 문구 또는 동등 공시가 전혀 없음. 쿠팡 파트너스 운영정책·공정거래위원회 추천·보증 고시상 의무 사항.
 - **재현:** 사이트 전체 푸터·상품 카드·상세 모달 어디에도 파트너스 공시 문구 없음
 
-### [M-89] 프리셋 전환 시 `comfort_temp`·`brands` URL 파라미터 미초기화 — M-68 미해결 잔여
+### [M-89] ✅ 해결완료 — 프리셋 전환 시 `comfort_temp`·`brands` URL 파라미터 미초기화 — M-68 미해결 잔여
+- **해결(2026-06-11):** `clearPresetFilters()`를 `STATE.range = {}; STATE.brands.clear(); STATE.campStyle = ""; STATE.cap = "";`으로 확장. 모든 range 필터(comfort_temp 포함)·brands·campStyle까지 초기화하여 프리셋 전환 시 이전 필터 누적 방지. M-101(campStyle 잔존)도 동시 해결. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 필터바 빠른 설정
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** M-68 수정으로 무게·가격·cap은 `clearPresetFilters()`로 초기화되지만, `comfort_temp__max`·`brands` URL 파라미터는 삭제 대상에 포함되지 않아 해당 필터를 설정한 채 프리셋 전환 시 여전히 누적됨. 또한 프리셋 버튼 클릭 후 `.on` 클래스가 부여되지 않아 어떤 프리셋이 활성화됐는지 시각적으로 알 수 없음.
@@ -1423,14 +1424,16 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
-### [M-106] 데스크톱 탭바 홈 탭 레이블이 '비교'로 오표기
+### [M-106] ✅ 해결완료 — 데스크톱 탭바 홈 탭 레이블이 '비교'로 오표기
+- **해결(2026-06-11):** `app.js` `TABS` 배열 첫 탭 `label: "비교"` → `label: "홈"` 수정. 데스크톱 `.tabbar`와 모바일 `.bottom-nav` 레이블 일치. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 데스크톱 탭바
 - **URL:** https://gear-forest.com/
 - **증상:** 데스크톱(≥769px) 상단 `.tabbar`의 첫 번째 탭(홈/index.html)이 '📊비교'로 표시됨. 모바일 `.bottom-nav`는 '홈'으로 올바르게 표시되어 플랫폼 간 레이블 불일치.
 - **원인:** `app.js` line 341의 레거시 `TABS` 상수에 `label: '비교'`로 정의. 반면 `.bottom-nav` 탭 배열은 `label: '홈'`으로 정의 — 두 탭바 시스템이 서로 다른 레이블 사용.
 - **재현:** 데스크톱(≥769px) → `https://gear-forest.com/` → 상단 탭바 첫 번째 탭 레이블 '📊비교' 확인
 
-### [M-105] 로그 작성 모달 세트 드롭다운 — `s.name` 참조로 항상 '이름 없는 세트' 표시
+### [M-105] ✅ 해결완료 — 로그 작성 모달 세트 드롭다운 — `s.name` 참조로 항상 '이름 없는 세트' 표시
+- **해결(2026-06-11):** 로그 작성 모달 세트 드롭다운(line 2678)·`gear_set_snapshot` 저장(line 2781) 모두 `s.name` → `s.title`로 수정. `getSets()`가 반환하는 세트 객체의 실제 필드명(`title`)과 일치. [site/app.js](site/app.js)
 - **영역:** 계정/로그인 — 커뮤니티 로그 작성 모달
 - **URL:** https://gear-forest.com/account.html (세트 → 커뮤니티 로그 작성 버튼)
 - **증상:** 로그 작성 모달의 '내 세트 첨부' 드롭다운에 세트 이름 대신 '이름 없는 세트'가 표시됨. 저장된 `gear_set_snapshot.name`도 '이름 없는 세트'로 기록됨.
@@ -1451,14 +1454,16 @@
 - **원인:** 상세 HTML 생성기(`build-item-pages.js`)가 JSON-LD `name`에 `브랜드명 + 모델명` 조합으로 삽입.
 - **재현:** 상세 페이지 → DevTools 콘솔 → `document.querySelector('script[type="application/ld+json"]').textContent` → name에 브랜드명 포함 확인
 
-### [M-101] 캠핑 스타일 칩 ON 상태에서 경량 우선 프리셋 적용 후 스타일 리드 텍스트 불일치
+### [M-101] ✅ 해결완료(M-89와 동시) — 캠핑 스타일 칩 ON 상태에서 경량 우선 프리셋 적용 후 스타일 리드 텍스트 불일치
+- **해결(2026-06-11):** M-89 수정으로 `clearPresetFilters()`가 `STATE.campStyle = ""`까지 초기화하여 스타일 칩·리드 텍스트 동시 해소. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 스타일 칩·프리셋 상호작용
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent&style=backpacking
 - **증상:** 백패킹 스타일 칩 ON → 경량 우선 프리셋 클릭 시, `clearPresetFilters()`가 `STATE.campStyle`을 초기화하지 않아 상단 리드 텍스트가 '🏕 백패킹 기준'으로 남음. 프리셋 버튼은 ON 표시인데 스타일 칩도 ON인 모순 상태. (0건의 근본원인은 H-41 kg/g 불일치)
 - **원인:** `clearPresetFilters(line 968-972)`가 weightMeta.key·price·cap만 초기화하고 `STATE.campStyle`은 건드리지 않음. M-89와 동일 계열이나 campStyle 대상.
 - **재현:** 백패킹 칩 클릭 → 경량 우선 클릭 → 리드 텍스트 '백패킹 기준' 유지, 경량우선 ON 표시 동시 공존
 
-### [M-102] 스타일 칩 적용 후 정렬 드롭다운이 '기본'으로 표시 — 실제 정렬(weight_min) 미반영
+### [M-102] ✅ 해결완료 — 스타일 칩 적용 후 정렬 드롭다운이 '기본'으로 표시 — 실제 정렬(weight_min) 미반영
+- **해결(2026-06-11):** 스타일 칩 onclick 핸들러에 `applyStyleSort(d)` 직후 `syncFilterUI()` 추가 — 정렬 드롭다운 `<select>` UI가 변경된 `STATE.sortKey`(예: `spec:weight_min`)와 동기화됨. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 스타일 칩·정렬 UI
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&style=backpacking
 - **증상:** 백패킹 스타일 칩 클릭 시 실제 정렬은 weight_min(가벼운순)으로 바뀌지만, 정렬 드롭다운은 '기본(주력지표)'으로 표시. 사용자가 정렬 기준이 변경됐음을 인지할 수 없음.
