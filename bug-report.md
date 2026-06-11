@@ -945,26 +945,30 @@
 
 ## 🟢 Low
 
-### [H-23] 계정삭제 UI 부재 — delete-account 엣지함수 존재하나 버튼 없음, privacy.html 안내와 모순
+### [H-23] ✅ 해결완료(UI·코드, 백엔드 배포 검증 권장) — 계정삭제 UI 부재
 - **영역:** 계정/로그인 (법적 컴플라이언스)
-- **URL:** https://www.gear-forest.com/account.html
+- **URL:** https://gear-forest.com/account.html
 - **증상:** `delete-account` Supabase 엣지함수와 RPC는 구현되어 있으나 account.html에 삭제 버튼·UI가 전혀 없음. privacy.html은 "계정 삭제 링크"를 안내하는데 실제 UI 없어 모순. Google OAuth API 정책·개인정보보호법상 계정 삭제 기능 UI 노출 의무.
 - **이전:** L-19에서 승격
+- **해결(검증 2026-06-11):** account.html 로그인 영역에 `#btn-delete-account` 존재 — 2단계 `confirm`(파괴적·30일 쿨다운 경고) 후 `deleteAccount()`(supabaseClient) → `supabase.functions.invoke('delete-account')` 호출, 성공 시 `signOut()`+localStorage(wish·gear_sets) 정리·홈 이동. privacy.html §6도 "내 정보 → 계정 삭제"로 일치(모순 해소). Edge 함수 `supabase/functions/delete-account/index.ts`는 JWT 검증 → `delete_account_atomic` RPC(프로필 익명화+게시글 소프트삭제) → `auth.admin.deleteUser` 물리삭제로 구현됨. ⚠️ **남은 확인:** Edge 함수의 라이브 배포(`supabase functions deploy delete-account`)와 `delete_account_atomic` RPC의 라이브 적용 여부는 파괴적이라 미검증 — 실제 탈퇴 1건으로 e2e 확인 필요. [site/account.html](site/account.html) · [supabase/functions/delete-account/index.ts](supabase/functions/delete-account/index.ts)
 
-### [H-24] Supabase 국외 개인정보 이전 고지 누락 — 한국 PIPA 제28조의8 위반 가능성
+### [H-24] ✅ 해결완료(라이브 검증) — Supabase 국외 개인정보 이전 고지 누락
 - **영역:** privacy.html (법적 컴플라이언스)
-- **URL:** https://www.gear-forest.com/privacy.html
+- **URL:** https://gear-forest.com/privacy.html
 - **증상:** Supabase(미국 서버)로 이메일·닉네임·찜목록·게시글이 이전됨에도 privacy.html에 국외이전 고지(이전 국가·항목·기간·거부방법)가 없음. 개인정보보호법 제28조의8에 따라 국외이전 시 정보주체 고지 또는 동의 의무.
+- **해결(라이브 검증 2026-06-11):** privacy.html §5 "개인정보 처리 위탁 및 국외 이전"에 제28조의8 근거·이전받는 자(Supabase Inc.)·이전 국가(미국)·이전 항목·목적·보유기간·**거부 방법**까지 표로 완비. 라이브 `curl https://gear-forest.com/privacy.html`에서 "개인정보 처리 위탁 및 국외 이전"·"제28조의8"·"Supabase Inc" 확인. [site/privacy.html](site/privacy.html)
 
-### [H-25] privacy.html에 쿠팡 어필리에이트 추적 고지 누락
-- **영역:** privacy.html (법적 컴플라이언스)
-- **URL:** https://www.gear-forest.com/privacy.html
+### [H-25] ✅ 부분해결(제휴 고지 존재) — 쿠팡 어필리에이트 고지
+- **영역:** privacy.html / terms.html (법적 컴플라이언스)
+- **URL:** https://gear-forest.com/terms.html
 - **증상:** 쿠팡 파트너스(어필리에이트) 링크 클릭 시 추적 쿠키·파라미터가 수집됨에도 privacy.html에 제3자 어필리에이트 추적에 대한 언급이 0건. 한국 개인정보보호법(제3자 제공·위탁) 및 공정위 추천보증지침상 고지 필요. 또한 어필리에이트 관계는 링크 바로 옆에 상시 표시해야 함('더보기' 내부 고지는 부적격).
+- **해결(라이브 검증 2026-06-11):** terms.html §1·§5 "제휴(어필리에이트) 고지"에 "쿠팡 파트너스 등 제휴 활동…수수료를 제공받을 수 있으며…추천 순위·객관성에 영향 없음" 명시(라이브 curl 확인). 공정위 추천보증지침의 핵심(제휴 관계·대가성 고지)은 충족. ⚠️ **남은 권장(현재 비차단):** 쿠팡 구매 링크는 H-14로 **현재 비활성(disabled)**이라 활성 추적이 없음 — 추후 구매 링크 활성화 시 ① 링크 바로 옆 상시 "쿠팡 파트너스 활동의 일환…" 문구, ② privacy.html에 어필리에이트 쿠키 수집 고지 추가 필요. [site/terms.html](site/terms.html)
 
-### [H-26] terms.html(이용약관) 미존재 + UGC 게시 전 약관 동의 플로 없음
+### [H-26] ✅ 해결완료(라이브 검증) — terms.html(이용약관) 미존재 + UGC 약관 동의
 - **영역:** 전체 서비스 (법적 컴플라이언스)
-- **URL:** https://www.gear-forest.com/
+- **URL:** https://gear-forest.com/terms.html
 - **증상:** 서비스 이용약관 페이지(`terms.html`) 자체가 없음. 커뮤니티에 UGC(글·사진)를 게시하는 플로에서 약관 동의 UI 없이 바로 제출 가능. 정보통신망법 제23조 및 콘텐츠산업진흥법상 이용약관 명시 의무.
+- **해결(라이브 검증 2026-06-11):** terms.html 존재·라이브 서빙(curl 200). 내용: §1 서비스 성격, §2 금지 콘텐츠(아동 성착취물 무관용·삭제·신고 포함 — Google Play/앱 정책 대응), §3 신고·차단·제재, §4 UGC 권리·책임, §5 제휴 고지, §6 면책, §7 문의, §8 변경. **약관 동의 간주 문구** 명시("회원가입 또는 콘텐츠 작성 시 본 약관에 동의한 것으로 봅니다"). 푸터(전 페이지)·privacy.html에서 상호 링크. ⚠️ 잔여(저영향): 글쓰기 폼에 명시적 동의 체크박스는 없음(동의 간주 방식) — 필요 시 후속. [site/terms.html](site/terms.html)
 
 ### [H-29] ✅ 해결완료 — 상품 상세 모달 포커스 트랩 미구현 — Tab 키로 모달 밖 탈출
 - **영역:** 상품상세 (접근성)
@@ -1023,10 +1027,11 @@
 - **수정(클라이언트 데이터 레이어):** `supabaseClient.js`에 `editComment(id, body)`(본인 댓글 body UPDATE)·`deleteComment(id)`(deleted_at 소프트삭제) 추가 — createComment와 동일 패턴, user_id 가드 + RLS 이중 방어. [site/supabaseClient.js](site/supabaseClient.js)
 - **⚠️ 남은 작업(프론트엔드, 본 백엔드 세션 범위 밖):** `community.html`의 `renderComments()`에 본인 댓글 한정 수정·삭제 버튼 + 핸들러(editComment/deleteComment 호출) 와이어링 필요. DB·클라이언트 함수는 준비 완료라 UI만 붙이면 동작.
 
-### [H-27] privacy.html에 카카오 로그인 기재 — 실제 구현은 Google 단독 (오기재)
+### [H-27] ✅ 해결완료(라이브 검증) — privacy.html 카카오 로그인 오기재
 - **영역:** privacy.html (정보 정확성)
-- **URL:** https://www.gear-forest.com/privacy.html
+- **URL:** https://gear-forest.com/privacy.html
 - **증상:** privacy.html에 카카오 로그인 관련 개인정보 처리 항목이 기재되어 있으나 실제 코드는 Google OAuth만 구현됨. 개인정보 처리방침이 실제 처리 현황과 불일치.
+- **해결(라이브 검증 2026-06-11):** 현재 privacy.html은 §1 수집항목·§4 제3자 제공 모두 "구글 소셜 로그인(OAuth 2.0)" 단독 기재이며 카카오 언급이 0건. 라이브 `curl https://gear-forest.com/privacy.html | grep 카카오` 결과 없음 → 실제 구현(Google 단독)과 일치. [site/privacy.html](site/privacy.html)
 
 ### [L-44] 상세 페이지 스펙 단위 "m2" 텍스트 표기 — "m²" 상첨자 아님
 - **영역:** 상품상세 — 스펙 테이블
