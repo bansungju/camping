@@ -63,14 +63,14 @@ const OPS = localStorage.getItem("ops") === "1";
 
 /* 세트 수량 한도: 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
 const SET_QTY_MAX = {
-  "backpacking-tent": 1, "auto-tent": 1, "other-tent": 1, "tarp": 1,
+  "backpacking-tent": 1, "auto-tent": 1, "shelter": 1, "tarp": 1,
   "sleeping-bag": 1, "mat": 1, "cot": 1,
 };
 const qtyMax = slug => SET_QTY_MAX[slug] ?? (slug === "chair" ? 4 : slug === "table" ? 2 : 4);
 
 /* 세트 슬롯 도장판 — 8개 슬롯, 해당 카테고리 장비가 있으면 불 들어옴 */
 const SET_SLOTS = [
-  { slugs: ["backpacking-tent","auto-tent","other-tent","tarp"], icon: "⛺", label: "텐트" },
+  { slugs: ["backpacking-tent","auto-tent","shelter","tarp"], icon: "⛺", label: "텐트" },
   { slugs: ["sleeping-bag"], icon: "🛌", label: "침낭" },
   { slugs: ["mat","cot"], icon: "🧘", label: "매트" },
   { slugs: ["burner"], icon: "🔥", label: "버너" },
@@ -96,14 +96,14 @@ if (OPS) window.addEventListener("DOMContentLoaded", () => {
 
 /* 카테고리 아이콘(이미지 수집 전 단계: 이모지 타일). 중복 없이 1:1 */
 const CAT_ICON = {
-  "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "기타텐트": "🎪", "침낭": "🛌", "매트": "🧘",
+  "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "쉘터": "🏖️", "기타용품": "🧰", "침낭": "🛌", "매트": "🧘",
   "의자": "🪑", "랜턴": "🔦", "아이스박스": "🧊", "버너": "🍳", "타프": "⛱️",
   "테이블": "🪵", "야전침대": "🛏️", "코펠": "🥘", "웨건": "🛒", "화로대": "🔥", "파워뱅크": "🔋",
 };
 const catIcon = name => CAT_ICON[name] || "🏕️";
 /* 카테고리별 옅은 배경 톤(아이콘 타일 — 단색 회색 대신 생동감) */
 const CAT_TINT = {
-  "백패킹텐트": "#eaf4ec", "오토캠핑텐트": "#eaf4ec", "기타텐트": "#eaf4ec", "타프": "#e6f4f7",
+  "백패킹텐트": "#eaf4ec", "오토캠핑텐트": "#eaf4ec", "쉘터": "#eaf4ec", "기타용품": "#f0f0f2", "타프": "#e6f4f7",
   "침낭": "#eef0fb", "매트": "#eef0fb", "야전침대": "#eef0fb", "아이스박스": "#e6f4f7",
   "의자": "#f6efe7", "테이블": "#f6efe7", "웨건": "#f6efe7",
   "버너": "#fdeee7", "화로대": "#fdeee7", "코펠": "#fdeee7",
@@ -469,7 +469,7 @@ async function renderHub() {
 
 async function setupHomeSearch() {
   let idx = [];
-  try { idx = await getJSON("data/search.json?v=9b015e7e"); } catch (e) { return; }
+  try { idx = await getJSON("data/search.json?v=ad0b6b03"); } catch (e) { return; }
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
   if (!inp || !box) return;
   // WAI-ARIA combobox 패턴 (H-17) — 입력창/목록에 역할·상태 부여
@@ -998,7 +998,7 @@ function buildFilters(d, star) {
   const EXTRA_SPECS = {
     "backpacking-tent": [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
     "auto-tent":        [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
-    "other-tent":       [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+    "shelter":          [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
     "tarp":             [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
     "sleeping-bag":     [{key:"comfort_temp",label:"쾌적온도",unit:"°C"},{key:"fill_weight",label:"다운충전량",unit:"g"}],
     "mat":              [{key:"r_value",label:"R값",unit:""},{key:"thickness",label:"두께",unit:"mm"}],
@@ -1902,7 +1902,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=9b015e7e"); }
+  try { idx = await getJSON("data/search.json?v=ad0b6b03"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
