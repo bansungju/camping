@@ -1270,13 +1270,13 @@ function openProduct(m) {
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
-  modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true">
+  modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true" aria-labelledby="pm-title">
      <button class="pmx" aria-label="닫기">✕</button>
      <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
      ${imgHtml}
      <div class="pmbody">
        <div class="pmbrand">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}${m.variants > 1 ? ` · +${m.variants - 1}색` : ""}</div>
-       <div class="pmname">${esc(m.model)}</div>
+       <div class="pmname" id="pm-title">${esc(m.model)}</div>
        <div class="pmprice">${priceRange(m.price_min, m.price_max)}</div>
        <div class="pmprice-note">제품은 최저가를 표기하고 있습니다. 링크의 가격과 다를 수 있습니다.</div>
        <div class="pmspecs">${specRows}</div>
