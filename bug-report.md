@@ -64,6 +64,7 @@
 | 50 | 카테고리/목록 (9순환) | 2026-06-11 | 4건 |
 | 51 | 상품상세 (9순환) | 2026-06-11 | 4건 (LCP 중복 제외) |
 | 52 | 검색 (9순환) | 2026-06-11 | 3건 |
+| 53 | 계정/로그인 (9순환) | 2026-06-11 | 3건 |
 
 ---
 
@@ -1414,6 +1415,13 @@
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
 
+### [M-105] 로그 작성 모달 세트 드롭다운 — `s.name` 참조로 항상 '이름 없는 세트' 표시
+- **영역:** 계정/로그인 — 커뮤니티 로그 작성 모달
+- **URL:** https://gear-forest.com/account.html (세트 → 커뮤니티 로그 작성 버튼)
+- **증상:** 로그 작성 모달의 '내 세트 첨부' 드롭다운에 세트 이름 대신 '이름 없는 세트'가 표시됨. 저장된 `gear_set_snapshot.name`도 '이름 없는 세트'로 기록됨.
+- **원인:** `app.js` line 2665/2768에서 세트 이름을 `s.name`으로 참조하나, `getSets()`가 반환하는 세트 객체는 `title` 필드를 사용(saveSets/getSets line 243~244). `s.name`은 항상 undefined → fallback '이름 없는 세트' 노출.
+- **재현:** localStorage에 세트 1개 이상 저장 → account.html 세트 탭 → '이 세트로 커뮤니티 로그 작성' 버튼 → 드롭다운에 '이름 없는 세트' 표시
+
 ### [M-104] `brand.html` 다른 브랜드 검색창 — 자동완성·Enter 이동 미구현
 - **영역:** 검색 — 브랜드 페이지
 - **URL:** https://gear-forest.com/brand.html?b=헬리녹스
@@ -1448,6 +1456,20 @@
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.
 - **원인:** `app.js` PERSONA_CAT 맵에서 `family` 키가 `auto` 키와 동일한 `{cat, sort, sa, cap}` 값으로 설정되어 있음. `family`는 별도 `recommend.html?p=family` 페이지를 갖고 있으나 카테고리 URL로만 링크됨.
 - **재현:** 홈 → '오토/맥시멀' 우클릭 링크 주소 복사 → '4인 가족' 우클릭 링크 주소 복사 → 두 URL 동일 확인
+
+### [L-88] `account.html` 비로그인 앵커 링크 `href="#sec-wish"` id 불일치
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** acc-nav의 '찜 N' 링크가 `href="#sec-wish"`를 가리키지만 실제 DOM에는 `id="wish-section"`만 존재. 앵커 클릭 시 해당 섹션으로 스크롤되지 않음. (acc-nav 자체 L-87 이슈와 동반)
+- **원인:** `app.js` line 1826에서 `href='#sec-wish'` 생성, account.html에는 `id='sec-wish'`가 없음.
+- **재현:** acc-nav 임시 추가 후 → '찜 N' 링크 클릭 → 스크롤 미동작
+
+### [L-87] `account.html` — `acc-nav`, `acc-empty`, `acc-tabs` 요소 미존재로 비로그인 내비·로그인 탭 UI 무효
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 비로그인 시 섹션 앵커 내비게이션, 로그인 후 탭 UI(찜/세트/로그)가 전혀 표시되지 않음.
+- **원인:** `app.js renderAccount()`에서 `getElementById('acc-nav')`, `getElementById('acc-empty')`, `getElementById('acc-tabs')`를 참조하나 `account.html`에 해당 id 요소가 없어 모두 null 반환 → 관련 로직 전부 스킵.
+- **재현:** account.html 접속 → 찜/세트 데이터 있어도 앵커 링크 없음, 구글 로그인 후 탭 UI 미표시
 
 ### [L-86] 홈 검색창 숫자만 입력 시 '검색 결과 없음' 피드백 미표시
 - **영역:** 검색 — 홈 자동완성
@@ -1495,4 +1517,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (9순환)*
+*다음 회차: 커뮤니티/소셜 (9순환)*
