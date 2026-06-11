@@ -47,6 +47,16 @@ SQL Editor에서 **`migrations/015_comment_count_softdelete.sql`** 실행(멱등
 > ⚠️ **`migrations/009_comments.sql`은 적용 금지** — 라이브와 비호환(content 컬럼)이며
 > 적용 시 중복 카운트 트리거 유발. 댓글 카운트 SSOT는 015.
 
+## 6. 트리거 함수 SECURITY DEFINER 보정 (M-54·카운트정합·신고숨김)
+001/002의 일부 트리거 함수가 `SECURITY DEFINER` 없이 호출자 권한으로 실행되어
+RLS·GRANT에 막힘 → **게시글/리뷰 수정이 42501로 하드 실패**(post_history `WITH CHECK(false)`),
+**타인 글의 댓글/좋아요 카운트 미반영**(posts RLS), **신고 5회 자동숨김 미작동**.
+SQL Editor에서 **`migrations/016_trigger_security_definer.sql`** 실행(멱등, CREATE OR REPLACE):
+`update_comment_count`/`update_like_count`/`save_post_history`/`save_review_history`/
+`trim_post_history`/`auto_hide_on_reports` 6개를 `SECURITY DEFINER + search_path=public`으로 교체.
+
+> 015를 먼저 적용했어도 016이 `update_comment_count`를 DEFINER 버전으로 최종 대체하므로 무방.
+
 ## 검증
 1. 로그인 → 닉네임 설정 → 커뮤니티 "글쓰기"로 글 작성(사진 포함) → 피드/상세 표시
 2. 좋아요 토글 / 댓글 작성 / 신고 동작 확인

@@ -52,6 +52,8 @@
 | 38 | 카테고리/목록 (7순환) | 2026-06-11 | 3건 + M-68 보완 (H-01·M-69 중복 제외) |
 | 39 | 상품상세 (7순환) | 2026-06-11 | 8건 (중복 제외) |
 | 40 | 검색 (7순환) | 2026-06-11 | 6건 (L-31 재확인, M-25 해소 확인) |
+| 41 | 계정/로그인 (7순환) | 2026-06-11 | 6건 (H-23·L-39 중복 제외) |
+| 42 | 커뮤니티/소셜 (7순환) | 2026-06-11 | 4건 (L-32·L-10 중복 제외, H-35 엣지케이스 재현) |
 
 ---
 
@@ -357,11 +359,13 @@
 - **증상:** `account.html#sets`, `#logs`, `#settings` 등 해시로 직접 접근 시 해시 무시, 항상 wish 탭 표시. `_accSetTab()`이 `sessionStorage("acc-tab")`만 읽고 `location.hash` 미참조, `hashchange` 핸들러도 없음. 딥링크 공유·브라우저 Back/Forward 탭 전환 모두 불가.
 - **재현:** `account.html#logs` 직접 접근 → wish 탭 표시됨
 
-### [M-54] 커뮤니티 게시글 수정 기능 없음 — 삭제만 존재
+### [M-54] 커뮤니티 게시글 수정 기능 없음 — 삭제만 존재 〔🔧 백엔드 차단요인 해소(016)·UI/클라 대기〕
 - **영역:** 커뮤니티/소셜 — 게시글 상세
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `renderDetail()` toolbar에 삭제 버튼만 있고 수정 버튼 없음. 오타·내용 수정을 위해서는 삭제 후 재작성 필요.
 - **재현:** 내 게시글 클릭 → 상세 모달 → toolbar 확인
+- **백엔드 근본 차단요인 발견·수정(2026-06-11):** 게시글 수정을 붙여도 **DB 레이어에서 하드 실패**하는 잠재 결함이 있었음 — `posts` UPDATE 시 `AFTER UPDATE` 트리거 `save_post_history()`가 `post_history`에 INSERT하는데, ① post_history 정책이 `WITH CHECK(false)`로 직접 insert 전면 차단 + INSERT GRANT 없음, ② 함수가 **SECURITY DEFINER가 아님** → 호출자 권한 INSERT가 `42501`로 실패 → 수정 UPDATE 트랜잭션 전체 abort. 동일 결함이 `save_review_history`(리뷰 수정), `update_comment_count`/`update_like_count`(타인 글 카운트 UPDATE가 posts RLS에 막혀 누락), `auto_hide_on_reports`(신고 자동숨김 미작동)에도 존재. → 신규 `016_trigger_security_definer.sql`로 6개 트리거 함수를 `SECURITY DEFINER + SET search_path=public`으로 재정의(트리거 유지·멱등). 이로써 카운트 정합성([H-34]의 cross-user 보강 포함)·이력 저장·자동숨김이 정상화되고, 게시글/리뷰 수정의 DB 차단요인이 제거됨. [supabase/migrations/016_trigger_security_definer.sql](supabase/migrations/016_trigger_security_definer.sql)
+- **⚠️ 남은 작업:** ① 대시보드에서 `016` 1회 적용(아래 APPLY.md 6단계). ② 프론트(본 백엔드 세션 범위 밖) — supabaseClient `editPost(id,{title,body})` + renderDetail 수정 버튼/폼 와이어링.
 
 ### [M-55] 커뮤니티 카테고리 필터 없음 — 게시글 증가 시 탐색 불가
 - **영역:** 커뮤니티/소셜 — 피드
@@ -731,6 +735,24 @@
 - **증상:** 카테고리 페이지는 `?q=` 파라미터로 검색어를 복원·필터를 적용하지만, 홈페이지(`index.html`)는 `?q=` 파라미터를 읽는 코드가 없어 `?q=헬리녹스`로 접근해도 입력창이 비어 있고 드롭다운이 열리지 않음. 검색 결과 URL 공유 및 뒤로가기 복원 불가.
 - **재현:** `https://gear-forest.com/?q=헬리녹스` 직접 접속 → `#homeq` 비어있음 확인
 
+### [M-83] 비로그인 시 찜·세트 섹션이 가림 없이 로그인 CTA와 동시 노출
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 비로그인 상태에서 `auth-section`(로그인 CTA)과 `wish-section`·`sets-section`이 모두 `display:block`으로 동시 표시됨. 사용자는 로그인 없이 찜·세트 관리가 가능한 것으로 오인할 수 있으며, 로그인 전후 UI 구분이 없음.
+- **재현:** 비로그인 → `account.html` → 로그인 CTA + 찜/세트 목록 동시 노출 확인
+
+### [M-84] 계정 페이지 섹션 전환에 탭 ARIA 구조 미구현 — `role="tab"` 전혀 없음
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 찜/세트/로그/설정은 탭 구조로 설계됐으나 DOM에 `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls` 속성이 전혀 없음. 섹션이 탭으로 전환되지 않고 수직 나열. 스크린리더 사용자는 탭 구조를 인식하지 못함.
+- **재현:** `account.html` DOM 검사 → `[role="tab"]` 0개 확인
+
+### [M-85] 설정 탭에 PWA 설치 버튼 없음 — `beforeinstallprompt` 억제 후 진입점 부재
+- **영역:** 계정/로그인 — 설정 탭
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 브라우저가 PWA 설치 프롬프트(`beforeinstallprompt`)를 발생시키지만 앱에서 억제(preventDefault)만 하고 설정 섹션에 설치 버튼이 없어 사용자가 직접 설치할 방법이 없음. 브라우저 기본 메뉴를 직접 찾아야 함.
+- **재현:** `account.html` 콘솔 → `beforeinstallprompt` 억제 로그 확인 → 설정 섹션에 설치 버튼 없음
+
 ---
 
 ## 🟢 Low
@@ -873,6 +895,24 @@
 - **URL:** https://gear-forest.com/
 - **증상:** 존재하지 않는 검색어 입력 후 Enter를 누르면 이동도, 흔들림 애니메이션도, 토스트 메시지도 없이 아무 반응이 없음. 사용자가 Enter가 처리됐는지 알 수 없음.
 - **재현:** 검색창에 "zzzznotexistxxx" 입력 → Enter → 반응 없음
+
+### [L-62] 찜·세트 카드 `div[role="button"]`에 `aria-label` 없음
+- **영역:** 계정/로그인 — 찜·세트 탭
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 찜/세트 아이템 카드가 `<div role="button" tabindex="0">` 구조이나 `aria-label`이 없음. 스크린리더가 카드 전체 텍스트를 낱낱이 읽어야 하며 상품명을 간결하게 고지하지 못함.
+- **재현:** 찜 카드 DOM 검사 → `aria-label` null 확인
+
+### [L-63] 계정 페이지 전체에 `aria-live` 영역 전무 — 찜 해제·삭제 후 결과 알림 없음
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html
+- **증상:** `[aria-live]` 요소가 0개로 찜 해제·세트 삭제·링크 복사 등 액션 결과를 스크린리더에 알려주는 live region이 없음.
+- **재현:** `account.html` DOM에서 `[aria-live]` 검색 → 0개
+
+### [L-64] Google OAuth 로그인 후 진입 hash(`#logs` 등) 유실
+- **영역:** 계정/로그인
+- **URL:** https://gear-forest.com/account.html#logs
+- **증상:** `account.html#logs`에서 Google 로그인 버튼 클릭 시 OAuth `redirect_uri`에 원래 hash 정보가 없음. 로그인 완료 후 콜백이 `account.html`로 돌아오지만 `#logs` 위치로 복원되지 않음. M-52와 연관되나 OAuth 흐름 내 hash 보존 별도 문제.
+- **재현:** `account.html#logs` → Google 로그인 클릭 → OAuth URL state 파라미터 확인 → hash 없음 → 로그인 후 hash 복원 안 됨
 
 ### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
 - **영역:** 전체 (정적 리소스)
@@ -1127,4 +1167,4 @@
 
 ---
 
-*다음 회차: 계정/로그인 (7순환)*
+*다음 회차: 커뮤니티/소셜 (7순환)*
