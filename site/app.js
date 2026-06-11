@@ -2778,7 +2778,7 @@ function openLogModal(presetSetIndex) {
         const s = sets[+setSelect.value];
         if (s) {
           const totalW = (s.items || []).reduce((acc, x) => x.weight_g != null ? acc + x.weight_g * (x.qty || 1) : acc, 0);
-          gear_set_snapshot = { name: s.name || "이름 없는 세트", items: (s.items || []).map(x => ({ name: `${x.b || ""} ${x.m || ""}`.trim(), weight_g: x.weight_g ?? null, qty: x.qty || 1 })), total_weight_g: totalW > 0 ? totalW : null };
+          gear_set_snapshot = { name: s.title || "이름 없는 세트", items: (s.items || []).map(x => ({ name: `${x.b || ""} ${x.m || ""}`.trim(), weight_g: x.weight_g ?? null, qty: x.qty || 1 })), total_weight_g: totalW > 0 ? totalW : null };
         }
       }
       const { error } = await supabase.from("posts").insert({
