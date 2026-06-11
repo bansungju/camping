@@ -1156,6 +1156,7 @@ function openProduct(m) {
          : `<button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
        <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
        }
+       <button class="pmset" type="button">＋ 내 세트에 추가</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
        ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
      </div></div>`;
@@ -1182,6 +1183,8 @@ function openProduct(m) {
     wbtn.classList.toggle("on", added); wbtn.innerHTML = BOOKMARK_SVG;
     wbtn.setAttribute("aria-pressed", added);
   };
+  const setBtn = modal.querySelector(".pmset");
+  if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug));
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
   const close = () => {
     modal.classList.remove("on");
@@ -1341,7 +1344,6 @@ function draw() {
     return `<div class="pli" role="button" tabindex="0" data-mi="${i}">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
-      <button type="button" class="pli-setadd" data-mi="${i}" aria-label="세트에 추가">⊕</button>
       ${thumbCell(m.img, m.model, tint, icon)}
       <div class="pli-info">
         <div class="pli-top">${top}</div>
@@ -1369,11 +1371,6 @@ function draw() {
     const added = toggleWish(wishItem(rows[+btn.dataset.mi], STATE.slug));
     btn.classList.toggle("on", added); btn.innerHTML = BOOKMARK_SVG;
     btn.setAttribute("aria-pressed", added);
-  });
-  // 세트에 추가 버튼
-  document.querySelectorAll("#list .pli-setadd").forEach(btn => btn.onclick = e => {
-    e.stopPropagation();
-    openSetModal(setItem(rows[+btn.dataset.mi], STATE.slug));
   });
   document.querySelectorAll("#list .pli-cmp").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
@@ -1603,14 +1600,7 @@ function renderRecent() {
         <div class="recard-m">${esc(x.m)}</div>
         <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div>
       </a>
-      <button type="button" class="recard-setadd" data-ri="${i}" aria-label="세트에 추가" title="세트에 추가">⊕</button>
     </div>`).join("") + `</div>`;
-  el.querySelectorAll(".recard-setadd").forEach(btn => btn.onclick = e => {
-    e.preventDefault();
-    const x = a[+btn.dataset.ri];
-    if (!x) return;
-    openSetModal({ pcode: x.key, b: x.b, m: x.m, cap: x.cap ?? null, s: x.s, p: x.p ?? null, img: x.img ?? null, weight_g: x.weight_g ?? null });
-  });
 }
 
 /* ---------- 내 정보 — Progressive Disclosure ---------- */
