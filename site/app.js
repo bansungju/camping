@@ -525,15 +525,10 @@ function serializeState() {
   }
   if (STATE.qExclude) p.set("qx", "1");
   if (STATE.campStyle) p.set("style", STATE.campStyle);
-  // 클린 URL 유지: /category/{slug}?필터  (cat= 쿼리 제거)
-  const pathMatch = location.pathname.match(/^\/category\/[a-z0-9-]+/);
+  // 항상 category.html?cat= 형식 유지(클린 경로는 GitHub Pages에서 자산 404 → 사용 안 함)
   const qs = p.toString();
-  if (pathMatch) {
-    history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
-  } else {
-    const full = qs ? `?cat=${STATE.slug}&${qs}` : `?cat=${STATE.slug}`;
-    history.replaceState(null, "", full);
-  }
+  const base = location.pathname.endsWith("/category.html") ? location.pathname : "category.html";
+  history.replaceState(null, "", `${base}?cat=${STATE.slug}${qs ? "&" + qs : ""}`);
 }
 function restoreState(params) {
   STATE.q = (params.get("q") || "").toLowerCase();
@@ -688,7 +683,7 @@ async function renderCategory() {
   renderCatNav(slug);
 
   document.getElementById("crumbName").textContent = d.name;
-  const shareUrl = `https://gear-forest.com/category/${slug}`;
+  const shareUrl = `https://gear-forest.com/category.html?cat=${slug}`;
   const shareTitle = `${d.name} 비교 — 장비의 숲`;
   const shareDesc = `${d.count.toLocaleString()}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다.`;
   document.title = shareTitle;
@@ -1391,7 +1386,7 @@ function draw() {
   // JSON-LD Product schema (현재 표시 중인 상위 20개)
   let ldEl = document.getElementById("jsonld-products");
   if (!ldEl) { ldEl = document.createElement("script"); ldEl.type = "application/ld+json"; ldEl.id = "jsonld-products"; document.head.appendChild(ldEl); }
-  const catUrl = `https://gear-forest.com/category/${STATE.slug}`;
+  const catUrl = `https://gear-forest.com/category.html?cat=${STATE.slug}`;
   ldEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList",
     "name": d.name, "url": catUrl,
     "numberOfItems": rows.length,

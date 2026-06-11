@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>이동 중… — 장비의 숲</title>
+<script>
+  // 레거시 클린 URL 호환: /category/{slug}[?필터] → /category.html?cat={slug}[&필터]
+  // (GitHub Pages는 클린 경로에서 상대 자산이 404 → 쿼리 형식으로 통일)
+  (function () {
+    var p = location.pathname;
+    var m = p.match(/^\/category\/([a-z0-9-]+)\/?$/);
+    if (m) {
+      var extra = location.search ? location.search.replace(/^\?/, "&") : "";
+      location.replace("/category.html?cat=" + m[1] + extra + location.hash);
+      return;
+    }
+    // 그 외 미존재 경로 → 홈으로
+    location.replace("/index.html");
+  })();
+</script>
+</head>
+<body>
+<p style="font-family:system-ui,sans-serif;color:#6e6e73;padding:40px;text-align:center">페이지를 찾는 중입니다…</p>
+</body>
+</html>
