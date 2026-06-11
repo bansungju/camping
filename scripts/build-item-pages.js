@@ -179,6 +179,8 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .item-buy{display:block;width:100%;max-width:320px;margin-top:14px;padding:13px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}
 .item-buy[disabled]{cursor:not-allowed;opacity:.4}
 .item-buynote{font-size:12px;color:var(--muted);margin:8px 0 0;max-width:320px}
+.item-set-btn{display:block;width:100%;max-width:320px;margin-top:8px;padding:11px;border:1.5px solid var(--accent);border-radius:11px;background:var(--card);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.item-set-btn:hover{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -206,6 +208,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
         <svg class="wish-ico" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/></svg>
         <span class="iw-label">찜하기</span>
       </button>
+      <button id="item-set-add" class="item-set-btn" type="button">＋ 장비 꾸러미에 담기</button>
       ${coupang_url
         ? `<a class="item-buy" href="${String(coupang_url).replace(/"/g, "%22")}" target="_blank" rel="nofollow sponsored noopener">🛒 쿠팡에서 구매하기</a>
       <p class="item-buynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</p>`
@@ -239,6 +242,10 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
     var added = toggleWish({ key: key, b: ITEM.b, m: ITEM.m, cap: ITEM.cap, s: ITEM.s, p: ITEM.p, img: ITEM.img });
     paint(added);
   });
+  var setBtn = document.getElementById('item-set-add');
+  if (setBtn && typeof openSetModal === 'function') {
+    setBtn.addEventListener('click', function(){ openSetModal({ pcode: key, b: ITEM.b, m: ITEM.m, cap: ITEM.cap, s: ITEM.s, p: ITEM.p, img: ITEM.img, weight_g: null }); });
+  }
 })();
 </script>
 </body>
