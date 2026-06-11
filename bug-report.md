@@ -406,7 +406,8 @@
 - **증상:** 세트가 0개이면 `#sets-section`이 완전히 숨겨지고 빈 상태 안내("세트가 없어요")나 CTA도 없음. 찜 섹션과 달리 기능 존재 자체를 알 수 없음.
 - **재현:** 세트 없는 상태에서 account.html 접속 → 세트 섹션 미표시
 
-### [M-39] 홈 검색 Enter 시 첫 번째 자동완성 결과의 단일 카테고리로 강제 이동
+### [M-39] ✅ 해결완료(H-39 동시) — 홈 검색 Enter 시 첫 번째 자동완성 결과의 단일 카테고리로 강제 이동
+- **해결(2026-06-11):** H-39 수정으로 정확 브랜드명 Enter 시 brand.html로 이동 — 단일 카테고리 강제 진입 해소. [site/app.js](site/app.js)
 - **영역:** 검색 (홈)
 - **URL:** https://www.gear-forest.com/
 - **증상:** 홈 검색창에서 브랜드명(예: "헬리녹스") 입력 후 Enter 시 첫 번째 자동완성 결과의 카테고리(`category.html?cat=backpacking-tent&q=헬리녹스`)로 강제 이동. 해당 브랜드의 의자·타프 등 다른 카테고리 제품은 누락됨. 사용자 의도와 다른 범위로 검색됨.
@@ -473,7 +474,8 @@
 - **증상:** 다크모드 저장 사용자가 페이지 로드 시 순간적으로 라이트 테마가 렌더링됐다가 다크로 전환되는 FOUC(Flash of Unstyled Content) 발생. `initTheme()` IIFE가 `app.js`(body 끝 위치) 내부에 있어 HTML·CSS 파싱·렌더링 후에야 `data-theme="dark"`가 적용됨.
 - **수정 방향:** `<head>` 안에 `<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>` 인라인 1줄 추가
 
-### [M-76] `search.json` 캐시 버스팅 파라미터 없음 — 배포 후 최대 10분간 구 데이터 서빙
+### [M-76] ✅ 해결완료 — `search.json` 캐시 버스팅 파라미터 없음 — 배포 후 최대 10분간 구 데이터 서빙
+- **해결(2026-06-11):** `stamp_version.py`에 `data/search.json` 내용 해시 계산 추가. app.js 내 `"data/search.json?v=..."` 패턴을 해시로 교체한 뒤 app.js 해시를 계산하므로 HTML 스탬프까지 올바르게 연쇄. 데이터 업데이트 시 search.json 해시·app.js 해시·HTML 스탬프 3단 연쇄 무효화. [pipeline/stamp_version.py](pipeline/stamp_version.py), [site/app.js](site/app.js)
 - **영역:** 홈/메인 (검색 DB)
 - **URL:** https://gear-forest.com/data/search.json
 - **증상:** `app.js?v=hash`, `style.css?v=hash`는 버전 파라미터로 캐시 무효화되나 `search.json`은 `max-age=600`(10분)만 설정되고 버전 파라미터 없음. 상품 데이터 업데이트 후 최대 10분간 구 데이터가 노출됨.
@@ -530,7 +532,8 @@
 - **증상:** 비로그인 상태에서 "찜한 N개 → 새 세트로 저장" 클릭 시 버튼이 "✅ 세트 저장됨 — 마이페이지 세트 탭에서 확인"으로 바뀌나, 비로그인 상태에서는 세트 탭이 숨겨져 있어 안내대로 이동 불가. 사용자가 세트 확인 방법을 알 수 없음.
 - **재현:** 비로그인 + 찜 1개 이상 → account.html → "새 세트로 저장" 클릭 → 안내 메시지 확인
 
-### [M-62] 홈 검색 `?q=` URL 직접 진입 시 검색창 pre-fill 없음
+### [M-62] ✅ 해결완료 — 홈 검색 `?q=` URL 직접 진입 시 검색창 pre-fill 없음
+- **해결(2026-06-11):** `setupHomeSearch()` 함수 끝에 `new URLSearchParams(location.search).get("q")` 읽기 추가 — 값 있으면 `inp.value` 설정 후 `run()` 호출하여 자동완성 드롭다운 표시. [site/app.js](site/app.js)
 - **영역:** 검색 — 홈
 - **URL:** https://www.gear-forest.com/?q=헬리녹스
 - **증상:** `input#homeq` 초기값을 URL params에서 읽는 코드 없음. `?q=검색어` URL로 공유받아도 검색창이 항상 빈 칸. M-40(타이핑 시 URL 미반영)의 반대 방향 케이스.
@@ -559,7 +562,8 @@
 - **증상:** 찜 탭의 상품 카드 클릭 시 계정 페이지 위에서 모달이 열리지 않고 `category.html?cat=...&q=상품명`으로 페이지 이동. 계정 컨텍스트 완전 이탈, 돌아오려면 Back 필요.
 - **재현:** 로그인 또는 찜 있는 비로그인 상태 → account.html → 찜 탭 → 상품 카드 클릭
 
-### [M-51] 홈 검색 Enter 시 브랜드 정확 매칭 우선순위 역전 — 카테고리로 잘못 이동
+### [M-51] ✅ 해결완료(H-39 동시) — 홈 검색 Enter 시 브랜드 정확 매칭 우선순위 역전 — 카테고리로 잘못 이동
+- **해결(2026-06-11):** H-39 수정으로 Enter 핸들러가 정확 브랜드 일치를 모델 매치보다 먼저 확인. [site/app.js](site/app.js)
 - **영역:** 검색 (홈)
 - **URL:** https://www.gear-forest.com/
 - **증상:** 브랜드명(예: "헬리녹스") 정확 입력 후 Enter 시 `brand.html?b=헬리녹스` 대신 해당 브랜드 임의 첫 번째 상품의 카테고리(`category.html?cat=...`)로 이동. 검색 결과 코드에서 모델·브랜드 복합 매칭이 브랜드 전용 페이지보다 우선 실행됨.
@@ -787,7 +791,8 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=tent
 - **증상:** JSON 로드 실패 시 breadcrumb에 카테고리명 대신 '…'가 표시됨.
 
-### [M-01] '오토/맥시멀'과 '4인 가족' 캠핑 스타일 카드가 동일한 URL
+### [M-01] ✅ 해결완료(M-100 동시) — '오토/맥시멀'과 '4인 가족' 캠핑 스타일 카드가 동일한 URL
+- **해결(2026-06-11):** M-100 수정으로 family → recommend.html?p=family 분리. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
 - **URL:** https://www.gear-forest.com/
 - **증상:** 두 카드 모두 `category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4` 로 연결. 다른 컨셉임에도 URL이 동일하여 4인 가족 전용 필터가 없거나 URL 설정 누락으로 보임.
@@ -1470,7 +1475,8 @@
 - **원인:** `applyStyleSort`가 `STATE.sortKey = 'spec:weight_min'`으로 세팅하지만 `syncFilterUI`가 스타일 정렬 반영 후 호출되지 않아 셀렉트 UI 미갱신. 정렬 value가 option에 없으면 드롭다운이 '기본'처럼 보임.
 - **재현:** `?cat=sleeping-bag` 접속(기본 정렬≠weight_min) → 백패킹 칩 클릭 → 목록 재정렬됨, 드롭다운은 '기본' 유지
 
-### [M-100] 페르소나 카드 '4인 가족'과 '오토/맥시멀' 동일 URL로 연결
+### [M-100] ✅ 해결완료 — 페르소나 카드 '4인 가족'과 '오토/맥시멀' 동일 URL로 연결
+- **해결(2026-06-11):** `PERSONA_CAT`에서 `family` 항목 제거 → fallback 경로인 `recommend.html?p=family`로 연결. 오토/맥시멀은 기존 category URL 유지. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션
 - **URL:** https://gear-forest.com/
 - **증상:** '🚙 오토 / 맥시멀'과 '👨‍👩‍👧‍👦 4인 가족' 카드가 동일한 URL(`category.html?cat=auto-tent&sort=spec%3Afloor_area&sa=0&cap=4`)로 연결됨. 두 페르소나는 tagline과 추천 의도가 다름에도 클릭 결과가 구분되지 않음.

@@ -24,6 +24,22 @@ def main():
     # 72R: app.js뿐 아니라 style.css도 콘텐츠해시 스탬프(둘 중 하나만 하면 JS새/CSS헌 깨짐)
     # +supabaseClient.js: 모듈 import도 콘텐츠해시 스탬프(버전쿼리 없으면 SW가 구버전 모듈을
     #  stale 캐싱 → 새 함수 미정의로 페이지 깨짐). HTML의 './supabaseClient.js' import에 ?v= 박음.
+
+    # M-76: search.json 캐시 버스팅 — 상품 데이터 업데이트 후 구 데이터 서빙 방지.
+    # app.js 내 "data/search.json?v=..." 패턴을 search.json 내용 해시로 교체.
+    # 반드시 app.js 해시 계산(hj) 전에 실행 — 교체 후 해시가 HTML에 스탬프됨.
+    search_json_path = os.path.join(SITE, "data", "search.json")
+    if os.path.exists(search_json_path):
+        with open(search_json_path, "rb") as f:
+            hq = hashlib.md5(f.read()).hexdigest()[:8]
+        appjs_path = os.path.join(SITE, "app.js")
+        with open(appjs_path, encoding="utf-8") as f:
+            appjs = f.read()
+        appjs2 = re.sub(r'"data/search\.json(\?v=[^"]*)?\"', f'"data/search.json?v={hq}"', appjs)
+        if appjs2 != appjs:
+            with open(appjs_path, "w", encoding="utf-8") as f:
+                f.write(appjs2)
+
     hj, hc = _hash("app.js"), _hash("style.css")
     hs = _hash("supabaseClient.js")
     changed = []
