@@ -80,6 +80,7 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .nd{color:var(--faint);font-style:italic;font-size:12px}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--muted);font-size:12px}
 .disc{display:block;margin-top:6px;font-size:11px;opacity:.7}
+body:has(.pmodal.on){overflow:hidden}
 .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;
   font-size:12.5px;color:var(--muted);margin:0 0 18px}
 .note b{color:var(--txt)}
@@ -131,8 +132,44 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmset:active{transform:translateY(1px)}
 .pmlink{display:inline-block;margin-top:14px;font-size:13px;color:var(--accent);font-weight:600}
 .pmprice-note{font-size:11px;color:var(--muted);margin-top:3px;margin-bottom:2px}
-.pmreport{display:block;width:100%;margin-top:16px;padding:9px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;text-align:center}
-.pmreport:hover{color:var(--fg);text-decoration:underline}
+/* 제품명 행 — 모델명 왼쪽, 공유·오류신고 아이콘 오른쪽(빈 공간 활용) */
+.pmname-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:2px 0 6px}
+.pmname-row .pmname{margin:0;flex:1;min-width:0}
+.pmname-tools{display:flex;gap:6px;flex-shrink:0}
+.pmtool{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--card2,var(--card));color:var(--muted);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.pmtool:hover{border-color:var(--accent);color:var(--accent)}
+.pmtool:active{transform:translateY(1px)}
+.pmspec-user .pmv{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.pmrv-avgn{font-size:12px;color:var(--muted);font-weight:600}
+/* 유저 후기 섹션 */
+.pmrv{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.pmrv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.pmrv-title{font-size:14px;font-weight:700}
+.pmrv-cnt{color:var(--muted);font-weight:600}
+.pmrv-add{border:1.5px solid var(--accent);background:var(--card);color:var(--accent);font-size:12.5px;font-weight:700;border-radius:9px;padding:7px 12px;cursor:pointer;transition:.15s;white-space:nowrap}
+.pmrv-add:hover{background:var(--accent);color:#fff}
+.pmrv-login{font-size:13px;color:var(--muted);padding:10px 12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.pmrv-login .pmlink{margin-top:0}
+.pmrv-formbox{margin-bottom:12px}
+.pmrv-form{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px}
+.pmrv-rate{display:flex;align-items:center;gap:2px}
+.pmrv-star{border:0;background:none;font-size:24px;line-height:1;color:var(--line);cursor:pointer;padding:0 1px;transition:color .1s}
+.pmrv-star.on{color:#f5a623}
+.pmrv-rate-hint{margin-left:8px;font-size:12px;color:var(--muted)}
+.pmrv-ta{width:100%;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--fg);box-sizing:border-box}
+.pmrv-form-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pmrv-ta-cnt{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pmrv-submit{border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:8px 18px;cursor:pointer}
+.pmrv-submit:disabled{opacity:.5;cursor:default}
+.pmrv-list{display:flex;flex-direction:column;gap:12px}
+.pmrv-empty{font-size:13px;color:var(--muted);padding:6px 0}
+.pmrv-item{border-bottom:1px solid var(--line);padding-bottom:11px}
+.pmrv-item:last-child{border-bottom:0;padding-bottom:0}
+.pmrv-meta{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.pmrv-nick{font-size:12.5px;font-weight:700}
+.pmrv-stars{font-size:12px}
+.pmrv-date{font-size:11px;color:var(--muted);margin-left:auto}
+.pmrv-body{font-size:13px;line-height:1.65;color:var(--fg);white-space:pre-wrap;word-break:break-word}
 
 /* 운영자 모드 배너 — static(헤더 sticky와 top:0 충돌 방지) */
 .opsbar{background:#fff3d6;border-bottom:1px solid #e8d196;color:#7a5b00;
