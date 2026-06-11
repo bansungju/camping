@@ -1002,7 +1002,7 @@
 - **재현:** 로그인 → 댓글 작성 → ✕로 삭제 → 게시글 카드 💬 카운트 확인 — 감소 없음
 - **원인(2026-06-11, 라이브 검증):** anon 키로 `comments?select=id,parent_id,deleted_at` → **HTTP 200**(컬럼 존재) = 라이브 comments는 **001/002 스키마**(`body`·`parent_id`·`hidden`). 따라서 활성 트리거는 002 `update_comment_count`(root만, INSERT/DELETE)이고 소프트삭제 UPDATE는 미처리 → 증상 그대로. `009_comments.sql`은 `content` 컬럼의 **비호환 재정의**라 적용된 적 없는 dead migration(`CREATE TABLE IF NOT EXISTS` no-op).
 - **수정(코드):** 신규 `015_comment_count_softdelete.sql` — ① `update_comment_count()`를 `UPDATE OF deleted_at`까지 처리하도록 확장(root 한정·삭제글 제외, 소프트삭제 −1·복원 +1 대칭). ② 트리거를 `AFTER INSERT OR DELETE OR UPDATE OF deleted_at`로 재생성. ③ 기존 누적 드리프트 1회 재집계(살아있는 root 댓글 수로 동기화). ④ 혹시 적용됐을 009의 중복 트리거(`trg_inc/dec_comment_count`) 안전 제거. + 009 상단에 적용금지 경고, APPLY.md에 5단계·검증 추가. [supabase/migrations/015_comment_count_softdelete.sql](supabase/migrations/015_comment_count_softdelete.sql), [supabase/migrations/009_comments.sql](supabase/migrations/009_comments.sql), [supabase/APPLY.md](supabase/APPLY.md)
-- **⚠️ 남은 작업(대시보드 1회 적용 필요):** anon 키로 DDL 불가 → 사용자가 Supabase SQL Editor에서 `015` 실행해야 라이브 정합성 해소(009는 적용 금지). 적용 후 댓글 작성→소프트삭제 시 💬 카운트 감소 확인.
+- **라이브 적용(2026-06-11):** SQL Editor에서 `015` 실행 완료. 댓글 소프트삭제 시 💬 카운트 정상 감소 + 기존 드리프트 재집계 완료.
 
 ### [H-35] ✅ 해결완료 — `community.html?open-log=1&set=N` 파라미터 처리 누락 — 원클릭 연결 기능 미동작
 - **영역:** 커뮤니티/소셜 — 글쓰기 연동
@@ -1667,6 +1667,27 @@
 - **원인:** 드롭다운 결과 산출 `run()`은 **토큰 AND 매칭**(app.js:487 `terms.every(t => (x.b+" "+x.m).includes(t))`)인데, Enter 핸들러의 폴백은 **통문자열 부분일치**(app.js:561 `(x.b+" "+x.m).includes(ql)`)를 쓴다. 토큰이 "브랜드 모델" 연속 부분문자열로 들어맞지 않으면 `first`·`exactBrand`·`brandMatch` 모두 실패 → `location.href` 미설정 → 무반응. 드롭다운은 매칭되므로 사용자에겐 "결과가 보이는데 Enter가 먹통"으로 체감.
 - **재현(프리뷰 실측):** 홈 검색에 `백패킹 mier` 입력 → 드롭다운 1건 표시(`MIER 울트라라이트 초경량 백패킹 1인용 텐트`)·"결과 없음" 아님 → Enter → 이동 대상 계산 결과 `NOTHING`(무반응) 확인. (`bugConfirmed: true`)
 - **권장:** Enter 폴백도 `run()`과 동일한 토큰 AND 매칭을 쓰거나, 활성 옵션이 없을 때 드롭다운 첫 결과(`hits[0]`)로 이동.
+
+---
+
+### [M-113] 상품 상세 — '구매하기' 버튼 아래 "구매 링크를 준비 중입니다" 문구가 버튼 외부 텍스트로 노출됨
+
+- **영역:** 상품 상세 페이지
+- **재현:** 구매 링크가 없는 상품의 상세 페이지 접근 → '구매하기' 버튼 하단에 별도 텍스트 노출
+- **기대:** '구매하기' 버튼 자체를 "구매 링크 준비 중" 으로 표시 (버튼명 변경), 외부 텍스트 제거
+- **보고자:** 사용자 직접 제보 (2026-06-11)
+- **심각도:** 🟡 Medium
+
+---
+
+### [M-114] 상품 찜 버튼 — 비로그인 상태에서 찜 누를 시 로그인 유도 없이 로컬 저장만 처리됨
+
+- **영역:** 상품 상세 / 목록 페이지
+- **재현:** 비로그인 상태에서 찜(♡) 버튼 클릭
+- **현재:** 로컬스토리지에만 저장되고 로그인 유도 없음
+- **기대:** 로그인 프로세스로 강제 전환 (로그인 후 찜 동작 완료)
+- **보고자:** 사용자 직접 제보 (2026-06-11)
+- **심각도:** 🟡 Medium
 
 ---
 
