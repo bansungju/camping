@@ -21,6 +21,7 @@
 | 10 | 검색 (2순환) | 2026-06-11 | 7건 |
 | 11 | 계정/로그인 (2순환) | 2026-06-11 | 7건 |
 | + | 사용자 직접 제보 | 2026-06-11 | 4건 |
+| 12 | 커뮤니티/소셜 (2순환) | 2026-06-11 | 5건 |
 
 ---
 
@@ -158,6 +159,16 @@
 - **증상:** 데스크톱 뷰에서 필터(정렬·스펙 필터 등)가 모바일 기준으로만 구현되어 있어 데스크톱 레이아웃에서도 모바일형 UI가 그대로 표시됨. 넓은 화면에 맞는 사이드바 필터 또는 가로형 레이아웃으로 전환되지 않음.
 - **제보:** 사용자 직접 제보
 
+### [M-34] 커뮤니티 글 상세 진입 시 document.title 미갱신
+- **영역:** 커뮤니티/소셜 (SEO)
+- **URL:** https://gear-forest.com/community.html#post={id}
+- **증상:** `renderDetail()` 실행 시 `document.title`이 '커뮤니티 — 장비의 숲'으로 고정, 글 제목으로 변경 안 됨. 브라우저 탭·히스토리·소셜 공유 미리보기에 글 제목 미반영.
+
+### [M-35] 개별 글 공유 가능한 독립 URL 없음 — hash 라우팅만 사용
+- **영역:** 커뮤니티/소셜 (SEO)
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 글 상세가 `community.html#post={uuid}` 해시로만 접근 가능. og:url·canonical이 글마다 갱신 안 돼 SNS 공유·크롤러가 글 내용 인식 불가. 공유 버튼도 없음.
+
 ### [M-28] account.html canonical non-www vs 실제 www 불일치 (SEO)
 - **영역:** 계정/로그인 (SEO)
 - **URL:** https://www.gear-forest.com/account.html
@@ -243,13 +254,23 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 페이지에 `<nav>` 2개 존재. 하단 탭바는 `aria-label="주 내비게이션"` 있으나 상단 탭바 `<nav>`에는 없어 스크린리더 사용자가 구분 불가.
 
-### [M-12] 커뮤니티 페이지 로드 시 posts API 중복 호출 (2회)
+### [M-12] 커뮤니티 페이지 '불러오는 중' 지연 — 피드 렌더가 인증에 묶임 + posts 중복 호출 ✅ 수정됨(2026-06-11)
+- **관련 제보:** '커뮤니티 누르면 불러오는 중만 뜸' → 미개발 아님. 피드(공개 데이터)가 인증 완료를 기다리느라 로딩이 길게 보였던 구조 문제.
 - **영역:** 커뮤니티/소셜
 - **URL:** https://www.gear-forest.com/community.html
-- **증상:** `supabaseClient.js`의 `initAuth()`가 `getSession()` 동기 콜백과 `onAuthStateChange INITIAL_SESSION` 이벤트 두 번 모두 `renderFeed()`를 트리거해 `/rest/v1/posts` 요청이 매 페이지 로드마다 2회 발생.
-- **재현:** 네트워크 탭 열고 community.html 접속 → `/rest/v1/posts` 요청 2건 확인
+- **근본 원인 (2가지):**
+  1. `community.html` 부팅이 `await initAuth(...)` 콜백 안에서만 `route()`→`renderFeed()`를 호출. 즉 jsdelivr CDN의 supabase-js 다운로드·파싱 → `getSession()` 완료까지 끝나야 비로소 `listPosts()`가 실행됨. 그 전 구간 내내 "불러오는 중" 표시. (supabase-js를 안 쓰는 다른 페이지가 빠른 이유 = 커뮤니티만 느린 이유.)
+  2. `initAuth()`가 수동 `'INITIAL'` 콜백 + `onAuthStateChange INITIAL_SESSION` 이벤트로 콜백을 2회 호출 → `/rest/v1/posts`가 페이지 로드마다 2회 발생.
+- **수정:**
+  - 부팅 시 `route()`를 먼저 1회 호출해 공개 피드를 즉시 렌더(인증 대기 제거).
+  - 인증은 병렬 확인하되 `canParticipate()`가 실제로 바뀐 경우에만 재렌더 → 콜백 2회·토큰 갱신에도 중복 fetch 없음.
+  - `<head>`에 supabase·jsdelivr `preconnect` + `supabaseClient.js` `modulepreload` 추가로 연결 설정 지연 단축.
+- **검증:** 프리뷰 재현 — `/rest/v1/posts` 요청 **2회 → 1회**, 콘솔 에러 0, 피드 즉시 렌더(빈 상태 정상 표시).
 
-### [M-13] 비로그인 empty state에서 글쓰기 유도 문구와 액션 불일치
+### [M-13] empty state에서 글쓰기 CTA 없음 — 비로그인·로그인 모두 해당
+- **영역:** 커뮤니티/소셜
+- **URL:** https://www.gear-forest.com/community.html
+- **증상:** '아직 글이 없어요. 첫 이야기를 남겨보세요!' 문구에 클릭 가능한 글쓰기 버튼/링크 없음. 글쓰기 버튼은 `canParticipate()`가 true인 사용자의 `cm-bar`에만 렌더링되어, empty state에서는 로그인 사용자도 글쓰기로 이동 불가. *(구 [M-13]: 비로그인 케이스 → 로그인 포함으로 확장)*
 - **영역:** 커뮤니티/소셜
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 글 없을 때 '첫 이야기를 남겨보세요!' 문구가 표시되지만 비로그인 사용자에게는 글쓰기 버튼이 없어 액션 불가. 로그인 유도 없이 단순 권유 문구만 표시.
@@ -348,6 +369,21 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 활성 정렬 chip에 `on` 클래스는 붙지만 `aria-pressed` 속성 없음. 스크린 리더 사용자가 현재 선택된 정렬 상태 확인 불가.
 
+### [L-23] 커뮤니티 페이지 JSON-LD 구조화 데이터 없음
+- **영역:** 커뮤니티/소셜 (SEO)
+- **URL:** https://gear-forest.com/community.html
+- **증상:** `DiscussionForumPosting`, `BreadcrumbList` 등 schema.org JSON-LD 전무. 검색 결과 리치 스니펫 노출 기회 손실. ([L-13] 홈과 동일 패턴)
+
+### [L-24] 비로그인 사용자 사이트 전역에서 다크모드 변경 불가
+- **영역:** 커뮤니티/소셜 (UI)
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 다크모드 토글이 `account.html` 설정 탭에만 존재. 비로그인 사용자는 다크모드를 변경할 수 없음. 시스템 다크모드는 적용되지만 수동 전환 방법 없음. ([M-06], [M-17] 등 개별 페이지 미토글 버그의 근본 원인)
+
+### [L-25] www·non-www 리다이렉트 동작이 경로마다 불일치
+- **영역:** 커뮤니티/소셜 (SEO)
+- **URL:** https://gear-forest.com/community.html
+- **증상:** 일부 경로는 www→non-www, 일부는 non-www→www로 리다이렉트 방향이 혼재. canonical은 non-www로 통일되어 있으나 실제 리다이렉트 동작 불일치로 크롤링 일관성 저하. ([H-12] 근본 원인과 연관)
+
 ### [L-13] JSON-LD 구조화 데이터 없음 — 리치 스니펫 노출 불가
 - **영역:** 홈/메인 (SEO)
 - **URL:** https://www.gear-forest.com/
@@ -425,4 +461,4 @@
 
 ---
 
-*다음 회차: 커뮤니티/소셜 (2순환)*
+*다음 회차: 홈/메인 (3순환)*
