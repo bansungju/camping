@@ -470,7 +470,8 @@
 - **검증/해결(2026-06-11):** ① **입력(oninput) 필터는 정상 동작** — 라이브 코드에 `renderBrand`의 `#bq` oninput 핸들러(`renderChips`)가 이미 존재. 프리뷰 재현 — "코베아" 입력 시 브랜드 칩이 1개로 실시간 필터, 없는 단어는 "브랜드 없음" 표시. (리포트의 'oninput 미동작'은 stale, 캐시된 구버전 관찰로 추정) ② **Enter 핸들러는 실제 부재** → `#bq`에 keydown 추가: Enter 시 현재 필터된 첫 브랜드 칩으로 이동(IME 조합 가드 포함). 프리뷰 검증 — "코베아"+Enter → 브랜드 페이지가 코베아로 전환(title "코베아 전 카테고리", URL `?b=코베아`), 콘솔 에러 0. [site/app.js](site/app.js)
 - **재현:** brand.html?b=헬리녹스 → bq 검색창에 "코베아" 입력 → 브랜드 칩 변화 없음 → Enter → 무반응
 
-### [M-75] 다크모드 FOUC — `initTheme()`이 `<body>` 끝 app.js에서 실행
+### [M-75] ✅ 해결완료 — 다크모드 FOUC — `initTheme()`이 `<body>` 끝 app.js에서 실행
+- **해결(2026-06-11):** index.html·category.html·brand.html·recommend.html `<head>` 내 `<link rel="stylesheet">` 직전에 `<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>` 인라인 1줄 추가. 아이템 상세 페이지 템플릿(build-item-pages.js)에도 동일 적용 후 2277개 재빌드. [site/index.html](site/index.html), [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **영역:** 홈/메인 (전체 페이지)
 - **URL:** https://gear-forest.com/
 - **증상:** 다크모드 저장 사용자가 페이지 로드 시 순간적으로 라이트 테마가 렌더링됐다가 다크로 전환되는 FOUC(Flash of Unstyled Content) 발생. `initTheme()` IIFE가 `app.js`(body 끝 위치) 내부에 있어 HTML·CSS 파싱·렌더링 후에야 `data-theme="dark"`가 적용됨.
@@ -491,13 +492,15 @@
 - **백엔드 근본 차단요인 발견·수정(2026-06-11):** 로그인해도 **세트 원격 동기화가 실제로 동작 불가** 상태였음 — 앱은 `upsertGearSet`/`deleteRemoteGearSet`/fetchGearSets로 `gear_sets` 테이블에 동기화하는데, ① `gear_sets` 테이블이 **라이브 미적용**(REST 404 PGRST205), ② 게다가 `006_gear_sets.sql`이 테이블·RLS 정책만 있고 **GRANT 문이 전무** = 적용해도 004와 동일한 함정으로 모든 작업이 `42501`로 막힘. → `006`에 `GRANT SELECT TO anon,authenticated` + `GRANT INSERT,UPDATE,DELETE TO authenticated` 추가(grant 누락 보정). [supabase/migrations/006_gear_sets.sql](supabase/migrations/006_gear_sets.sql)
 - **⚠️ 남은 작업:** 세트 동기화를 켜려면 대시보드에서 `006`(grant 포함) 1회 적용(APPLY.md "7. 세트 동기화"). 적용 후엔 동기화가 실작동하므로 M-71/M-63의 "동기화 안내" 프론트 문구도 사실과 일치하게 됨(프론트 문구 추가는 별도).
 
-### [M-72] 세트 자동 생성 이름에 날짜만 포함 — 같은 날 복수 저장 시 이름 중복
+### [M-72] ✅ 해결완료 — 세트 자동 생성 이름에 날짜만 포함 — 같은 날 복수 저장 시 이름 중복
+- **해결(2026-06-11):** 찜→세트 저장 시 동일 날짜 기존 세트 수 카운트 후 ` (2)`, ` (3)` 접미사 자동 부여. [site/app.js](site/app.js)
 - **영역:** 계정/세트
 - **URL:** https://gear-forest.com/account.html
 - **증상:** "찜 목록 세트 6. 11." 형식으로 날짜만 포함. 같은 날 여러 세트 저장 시 이름이 동일해지고 구별 불가. 세트 이름 편집 UI도 없음.
 - **재현:** 같은 날 세트 2개 저장 → 세트 목록에서 이름 구별 불가
 
-### [M-73] 세트 카드 클릭 시 구성 장비 목록 확인 불가
+### [M-73] ✅ 해결완료(기존 구현 확인) — 세트 카드 클릭 시 구성 장비 목록 확인 불가
+- **해결(2026-06-11):** 라이브 코드 확인 — `setsEl.querySelectorAll(".acc-set")` click 핸들러가 이미 존재, 클릭 시 장비 목록(무게·가격 표) + "로그 작성" 버튼 포함 `set-detail-modal` 팝업. (리포트의 '반응 없음'은 stale 관찰로 추정) [site/app.js](site/app.js)
 - **영역:** 계정/세트
 - **URL:** https://gear-forest.com/account.html
 - **증상:** `.acc-set` 카드에 `role="button"` 및 `tabindex="0"`이 있어 클릭 가능해 보이지만, 클릭 시 세트 상세(구성 장비 목록) 진입 동작이 없음. 저장한 세트의 내용을 확인하는 방법이 없음.
@@ -1452,14 +1455,16 @@
 - **원인:** `app.js` line 2665/2768에서 세트 이름을 `s.name`으로 참조하나, `getSets()`가 반환하는 세트 객체는 `title` 필드를 사용(saveSets/getSets line 243~244). `s.name`은 항상 undefined → fallback '이름 없는 세트' 노출.
 - **재현:** localStorage에 세트 1개 이상 저장 → account.html 세트 탭 → '이 세트로 커뮤니티 로그 작성' 버튼 → 드롭다운에 '이름 없는 세트' 표시
 
-### [M-104] `brand.html` 다른 브랜드 검색창 — 자동완성·Enter 이동 미구현
+### [M-104] ✅ 해결완료(M-61 동시 수정) — `brand.html` 다른 브랜드 검색창 — 자동완성·Enter 이동 미구현
+- **해결(2026-06-11):** M-61(Enter 핸들러 추가)로 이미 수정됨. `renderBrand()`에 `bqInput.oninput`(칩 필터링)·`bqInput.onkeydown`(Enter → 첫 브랜드 이동) 모두 존재. 드롭다운 대신 실시간 칩 필터 방식. [site/app.js](site/app.js)
 - **영역:** 검색 — 브랜드 페이지
 - **URL:** https://gear-forest.com/brand.html?b=헬리녹스
 - **증상:** '다른 브랜드 검색' 입력창에 브랜드명을 타이핑해도 자동완성 드롭다운이 열리지 않으며, Enter 를 눌러도 해당 브랜드 페이지로 이동하지 않음. 브랜드 목록 버튼 클릭만 가능.
 - **원인:** `brand.html` 검색창에 debounce 입력 이벤트 핸들러·Enter keydown 핸들러·자동완성 로직이 미구현된 것으로 추정.
 - **재현:** `brand.html?b=헬리녹스` → 검색창에 '코베아' 입력 → 드롭다운 없음, Enter 무반응
 
-### [M-103] JSON-LD Product `name`에 브랜드명 중복 포함
+### [M-103] ✅ 해결완료 — JSON-LD Product `name`에 브랜드명 중복 포함
+- **해결(2026-06-11):** `build-item-pages.js` JSON-LD `"name": \`${brand} ${modelName}\`` → `"name": modelName`으로 수정. `brand.name`에 브랜드 분리 유지. 2277개 상세 페이지 재빌드. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **영역:** 상품상세 — 구조화 데이터
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** JSON-LD `name` 필드가 `"니모이큅먼트 호넷 엘리트 오스모 1P"`(브랜드+모델명)이고 `brand.name`도 `"니모이큅먼트"`로 별도 존재. Schema.org 권장은 `name`=모델명, `brand`=브랜드 분리. 구글 리치 결과에서 브랜드명 중복 노출 가능.

@@ -106,7 +106,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    "name": `${brand} ${modelName}`,
+    "name": modelName,
     "brand": { "@type": "Brand", "name": brand },
     "url": canonicalUrl,
     "image": imgUrl,
@@ -153,6 +153,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <meta name="twitter:image" content="${imgUrl}">
 <meta name="theme-color" content="#2f7a4e">
 <link rel="icon" type="image/png" href="../../icon-192.png">
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
 <link rel="stylesheet" href="../../style.css?v=${CSS_V}">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <style>
@@ -182,7 +183,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="logo" href="../../index.html">장비의 <b>숲</b></a>
+  <a class="logo" href="../../index.html"><img class="logo-mark" src="../../icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></a>
   <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
 </div></header>
 
