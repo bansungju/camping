@@ -642,11 +642,8 @@
 ### [M-31] ✅ 해결완료(사용자 확인) — 로그아웃 버튼 없음
 - **해결(2026-06-11):** account.html에 로그아웃 버튼 존재 확인(사용자 직접 확인). 코드 변경 불필요.
 
-### [M-32] 내 정보 영역 근처에 불필요한 그래픽/UI 요소 존재
-- **영역:** 계정/로그인
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** '내 정보' 섹션 부근에 의도하지 않은 것으로 보이는 그래픽 요소가 표시됨. 디자인 의도와 맞지 않는 잔여 UI로 추정.
-- **제보:** 사용자 직접 제보
+### [M-32] ✅ 아카이브(stale·재현불가·2026-06-13) — 내 정보 영역 근처에 불필요한 그래픽/UI 요소 존재
+- **처리:** 현재 account.html 코드 검토 결과 의도하지 않은 잔여 UI 요소 미발견. 탭 UI 제거(FE-SOC-07) 이후 클린업된 것으로 추정. 재현 불가.
 
 ### [M-33] ✅ 해결완료 — 데스크톱에서 카테고리 필터가 반응형으로 구현되지 않음
 - **해결(2026-06-11):** `category.html`에 `#cat-layout`(flex) > `#cat-aside`(220px sticky 사이드바) + `#cat-body`(flex:1) 2단 레이아웃 추가. `style.css`에 `#cat-layout{display:flex}`, `#cat-aside{flex:0 0 220px;position:sticky;top:110px}`, `#cat-body{flex:1;min-width:0}` 추가; `@media(max-width:640px)`에서 `#cat-layout{display:block}`으로 모바일 세로 스택 복원. 로컬 프리뷰 검증 — 1200px에서 필터 사이드바·목록 2단 확인, 390px에서 세로 스택·필터 토글 버튼 정상 동작 스크린샷 확인. [site/category.html](site/category.html), [site/style.css](site/style.css)
@@ -665,10 +662,8 @@
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 글 상세가 `community.html#post={uuid}` 해시로만 접근 가능. og:url·canonical이 글마다 갱신 안 돼 SNS 공유·크롤러가 글 내용 인식 불가. 공유 버튼도 없음.
 
-### [M-28] account.html canonical non-www vs 실제 www 불일치 (SEO)
-- **영역:** 계정/로그인 (SEO)
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** canonical이 `https://gear-forest.com/account.html`(non-www). [H-12] 전 페이지 공통 이슈.
+### [M-28] ✅ 해결완료(기구현·2026-06-13 검증) — account.html canonical non-www vs 실제 www 불일치 (SEO)
+- **처리:** 현재 canonical은 `https://gear-forest.com/account.html`(apex non-www). 사이트 서빙도 apex gear-forest.com 정규화(www→apex 301, 2026-06-11 정식화). canonical과 서빙 일치. 코드 변경 불필요.
 
 ### [M-29] ✅ 해결완료(기구현·2026-06-13 검증) — auth_error=1 파라미터 도달 시 에러 메시지 미표시 — 로그인 실패 원인 안내 없음
 - **영역:** 계정/로그인
@@ -766,10 +761,11 @@
 ### [M-10] ✅ 해결완료(H-37 동시 수정) — 탭바 메뉴 구성 불일치
 - **해결(2026-06-11):** H-37에서 데스크톱 TABS에 "탐색" 탭 추가. 데스크톱 4개(홈/탐색/커뮤니티/내 정보), 모바일 4개(홈/탐색/커뮤/마이) 구성 일치. [site/app.js](site/app.js)
 
-### [M-11] login.html 접근 시 '서비스 점검 중' 텍스트만 반환
+### [M-11] ✅ 해결완료(2026-06-13) — login.html 접근 시 '서비스 점검 중' 텍스트만 반환
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/login.html
 - **증상:** 별도 로그인 URL로 직접 접근 시 아무런 안내 없이 비어 보이는 점검 페이지 표시. 리다이렉트나 안내 링크 없음.
+- **해결:** `site/login.html` 신규 생성 — `<meta http-equiv="refresh" content="0;url=account.html">` + canonical 태그로 account.html 즉시 리다이렉트. [site/login.html](site/login.html)
 
 ### [M-05] ✅ 해결완료(2026-06-11) — 상세 페이지 커뮤니티 로그 연결 버튼 없음
 - **해결(2026-06-11):** `build-item-pages.js`에 `.item-log-btn` 링크 추가됨. [scripts/build-item-pages.js](scripts/build-item-pages.js)
@@ -1211,10 +1207,11 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** H-23 참조.
 
-### [L-20] 닉네임 설정/변경 UI 미존재
+### [L-20] ✅ 해결완료(2026-06-13) — 닉네임 설정/변경 UI 미존재
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 커뮤니티 로그에 닉네임이 사용되는 구조임에도 닉네임 설정·변경 입력 필드 없음. 최초 자동 생성 닉네임 변경 불가 상태.
+- **해결:** 설정 탭에 `#nick-settings-row` + `#nick-change-form` 추가. `initNickChange()` IIFE로 디바운스 중복검사(isNicknameAvailable)·저장(setNickname)·SR 알림(accAnnounce) 처리. [site/account.html](site/account.html)
 
 ### [L-21] ✅ 해결완료(2026-06-13) — account.html meta description 8자로 SEO 기준 미달
 - **영역:** 계정/로그인 (SEO)
@@ -1357,9 +1354,10 @@
 - **재현:** 홈 접속 → Tab 키 반복 → 콘텐츠 바로가기 링크 없음 확인
 - **해결:** index/category/brand/recommend.html + item 페이지에 `<a class="skip-link" href="#main">` 추가. `<main id="main">` 추가. style.css에 `.skip-link` 포커스 시 visible 스타일. [site/style.css](site/style.css)
 
-### [L-37] 계정 찜 탭 전체 삭제 기능 없음
+### [L-37] ✅ 해결완료(2026-06-13) — 계정 찜 탭 전체 삭제 기능 없음
 - **영역:** 계정/로그인 — 찜 탭
 - **증상:** 개별 찜 해제 버튼만 있고 "전체 삭제" 기능 없음. 다수 찜 항목을 일일이 해제해야 함.
+- **해결:** 찜 섹션 헤더에 `#wish-clear-all` 버튼 추가. 클릭 시 confirm 후 `setWish([])` → `renderAccount()` → SR 알림. [site/account.html](site/account.html)
 
 ### [L-38] ✅ 해결완료(기구현·2026-06-13 검증) — 다크모드 설정 설명에 "(정비 중)" 텍스트 잔존
 - **영역:** 계정/로그인 — 설정 탭
