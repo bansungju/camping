@@ -1807,11 +1807,9 @@
 
 ## R-67 카테고리/목록 (13순환) — 2026-06-12
 
-### [M-124] draw() 카드 href — 필터/정렬 인덱스 사용으로 잘못된 상품 정적 페이지 링크
+### [M-124] ✅ 해결완료(2026-06-12) — draw() 카드 href — 필터/정렬 인덱스 사용으로 잘못된 상품 정적 페이지 링크
 - **영역:** 카테고리/목록 — 상품 카드 링크
-- **증상:** 필터나 정렬이 적용된 상태에서 상품 카드를 Ctrl+클릭(새 탭)하거나 스크린리더가 href를 따라가면 전혀 다른 상품의 정적 페이지가 열림. 예: 원본 d.models[5]가 rows[0]으로 필터됐을 때 href = `/item/slug/item-0.html` (rows 인덱스)이지만 실제 해당 상품 페이지는 `/item/slug/item-5.html` (원본 인덱스). 카드 클릭 자체는 `onclick → e.preventDefault() → openProduct(rows[i])` 경로로 정상 동작하지만 href 자체가 틀림.
-- **원인:** `app.js:1950` `rows.map((m, i) => ...)` — `i`는 필터·정렬 후 배열의 위치. `app.js:1964` `href="/item/${STATE.slug}/item-${i}.html"` — 정적 item 페이지는 원본 `d.models` 기준으로 생성되므로 인덱스가 불일치.
-- **수정 방향:** `app.js:1964` href를 `"/item/${STATE.slug}/item-${d.models.indexOf(m)}.html"`로 변경 (M-119 JSON-LD fix와 동일한 패턴). [site/app.js:1964](site/app.js)
+- **해결:** `.pli` 카드 href를 `item-${i}`(rows 인덱스) → `item-${d.models.indexOf(m)}`(원본 인덱스)로 변경. L-03(카드 a태그화)에서 유입된 회귀. 검증: 정렬된 목록 2번째 카드 → item-50.html, 해당 페이지 H1="니모이큅먼트 아폴로 3P"로 카드 라벨과 일치 확인. [site/app.js](site/app.js)
 - **심각도:** 🟡 Medium
 
 ---
@@ -1895,7 +1893,8 @@
 
 ## R-70 홈/메인 (14순환) — 2026-06-12
 
-### [M-126] `renderHotSection` 비동기 완료 시 `#hot-section` display:none→block 전환으로 하단 콘텐츠 CLS 발생
+### [M-126] ✅ 해결완료(2026-06-12) — `renderHotSection` 비동기 완료 시 `#hot-section` display:none→block 전환으로 하단 콘텐츠 CLS 발생
+- **해결:** `index.html` `#hot-section`에서 `display:none` 제거 + `#hot-list`에 스켈레톤(`.hot-skel`) 삽입, `style.css`에 `#hot-section{min-height:92px}`로 공간 예약. 비동기 fill이 display 토글 없이 제자리 교체 → CLS 제거. 검증: 로드 직후 display=block·minHeight=92px. [site/index.html](site/index.html) · [site/style.css](site/style.css)
 - **영역:** 홈/메인 — 이번 주 인기 섹션
 - **심각도:** 🟡 Medium
 - **증상:** `#hot-section`은 초기 HTML에서 `display:none`으로 숨겨져 있으며 `renderHub()`에서 `renderHotSection()` 호출은 await 없이 fire-and-forget. Supabase RPC(`get_hot_items`) 응답 후 `sec.style.display = "block"`으로 전환될 때 아래 위치한 `#personas`·`#grid`·footer가 아래로 밀리며 Cumulative Layout Shift(CLS) 발생. Lighthouse CLS 지표 영향.
@@ -1903,7 +1902,8 @@
 - **수정 방향:** `#hot-section`에 `min-height` 또는 skeleton 높이를 CSS로 예약(예: `min-height:80px`)하거나, `#personas·#grid` 위가 아닌 아래로 위치 이동.
 - **파일:** [site/app.js](site/app.js) line ~510, [site/index.html](site/index.html) line ~61
 
-### [L-116] `renderHub()` 데이터 로드 실패 시 개발용 "(로컬서버 필요)" 메시지 사용자에게 노출
+### [L-116] ✅ 해결완료(2026-06-12) — `renderHub()` 데이터 로드 실패 시 개발용 "(로컬서버 필요)" 메시지 사용자에게 노출
+- **해결:** catch 메시지 `"데이터를 불러오지 못했습니다. (로컬서버 필요)"` → `"데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요."` [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 카테고리 그리드
 - **심각도:** 🟢 Low
 - **증상:** `data/manifest.json` fetch 실패 시 `#lead`에 `"데이터를 불러오지 못했습니다. (로컬서버 필요)"` 출력. 프로덕션 네트워크 장애 시 일반 사용자에게 개발 환경용 안내("로컬서버 필요")가 노출되어 혼란 유발.
@@ -1911,7 +1911,8 @@
 - **수정:** `"잠시 후 다시 시도해주세요."` 등 사용자 친화적 메시지로 교체.
 - **파일:** [site/app.js](site/app.js) line ~487
 
-### [L-117] 홈 검색결과 listbox(`#homeres`) 내 `sres-footer` div — `role` 없어 ARIA `listbox` 규격 위반
+### [L-117] ✅ 해결완료(2026-06-12) — 홈 검색결과 listbox(`#homeres`) 내 `sres-footer` div — `role` 없어 ARIA `listbox` 규격 위반
+- **해결:** `.sres-footer` div 2곳(결과수·카테고리탐색)에 `role="presentation"` 추가 → listbox 자식 ARIA 규격 준수. 검증: footer role=presentation. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 전역 검색
 - **심각도:** 🟢 Low
 - **증상:** `#homeres`에 `role="listbox"` 적용됨. 내부 검색결과 항목들은 `role="option"` 부여되나, 하단 `<div class="sres-footer">` 및 `<div class="sres nd" role="option" aria-disabled="true">`(결과 없음)는 비표준 구조. `listbox` 자식은 `option` 또는 `group`/`presentation`이어야 하는데 `sres-footer`에 role 없어 ARIA 트리 오염.
@@ -1919,7 +1920,8 @@
 - **수정:** `sres-footer`에 `role="presentation"` 추가.
 - **파일:** [site/app.js](site/app.js) line ~693
 
-### [L-118] `#pwa-banner` 동적 삽입 시 `role="alert"` 또는 `aria-live` 미적용 — 스크린리더 미고지
+### [L-118] ✅ 해결완료(2026-06-12) — `#pwa-banner` 동적 삽입 시 `role="alert"` 또는 `aria-live` 미적용 — 스크린리더 미고지
+- **해결:** `beforeinstallprompt` 핸들러에서 banner에 `role="alert"` + `aria-live="polite"` 부여 후 innerHTML 삽입. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — PWA 설치 배너
 - **심각도:** 🟢 Low
 - **증상:** `beforeinstallprompt` 이벤트 후 `#pwa-banner`에 innerHTML 삽입되어 배너가 동적으로 나타나지만, 배너 요소에 `role="alert"` 또는 `aria-live="polite"` 없어 스크린리더 사용자에게 배너 출현이 고지되지 않음.
