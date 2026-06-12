@@ -1831,3 +1831,38 @@
 ---
 
 *다음 회차: 상품상세 (13순환)*
+
+---
+
+### [M-116] 상품 카드 — ⚠️ 신고 버튼 아이콘 의미 불명확, UX 개선 필요
+
+- **영역:** 카테고리/목록 — 상품 카드 우상단 ⚠️ 버튼
+- **현재:** 경고 아이콘(⚠️) 버튼으로 노출 → 사용자가 기능을 인지 못함
+- **기대:**
+  - 아이콘 버튼 제거
+  - 상품 상세 페이지 **최하단**에 텍스트 하이퍼링크 "상품의 정보가 달라요" 배치
+  - 스타일: 옅은 회색(`color: var(--muted)` 또는 유사), 작은 폰트, 밑줄
+- **보고자:** 사용자 직접 제보 (2026-06-12)
+- **심각도:** 🟡 Medium
+
+---
+
+## R-68 상품상세 (13순환) — 2026-06-12
+
+### [L-111] 후기 작성 — 부분 사진 업로드 실패 시 이미 업로드된 이미지 orphan
+- **영역:** 상품상세 — 후기 작성 폼 제출
+- **증상:** 후기 작성 시 복수 사진 업로드 중 중간 실패(두 번째 사진 오류 등)가 발생하면 앞서 성공한 사진은 `review-images` Storage에 남아 orphan이 됨. L-108(community.html)과 동일 패턴으로 review 제출 흐름에도 동일하게 존재.
+- **원인:** `app.js:1781-1785` — 사진 순차 업로드 루프에서 실패 시 `return`하지만 이미 `urls`에 들어간 업로드 완료 파일은 Storage에서 삭제하지 않음.
+- **수정 방향:** 업로드 실패 시 `urls` 배열에 이미 쌓인 경로들을 `supabase.storage.from(IMG_BUCKET).remove([paths])` 로 정리 후 return. [site/app.js:1783](site/app.js)
+- **심각도:** 🟢 Low
+
+### [L-112] openProduct — #pmodal 외부 div와 내부 .pmbox 모두 role="dialog" 중첩
+- **영역:** 상품상세 — 상품 상세 모달 접근성
+- **증상:** `#pmodal` 외부 컨테이너(backdrop)와 내부 `.pmbox` 모두 `role="dialog" aria-modal="true"`가 설정돼 스크린리더가 dialog 진입을 두 번 고지하거나 예기치 않은 동작 가능. WAI-ARIA spec상 nested `role="dialog"`는 anti-pattern.
+- **원인:** `app.js:1480` — modal 생성 시 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정. `app.js:1493` — innerHTML로 `<div class="pmbox" role="dialog" aria-modal="true" ...>` 삽입으로 중첩.
+- **수정 방향:** 외부 `#pmodal`의 `role`·`aria-modal` 속성 제거 (내부 `.pmbox`에만 유지). [site/app.js:1480](site/app.js)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 커뮤니티/소셜 (13순환)*
