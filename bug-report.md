@@ -1139,7 +1139,7 @@
 - **증상:** 헤더의 "정량 스펙 별점 · 브랜드만 · 측정값만" 문구가 카테고리 페이지 필터 칩과 유사한 표현으로, 상세 페이지에서는 클릭 불가한 정적 텍스트임에도 인터랙티브 요소로 오인될 수 있음.
 - **재현:** 상세 페이지 → 헤더 슬로건 클릭 → 반응 없음
 
-### [L-74] `account.html#settings` URL hash가 실제 DOM ID `settings-section`과 불일치 — 스크롤 이동 불가
+### [L-74] ✅ 해결완료(2026-06-13) — `account.html#settings` URL hash가 실제 DOM ID `settings-section`과 불일치 — 스크롤 이동 불가
 - **영역:** 계정/로그인 — 설정 탭
 - **URL:** https://gear-forest.com/account.html#settings
 - **증상:** URL hash가 `#settings`이지만 DOM ID는 `settings-section`. 브라우저 기본 anchor 동작이 작동하지 않아 직접 접근·링크 공유 시 설정 섹션으로 자동 스크롤되지 않음. `#wish`, `#sets`, `#logs`도 동일 패턴 확인 필요.
@@ -1193,7 +1193,7 @@
 - **영역:** SEO
 - **해결:** sitemap.xml 18개 카테고리 URL을 `category/{slug}` → `category.html?cat={slug}`로 변경 — 실제 서빙 경로·canonical과 일치, 301 리다이렉트 제거. [site/sitemap.xml](site/sitemap.xml)
 
-### [L-49] 구글 로그인 버튼 `type="submit"` — `<form>` 없이 submit 타입 설정
+### [L-49] ✅ 해결완료(2026-06-13) — 구글 로그인 버튼 `type="submit"` — `<form>` 없이 submit 타입 설정
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
 - **증상:** `#btn-google` 버튼의 `type="submit"`으로 설정되어 있으나 감싸는 `<form>` 요소가 없음. 의도치 않은 폼 제출 동작 유발 가능성. `type="button"`이어야 함.
@@ -1372,7 +1372,7 @@
 - **영역:** 계정/로그인 — 찜 탭
 - **증상:** 개별 찜 해제 버튼만 있고 "전체 삭제" 기능 없음. 다수 찜 항목을 일일이 해제해야 함.
 
-### [L-38] 다크모드 설정 설명에 "(정비 중)" 텍스트 잔존
+### [L-38] ✅ 해결완료(기구현·2026-06-13 검증) — 다크모드 설정 설명에 "(정비 중)" 텍스트 잔존
 - **영역:** 계정/로그인 — 설정 탭
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 다크모드 토글 설명에 "어두운 테마로 전환합니다 (정비 중)" 문구가 사용자에게 그대로 노출됨. 기능 자체는 정상 동작(localStorage 저장, 새로고침 후 유지)하므로 "(정비 중)" 제거 필요.
@@ -1923,7 +1923,7 @@
 - **수정:** `saveSets(arr)` 후 `if (window._accUser) { import("./supabaseClient.js").then(({ upsertGearSet }) => upsertGearSet(newSet, window._accUser.id).then(id => { if (id) { newSet.remoteId = id; saveSets(getSets()); }})) }` 추가.
 - **파일:** [site/app.js](site/app.js) line ~3381
 
-### [L-115] `acc-tabs` 내 로그 탭 레이블에 카운트 배지 없음 — 찜·세트와 불일치
+### [L-115] ✅ 해결완료(기구현·2026-06-13 검증) — `acc-tabs` 내 로그 탭 레이블에 카운트 배지 없음 — 찜·세트와 불일치
 - **영역:** 계정/로그인 — 탭 바
 - **심각도:** 🟢 Low
 - **증상:** `renderAccount()` 내 탭 레이블 갱신 로직(line ~2760)에서 찜(`❤️ 찜목록 3`)·세트(`🎒 내 세트 2`)는 localStorage 기반 카운트 배지를 표시하지만, 내 로그 탭(`📝 내 로그`)은 Supabase 비동기 로드 후에도 배지 없음. 로그 수가 로드된 후 `logscount` 스팬은 갱신되나 탭 레이블 자체는 변경 안 됨.
@@ -2358,7 +2358,7 @@
 - **수정:** line 259(`syncWishlistOnLogin()`) 아래에 `syncGearSetsOnLogin(profile.id)` 추가. `profile`은 바로 위 `getProfile()` 반환값에서 획득 가능.
 - **파일:** [site/account.html](site/account.html) line ~259 [lane:SOCIAL]
 
-### [L-151] 닉네임 설정 모달 `#nick-hint` — `aria-live` 없음 → AT 사용자 유효성 피드백 미청취
+### [L-151] ✅ 해결완료(2026-06-13) — 닉네임 설정 모달 `#nick-hint` — `aria-live` 없음 → AT 사용자 유효성 피드백 미청취
 - **영역:** 계정 — 닉네임 설정 모달 접근성
 - **심각도:** 🟢 Low
 - **증상:** `renderNicknameModal()`(line 196) 내 `#nick-hint` `<p>` 요소에 `aria-live` 속성이 없다. `setHint()` 함수가 텍스트를 동적으로 변경해도("사용 가능한 닉네임이에요 ✓", "이미 사용 중인 닉네임이에요", "확인 중…") AT가 자동으로 읽어주지 않는다. 스크린 리더 사용자는 포커스를 hint 요소로 직접 이동하지 않는 한 닉네임 검사 결과를 인지할 수 없어 저장 버튼 활성화 여부를 파악하기 어렵다.
