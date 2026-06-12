@@ -102,7 +102,8 @@ body:has(.pmodal.on){overflow:hidden}
 h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 
 /* 카테고리 네비게이션 */
-.catnav-wrap{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:calc(59px + var(--banner-h,0px));z-index:9}
+.catnav-wrap{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:calc(59px + var(--banner-h,0px));z-index:9;overflow:hidden}
+.catnav-wrap::after{content:"";position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to right,transparent,var(--card));pointer-events:none;z-index:1}
 .catnav{display:flex;gap:6px;overflow-x:auto;padding:9px 0;scrollbar-width:thin}
 .catnav::-webkit-scrollbar{height:5px}
 .catnav::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
@@ -415,7 +416,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pli-specs{display:flex;flex-wrap:wrap;gap:4px 12px}
 .pli-spec{font-size:12px;color:var(--txt);font-variant-numeric:tabular-nums;
   display:inline-flex;gap:4px;align-items:baseline}
-.pli-spec i{font-style:normal;color:var(--muted)}
+.pli-spec i{font-style:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:10em}
 .pli-spec.on{color:var(--accent);font-weight:700}
 .pli-spec.on i{color:var(--accent)}
 .pli-spec .stars{font-size:11px}

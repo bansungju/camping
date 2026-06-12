@@ -1782,6 +1782,9 @@ function openCmpModal(rows) {
   modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
   modal.querySelector("#cmp-save-set").onclick = () => {
+    const btn = modal.querySelector("#cmp-save-set");
+    if (btn.disabled) return;  // L-82: 더블클릭 중복 저장 방지
+    btn.disabled = true;
     const today = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
     const setName = `${catLabel} 비교 ${today}`;
     const setItems = items.map(m => ({
@@ -1792,9 +1795,7 @@ function openCmpModal(rows) {
     const sets = getSets();
     sets.push({ id: Date.now().toString(36), title: setName, style: "비교", items: setItems, created_at: new Date().toISOString() });
     saveSets(sets);
-    const btn = modal.querySelector("#cmp-save-set");
     btn.textContent = "✅ 저장됐어요! 마이페이지에서 확인하세요";
-    btn.disabled = true;
     btn.style.background = "var(--muted)";
   };
 }
