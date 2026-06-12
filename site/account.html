@@ -198,10 +198,12 @@ import {
 } from './supabaseClient.js?v=5e3018d7'
 
 const section = document.getElementById('auth-section')
+// L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
+const _isViewSet = !!new URLSearchParams(location.search).get('view-set')
 
 // 찜 목록은 로그인 여부와 무관하게 즉시 표시(localStorage 기준).
 // 로그인 상태에 따라 동기화 안내만 토글한다.
-if (typeof renderAccount === 'function') renderAccount()
+if (!_isViewSet && typeof renderAccount === 'function') renderAccount()
 function setSyncHint(loggedIn) {
   const h = document.getElementById('wish-synchint')
   if (!h) return
@@ -343,6 +345,7 @@ function scrollToHashSection() {
 window.addEventListener('hashchange', scrollToHashSection)
 
 function showLoggedInSections(show) {
+  if (show && _isViewSet) return  // L-76: 공유 URL 열람 중 개인 섹션 억제
   const ws = document.getElementById('wish-section')
   const ss = document.getElementById('settings-section')
   const ba = document.getElementById('bottom-actions')
