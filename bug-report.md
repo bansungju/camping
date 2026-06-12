@@ -1852,3 +1852,41 @@
 ---
 
 *다음 회차: 계정/로그인 (13순환)*
+
+---
+
+## R-69 계정/로그인 (13순환) — 2026-06-12
+
+### [M-125] 닉네임 설정 모달 — save 클릭 시 `clearTimeout(debounce)` 미호출 → `enable(true)` 경쟁 조건으로 중복 setNickname 가능
+- **영역:** 계정/로그인 — 닉네임 설정 모달
+- **심각도:** 🟡 Medium
+- **증상:** 닉네임 입력 중(마지막 키 입력 후 320ms 이내) 바로 "시작하기" 클릭 시, `save.addEventListener` 핸들러가 `clearTimeout(debounce)` 없이 `setNickname(v)` await을 시작함. 320ms 뒤 debounce 타이머가 발화해 `isNicknameAvailable` 결과에 따라 `enable(true)`(`save.disabled = false`) 호출 가능 → `setNickname` 완료 전 버튼 재활성화 → 사용자가 한 번 더 클릭하면 `setNickname(v)` 두 번 호출.
+- **원인:** `account.html` `renderNicknameModal` save 클릭 핸들러(line ~247)에 `clearTimeout(debounce)` 누락.
+- **수정:** save 클릭 핸들러 첫 줄에 `clearTimeout(debounce)` 추가.
+- **파일:** [site/account.html](site/account.html) line ~247
+
+### [L-113] `wish-bulk-add` 버튼 — `renderAccount()` 재호출 시 `disabled` 상태 미초기화, 찜 0개 시 DOM 잔존
+- **영역:** 계정/로그인 — 찜 탭
+- **심각도:** 🟢 Low
+- **증상:** ①"찜한 N개 전체 → 새 세트로 저장" 버튼 클릭 후 `disabled=true` 세팅. 이후 `renderAccount()` 재호출 시 `bulkBtn.textContent`·`onclick`은 갱신되나 `bulkBtn.disabled = false` 재설정 없어 버튼이 영구 비활성화됨. ②찜을 모두 제거하면 `wishEl.innerHTML = ""`로 목록은 초기화되나 `bulkBtn`(`#wish-bulk-add`)은 `wishEl.after()` 위치에 잔존 — 찜 0개 상태에서도 버튼이 DOM에 남음.
+- **원인:** `app.js` 내 `renderAccount()` 찜 섹션 렌더링 로직(line ~2613)에서 `bulkBtn.disabled = false` 초기화 및 `wishes.length === 0` 시 `bulkBtn` 숨김/제거 코드 누락.
+- **수정:** `if (wishEl && wishes.length)` 블록 내 `bulkBtn.disabled = false` 추가; `else` 블록에 `bulkBtn = document.getElementById("wish-bulk-add"); if (bulkBtn) bulkBtn.style.display = "none"` 추가.
+- **파일:** [site/app.js](site/app.js) line ~2613
+
+### [L-114] 공유 세트(`?view-set`) import — 로그인 상태에서 `upsertGearSet` 미호출 → 현재 세션 내 Supabase 동기화 없음
+- **영역:** 계정/로그인 — 내 세트 (세트 공유 수신)
+- **심각도:** 🟢 Low
+- **증상:** `?view-set=BASE64`로 공유 세트를 열고 "내 세트에 추가" 클릭 시, 로그인 여부와 무관하게 localStorage에만 저장(`getSets()`→`saveSets()`). 로그인 상태에서도 `upsertGearSet(newSet, userId)` 미호출로 Supabase `gear_sets` 테이블에는 즉시 반영되지 않음. 로그아웃 후 재로그인 시 `syncGearSetsOnLogin`의 `toUpsert`(remoteId 없는 세트) 경로를 통해 뒤늦게 동기화됨 — 그 전에 다른 기기로 로그인하면 해당 세트 유실.
+- **원인:** `app.js` `?view-set` 처리 블록(line ~3381) 내 import 핸들러에 `upsertGearSet` 호출 누락.
+- **수정:** `saveSets(arr)` 후 `if (window._accUser) { import("./supabaseClient.js").then(({ upsertGearSet }) => upsertGearSet(newSet, window._accUser.id).then(id => { if (id) { newSet.remoteId = id; saveSets(getSets()); }})) }` 추가.
+- **파일:** [site/app.js](site/app.js) line ~3381
+
+### [L-115] `acc-tabs` 내 로그 탭 레이블에 카운트 배지 없음 — 찜·세트와 불일치
+- **영역:** 계정/로그인 — 탭 바
+- **심각도:** 🟢 Low
+- **증상:** `renderAccount()` 내 탭 레이블 갱신 로직(line ~2760)에서 찜(`❤️ 찜목록 3`)·세트(`🎒 내 세트 2`)는 localStorage 기반 카운트 배지를 표시하지만, 내 로그 탭(`📝 내 로그`)은 Supabase 비동기 로드 후에도 배지 없음. 로그 수가 로드된 후 `logscount` 스팬은 갱신되나 탭 레이블 자체는 변경 안 됨.
+- **원인:** `app.js:2762` `logs: \`📝 내 로그\`` — 카운트 배지 템플릿 미적용. `logscount.textContent` 갱신 시 탭 레이블도 함께 업데이트하는 로직 없음.
+- **수정:** 로그 로드 성공 후(`logsCnt.textContent = ...` 설정 시점) 탭 레이블도 `b.innerHTML = \`📝 내 로그 <span>...\`` 갱신 로직 추가 (단, 비동기 특성상 초기 렌더 후 반영).
+- **파일:** [site/app.js](site/app.js) line ~2762
+
+*다음 회차: 홈/메인 (14순환)*
