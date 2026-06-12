@@ -296,7 +296,7 @@ function setItem(m, slug) {
 function openSetModal(item) {
   let modal = document.getElementById("set-modal");
   if (!modal) {
-    modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal";
+    modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true");
     document.body.appendChild(modal);
   }
   const sets = getSets();
@@ -306,7 +306,7 @@ function openSetModal(item) {
         <span class="sm-set-cnt">${s.items.length}개 장비</span></button>`).join("")
     : `<div class="sm-empty">저장된 세트가 없어요</div>`;
   modal.innerHTML = `<div class="pmbox sm-box" role="dialog" aria-modal="true">
-    <button class="pmx" aria-label="닫기">✕</button>
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div class="sm-head">
       <div class="sm-title">장비 꾸러미에 담기</div>
       <div class="sm-item">${esc(item.b)} ${esc(item.m)}</div>
@@ -1172,7 +1172,7 @@ function buildFilters(d, star) {
       fill.style.left = pct(lo) + "%";
       fill.style.width = (pct(hi) - pct(lo)) + "%";
     };
-    const toStateVal = v => isWeight ? parseFloat(v) * 1000 : parseFloat(v);
+    const toStateVal = v => isWeight ? Math.round(parseFloat(v) * 1000) : parseFloat(v);  // L-68 float precision
     const applyToState = () => {
       const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
       const isDefault = (lo <= totalLo && hi >= totalHi);
@@ -1212,7 +1212,7 @@ function buildFilters(d, star) {
   if (sc) {
     const CHIPS = [["", "기본"], ["price_min", "가격 낮은순"], ["value", "가성비순"]];
     sc.innerHTML = `<span class="flab">정렬</span>` + CHIPS.map(([v, lab]) =>
-      `<button type="button" class="schip" data-sortval="${v}">${esc(lab)}</button>`).join("");
+      `<button type="button" class="schip" data-sortval="${v}" aria-pressed="false">${esc(lab)}</button>`).join("");  // L-16
     sc.querySelectorAll(".schip").forEach(b => b.onclick = () => applySort(b.dataset.sortval));
   }
   // 품질 토글
@@ -1359,7 +1359,7 @@ function openProduct(m) {
   pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
-  if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); document.body.appendChild(modal); }
   const imgHtml = thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "pmimg", "pmicon");
   const specRows = star.map(mt => {
     const s = m.specs[mt.key];
@@ -1373,7 +1373,7 @@ function openProduct(m) {
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
   const pcode = wishKey(m.brand, m.model, m.capacity);
   modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true" aria-labelledby="pm-title">
-     <button class="pmx" aria-label="닫기">✕</button>
+     <button type="button" class="pmx" aria-label="닫기">✕</button>
      <button class="pmwish${wished ? " on" : ""}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
      ${imgHtml}
      <div class="pmbody">
@@ -1522,11 +1522,11 @@ function _reviewCard(r, i) {
 // 후기 상세 라이트박스 — 큰 사진 + 별점 + 전체 텍스트
 function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
-  if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }
+  if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-modal","true"); document.body.appendChild(ov); }
   const nick = esc(r.profiles?.nickname || "익명");
   const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy">`).join("");
   ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">
-    <button class="pmx" aria-label="닫기">✕</button>
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
     ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}
     <div class="pmrvd-body">
       <div class="pmrvd-meta"><span class="pmrv-nick">${nick}</span><span class="pmrv-stars">${stars(r.rating)}</span><span class="pmrv-date">${_reviewDate(r.created_at)}</span></div>
@@ -1769,7 +1769,7 @@ function openCmpModal(rows) {
 
   const catLabel = d.name || STATE.slug || "";
   modal.innerHTML = `<div class="pmbox" style="max-width:600px;width:100%;padding:20px;overflow-x:auto">
-    <button class="pmx" aria-label="닫기">✕</button>
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
     <h2 id="cmp-modal-title" style="font-size:16px;font-weight:700;margin-bottom:16px">📊 스펙 비교</h2>
     <div style="display:flex;gap:12px;align-items:flex-start">${cols}</div>
     <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">✓ 표시: 해당 지표 최선값</p>
@@ -1822,7 +1822,9 @@ function draw() {
   // 빠른 정렬 칩 활성표시(칩·셀렉트·URL복원 어느 경로로 바뀌든 일치)
   document.querySelectorAll("#sortchips .schip").forEach(b => {
     const v = b.dataset.sortval;
-    b.classList.toggle("on", (v === "" && k === defaultSortKey()) || v === k);
+    const active = (v === "" && k === defaultSortKey()) || v === k;
+    b.classList.toggle("on", active);
+    b.setAttribute("aria-pressed", String(active));  // L-16
   });
 
   const tint = catTint(d.name), icon = catIcon(d.name);
@@ -2164,9 +2166,9 @@ function openSetDetail(si) {
     </tr>`;
   }).join("");
   let modal = document.getElementById("set-detail-modal");
-  if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); document.body.appendChild(modal); }
   modal.innerHTML = `<div class="pmbox" style="max-width:520px;width:100%;padding:20px">
-    <button class="pmx" aria-label="닫기">✕</button>
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
     <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
     <table style="width:100%;border-collapse:collapse">
@@ -2523,7 +2525,7 @@ function renderAccount() {
       const dialog = document.createElement("div");
       dialog.className = "pmodal on";
       dialog.innerHTML = `<div class="pmbox" style="max-width:320px;width:100%;padding:24px">
-        <button class="pmx" aria-label="닫기">✕</button>
+        <button type="button" class="pmx" aria-label="닫기">✕</button>
         <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 무게 목표 설정</h2>
         <div style="text-align:center;font-size:24px;font-weight:700;margin-bottom:8px" id="goal-display">${fmtWeight(current)}</div>
         <input type="range" id="goal-slider" min="500" max="15000" step="100" value="${current}" style="width:100%;margin-bottom:16px">
@@ -2882,7 +2884,7 @@ function openLogDetail(p) {
   const tagHtml = (p.tags || []).map(t => `<span class="log-tag" style="font-size:12px;padding:3px 10px">${esc(t)}</span>`).join("");
   const body = (p.content || "").replace(/\n/g, "<br>");
   modal.innerHTML = `<div class="pmbox log-detail-box" role="dialog" aria-modal="true">
-    <button class="pmx" aria-label="닫기">✕</button>
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span class="log-nick" style="font-size:14px">${esc(nick)}</span>
       <span class="log-date">${dt}</span>
@@ -3184,7 +3186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `<div class="cmt-row"><div class="cmt-body">${esc(`${x.b || ""} ${x.m || ""}`.trim())}${x.qty > 1 ? ` ×${x.qty}` : ""}${x.weight_g ? ` <span style="color:var(--muted);font-size:11px">${x.weight_g >= 1000 ? (x.weight_g / 1000).toFixed(1) + "kg" : x.weight_g + "g"}</span>` : ""}</div></div>`
       ).join("");
       modal.innerHTML = `<div class="pmbox" style="max-width:400px;width:100%;padding:24px">
-        <button class="pmx">✕</button>
+        <button type="button" class="pmx" aria-label="닫기">✕</button>
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px">공유된 세트</div>
         <h2 style="font-size:18px;font-weight:700;margin:0 0 6px">${esc(s.name || "세트")}</h2>
         ${wTxt ? `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">총 무게 ${wTxt}</div>` : ""}
