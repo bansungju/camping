@@ -969,11 +969,12 @@
 - **증상:** privacy.html에 카카오 로그인 관련 개인정보 처리 항목이 기재되어 있으나 실제 코드는 Google OAuth만 구현됨. 개인정보 처리방침이 실제 처리 현황과 불일치.
 - **해결(라이브 검증 2026-06-11):** 현재 privacy.html은 §1 수집항목·§4 제3자 제공 모두 "구글 소셜 로그인(OAuth 2.0)" 단독 기재이며 카카오 언급이 0건. 라이브 `curl https://gear-forest.com/privacy.html | grep 카카오` 결과 없음 → 실제 구현(Google 단독)과 일치. [site/privacy.html](site/privacy.html)
 
-### [L-44] 상세 페이지 스펙 단위 "m2" 텍스트 표기 — "m²" 상첨자 아님
+### [L-44] ✅ 해결완료(2026-06-12) — 상세 페이지 스펙 단위 "m2" 텍스트 표기 — "m²" 상첨자 아님
 - **영역:** 상품상세 — 스펙 테이블
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html 등 바닥면적 있는 텐트 상세
 - **증상:** 스펙 테이블 바닥면적 셀이 "2.25m2"로 표시됨. 올바른 기호는 "m²"(유니코드 상첨자). 생성 스크립트(`scripts/build-item-pages.js`)가 JSON 원본 "m2" 값을 변환 없이 출력한 결과.
 - **재현:** 텐트 상세 페이지 → 스펙 테이블 바닥면적 행 확인
+- **해결:** `UNIT_DISPLAY` 맵(`m2`→`m²`, `cm3`→`cm³`, `C`→`°C`) 추가, `specTableRows`에서 적용 후 item 페이지 2277개 재생성. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-45] SW 스크립트 404 콘솔 에러 — 매 페이지 로드마다 발생
 - **영역:** 전체 (PWA/서비스워커)
@@ -1010,11 +1011,12 @@
 ### [L-59] ✅ 해결완료(2026-06-12) — 카테고리 검색창 IME `isComposing` 가드 없음
 - **해결(2026-06-12):** `qInp.oninput` 핸들러에 `if (e.isComposing) return` 가드 추가. [site/app.js](site/app.js)
 
-### [L-60] 홈 검색 "결과 없음" div에 `role="option"` 없음 — listbox 내 메시지 스크린리더 미인식
+### [L-60] ✅ 해결완료(2026-06-12) — 홈 검색 "결과 없음" div에 `role="option"` 없음 — listbox 내 메시지 스크린리더 미인식
 - **영역:** 검색 — 홈 전역 검색
 - **URL:** https://gear-forest.com/
 - **증상:** 결과 0건일 때 `#homeres`(role=listbox) 안에 삽입되는 "결과 없음" div에 `role="option"`이 없어 listbox 컨텍스트에서 스크린리더가 이를 항목으로 인식하지 않음. aria-live도 없어 외부 고지도 불가.
 - **재현:** 검색창에 "zzzznotexist" 입력 → `#homeres` 내부 div role 확인 → null
+- **해결:** "결과 없음" div에 `role="option"` + `aria-disabled="true"` 추가. [site/app.js](site/app.js)
 
 ### [L-61] 홈 검색 Enter 키 — 결과 없을 때 아무 피드백 없음
 - **영역:** 검색 — 홈 전역 검색
@@ -1022,11 +1024,12 @@
 - **증상:** 존재하지 않는 검색어 입력 후 Enter를 누르면 이동도, 흔들림 애니메이션도, 토스트 메시지도 없이 아무 반응이 없음. 사용자가 Enter가 처리됐는지 알 수 없음.
 - **재현:** 검색창에 "zzzznotexistxxx" 입력 → Enter → 반응 없음
 
-### [L-62] 찜·세트 카드 `div[role="button"]`에 `aria-label` 없음
+### [L-62] ✅ 해결완료(2026-06-12) — 찜·세트 카드 `div[role="button"]`에 `aria-label` 없음
 - **영역:** 계정/로그인 — 찜·세트 탭
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 찜/세트 아이템 카드가 `<div role="button" tabindex="0">` 구조이나 `aria-label`이 없음. 스크린리더가 카드 전체 텍스트를 낱낱이 읽어야 하며 상품명을 간결하게 고지하지 못함.
 - **재현:** 찜 카드 DOM 검사 → `aria-label` null 확인
+- **해결:** 찜 카드에 `aria-label="${brand} ${model} 상세 보기"`, 세트 카드에 `aria-label="${title} 세트 상세 보기"` 추가. [site/app.js](site/app.js)
 
 ### [L-63] 계정 페이지 전체에 `aria-live` 영역 전무 — 찜 해제·삭제 후 결과 알림 없음
 - **영역:** 계정/로그인
@@ -1072,11 +1075,12 @@
 - **재현:** DOM 검사 → `select[data-sort]`, `select[data-brandsel]` aria-label null 확인
 - **해결:** 코드 확인 시 이미 `aria-label="브랜드 필터 선택"` / `aria-label="정렬 기준 선택"` 존재 — 사전 적용됨. [site/app.js](site/app.js)
 
-### [L-70] 범위 슬라이더 `<input type="range">` `aria-label`·`aria-valuetext` 없음
+### [L-70] ✅ 해결완료(2026-06-12) — 범위 슬라이더 `<input type="range">` `aria-label`·`aria-valuetext` 없음
 - **영역:** 카테고리/목록 — 필터 슬라이더
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `.dsl-input` range input 전체(가격·무게·온도·충전량 min/max 8개)에 `aria-label`과 `aria-valuetext` 없음. 스크린리더가 어떤 필터의 min/max인지 알 수 없고 단위 없는 숫자만 읽힘.
 - **재현:** DOM 검사 → `input[type="range"].dsl-input` 8개 모두 aria-label null
+- **해결:** 가격/스펙/추가스펙 슬라이더 3종 템플릿에 `aria-label="XXX 최솟값/최댓값"` 추가. oninput에서 `aria-valuetext` 포맷팅 값으로 동기화. [site/app.js](site/app.js)
 
 ### [L-71] 상세 페이지 별점 셀(`.spec-stars`)에 `aria-label` 없음 — 원시 유니코드 문자 읽힘
 - **영역:** 상품 상세 — 스펙 테이블

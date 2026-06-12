@@ -51,12 +51,14 @@ function starsHtml(stars) {
   return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty) + ` (${stars})`;
 }
 
+const UNIT_DISPLAY = { m2: "m²", cm3: "cm³", C: "°C" };
 function specTableRows(specs, metrics) {
   return metrics
     .filter(m => specs[m.key] != null)
     .map(m => {
       const s = specs[m.key];
-      const val = s.value != null ? `${s.value}${m.unit}` : "-";
+      const unit = UNIT_DISPLAY[m.unit] || m.unit;
+      const val = s.value != null ? `${s.value}${unit}` : "-";
       const stars = s.stars != null ? starsHtml(s.stars) : "";
       const badge = s.badge ? `<span class="spec-badge">${s.badge}</span>` : "";
       return `<tr><th>${m.label}</th><td>${val} ${badge}</td><td class="spec-stars">${stars}</td></tr>`;
