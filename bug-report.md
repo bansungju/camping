@@ -1968,3 +1968,33 @@
 - **파일:** [site/app.js](site/app.js) line ~1292, ~1295
 
 *다음 회차: 상품상세 (14순환)*
+
+---
+
+## R-72 상품상세 (14순환) — 2026-06-12
+
+### [M-128] `openProduct()` · `openReviewDetail()` — 외부 오버레이와 내부 `.pmbox` 양쪽에 `role="dialog"` 중복 설정
+- **영역:** 상품상세 — 제품 상세 모달 / 후기 상세 모달
+- **심각도:** 🟡 Medium
+- **증상:** `openProduct()`(line ~1550)에서 외부 컨테이너 `#pmodal`에 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정 후, `modal.innerHTML`로 삽입하는 내부 `.pmbox`에도 `role="dialog" aria-modal="true" aria-labelledby="pm-title"` 중복 부여. `openReviewDetail()`(line ~1713)도 동일하게 외부 `#pmrv-detail`과 내부 `.pmbox pmrvd-box` 양쪽에 `role="dialog"`. ARIA 기준상 `role="dialog"`는 단일 요소에만 지정해야 하며, 외부 오버레이(backdrop)가 아닌 내부 콘텐츠 박스에만 위치해야 한다. 외부 오버레이에 role이 있어 `aria-labelledby`도 내부 요소와 연결이 끊김.
+- **원인:** `openProduct()` 초기화 블록(line ~1550)에서 외부 컨테이너에 role 설정 후, `innerHTML` 재생성 시 내부 `.pmbox`에도 동일 속성 반복. `openReviewDetail()`(line ~1713)도 동일 패턴.
+- **수정:** 외부 컨테이너(`#pmodal`, `#pmrv-detail`)에서 `role="dialog"`·`aria-modal="true"` 제거. `aria-labelledby`는 외부 컨테이너에 추가(내부 pmbox에서는 유지). 내부 `.pmbox`의 `role="dialog" aria-modal="true"`는 유지.
+- **파일:** [site/app.js](site/app.js) line ~1550, ~1563, ~1713, ~1716
+
+### [L-122] `openReviewDetail()` 포커스 관리 완전 누락 — 초기 포커스·복귀·트랩 모두 없음
+- **영역:** 상품상세 — 후기 상세 라이트박스 모달
+- **심각도:** 🟢 Low
+- **증상:** `openReviewDetail()`(line ~1711) 모달 open 시 ① 닫기 버튼에 초기 포커스 미설정 ② 모달 닫힐 때 이전 포커스 복귀 코드 없음 ③ Tab 키가 모달 밖으로 탈출하는 포커스 트랩 없음. `openProduct()`는 `prevFocus` 캡처 → `xbtn.focus()` → 포커스 트랩(H-29 수정) 모두 구현됨. 두 모달이 함께 사용되는 상황(후기 카드 클릭)에서 후기 상세만 접근성 수준이 떨어짐.
+- **원인:** `openReviewDetail()` 구현 시 `openProduct()`의 포커스 관리 패턴 미적용.
+- **수정:** `openProduct()` 패턴 동일 적용: `const prevFocus = document.activeElement`, `ov.querySelector(".pmx").focus()`, Tab/Shift+Tab 순환 포커스 트랩 추가. `close()` 내 `if (prevFocus) prevFocus.focus()` 추가.
+- **파일:** [site/app.js](site/app.js) line ~1711
+
+### [L-123] `site/item/**` 정적 페이지 `style.css?v=` 해시가 `stamp_version.py` 갱신 대상 제외 — CSS 변경 후 구버전 CSS 캐시 가능
+- **영역:** 상품상세 — 정적 상품 상세 페이지 (2277개)
+- **심각도:** 🟢 Low
+- **증상:** `stamp_version.py` 실행 시 `site/item/**` 페이지는 업데이트 대상 제외. CSS 변경 후 stamp가 실행돼도 item 페이지들의 `style.css?v=...` 해시는 갱신되지 않아 구버전 CSS를 캐시할 수 있음. stamp_version.py 갱신 대상은 `community.html, index.html, category.html, recommend.html, account.html, brand.html` 만이며 `site/item/**` 제외. 향후 CSS 변경 후 코어 HTML만 갱신되면 item 페이지와 버전 불일치 발생 가능.
+- **원인:** `stamp_version.py`의 업데이트 대상 파일 목록에 `site/item/**/*.html` 미포함. Item 페이지는 `build-item-pages.js` 재실행 시에만 최신 해시 반영.
+- **수정:** CSS/JS 변경 시 item 페이지 재빌드(`node scripts/build-item-pages.js`) 필수 단계 추가. 또는 `stamp_version.py`가 item 페이지도 포함하도록 확장.
+- **파일:** [pipeline/stamp_version.py](pipeline/stamp_version.py), `site/item/**/*.html`
+
+*다음 회차: 계정/로그인 (14순환)*
