@@ -1814,7 +1814,7 @@
 
 ## R-65 계정/로그인 (12순환) — 2026-06-12
 
-### [M-123] 첫 로그인 닉네임 설정 완료 후 syncGearSetsOnLogin 미호출 — 세트 동기화 누락
+### [M-123] ✅ 해결완료(2026-06-13) — 첫 로그인 닉네임 설정 완료 후 syncGearSetsOnLogin 미호출 — 세트 동기화 누락
 - **영역:** 계정/로그인 — 닉네임 설정 모달
 - **증상:** 처음 로그인한 사용자가 닉네임 설정을 완료하면 `syncWishlistOnLogin()`만 호출되고 `syncGearSetsOnLogin(user.id)`는 호출되지 않음. 이로 인해 로컬 세트가 서버에 업로드되지 않고 서버 세트가 로컬에 병합되지 않음. `initAuth`의 `SIGNED_IN` 분기에서 `syncGearSetsOnLogin`을 호출하지만 닉네임 미설정 사용자는 early return으로 해당 분기에 진입하지 않음.
 - **원인:** `account.html:247-260` — `setNickname` 성공 후 `syncWishlistOnLogin()` 만 호출. `syncGearSetsOnLogin(user.id)` 미포함.
@@ -1916,7 +1916,7 @@
 - **수정:** `if (wishEl && wishes.length)` 블록 내 `bulkBtn.disabled = false` 추가; `else` 블록에 `bulkBtn = document.getElementById("wish-bulk-add"); if (bulkBtn) bulkBtn.style.display = "none"` 추가.
 - **파일:** [site/app.js](site/app.js) line ~2613
 
-### [L-114] 공유 세트(`?view-set`) import — 로그인 상태에서 `upsertGearSet` 미호출 → 현재 세션 내 Supabase 동기화 없음
+### [L-114] ✅ 해결완료(2026-06-13) — 공유 세트(`?view-set`) import — 로그인 상태에서 `upsertGearSet` 미호출 → 현재 세션 내 Supabase 동기화 없음
 - **영역:** 계정/로그인 — 내 세트 (세트 공유 수신)
 - **심각도:** 🟢 Low
 - **증상:** `?view-set=BASE64`로 공유 세트를 열고 "내 세트에 추가" 클릭 시, 로그인 여부와 무관하게 localStorage에만 저장(`getSets()`→`saveSets()`). 로그인 상태에서도 `upsertGearSet(newSet, userId)` 미호출로 Supabase `gear_sets` 테이블에는 즉시 반영되지 않음. 로그아웃 후 재로그인 시 `syncGearSetsOnLogin`의 `toUpsert`(remoteId 없는 세트) 경로를 통해 뒤늦게 동기화됨 — 그 전에 다른 기기로 로그인하면 해당 세트 유실.
@@ -2352,7 +2352,7 @@
 - **수정:** `initAuth`에서 line 22(`onStateChange(session?.user ?? null, 'INITIAL')`) 합성 호출 제거. `onAuthStateChange`의 `INITIAL_SESSION` 이벤트만으로 초기 상태 처리. 콜백 내 `event === 'INITIAL'` 분기가 있다면 함께 정리.
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~22, [site/account.html](site/account.html) line ~367 [lane:SOCIAL]
 
-### [L-150] 닉네임 설정 완료 후 `syncGearSetsOnLogin` 미호출 — 신규 사용자 로컬 기어세트 원격 미업로드
+### [L-150] ✅ 해결완료(2026-06-13) — 닉네임 설정 완료 후 `syncGearSetsOnLogin` 미호출 — 신규 사용자 로컬 기어세트 원격 미업로드
 - **영역:** 계정 — 최초 로그인 닉네임 설정
 - **심각도:** 🟢 Low
 - **증상:** 최초 로그인(닉네임 미설정) 시 `initAuth` 콜백은 `renderNicknameModal()` 후 `return`하므로 line 393의 `syncGearSetsOnLogin(user.id)` 경로에 도달하지 않는다. 닉네임 저장 성공 후 `save` 클릭 핸들러(line 247)에서 `syncWishlistOnLogin()`은 호출하지만 `syncGearSetsOnLogin`은 호출하지 않는다. 닉네임 설정 전에 로컬 기어세트를 보유한 신규 사용자는 원격 동기화 기회를 영구적으로 놓친다(`SIGNED_IN` 이벤트는 이미 지나감).
