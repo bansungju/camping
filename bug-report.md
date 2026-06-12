@@ -2326,4 +2326,40 @@
 - **수정:** `renderNicknameModal` 템플릿 내 `<p id="nick-hint" ...>` 에 `aria-live="polite"` 추가.
 - **파일:** [site/account.html](site/account.html) line ~206 [lane:SOCIAL]
 
-*다음 회차: 홈/메인 (17순환)*
+---
+
+## R-82 — 홈/메인 (17순환) [2026-06-12] [lane:SOCIAL]
+
+### [M-133] `community.html` `renderFeed` — `.cm-post` `<a>` href 없음 → 피드 전체 키보드/AT 접근 불가
+- **영역:** 커뮤니티 — 피드 목록
+- **심각도:** 🟡 Medium
+- **증상:** `renderFeed()`(line 177)에서 게시글 카드를 `<a class="cm-post" data-id="...">` 로 렌더링하지만 `href` 속성이 없다. `href` 없는 `<a>` 요소는 브라우저 기본 탭 순서에 포함되지 않으므로, 키보드 사용자는 Tab으로 어떤 게시글에도 접근할 수 없다. 스크린 리더도 이를 링크가 아닌 일반 텍스트로 처리해 클릭 가능 여부를 안내하지 않는다. 마우스 `onclick` 핸들러(line 191)는 정상 동작하지만 키보드·AT 경로는 완전 차단.
+- **원인:** `<a href="#post={id}">` 대신 `data-id`를 쓰고 JS onclick만 연결. `href` 없는 `<a>` = 포커스 불가.
+- **수정:** `<a class="cm-post" href="#post=${esc(p.id)}" data-id="${esc(p.id)}">` 로 변경. href 추가 시 hashchange 리스너(line 386)가 자동으로 `renderDetail`을 호출하므로 별도 `onclick` 불필요.
+- **파일:** [site/community.html](site/community.html) line ~181 [lane:SOCIAL]
+
+### [L-152] `sw.js` `notificationclick` — URL 일치 탭 우선 탐색 없음 → 알림 대상 URL 대신 임의 탭 포커스
+- **영역:** PWA — 푸시 알림 클릭
+- **심각도:** 🟢 Low
+- **증상:** `notificationclick` 핸들러(sw.js line 96)에서 `list.find((c) => c.url.includes(location.origin))`로 기존 탭을 탐색한다. 알림 대상 URL이 `/community.html`이어도 `account.html` 탭이 이미 열려있으면 account.html을 포커스하고 종료 — 사용자는 커뮤니티가 아닌 다른 화면을 보게 된다. `clients.openWindow(url)` 경로(새 탭)는 URL이 올바르지만, 기존 탭이 있을 때는 항상 URL 무시.
+- **원인:** 탭 탐색 조건이 `origin` 포함 여부만 확인하며 `url`과의 일치 여부를 검사하지 않음.
+- **수정:** `list.find((c) => c.url === url || c.url === new URL(url, location.origin).href)` 로 URL-일치 탭을 우선 탐색. 없으면 임의 탭에 `navigate(url)` 또는 새 탭 오픈.
+- **파일:** [site/sw.js](site/sw.js) line ~96 [lane:SOCIAL]
+
+### [L-153] `community.html` `.cm-back` `<span onclick>` — 키보드/AT 뒤로가기 불가
+- **영역:** 커뮤니티 — 네비게이션
+- **심각도:** 🟢 Low
+- **증상:** `renderCompose()`(line 199)와 `renderDetail()`(lines 280, 286, 297)의 "← 목록으로" 버튼이 `<span class="cm-back" onclick>` 로 구현되어 있다. `<span>` 은 기본적으로 키보드 포커스를 받지 않으므로 키보드/AT 사용자가 Tab으로 뒤로가기를 실행할 수 없다. 글쓰기 폼·상세 화면 진입 후 Esc·Tab으로는 목록 복귀 방법이 없음.
+- **원인:** 클릭 전용 `<span>` 사용. `<button type="button">` 또는 `<a href="#">` 패턴 미적용.
+- **수정:** `<span class="cm-back" ...>` → `<button type="button" class="cm-back" ...>` 로 교체 (CSS는 그대로 적용됨).
+- **파일:** [site/community.html](site/community.html) line ~199, ~280, ~286, ~297 [lane:SOCIAL]
+
+### [L-154] `community.html` `renderDetail` `cm-like` 버튼 `aria-pressed` 없음 → AT 좋아요 상태 미공지
+- **영역:** 커뮤니티 — 게시글 상세 좋아요
+- **심각도:** 🟢 Low
+- **증상:** `cm-like` 버튼(line 304)은 좋아요 상태를 `.on` CSS 클래스로만 표현한다(`aria-pressed` 없음). 스크린 리더 사용자는 현재 좋아요 상태를 알 수 없으며, 클릭 후 상태 변화도 청취하지 못한다. 토글 후 `likedState` 갱신 시 `aria-pressed`도 동기 업데이트 필요.
+- **원인:** 토글 버튼 패턴에 필수인 `aria-pressed` 속성 누락.
+- **수정:** 초기 렌더 시 `aria-pressed="${liked}"` 추가. `likeBtn.onclick` 핸들러 내 `likeBtn.setAttribute('aria-pressed', String(likedState))` 추가.
+- **파일:** [site/community.html](site/community.html) line ~304, ~322 [lane:SOCIAL]
+
+*다음 회차: 카테고리/목록 (17순환)*
