@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1080px; height: 1920px; overflow: hidden; background: #2f7a4e; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.label-top { color: #fff; font-size: 52px; font-weight: 700; text-align: center; margin-bottom: 48px; line-height: 1.3; }
+.phone-wrap { width: 540px; height: 1080px; background: #111; border-radius: 64px; border: 10px solid #333; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.notch { width: 140px; height: 28px; background: #111; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10; }
+.screen { flex: 1; margin-top: 28px; background: #111; display: flex; flex-direction: column; }
+.cats { display: flex; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #333; overflow: hidden; }
+.cat { padding: 8px 18px; background: #333; border-radius: 24px; font-size: 20px; color: #aaa; white-space: nowrap; flex-shrink: 0; }
+.cat.active { background: #fff; color: #111; font-weight: 600; }
+.title { padding: 20px 24px 6px; font-size: 34px; font-weight: 700; color: #fff; }
+.count { padding: 0 24px 16px; font-size: 20px; color: #888; }
+.filter-hd { padding: 0 24px 12px; font-size: 22px; font-weight: 600; color: #4aad6d; }
+.row { padding: 6px 24px; }
+.rlabel { font-size: 20px; color: #888; margin-bottom: 6px; }
+.track { height: 6px; background: #333; border-radius: 3px; position: relative; }
+.fill { position: absolute; left: 0; height: 6px; background: #2f7a4e; border-radius: 3px; }
+.range { display: flex; justify-content: space-between; font-size: 18px; color: #ccc; margin-top: 4px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 24px; }
+.tag { padding: 6px 16px; background: #1e3d28; border-radius: 20px; font-size: 18px; color: #4aad6d; }
+.spacer { flex: 1; }
+.tabbar { display: flex; background: #111; border-top: 1px solid #333; padding: 14px 0 10px; }
+.tab { flex: 1; text-align: center; font-size: 18px; color: #555; }
+.tab.active { color: #4aad6d; font-weight: 600; }
+.tab-icon { font-size: 28px; display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="label-top">스펙 슬라이더로<br>내 조건에 맞게</div>
+<div class="phone-wrap">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="cats">
+      <div class="cat">백패킹텐트</div>
+      <div class="cat active">침낭</div>
+      <div class="cat">의자</div>
+      <div class="cat">매트</div>
+    </div>
+    <div class="title">침낭</div>
+    <div class="count">244개 모델 · 같은 그룹 안에서의 별점</div>
+    <div class="filter-hd">필터 펼치기 ▲</div>
+    <div class="row">
+      <div class="rlabel">가격</div>
+      <div class="track"><div class="fill" style="width:80%"></div></div>
+      <div class="range"><span>15,500원</span><span>1,249,280원</span></div>
+    </div>
+    <div class="row">
+      <div class="rlabel">최소무게</div>
+      <div class="track"><div class="fill" style="width:60%"></div></div>
+      <div class="range"><span>0.2kg</span><span>5.4kg</span></div>
+    </div>
+    <div class="row">
+      <div class="rlabel">내한온도 (ISO 하한)</div>
+      <div class="track"><div class="fill" style="width:55%"></div></div>
+      <div class="range"><span>-45.0°C</span><span>13.0°C</span></div>
+    </div>
+    <div class="row">
+      <div class="rlabel">충전량</div>
+      <div class="track"><div class="fill" style="width:72%"></div></div>
+      <div class="range"><span>0.1kg</span><span>3.2kg</span></div>
+    </div>
+    <div class="tags">
+      <div class="tag">씨투써밋 36</div>
+      <div class="tag">네이처하이크 34</div>
+      <div class="tag">반고 32</div>
+      <div class="tag">몽벨 29</div>
+      <div class="tag">코베아 16</div>
+      <div class="tag">+ 브랜드 (32)</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tabbar">
+      <div class="tab"><span class="tab-icon">⌂</span>홈</div>
+      <div class="tab active"><span class="tab-icon">◎</span>탐색</div>
+      <div class="tab"><span class="tab-icon">◇</span>커뮤</div>
+      <div class="tab"><span class="tab-icon">⊙</span>마이</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

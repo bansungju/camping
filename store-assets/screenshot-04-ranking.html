@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 1080px; height: 1920px; overflow: hidden; background: #2f7a4e; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.label-top { color: #fff; font-size: 52px; font-weight: 700; text-align: center; margin-bottom: 48px; line-height: 1.3; }
+.phone-wrap { width: 540px; height: 1080px; background: #111; border-radius: 64px; border: 10px solid #333; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.notch { width: 140px; height: 28px; background: #111; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10; }
+.screen { flex: 1; margin-top: 28px; background: #fff; display: flex; flex-direction: column; }
+.header { padding: 20px 24px 16px; border-bottom: 1px solid #eee; font-size: 28px; font-weight: 700; color: #1a1a1a; }
+.row { display: flex; align-items: center; padding: 18px 24px; border-bottom: 1px solid #f5f5f5; gap: 16px; }
+.num { font-size: 24px; font-weight: 700; width: 36px; flex-shrink: 0; }
+.num.gold { color: #2f7a4e; }
+.num.silver { color: #2f7a4e; }
+.num.bronze { color: #888; }
+.num.rest { color: #bbb; }
+.img { width: 80px; height: 80px; background: #f0f4f2; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.info { flex: 1; min-width: 0; }
+.ibrand { font-size: 18px; color: #888; margin-bottom: 2px; }
+.iname { font-size: 22px; font-weight: 600; color: #1a1a1a; line-height: 1.3; margin-bottom: 4px; }
+.iprice { font-size: 22px; color: #2f7a4e; font-weight: 600; }
+.stars { font-size: 20px; color: #f5c842; flex-shrink: 0; }
+.spacer { flex: 1; }
+.tabbar { display: flex; background: #fff; border-top: 1px solid #eee; padding: 14px 0 10px; }
+.tab { flex: 1; text-align: center; font-size: 18px; color: #bbb; }
+.tab.active { color: #2f7a4e; font-weight: 600; }
+.tab-icon { font-size: 28px; display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="label-top">카테고리별<br>순위 비교</div>
+<div class="phone-wrap">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="header">백패킹 텐트 137개</div>
+    <div class="row">
+      <div class="num gold">1</div>
+      <div class="img"><svg width="56" height="50" viewBox="0 0 56 50"><polygon points="28,4 50,42 6,42" fill="#9bc4b0" opacity="0.7"/><polygon points="28,10 46,42 10,42" fill="#6ba889"/></svg></div>
+      <div class="info"><div class="ibrand">씨투써밋</div><div class="iname">텔러스 TR2</div><div class="iprice">590,100원</div></div>
+      <div class="stars">★★★★★</div>
+    </div>
+    <div class="row">
+      <div class="num silver">2</div>
+      <div class="img"><svg width="56" height="50" viewBox="0 0 56 50"><polygon points="28,4 50,42 6,42" fill="#b5d4b5" opacity="0.7"/><polygon points="28,10 46,42 10,42" fill="#8aba8a"/></svg></div>
+      <div class="info"><div class="ibrand">니모이큅먼트</div><div class="iname">호넷 엘리트 오스모 1P</div><div class="iprice">592,200원</div></div>
+      <div class="stars">★★★★★</div>
+    </div>
+    <div class="row">
+      <div class="num bronze">3</div>
+      <div class="img"><svg width="56" height="50" viewBox="0 0 56 50"><polygon points="28,4 50,42 6,42" fill="#c4b8d0" opacity="0.7"/><polygon points="28,10 46,42 10,42" fill="#9e8eb0"/></svg></div>
+      <div class="info"><div class="ibrand">MSR</div><div class="iname">허바허바 쉴드 2</div><div class="iprice">600,000원</div></div>
+      <div class="stars">★★★★☆</div>
+    </div>
+    <div class="row">
+      <div class="num rest">4</div>
+      <div class="img"><svg width="56" height="50" viewBox="0 0 56 50"><polygon points="28,4 50,42 6,42" fill="#d4c8a0" opacity="0.7"/><polygon points="28,10 46,42 10,42" fill="#baa868"/></svg></div>
+      <div class="info"><div class="ibrand">빅아그네스</div><div class="iname">플라이크릭 HV UL2</div><div class="iprice">699,000원</div></div>
+      <div class="stars">★★★★☆</div>
+    </div>
+    <div class="row">
+      <div class="num rest">5</div>
+      <div class="img"><svg width="56" height="50" viewBox="0 0 56 50"><polygon points="28,4 50,42 6,42" fill="#b8d4c8" opacity="0.7"/><polygon points="28,10 46,42 10,42" fill="#88b8a8"/></svg></div>
+      <div class="info"><div class="ibrand">헬리녹스</div><div class="iname">소울 1</div><div class="iprice">449,000원</div></div>
+      <div class="stars">★★★★☆</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tabbar">
+      <div class="tab"><span class="tab-icon">⌂</span>홈</div>
+      <div class="tab active"><span class="tab-icon">◎</span>탐색</div>
+      <div class="tab"><span class="tab-icon">◇</span>커뮤</div>
+      <div class="tab"><span class="tab-icon">⊙</span>마이</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
