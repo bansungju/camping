@@ -521,7 +521,7 @@
 ### [M-70] ✅ 부분해결(브랜드)·데이터한계(모델) (2026-06-12) — 영문 원어 모델명으로 검색 불가 — 한국어 표기만 인덱싱됨
 - **해결(브랜드):** app.js에 `BRAND_ALIAS` 맵(~110개 유명 브랜드 한글→영문)+`_brandAlias()` 추가, 홈 검색 drop다운·Enter에서 브랜드 한글명에 영문별칭 합쳐 매칭. 검증: helinox→헬리녹스, naturehike, sea to summit, kovea/coleman/snowpeak 등 정상.
 - **미해결(모델):** 모델명 영문검색은 원본 영문 데이터가 없어(`variants`는 개수 필드) 불가 — 영문 모델명 소스 데이터 필요.
-- **별도 발견:** search.json이 라이브 카테고리 `backpacking-bag`(596개, manifest 등록됨)을 미포함 → osprey·gregory 등 배낭 브랜드 검색 0건. search.json 재생성(export_site.py) 필요한 stale 이슈. [site/app.js](site/app.js)
+- **별도 발견·✅해결(2026-06-12):** search.json이 라이브 `backpacking-bag`(596개) 미포함 → 배낭 브랜드 0건이던 stale 이슈. 데이터 파일에서 export_site.py 동일포맷으로 안전 재생성(2245→2870, DB 재빌드 미사용). 검증: osprey/gregory/deuter 정상. [site/data/search.json] [site/app.js](site/app.js)
 - **영역:** 검색 — 홈 전역 검색
 - **URL:** https://gear-forest.com/
 - **증상:** "PocketRocket", "Elixir", "Reactor" 등 영문 원어 모델명으로 검색 시 결과 없음. 동일 제품을 "포켓로켓", "엘릭서"로 검색하면 정상 히트. search.json 인덱스가 한국어 표기만 포함하고 영문 원어명을 포함하지 않음. 외국 브랜드 제품을 영문으로 기억하는 사용자 유입 차단.
