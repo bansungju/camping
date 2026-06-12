@@ -1928,3 +1928,41 @@
 - **파일:** [site/app.js](site/app.js) line ~25
 
 *다음 회차: 카테고리/목록 (14순환)*
+
+---
+
+## R-71 카테고리/목록 (14순환) — 2026-06-12
+
+### [M-127] `openCmpModal()` ESC 키 핸들러 및 포커스 트랩 없음
+- **영역:** 카테고리/목록 — 스펙 비교 모달
+- **심각도:** 🟡 Medium
+- **증상:** `openCmpModal()`(line ~1919)로 열리는 비교 모달에 ESC 키 닫기 핸들러와 포커스 트랩이 없음. 비교 모달 열린 상태에서 ESC 키를 눌러도 닫히지 않으며, Tab 키가 모달 밖으로 빠져나감. `openProduct()`(line ~1550)는 동일 구조에 ESC 핸들러(`onKey`)·포커스 트랩·초기 포커스(`xbtn.focus()`)가 모두 구현돼 있으나 비교 모달은 누락.
+- **원인:** `app.js:1967` 닫기 버튼 `.onclick`만 설정하고 `document.addEventListener("keydown", onKey)` 미등록. 포커스 관리 코드도 없음.
+- **수정:** `openProduct()`의 `onKey`·포커스 트랩 패턴과 동일하게 비교 모달에도 적용(ESC 감지 후 `modal.classList.remove("on")`·`removeEventListener` 호출, Tab 순환).
+- **파일:** [site/app.js](site/app.js) line ~1967
+
+### [L-119] `buildFilters()` 내 인원·브랜드·프리셋 토글 버튼 `aria-pressed` 누락
+- **영역:** 카테고리/목록 — 필터바
+- **심각도:** 🟢 Low
+- **증상:** `buildFilters()`(line ~1105)에서 생성되는 인원 버튼(`data-cap`, line ~1115), 브랜드 칩(`data-brand`, line ~1205), 빠른설정 프리셋 칩(`.fpre`, line ~1272)에 `aria-pressed` 속성이 없음. 활성 상태는 `.on` CSS 클래스로만 표현되어 스크린리더가 선택 여부를 감지 불가. 정렬 칩(`.schip`)은 L-16 수정으로 `aria-pressed` 적용됨 — 필터 토글 버튼만 미적용으로 일관성도 깨짐.
+- **원인:** `buildFilters()` 내 filter chip 생성 HTML에 `aria-pressed` 속성 미포함. `syncFilterUI()` 내에서도 `setAttribute("aria-pressed", ...)` 호출 없음.
+- **수정:** 인원·브랜드·프리셋 버튼 생성 시 `aria-pressed="false"` 초기값 설정; `syncFilterUI()` 및 클릭 핸들러에서 `setAttribute("aria-pressed", ...)` 갱신.
+- **파일:** [site/app.js](site/app.js) line ~1115, ~1205, ~1272, ~1454
+
+### [L-120] `renderStyleChips()` 스타일 칩 버튼 `aria-pressed` 누락
+- **영역:** 카테고리/목록 — 캠핑 스타일 칩
+- **심각도:** 🟢 Low
+- **증상:** `renderStyleChips()`(line ~903)에서 생성되는 `.sc-chip` 버튼에 `aria-pressed` 속성 없음. 활성 스타일은 `.on` CSS 클래스만으로 표현. 클릭 핸들러(line ~920)에서 `STATE.campStyle`에 따라 `.on` 클래스를 토글하지만 `aria-pressed` 갱신은 없음. 스크린리더 사용자가 선택된 캠핑 스타일을 인지 불가.
+- **원인:** 스타일 칩 `<button>` 생성 HTML 및 클릭 핸들러에 `aria-pressed` 속성 처리 미포함.
+- **수정:** 칩 생성 시 `aria-pressed="${STATE.campStyle === s.key}"` 추가; 클릭 핸들러 내 모든 칩 `setAttribute("aria-pressed", b.dataset.style === STATE.campStyle)` 갱신.
+- **파일:** [site/app.js](site/app.js) line ~916, ~923
+
+### [L-121] `filtoggle` 버튼 `aria-expanded`·`aria-controls` 누락 — 필터 열림/닫힘 상태 미고지
+- **영역:** 카테고리/목록 — 필터 토글 버튼
+- **심각도:** 🟢 Low
+- **증상:** `buildFilters()`(line ~1291)에서 생성되는 `#filtoggle` 버튼이 `#filters` 영역의 펼침/접힘을 제어하지만 `aria-expanded` 및 `aria-controls` 속성이 없음. `syncLabel()` 함수가 텍스트를 "필터 펼치기 ▾"/"필터 접기 ▴"로 변경하여 시각적 힌트는 있으나, `aria-expanded` 없이 보조기술이 영역의 열림 상태를 프로그래밍적으로 파악 불가.
+- **원인:** 버튼 생성 HTML에 `aria-expanded` 미설정, `aria-controls="filters"` 미설정. `syncLabel()` 내 `setAttribute("aria-expanded", ...)` 갱신 코드 없음.
+- **수정:** 버튼 생성 시 `aria-expanded="true" aria-controls="filters"` 추가; `syncLabel()` 내 `tg.setAttribute("aria-expanded", !bar.classList.contains("collapsed"))` 호출 추가.
+- **파일:** [site/app.js](site/app.js) line ~1292, ~1295
+
+*다음 회차: 상품상세 (14순환)*
