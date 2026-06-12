@@ -101,7 +101,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=1fecce8d"></script>
+<script src="app.js?v=1530231f"></script>
 <script>
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
@@ -326,13 +326,11 @@ function renderProfile(profile) {
   const deleteHint = document.getElementById('delete-hint')
 
   if (btnSignout) {
-    btnSignout.onclick = null
-    btnSignout.addEventListener('click', async () => { await signOut() })
+    btnSignout.onclick = async () => { await signOut() }
   }
 
   if (btnDelete) {
-    btnDelete.onclick = null
-    btnDelete.addEventListener('click', async () => {
+    btnDelete.onclick = async () => {
       if (!confirm('정말 계정을 삭제하시겠어요?\n\n· 프로필·찜·세트가 삭제됩니다\n· 작성한 글은 작성자 표시 없이 남습니다\n· 30일간 재가입할 수 없습니다')) return
       if (!confirm('이 작업은 되돌릴 수 없습니다. 계속할까요?')) return
       btnDelete.disabled = true; btnDelete.textContent = '삭제 중…'; btnDelete.style.opacity = '.4'
