@@ -202,6 +202,11 @@ def main():
     print("[사이트] verified 모델 → site/data/*.json")
     sh("export_site.py")
 
+    # 배포 게이트(로컬 선행): 익스포트 가격이 카테고리 대비 이상하면 즉시 실패.
+    #   CI(pages.yml)와 동일 검사 → 나쁜 데이터가 커밋/배포까지 가기 전에 차단. (GHE 2,167원 재발방지)
+    print("[게이트] 익스포트 가격 타당성")
+    subprocess.run([sys.executable, os.path.join(HERE, "check_export.py")], check=True)
+
     print("[캐시버스팅] app.js 해시 → HTML ?v= 스탬프")
     sh("stamp_version.py")
 

@@ -65,29 +65,57 @@ def _is_variant_paren(inner):
     return bool(toks) and all(t in COLORS or t in NOISE for t in toks)
 
 
+# 텐트류 '본품 최저 현실가'(원). 이 값보다 싸면 본품 텐트가 아니라 부속(펙·폴주머니·
+#   스테이크)·그늘막 노이즈를 잘못 긁은 것 → 격리. 텐트류만 두는 이유: 매트(2천원 돗자리)·
+#   의자(3천원 미니의자)·랜턴 등은 정상 저가품이 실재 → 하한을 두면 거짓격리. 텐트는
+#   1.5만원 미만 본품이 실존하지 않아 안전. HARD_RANGES와 같은 "본품일 수 없는 값만" 철학.
+HARD_PRICE_FLOOR = {
+    "오토캠핑텐트": 15000, "백패킹텐트": 15000, "쉘터": 10000,
+}
+
+
 def flag_price_outliers(con):
-    """canonical 그룹(같은 브랜드·모델·인원, 관측≥3) 내 중앙값 대비 [0.2×,5×] 밖 가격을
-    valid=0으로 격리. 부속·옵션·오타 단가(예: 2,199원/140만원)가 모델 min/max를 오염하는 것 차단.
-    관측<3 그룹은 중앙값 신뢰불가 → 미적용(일반명 2개짜리 과격리 방지). 멱등."""
+    """가격 이상치(부속·부품·오타 단가)를 valid=0으로 격리해 모델 min/max 오염 차단. 멱등.
+    3단 검증:
+      A. 텐트류 하한(HARD_PRICE_FLOOR) — 본품일 수 없는 저가(예: 쉘터 2,167원=부속단가) 절대격리.
+         중복 스크랩이 중앙값을 오염시켜도(B가 역작동) 영향받지 않는 1차 방어선.
+      B. canonical 그룹 중앙값 대비 [0.2×,5×] 밖 격리. 단 중앙값은 '관측치당'이 아니라
+         '제품당 대표가(최저 유효가)'로 산출 → 같은 값이 N번 중복 삽입돼도 1표만 행사
+         (중복 스크랩이 중앙값을 점령하던 역작동 버그 차단). 제품<2면 신뢰불가→skip.
+      C. 브랜드+카테고리 '고립 고가 봉우리' 격리(아래)."""
     try:
         con.execute("ALTER TABLE price_observations ADD COLUMN valid INTEGER NOT NULL DEFAULT 1")
     except sqlite3.OperationalError:
         pass
     con.execute("UPDATE price_observations SET valid=1")
+
+    # A. 텐트류 하한: 본품 텐트일 수 없는 저가(펙·폴주머니·스테이크·그늘막 오스크랩) 절대격리.
+    #    B(중앙값)는 다수 관측이 오염되면 무너지므로, 물리적 하한으로 먼저 바닥을 친다.
+    for cat, floor in HARD_PRICE_FLOOR.items():
+        con.execute("""UPDATE price_observations SET valid=0 WHERE valid=1 AND price_krw < ?
+            AND product_id IN (SELECT p.id FROM products p JOIN categories c ON c.id=p.category_id
+                               WHERE c.name_ko=?)""", (floor, cat))
+
+    # B. canonical 그룹 중앙값 이상치. 중복 스크랩 면역을 위해 '제품당 대표가'로 집계.
     groups = con.execute("""SELECT p.brand_id, p.canonical_model, IFNULL(p.capacity,-1)
         FROM products p GROUP BY p.brand_id, p.canonical_model, IFNULL(p.capacity,-1)""").fetchall()
     for bid, cm, cap in groups:
-        rows = con.execute("""SELECT po.id, po.price_krw FROM price_observations po
+        # 제품당 최저 유효가 1개 = 1표 (동일값 N중복이 중앙값을 점령하지 못하게)
+        reps = con.execute("""SELECT MIN(po.price_krw) FROM price_observations po
             JOIN products p ON p.id=po.product_id
             WHERE p.brand_id=? AND p.canonical_model=? AND IFNULL(p.capacity,-1)=?
-              AND po.price_krw IS NOT NULL ORDER BY po.price_krw""", (bid, cm, cap)).fetchall()
-        if len(rows) < 3:
+              AND po.price_krw IS NOT NULL AND po.valid=1
+            GROUP BY po.product_id""", (bid, cm, cap)).fetchall()
+        prices = sorted(r[0] for r in reps)
+        if len(prices) < 2:        # 제품 2종 미만이면 중앙값 신뢰불가 → skip(과격리 방지)
             continue
-        prices = [r[1] for r in rows]
         med = prices[len(prices) // 2]
         if med <= 0:
             continue
-        for oid, pr in rows:
+        for (oid, pr) in con.execute("""SELECT po.id, po.price_krw FROM price_observations po
+                JOIN products p ON p.id=po.product_id
+                WHERE p.brand_id=? AND p.canonical_model=? AND IFNULL(p.capacity,-1)=?
+                  AND po.price_krw IS NOT NULL AND po.valid=1""", (bid, cm, cap)).fetchall():
             if pr < med * 0.2 or pr > med * 5:
                 con.execute("UPDATE price_observations SET valid=0 WHERE id=?", (oid,))
     # 브랜드+카테고리 패스: 단일관측이라 canonical그룹(≥3)에 안 걸리는 '고립 봉우리' 고가 격리.
