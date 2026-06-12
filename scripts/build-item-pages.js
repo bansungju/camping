@@ -222,8 +222,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   <div class="item-hero">
     ${img ? `<img class="item-img" src="../../${img}" alt="${brand} ${modelName}" fetchpriority="high" onerror="this.onerror=null;this.style.display='none'">` : ""}
     <div class="item-info">
-      <h1 class="item-title">${modelName}</h1>
-      <p class="item-brand">${brand}</p>
+      <h1 class="item-title">${brand} ${modelName}</h1>
       ${priceRange ? `<p class="item-price">${priceRange}</p>` : ""}
       <p class="item-rank">${catLabel} ${rank}위 / ${total}개 비교</p>
       ${capacity ? `<p style="font-size:13px;color:var(--muted)">수용인원: ${capacity}인</p>` : ""}

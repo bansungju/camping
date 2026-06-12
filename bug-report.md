@@ -1151,10 +1151,9 @@
 - **URL:** https://gear-forest.com/favicon.ico
 - **증상:** favicon.ico 파일 없어 404 반환. `<link rel="icon" type="image/png" href="icon-192.png">`는 있으나 브라우저 기본 favicon.ico 자동 요청에 대한 응답 없음. 콘솔에 매 페이지마다 404 에러 노출.
 
-### [L-50] 동적 생성 이미지 `width`/`height` 속성 누락 — CLS 유발
+### [L-50] ✅ 해결완료(2026-06-12) — 동적 생성 이미지 `width`/`height` 누락 — CLS
 - **영역:** 홈/메인 (전체 상품 카드)
-- **URL:** https://gear-forest.com/
-- **증상:** JS로 생성된 상품 카드 `<img>` 태그에 `width`/`height` 속성이 없어 브라우저가 이미지 크기를 미리 예약하지 못함. 이미지 로드 완료 시 레이아웃이 밀리는 CLS 발생. M-44(LCP fetchpriority 누락)와 연관이나 별도 문제.
+- **해결:** `thumbCell()` 에 `_THUMB_SZ` 맵 추가 (`pli-thumb:74`, `sres-thumb:34`, `cmp-thumb:70`). 해당 클래스 이미지에 `width`/`height` HTML 속성 자동 주입 → 브라우저 early layout reservation 가능. [site/app.js](site/app.js)
 
 ### [L-51] `sitemap.xml` 클린 URL — 실제 서빙 경로(`category.html?cat=`)와 불일치 (SEO)
 - **영역:** SEO
@@ -1167,11 +1166,9 @@
 - **증상:** `#btn-google` 버튼의 `type="submit"`으로 설정되어 있으나 감싸는 `<form>` 요소가 없음. 의도치 않은 폼 제출 동작 유발 가능성. `type="button"`이어야 함.
 - **재현:** account.html → `#btn-google` 요소 → `type` 속성 확인
 
-### [L-46] 자동완성 정확 일치 모델이 접두어 부분 일치보다 후순위 표시
+### [L-46] ✅ 해결완료(2026-06-12) — 자동완성 정확 일치 모델 후순위
 - **영역:** 검색 — 홈 자동완성
-- **URL:** https://gear-forest.com/
-- **증상:** "체어원" 검색 시 첫 번째 결과가 "헬리녹스 15주년 체어원"(접두어 포함 부분 일치)이고 "헬리녹스 체어원"(정확 일치)이 두 번째로 밀림. 정확 일치 우선 정렬 로직 부재로 추정됨.
-- **재현:** 홈 검색창 → "체어원" → 자동완성 1번 결과 확인
+- **해결:** `hits` 필터 후 정렬 추가 — 모델명 정확 일치 → 접두어 → 부분 포함 순. [site/app.js](site/app.js)
 
 ### [L-47] 검색 결과 클릭 후 뒤로가기 시 홈 검색창 내용 미복원
 - **영역:** 검색 — 홈 내비게이션
@@ -1208,15 +1205,13 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `#wish-section` 전체 `display:none` 처리. 비로그인 사용자가 찜 기능의 존재를 알 수 없으며 로그인 유도 CTA 없음.
 
-### [L-17] 내한온도 스펙 값에 °(도) 기호 누락 — '-3C' 표시
+### [L-17] ✅ 해결완료(2026-06-12) — 내한온도 스펙 값 '-3C' → '-3°C'
 - **영역:** 상품 상세, 카테고리 카드, 모달 전체
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 스펙 테이블 내한온도 값이 '-3C'로 표시. 카테고리 카드 리스트와 상품 모달에서도 동일하게 °기호 누락 및 단위 표기가 `(C)`로 잘못 표시됨. 전체 노출 영역에 걸친 데이터 포맷 문제.
+- **해결:** `fmtVal()` 에 `_UNIT_DISPLAY = { C: "°C", m2: "m²" }` 매핑 추가. JSON 데이터 `unit:"C"` → 표시 `"°C"`로 변환. [site/app.js](site/app.js)
 
-### [L-18] h1 태그에 브랜드명 누락 — 제품명만 표시
+### [L-18] ✅ 해결완료(2026-06-12) — h1 태그에 브랜드명 누락
 - **영역:** 상품 상세 (SEO)
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** h1이 '매직 100'만 표시, 브랜드명 '큐물러스'는 별도 `p.item-brand`에만 있음. 페이지 title('큐물러스 매직 100 — 침낭 스펙 비교')과 불일치.
+- **해결:** `<h1>${modelName}</h1>` + `<p class="item-brand">` 분리 구조 → `<h1>${brand} ${modelName}</h1>` 통합. page title과 일치. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-16] ✅ 해결완료(2026-06-12) — 정렬 chip 버튼에 aria-pressed 속성 없음
 - **영역:** 카테고리/목록 (접근성)
@@ -1275,10 +1270,9 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 검색창에 아무것도 입력하지 않고 Enter를 눌러도 페이지 이동·오류 메시지·포커스 안내 모두 없음. 버튼이 동작하지 않는다는 오해 유발 가능.
 
-### [L-07] 검색 결과 없음(no-results) 상태에서 대안 탐색 경로 미제공
+### [L-07] ✅ 해결완료(2026-06-12) — 검색 결과 없음 시 대안 탐색 경로 미제공
 - **영역:** 검색
-- **URL:** https://www.gear-forest.com/
-- **증상:** 매칭 없는 검색어(예: 'sleeping bag') 입력 후 Enter 시 결과 없음 메시지만 표시, 카테고리 탐색 유도나 추천 검색어 등 대안 경로 없음.
+- **해결:** 결과 없음 상태 footer에 "📂 카테고리 탐색하기" 링크 추가 (`category.html`). L-61 Enter 핸들러 분기에서도 동일 메시지 표시. [site/app.js](site/app.js)
 
 ### [L-04] Cloudflare beacon.min.js 503 오류
 - **영역:** 상품 상세 (전체 페이지 공통으로 추정)
