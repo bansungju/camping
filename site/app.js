@@ -60,6 +60,7 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
   else if (v === "0") localStorage.removeItem("ops");
 })();
 const OPS = localStorage.getItem("ops") === "1";
+const LEGAL_LINKS = ` · <a href="privacy.html" style="color:var(--muted);text-decoration:underline">개인정보처리방침</a> · <a href="terms.html" style="color:var(--muted);text-decoration:underline">이용약관</a>`;
 
 /* 세트 수량 한도: 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
 const SET_QTY_MAX = {
@@ -462,9 +463,9 @@ async function renderHub() {
 
   // 홈 전역 검색
   setupHomeSearch();
-  document.getElementById("foot").innerHTML = OPS
+  document.getElementById("foot").innerHTML = (OPS
     ? `운영자 모드 · 자동생성 LIMITS 기반 · 측정값만 · 추측 없음.`
-    : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
+    : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`) + LEGAL_LINKS;
 }
 
 async function setupHomeSearch() {
@@ -1754,7 +1755,7 @@ function openCmpModal(rows) {
       const val = s?.value;
       const isBest = val != null && best[mt.key] === val;
       const cell = val != null ? fmtVal(val, mt.unit) : '<span class="nd">—</span>';
-      return `<tr><td style="padding:6px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)">${esc(mt.label)}</td>
+      return `<tr><th scope="row" style="padding:6px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);font-weight:500;text-align:left">${esc(mt.label)}</th>
         <td style="padding:6px 8px;font-size:13px;font-weight:${isBest ? "700" : "400"};color:${isBest ? "var(--accent)" : "var(--txt)"};border-bottom:1px solid var(--line)">${cell}${isBest ? " ✓" : ""}</td></tr>`;
     }).join("");
     const tint = catTint(d.name), icon = catIcon(d.name);
@@ -1765,7 +1766,7 @@ function openCmpModal(rows) {
       <div style="font-size:11px;color:var(--muted);margin:6px 4px 2px">${esc(m.brand)}</div>
       <div style="font-size:13px;font-weight:700;margin:0 4px 8px;line-height:1.3">${esc(m.model)}</div>
       ${detailUrl ? `<a href="${detailUrl}" style="display:inline-block;font-size:11px;color:var(--accent);margin:0 4px 8px;text-decoration:underline">상세 페이지 →</a>` : ""}
-      <table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>
+      <table style="width:100%;border-collapse:collapse"><caption style="position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden">${esc(m.brand)} ${esc(m.model)} 스펙</caption><tbody>${rows}</tbody></table>
     </div>`;
   }).join('<div style="width:1px;background:var(--line);flex-shrink:0"></div>');
 
@@ -1860,8 +1861,9 @@ function draw() {
       </div></div>`;
   }).join("");
   const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q;
-  document.getElementById("list").innerHTML = cards ||
-    `<div class="pli-empty"><div class="pe-ico">🔍</div>
+  document.getElementById("list").innerHTML = cards
+    ? cards + `<div class="list-end" aria-live="polite" role="status">─ 총 ${rows.length}개 모두 표시됨 ─</div>`
+    : `<div class="pli-empty"><div class="pe-ico">🔍</div>
        <div class="pe-msg">조건에 맞는 결과가 없어요 ${diagnoseEmpty(k)}</div>
        ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}</div>`;
   document.querySelectorAll("#list .pli").forEach(el => {
@@ -1901,9 +1903,9 @@ function draw() {
     }))
   });
 
-  document.getElementById("foot").innerHTML = OPS
+  document.getElementById("foot").innerHTML = (OPS
     ? `카드를 누르면 이미지·전체 스펙 · 정렬은 위 ‘정렬’ 메뉴 · 별점=세그먼트 내 순위백분위(중앙값 ★3) · 가격=국내가 우선 · 측정값만.`
-    : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
+    : `카드를 누르면 상세 스펙 · 위 ‘정렬’로 순서 변경 · 별점은 같은 그룹 내 순위 기준. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`) + LEGAL_LINKS;
 }
 
 /* ---------- 브랜드 가로지르기 (전 카테고리 한 브랜드 모아보기) ---------- */
@@ -1982,7 +1984,7 @@ async function renderBrand() {
 
   draw(bname);
   renderChips();
-  document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
+  document.getElementById("foot").innerHTML = `한 브랜드를 전 카테고리에서 모아봅니다 · 측정값만 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>` + LEGAL_LINKS;
 }
 
 /* ---------- 캠핑 스타일 추천 ---------- */
@@ -2047,7 +2049,7 @@ async function renderRecommend() {
        <div class="rgrid">${cards}</div></section>`;
   }).join("");
   document.getElementById("recs").innerHTML = sections || `<p class="nd">추천할 데이터가 없습니다.</p>`;
-  document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`;
+  document.getElementById("foot").innerHTML = `측정 스펙 기반 추천 · 정직성 우선 · 추측 없음. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>` + LEGAL_LINKS;
 }
 
 /* ---------- 이번 주 인기: 카테고리별 랭킹 ---------- */
