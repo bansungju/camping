@@ -2311,7 +2311,8 @@
 
 ## R-80 — 상품상세 (16순환) [2026-06-12]
 
-### [M-131] `openCmpModal` 세트저장 시 `s`·`pcode`·`coupang_url` 누락 — M-130 동일 패턴
+### [M-131] ✅ moot(2026-06-12) — `openCmpModal` 세트저장 시 `s`·`pcode`·`coupang_url` 누락 — M-130 동일 패턴
+- **처리:** 비교 모달이 `COMPARE_ENABLED=false`로 아카이브돼 도달 불가 → 세트저장 필드누락도 비활성. 복구 시 `setItem()` 헬퍼 사용 권장(M-130과 동일).
 - **영역:** 상품상세 — 비교 모달 세트 저장
 - **심각도:** 🟡 Medium
 - **증상:** `openCmpModal()`(line 2024)에서 "세트로 저장" 버튼이 생성하는 `setItems`에 `s`(카테고리 슬러그), `pcode`, `coupang_url`이 빠져 있음. 저장된 세트를 `openSetDetail()`에서 열면 `qtyMax(item.s)`가 `undefined` → 폴백 4로 처리되고, 구매 버튼 클릭 시 `click_events` 카테고리 집계가 null로 들어가며, 세트 상세에서 상품별 쿠팡 링크를 생성할 수 없음.
@@ -2461,7 +2462,8 @@
 
 ---
 
-### [M-135] 상품 카드 — 가격 옆 ⚖ 비교 버튼 아이콘 의미 불명확, 제거 요청
+### [M-135] ✅ 해결완료(2026-06-12) — 상품 카드 — 가격 옆 ⚖ 비교 버튼 아이콘 의미 불명확, 제거 요청
+- **처리:** 사용자 결정으로 비교 기능 전체 아카이브 — `COMPARE_ENABLED=false`(app.js). 카드 ⚖ 버튼 미렌더 + toggleCmp/updateCmpBar/openCmpModal 비활성. 코드는 복구 대비 보존. [site/app.js](site/app.js)
 
 - **영역:** 카테고리/목록 — 상품 카드 우측 ⚖ 버튼 (`pli-cmp`)
 - **현재:** 저울 아이콘(⚖)만 표시 → 사용자가 기능(비교에 추가) 인지 못함
