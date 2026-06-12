@@ -104,6 +104,7 @@ const CAT_ICON = {
   "백패킹텐트": "⛺", "오토캠핑텐트": "🏕️", "쉘터": "🏖️", "기타용품": "🧰", "침낭": "🛌", "매트": "🧘",
   "의자": "🪑", "랜턴": "🔦", "아이스박스": "🧊", "버너": "🍳", "타프": "⛱️",
   "테이블": "🪵", "야전침대": "🛏️", "코펠": "🥘", "웨건": "🛒", "화로대": "🔥", "파워뱅크": "🔋",
+  "백패킹 가방": "🎒",
 };
 const catIcon = name => CAT_ICON[name] || "🏕️";
 /* 카테고리별 옅은 배경 톤(아이콘 타일 — 단색 회색 대신 생동감) */
@@ -113,6 +114,7 @@ const CAT_TINT = {
   "의자": "#f6efe7", "테이블": "#f6efe7", "웨건": "#f6efe7",
   "버너": "#fdeee7", "화로대": "#fdeee7", "코펠": "#fdeee7",
   "랜턴": "#fdf6e0", "파워뱅크": "#fdf6e0",
+  "백패킹 가방": "#eaf4ec",
 };
 const catTint = name => CAT_TINT[name] || "var(--card2)";
 
@@ -485,7 +487,7 @@ async function renderCatNav(activeSlug) {
   try {
     const m = await getJSON("data/manifest.json");
     el.innerHTML = m.categories.map(c =>
-      `<a class="navchip${c.slug === activeSlug ? " on" : ""}" href="category.html?cat=${c.slug}"
+      `<a class="navchip${c.slug === activeSlug ? " on" : ""}"${c.slug === activeSlug ? ' aria-current="page"' : ""} href="category.html?cat=${c.slug}"
          title="${c.name}"><span class="ni">${catIcon(c.name)}</span>${c.name}${OPS ? `<i>${GRADE_CLASS[c.grade] || ""}</i>` : ""}</a>`).join("");
   } catch (e) { /* noop */ }
 }
@@ -1327,14 +1329,15 @@ function buildFilters(d, star) {
 
   // 인원
   bar.querySelectorAll("[data-cap]").forEach(btn => btn.onclick = () => {
-    bar.querySelectorAll("[data-cap]").forEach(b => b.classList.remove("on"));
-    btn.classList.add("on"); STATE.cap = btn.dataset.cap; draw();
+    bar.querySelectorAll("[data-cap]").forEach(b => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); });  // L-132
+    btn.classList.add("on"); btn.setAttribute("aria-pressed", "true"); STATE.cap = btn.dataset.cap; draw();
   });
   // 브랜드 멀티(칩 토글)
   bar.querySelectorAll("[data-brand]").forEach(btn => btn.onclick = () => {
     const b = btn.dataset.brand;
     if (STATE.brands.has(b)) { STATE.brands.delete(b); btn.classList.remove("on"); }
     else { STATE.brands.add(b); btn.classList.add("on"); }
+    btn.setAttribute("aria-pressed", String(btn.classList.contains("on")));  // L-132
     draw();
   });
   // 브랜드 드롭다운(추가)
@@ -1424,6 +1427,7 @@ function renderValueBanner(sortKey) {
     banner.id = "value-banner";
     banner.className = "value-banner";
     banner.setAttribute("role", "note");
+    banner.setAttribute("aria-live", "polite");   // L-133: 동적 삽입 배너 AT 고지
     list.parentNode.insertBefore(banner, list);   // 리스트 바로 위(활성필터 아래)
   }
   banner.innerHTML = `<span class="vb-ico" aria-hidden="true">💡</span>
@@ -1512,10 +1516,13 @@ function syncFilterUI() {
 function cellVal(m, key) {
   // 스펙 컬럼은 표시되는 '값'으로 정렬(별점 아님) → 클릭한 컬럼이 단조 정렬돼 직관적.
   if (key.startsWith("spec:")) { const s = m.specs[key.slice(5)]; return s ? s.value : null; }
-  if (key === "value") {   // 가성비 = 주력지표 별점 / 가격(만원)
+  if (key === "value") {   // 가성비 = 주력지표 / 가격(만원), 클수록 좋음
     const pk = STATE.data.metrics.filter(x => x.is_star)[0];
     const s = pk && m.specs[pk.key];
-    if (!s || s.stars == null || !m.price_min) return null;
+    if (!s || !m.price_min) return null;
+    // 용량(L) 주력 카테고리(백패킹 가방·쿨러)는 '용량 대비 가격'(L/만원 = 원/L 역수)으로 평가.
+    if (pk.unit === "L") return s.value != null ? s.value / (m.price_min / 10000) : null;
+    if (s.stars == null) return null;
     return s.stars / (m.price_min / 10000);
   }
   return m[key];
@@ -1737,7 +1744,7 @@ function _reviewCard(r, i) {
 // 후기 상세 라이트박스 — 큰 사진 + 별점 + 전체 텍스트
 function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
-  if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-modal","true"); document.body.appendChild(ov); }
+  if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
   const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy">`).join("");
   ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">
@@ -1938,7 +1945,7 @@ function updateCmpBar(rows) {
   bar.style.display = "flex";
   bar.innerHTML = `<span class="cmp-bar-label">${_cmpSet.length}개 선택됨</span>
     <button type="button" class="cmp-bar-btn" id="cmp-go">비교하기 →</button>
-    <button type="button" class="cmp-bar-clear" id="cmp-clear">✕</button>`;
+    <button type="button" class="cmp-bar-clear" id="cmp-clear" aria-label="비교 선택 해제">✕</button>`;
   bar.querySelector("#cmp-clear").onclick = () => { _cmpSet = []; updateCmpBar(rows); draw(); };
   bar.querySelector("#cmp-go").onclick = () => openCmpModal(rows);
 }
