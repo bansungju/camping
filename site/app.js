@@ -3557,8 +3557,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const arr = getSets();
         const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null })) };
         arr.push(newSet); saveSets(arr);
+        // L-114: 로그인 상태면 즉시 Supabase 동기화
+        if (window._accUser?.id) {
+          import("./supabaseClient.js?v=adfb0f1f").then(async ({ upsertGearSet }) => {
+            const id = await upsertGearSet(newSet, window._accUser.id);
+            if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
+          }).catch(() => {});
+        }
         close();
-        alert("세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");
+        alert(window._accUser ? "세트가 추가됐어요! 내 세트에서 확인하세요." : "세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");
       };
     } catch { /* 잘못된 파라미터 무시 */ }
   }
