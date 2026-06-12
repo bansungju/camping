@@ -1755,7 +1755,8 @@
 
 ---
 
-### [L-109] 모바일 — 슬라이드 필터 트랙이 화면 우측 끝까지 닿지 않음
+### [L-109] ✅ 해결완료(2026-06-12) — 모바일 — 슬라이드 필터 트랙이 화면 우측 끝까지 닿지 않음
+- **해결:** `.dslider{max-width:280px}`가 전체폭 모바일 필터바에서 우측 여백을 남김 → `@media(max-width:640px){.dslider{max-width:none}}`로 컨테이너 100% 채움. 검증: 390px서 슬라이더 358px==컨테이너폭. [site/style.css](site/style.css)
 
 - **영역:** 카테고리/목록 페이지 — 가격·최소무게·내수압·바닥면적 슬라이더
 - **재현:** 모바일(핸드폰) 화면 크기에서 필터 슬라이더 확인
@@ -2051,7 +2052,8 @@
 
 ## R-74 홈/메인 (15순환) — 2026-06-12
 
-### [L-127] `renderHub()` introbar 닫기 버튼 — `ib.remove()` 후 포커스 body 이탈
+### [L-127] ✅ 해결완료(2026-06-12) — `renderHub()` introbar 닫기 버튼 — `ib.remove()` 후 포커스 body 이탈
+- **해결:** 닫기 핸들러서 `ib.remove()` 전 `main h1`(없으면 `#homeq`) 참조 저장, 제거 후 `tabindex=-1` 부여+`.focus()`. 검증: 닫기 후 activeElement=H1(body 아님). [site/app.js](site/app.js)
 - **영역:** 홈/메인 — 첫 진입 안내 배너
 - **심각도:** 🟢 Low
 - **증상:** `renderHub()`(line ~514)에서 introbar 닫기(.ix) 버튼 클릭 시 `ib.remove()`만 호출. 닫기 버튼 자체가 DOM에서 삭제되므로 포커스가 `<body>`로 떨어짐. 키보드 사용자가 포커스를 잃고 페이지 상단부터 다시 탐색해야 함.
@@ -2068,7 +2070,8 @@
 - **수정:** `export_site.py`(`build-item-pages.js`) 내 search.json 생성 단계에서 파일 MD5 앞 8자리를 계산 후 `app.js` 내 `search.json?v=` 값을 자동 치환하거나, stamp_version.py에 data 파일 버전 갱신 로직 추가.
 - **파일:** [site/app.js](site/app.js) line ~601
 
-### [L-129] PWA 설치 배너 `role="alert"` + `aria-live="polite"` ARIA 의미 충돌
+### [L-129] ✅ 해결완료(2026-06-12) — PWA 설치 배너 `role="alert"` + `aria-live="polite"` ARIA 의미 충돌
+- **해결:** L-118서 넣은 `role="alert"`(assertive 내포) → `role="status"` 변경(+`aria-atomic="true"`). 비긴급 배너에 맞는 polite 시맨틱. 검증: role=status·aria-live=polite. [site/app.js](site/app.js)
 - **영역:** 홈/메인 — PWA 설치 유도 배너
 - **심각도:** 🟢 Low
 - **증상:** `app.js` lines ~27-28에서 `banner.setAttribute("role", "alert")` + `banner.setAttribute("aria-live", "polite")` 조합 사용. WAI-ARIA 명세상 `role="alert"`는 `aria-live="assertive"`를 내포하며, 명시적 `aria-live` 설정이 우선이므로 "polite"로 재정의됨. 그러나 일부 AT(JAWS·NVDA)는 role=alert을 감지하면 aria-live 값과 무관하게 즉시 인터럽트 방식으로 고지할 수 있어, AT마다 동작이 달라짐. 비긴급 설치 유도 배너에 alert role 사용은 의미론적으로 부적절.
