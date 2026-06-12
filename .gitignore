@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 venv/
 
+# 동시 세션 핫파일 잠금 (런타임 상태 — 커밋 금지). 규칙은 WORK-LANES.md
+.claude/locks/*.lock
+
 # 로컬 서버/스크린샷/임시
 *.log
 .playwright-mcp/
