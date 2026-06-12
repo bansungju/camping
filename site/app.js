@@ -1,7 +1,7 @@
 /* 장비의 숲 — 정적 프론트엔드 (DB→data/*.json) */
 /* PWA: 서비스워커 등록(오프라인+홈화면 설치). 실패해도 사이트는 정상 동작 */
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));  // L-85: 절대경로 — item 서브경로에서 sw.js 404 방지
 }
 
 // 테마: 기본 라이트. 다크는 '내 정보 > 설정'에서 명시적으로 켤 때만 적용(prefers-dark 자동 추종 안 함).
@@ -574,7 +574,7 @@ async function setupHomeSearch() {
       el.setAttribute("role", "option");
       el.setAttribute("aria-selected", "false");
     });
-    inp.setAttribute("aria-expanded", opts.length ? "true" : "false");
+    inp.setAttribute("aria-expanded", "true");  // L-86: 결과 없음 div만 있어도 expanded=true 유지
     inp.removeAttribute("aria-activedescendant");
     if (srStatus) srStatus.textContent = hits.length ? `${hits.length}개 결과` : (brandHits.length ? `브랜드 ${brandHits.length}개` : "결과 없음");
     // M-40: URL ?q= 반영 (replaceState — 히스토리 오염 없이 공유 가능)
@@ -629,7 +629,15 @@ async function setupHomeSearch() {
     } else {
       // 부분 브랜드 매치면 brand 페이지
       const brandMatch = idx.find(x => x.b.toLowerCase().includes(ql));
-      if (brandMatch) location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
+      if (brandMatch) {
+        location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
+      } else {
+        // L-61: 일치 결과 없음 — "결과 없음" 박스 열어 피드백 표시
+        box.innerHTML = `<div class="sres nd" role="option" aria-disabled="true">"${esc(q)}" 검색 결과 없음</div>`;
+        box.style.display = "block";
+        inp.setAttribute("aria-expanded", "true");
+        if (srStatus) srStatus.textContent = "결과 없음";
+      }
     }
   });
   // URL ?q= 파라미터 복원 — 공유 링크 접근 시 검색창 pre-fill (M-62)
@@ -1866,7 +1874,8 @@ function draw() {
     ? cards + `<div class="list-end" aria-live="polite" role="status">─ 총 ${rows.length}개 모두 표시됨 ─</div>`
     : `<div class="pli-empty"><div class="pe-ico">🔍</div>
        <div class="pe-msg">조건에 맞는 결과가 없어요 ${diagnoseEmpty(k)}</div>
-       ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}</div>`;
+       ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}
+       ${STATE.q ? `<a href="/?q=${encodeURIComponent(STATE.q)}" class="achip" style="text-decoration:none;display:inline-block;margin-top:6px">전체 카테고리에서 "${esc(STATE.q)}" 검색 →</a>` : ""}</div>`;
   document.querySelectorAll("#list .pli").forEach(el => {
     el.onclick = () => openProduct(rows[+el.dataset.mi]);
     el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProduct(rows[+el.dataset.mi]); } };

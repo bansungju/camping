@@ -1024,11 +1024,9 @@
 - **재현:** 검색창에 "zzzznotexist" 입력 → `#homeres` 내부 div role 확인 → null
 - **해결:** "결과 없음" div에 `role="option"` + `aria-disabled="true"` 추가. [site/app.js](site/app.js)
 
-### [L-61] 홈 검색 Enter 키 — 결과 없을 때 아무 피드백 없음
+### [L-61] ✅ 해결완료(2026-06-12) — 홈 검색 Enter 키 결과 없을 때 피드백 없음
 - **영역:** 검색 — 홈 전역 검색
-- **URL:** https://gear-forest.com/
-- **증상:** 존재하지 않는 검색어 입력 후 Enter를 누르면 이동도, 흔들림 애니메이션도, 토스트 메시지도 없이 아무 반응이 없음. 사용자가 Enter가 처리됐는지 알 수 없음.
-- **재현:** 검색창에 "zzzznotexistxxx" 입력 → Enter → 반응 없음
+- **해결:** Enter 핸들러의 "아무 매치 없음" 분기에 "결과 없음" div 박스 표시 + `aria-expanded="true"` + srStatus 갱신 추가. [site/app.js](site/app.js)
 
 ### [L-62] ✅ 해결완료(2026-06-12) — 찜·세트 카드 `div[role="button"]`에 `aria-label` 없음
 - **영역:** 계정/로그인 — 찜·세트 탭
@@ -1330,11 +1328,9 @@
 - **증상:** 글 상세·작성 폼에서 "← 목록으로" 클릭 시 `location.hash = ''` 실행으로 URL이 `community.html#`으로 변경됨. 주소창에 `#`이 잔존하고 URL 공유 시 `community.html#` 형태로 전달됨. `history.pushState('','',location.pathname)` 사용이 올바른 처리.
 - **재현:** 글 클릭 → "← 목록으로" → 주소창 `community.html#` 확인
 
-### [L-31] 카테고리 내 검색에서 다른 카테고리 결과 존재 안내 없음
+### [L-31] ✅ 해결완료(2026-06-12) — 카테고리 내 검색 0건 시 전체검색 CTA 없음
 - **영역:** 검색 (카테고리 페이지)
-- **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
-- **증상:** 카테고리 내 검색창은 해당 카테고리 내에서만 동작. "MSR 버너"처럼 다른 카테고리 제품 검색 시 "0건, 결과 없음"만 표시되고 "다른 카테고리에서 찾기" 등 전체 검색 안내 없음. 홈 전역 검색에서는 동일 검색어로 정상 반환.
-- **재현:** `?cat=backpacking-tent` → 검색창에 "MSR 버너" 입력 → 0건 → 전체검색 CTA 없음
+- **해결:** `draw()` 빈 결과 표시 시 `STATE.q`가 있으면 `/?q=...` 전체 카테고리 검색 링크를 `.pli-empty` 안에 추가. [site/app.js](site/app.js)
 
 ### [L-30] category.html `<title>` 초기값 "카테고리 비교" — JS 실행 후 카테고리명으로 교체
 - **영역:** 카테고리/목록 (SEO)
@@ -1526,19 +1522,13 @@
 - **원인:** `app.js renderAccount()`에서 `getElementById('acc-nav')`, `getElementById('acc-empty')`, `getElementById('acc-tabs')`를 참조하나 `account.html`에 해당 id 요소가 없어 모두 null 반환 → 관련 로직 전부 스킵.
 - **재현:** account.html 접속 → 찜/세트 데이터 있어도 앵커 링크 없음, 구글 로그인 후 탭 UI 미표시
 
-### [L-86] 홈 검색창 숫자만 입력 시 '검색 결과 없음' 피드백 미표시
+### [L-86] ✅ 해결완료(2026-06-12) — 홈 검색창 숫자만 입력 시 '검색 결과 없음' 피드백 미표시
 - **영역:** 검색 — 홈 자동완성
-- **URL:** https://gear-forest.com/
-- **증상:** '12345' 등 숫자만 입력하면 자동완성 리스트박스가 빈 상태로 열리고 '검색 결과 없음' 메시지가 없음. 문자열 입력 시('없는브랜드xyz')는 정상 표시됨.
-- **원인:** 자동완성 로직이 숫자만 포함된 입력을 early-return 처리(검색 미수행)하는 것으로 추정. 피드백 없이 드롭다운만 비어 UX 혼란.
-- **재현:** 홈 검색창 → '12345' 입력 → 드롭다운 열리나 빈 상태·"결과 없음" 메시지 없음
+- **해결:** `run()` 완료 후 `aria-expanded`를 `opts.length` 기준으로 설정하던 로직을 항상 `"true"`로 변경. 결과 없음 div(`sres.nd`)만 있어도 박스가 expanded 상태 유지. [site/app.js](site/app.js)
 
-### [L-85] item 상세 페이지 Service Worker 상대경로 등록 → 404
+### [L-85] ✅ 해결완료(2026-06-12) — item 상세 페이지 Service Worker 상대경로 등록 → 404
 - **영역:** 검색 / 전체 (PWA)
-- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** item 상세 페이지 접근 시 콘솔에 'A bad HTTP response code (404) was received when fetching the script.' 에러. `app.js`가 `navigator.serviceWorker.register('sw.js')`(상대경로)로 등록하여 `/item/sleeping-bag/sw.js`를 탐색하나 파일 없음. SW 등록 실패 → 오프라인 캐시 미동작.
-- **원인:** `app.js`에서 SW 등록 시 상대경로 `'sw.js'` 사용. item 페이지는 2단계 하위 경로(`/item/{cat}/`)이므로 루트 절대경로 `'/sw.js'`로 수정 필요.
-- **재현:** `/item/sleeping-bag/item-232.html` 직접 접근 → DevTools 콘솔 → 'sw.js 404' 에러 확인
+- **해결:** `navigator.serviceWorker.register('sw.js')` → `register('/sw.js')` 절대경로로 수정. `/item/{cat}/` 하위에서도 루트 SW를 정확히 등록. [site/app.js](site/app.js)
 
 ### [L-84] ✅ 해결완료(2026-06-12) — 상품상세 페이지 `twitter:site` 메타태그 누락
 - **영역:** 상품상세 — SNS 메타
@@ -1562,11 +1552,9 @@
 - **원인:** onclick 핸들러 진입 시 on-entry guard(플래그)가 없어 브라우저가 두 클릭 이벤트를 큐에 넣어 연속 실행 가능.
 - **재현:** 2~3개 제품 비교 선택 → 비교하기 → '세트로 저장' 빠른 더블클릭 → 마이페이지에 동일 세트 2개
 
-### [L-81] 홈 검색 combobox `aria-label` / `aria-labelledby` 누락
+### [L-81] ✅ 해결완료(2026-06-12, 사전 적용 확인) — 홈 검색 combobox `aria-label` 누락
 - **영역:** 홈/메인 — 전역 검색
-- **URL:** https://gear-forest.com/
-- **증상:** `id="homeq"` 검색 입력에 연결된 `<label>`, `aria-label`, `aria-labelledby` 모두 없음. `role="combobox"`, `aria-autocomplete="list"`는 있으나 레이블 연결 누락 — 스크린리더가 입력 목적을 인식하지 못함.
-- **재현:** DevTools → Elements → `#homeq` 확인 → `aria-label` 없음
+- **해결:** `app.js` line 482에 `inp.setAttribute("aria-label", "장비 검색")` 이미 적용됨(M-14 처리 시 함께 추가). 코드 확인으로 해소 확인.
 
 ### [L-27] ✅ 해결완료(2026-06-12) — 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
 - **영역:** 홈/메인 — 공통 푸터
