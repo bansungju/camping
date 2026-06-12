@@ -1285,10 +1285,9 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `.pli` 카드가 `role="button"`으로만 구현, 내부에 `<a>` 링크 없음. 스크린리더 사용자가 상품 링크로 인식하기 어렵고 새 탭으로 열기 불가.
 
-### [L-01] 데스크톱에서 캠핑 스타일 그리드 5열에 카드 4개 — 빈 셀 발생
+### [L-01] ✅ 해결완료(2026-06-12) — 데스크톱에서 캠핑 스타일 그리드 5열에 카드 4개 — 빈 셀 발생
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션 (데스크톱)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 데스크톱(1280px)에서 `.personas` 그리드가 5열로 계산되나 카드는 4개뿐이어서 마지막 열이 빈 공간으로 남아 불균형한 레이아웃.
+- **해결:** `@media(min-width:641px){.personas{grid-template-columns:repeat(4,1fr)}}` — 페르소나 4개를 4열 균등 배치. 모바일은 기존 auto-fill 유지. 검증: 1280px에서 281px×4 균등 확인. [site/style.css](site/style.css)
 
 ### [L-02] ✅ 해결완료(2026-06-12) — 모바일에서 캠핑 스타일 카드 1열 세로 나열
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션 (모바일)
@@ -1688,7 +1687,7 @@
 - **수정 방향:** `app.js:1904` `rows.slice(0, 20).map((m, i) => {...})` 내 `"url": catUrl`을 `"url": \`https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html\``으로 교체. `d.models.indexOf(m)`은 기존 openProduct 내 공유 버튼과 동일 패턴. [site/app.js:1911](site/app.js)
 - **심각도:** 🟡 Medium
 
-### [L-103] 0건 empty state "전체 카테고리에서 검색" 링크 — 홈이 ?q= 파라미터를 처리하지 않음
+### [L-103] ✅ 해결완료(M-62에서 기처리, 2026-06-12 검증) — 0건 empty state "전체 카테고리에서 검색" 링크 — 홈이 ?q= 파라미터를 처리하지 않음
 - **영역:** 카테고리/목록 — UX
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent&q=헬리녹스 (0건 유도 시)
 - **증상:** 필터+검색 결과 0건일 때 표시되는 "전체 카테고리에서 '헬리녹스' 검색 →" 링크가 `/?q=헬리녹스`로 이동. 그러나 홈(`renderHub`)은 URL의 `?q=` 파라미터를 읽지 않아 `homeq` 입력란이 비어있는 상태로 홈 화면만 표시됨. 사용자가 검색어를 다시 입력해야 함.
@@ -1764,6 +1763,17 @@
 - **증상:** 사진 선택 시 `uploadImage(f)` 호출로 즉시 Supabase Storage에 업로드됨. "취소" 클릭 또는 페이지 이탈 시 `pending` URL은 버려지지만 `review-images/{user_id}/{uuid}.ext` 파일은 Storage에 orphan으로 남음.
 - **원인:** `community.html:254` — 파일 선택 즉시 업로드 후 `pending.push(r.url)`. 취소 시 Storage 파일 삭제 로직 없음.
 - **수정 방향:** 취소 핸들러에서 `pending` URL들의 Storage path를 역산해 `supabase.storage.from(IMG_BUCKET).remove([path])` 호출. [site/community.html:231](site/community.html)
+- **심각도:** 🟢 Low
+
+---
+
+### [L-109] 모바일 — 슬라이드 필터 트랙이 화면 우측 끝까지 닿지 않음
+
+- **영역:** 카테고리/목록 페이지 — 가격·최소무게·내수압·바닥면적 슬라이더
+- **재현:** 모바일(핸드폰) 화면 크기에서 필터 슬라이더 확인
+- **현재:** 슬라이더 트랙이 화면 우측 여백까지 채워지지 않고 중간에서 끊김
+- **기대:** 슬라이더가 컨테이너 너비에 맞게 100% 렌더링
+- **보고자:** 사용자 직접 제보 (2026-06-12)
 - **심각도:** 🟢 Low
 
 ---
