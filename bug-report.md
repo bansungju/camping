@@ -2237,3 +2237,33 @@
 - **파일:** [site/index.html](site/index.html) line 47 [lane:CORE]
 
 *다음 회차: 카테고리/목록 (16순환)*
+
+---
+
+## R-79 카테고리/목록 (16순환·SOCIAL 레인) — 2026-06-12
+
+### [L-145] `sw.js` install — `data/search.json` 버전 없이 프리캐시, 앱은 `?v=` URL로 요청 → 캐시 키 불일치로 프리캐시 미사용
+- **영역:** 서비스워커 — 오프라인 캐시 / 홈 검색
+- **심각도:** 🟢 Low
+- **증상:** `sw.js` install 핸들러(line ~22)에서 `"data/search.json"` (버전 없음)을 `c.addAll()`에 포함. 그러나 앱은 `setupHomeSearch()`에서 `getJSON("data/search.json?v=ad0b6b03")` (L-128 추적 중)으로 요청. 서비스워커 캐시 키는 전체 URL이므로 `search.json`과 `search.json?v=...`는 별개 항목. 앱 요청 시 캐시 미스 → 네트워크 페치 후 `search.json?v=...`로 저장. 프리캐시된 `search.json` (298KB)는 영구 미사용 상태로 스토리지만 낭비.
+- **원인:** install 프리캐시 목록에는 버전 없는 URL을 사용하나, 앱 코드는 버전 쿼리를 붙여 fetch — 두 경로가 불일치.
+- **수정:** ① sw.js install 목록에서 `"data/search.json"` 제거(앱이 명시적 `?v=` URL을 쓰므로 프리캐시 불필요). 또는 ② L-128 수정 시 `search.json` 버전 쿼리를 stamp_version.py가 자동 관리하는 형태로 바꾸면서 sw.js URL도 동기화.
+- **파일:** [site/sw.js](site/sw.js) line ~22 [lane:SOCIAL]
+
+### [L-146] `syncGearSetsOnLogin()` — `remoteIds` 변수 선언 후 미사용 (데드 코드)
+- **영역:** 계정 — 기어세트 로그인 동기화
+- **심각도:** 🟢 Low
+- **증상:** `account.html` `syncGearSetsOnLogin()` line 165: `const remoteIds = new Set(remote.map(r => r.id))` 선언 후 함수 내 어디에서도 `remoteIds`를 참조하지 않음. 실제 필터링은 `localLinked` (line 166)와 `.remoteId` 직접 비교(line 168)로 처리. `remoteIds`는 이전 구현의 잔여물로 추정.
+- **원인:** 리팩터링 과정에서 `remoteIds`를 사용하던 로직을 다른 방식으로 대체했으나 선언문을 제거하지 않음.
+- **수정:** `const remoteIds = new Set(remote.map(r => r.id))` 라인 삭제.
+- **파일:** [site/account.html](site/account.html) line ~165 [lane:SOCIAL]
+
+### [L-147] `syncWishlistOnLogin()` — `window.onWishChange` 할당이 비동기 완료 후 → 로그인 직후 위시리스트 변경 원격 저장 누락
+- **영역:** 계정 — 위시리스트 로그인 동기화
+- **심각도:** 🟢 Low
+- **증상:** `syncWishlistOnLogin()`(line 185)에서 `window.onWishChange` 핸들러 등록(line 191)이 `await loadRemoteWishlist()` + `await saveRemoteWishlist()` 완료 후에 이루어짐. `SIGNED_IN` 이벤트 후 사용자가 200~500ms 이내에 카테고리 페이지에서 찜 버튼을 클릭하면, `app.js`의 `setWish()`가 `window.onWishChange`를 호출하지만 아직 null → 원격 저장 건너뜀. 로컬에는 저장되지만 원격 반영이 지연/누락됨.
+- **원인:** 비동기 처리 순서상 `window.onWishChange`가 네트워크 I/O 완료 전에 활성화되지 않음.
+- **수정:** `window.onWishChange = (items) => { saveRemoteWishlist(items) }` 할당을 `await loadRemoteWishlist()` 호출 전으로 이동. 동기 중 원격 저장이 중복 발생할 수 있으나 `upsert` 특성상 멱등.
+- **파일:** [site/account.html](site/account.html) line ~191 [lane:SOCIAL]
+
+*다음 회차: 상품상세 (16순환)*
