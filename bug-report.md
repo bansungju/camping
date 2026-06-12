@@ -72,6 +72,7 @@
 | 58 | 검색 (10순환) | 2026-06-11 | 1건 (대부분 기존 중복, 신규 M-111) |
 | 59 | 계정/로그인 (10순환) | 2026-06-12 | 5건 (M-116·M-117·L-97~L-99) |
 | 60 | 커뮤니티/소셜 (10순환) | 2026-06-12 | 2건 (L-100·L-101, H-31·M-98·M-99 재확인) |
+| 61 | 홈/메인 (11순환) | 2026-06-12 | 2건 (M-118 GoTrueClient 이중화·L-102 search.json 버전 하드코딩) |
 
 ---
 
@@ -1687,4 +1688,23 @@
 
 ---
 
-*다음 회차: 홈/메인 (11순환)*
+### [M-118] app.js 동적 import가 버전 없는 `./supabaseClient.js` 사용 — GoTrueClient 이중 인스턴스화
+- **영역:** 전체 (계정·커뮤니티·찜·세트 등 supabase 연동 기능)
+- **URL:** https://gear-forest.com/ (account.html·index.html·category.html 등 app.js 로드 페이지 전체)
+- **증상:** account.html·community.html 등은 `<script type="module">` 에서 `./supabaseClient.js?v=8ae38532` (버전 포함)으로 import. 그런데 app.js 내부의 17개 동적 import는 모두 `import("./supabaseClient.js")` (버전 없음). 브라우저가 두 개를 다른 모듈로 취급 → 두 번 모듈 평가 → `createClient()` 두 번 호출 → "Multiple GoTrueClient instances detected" 콘솔 경고 + auth 상태가 두 인스턴스 사이에서 분리될 수 있음.
+- **재현:** account.html 접속 → 콘솔 확인 → "Multiple GoTrueClient instances" 경고. 또는 찜·세트·핫섹션 등 동적 import 경로 실행 후 로그인 상태가 두 인스턴스 중 하나에만 반영될 수 있음.
+- **원인:** app.js의 동적 import 17곳(line 1422, 1551, 1590, 1659, 2071, 2271, 2336, 2352, 2664, 2698, 2794, 2862, 2869, 2932, 2938, 2948, 3135)이 `"./supabaseClient.js"` — 버전 파라미터 미포함. HTML 정적 import와 모듈 스펙터 불일치 → ES module 캐시 미적중 → 이중 로드.
+- **수정 방향:** app.js 내 동적 import를 `"./supabaseClient.js?v=CURRENT_HASH"` 로 통일하거나, supabase singleton을 app.js 상단에서 한 번만 전역 임포트해 재사용. stamp_version.py가 동적 import URL도 버전 교체하도록 확장 필요. [site/app.js:1422,1551… (17곳)](site/app.js)
+- **심각도:** 🟡 Medium
+
+### [L-102] `data/search.json?v=ad0b6b03` — app.js 하드코딩 버전, stamp_version.py 미관리
+- **영역:** 홈/메인 — 검색 인덱스
+- **URL:** https://gear-forest.com/ (검색 기능)
+- **증상:** `setupHomeSearch`(app.js:473)에서 `data/search.json?v=ad0b6b03`로 검색 인덱스를 fetch. 이 버전 문자열은 하드코딩이라 stamp_version.py가 갱신하지 않음. search.json 내용이 변경돼도 브라우저는 이전 캐시를 재사용 → 신규 상품이 홈 검색에 미반영.
+- **원인:** stamp_version.py 패턴이 `<link href>`, `<script src>`, `<link rel="modulepreload">`, `from '...'` 형태만 처리하고 JS 문자열 리터럴 내 URL은 미처리.
+- **수정 방향:** stamp_version.py에 `data/search.json` 버전 갱신 패턴 추가. 또는 search.json을 버전 없이 fetch하고 서버 cache-control로 관리. [site/app.js:473](site/app.js)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 카테고리/목록 (11순환)*
