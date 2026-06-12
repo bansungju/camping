@@ -71,6 +71,7 @@
 | 57 | 상품상세 (10순환) | 2026-06-11 | 2건 (GoTrueClient 경고=양성·LCP/aggregateRating 중복 제외) |
 | 58 | 검색 (10순환) | 2026-06-11 | 1건 (대부분 기존 중복, 신규 M-111) |
 | 59 | 계정/로그인 (10순환) | 2026-06-12 | 5건 (M-116·M-117·L-97~L-99) |
+| 60 | 커뮤니티/소셜 (10순환) | 2026-06-12 | 2건 (L-100·L-101, H-31·M-98·M-99 재확인) |
 
 ---
 
@@ -1648,4 +1649,22 @@
 
 ---
 
-*다음 회차: 커뮤니티/소셜 (10순환)*
+### [L-100] community.html — modulepreload 버전 vs import 버전 불일치
+- **영역:** 커뮤니티/소셜 — 성능
+- **URL:** https://gear-forest.com/community.html
+- **증상:** `<link rel="modulepreload" href="supabaseClient.js?v=e6966f82">` (32행)와 실제 `import ... from './supabaseClient.js?v=8ae38532'` (119행)의 버전 해시가 다름. 브라우저가 `e6966f82`를 미리 받아두지만 실제 import는 `8ae38532`를 요청 → 프리로드 캐시 미적중, 추가 네트워크 왕복.
+- **원인:** `stamp_version.py`가 `<script>` 내 import 버전은 업데이트했으나 `<link rel="modulepreload">` href는 패턴 미포함 (L-95와 동일 계열).
+- **수정 방향:** `stamp_version.py`에 `modulepreload` href 버전 업데이트 패턴 추가. 또는 community.html 32행을 `v=8ae38532`로 직접 수정. [site/community.html:32](site/community.html)
+- **심각도:** 🟢 Low
+
+### [L-101] renderDetail — initAuth 완료로 canParticipate 변경 시 #post=ID 상세보기 강제 재렌더
+- **영역:** 커뮤니티/소셜 — 상세보기
+- **URL:** https://gear-forest.com/community.html#post=<id>
+- **증상:** `#post=ID` 로딩 중 `initAuth` 완료 → `canParticipate()` 변경 → `route()` 재호출 → `renderDetail(id)` 재실행 → 스피너 재표시·API 재요청·스크롤 초기화. 로그인 사용자가 직접 링크 접근 시 글이 두 번 깜빡임.
+- **원인:** community.html `initAuth` 콜백(434행) `if (before !== canParticipate()) route()` 가 현재 해시 무관하게 전체 재렌더. `renderFeed`는 무해하나 `renderDetail`은 API 재요청을 수반.
+- **수정 방향:** 상세 뷰에서는 `canParticipate()` 변경 시 좋아요·댓글폼·삭제버튼 등 인증 의존 UI만 패치. 또는 현재 해시가 `#post=`면 재렌더 생략. [site/community.html:434](site/community.html)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 홈/메인 (11순환)*
