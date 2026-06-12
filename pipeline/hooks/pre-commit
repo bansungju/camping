@@ -1,0 +1,18 @@
+#!/bin/sh
+# WORK-LANES 가드 — bare git commit이 동시세션 staged 인덱스를 쓸어담는 사고 차단
+# (2026-06-12: bare commit이 동시세션 staged 2875개 파일을 통째로 커밋 → manifest↔search.json 불일치)
+# 코어코드(app.js/style.css)와 CI/데이터-파이프라인 파일이 한 커밋에 같이 들어가면 = 쓸어담기 정황.
+# 둘은 어떤 정상 작업에서도 같은 커밋에 안 들어간다(stamp/build-item-pages는 예외로 허용).
+staged=$(git diff --cached --name-only)
+has_code=$(printf '%s\n' "$staged" | grep -E '^site/(app\.js|style\.css)$')
+has_pipe=$(printf '%s\n' "$staged" | grep -E '^(\.github/|LIMITS\.md$|pipeline/(normalize_models|check_export|run_all|export_site)\.py$)')
+if [ -n "$has_code" ] && [ -n "$has_pipe" ] && [ -z "$ALLOW_CROSS_LANE" ]; then
+  echo "✋ WORK-LANES: 코어코드(app.js/style.css) + CI/데이터-파이프라인 파일이 한 커밋에 섞였습니다."
+  echo "   bare 'git commit'이 동시세션 staged 인덱스를 쓸어담은 정황일 수 있습니다."
+  echo "   → 'git commit -m \"...\" -- <내 파일만>' (pathspec)로 다시 커밋하세요."
+  echo "   (정말 의도한 교차레인 커밋이면: ALLOW_CROSS_LANE=1 git commit ...)"
+  echo "   --- staged 파일(처음 40개) ---"
+  printf '%s\n' "$staged" | head -40 | sed 's/^/     /'
+  exit 1
+fi
+exit 0
