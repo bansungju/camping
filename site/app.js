@@ -553,7 +553,7 @@ async function setupHomeSearch() {
         <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       </div>`;
     }).join("")
-      : (brandHtml ? "" : `<div class="sres nd">"${esc(inp.value)}" 검색 결과 없음</div>`))
+      : (brandHtml ? "" : `<div class="sres nd" role="option" aria-disabled="true">"${esc(inp.value)}" 검색 결과 없음</div>`))
       + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>` : "");
     // 찜 버튼 이벤트
     box.querySelectorAll(".sres-wish").forEach(btn => {
@@ -962,8 +962,8 @@ function buildFilters(d, star) {
     parts.push(`<div class="fgrp fgrp-slider"><span class="flab">가격</span>
       <div class="dslider" data-rng="price" data-lo="${lo}" data-hi="${hi}" data-step="${step}" data-unit="price">
         <div class="dslider-track"><div class="dslider-fill"></div></div>
-        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min">
-        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min" aria-label="가격 최솟값">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max" aria-label="가격 최댓값">
         <div class="dslider-labels">
           <span class="dsl-val" data-b="min">${lo.toLocaleString()}원</span>
           <span class="dsl-val" data-b="max">${hi.toLocaleString()}원</span>
@@ -987,8 +987,8 @@ function buildFilters(d, star) {
       <div class="dslider" data-rng="${m.key}" data-lo="${slo}" data-hi="${shi}" data-step="${step}"
            data-unit="${displayUnit}" data-isweight="${isWeight ? 1 : 0}">
         <div class="dslider-track"><div class="dslider-fill"></div></div>
-        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${slo}" data-b="min">
-        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${shi}" data-b="max">
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${slo}" data-b="min" aria-label="${m.label} 최솟값">
+        <input class="dsl-input" type="range" min="${slo}" max="${shi}" step="${step}" value="${shi}" data-b="max" aria-label="${m.label} 최댓값">
         <div class="dslider-labels">
           <span class="dsl-val" data-b="min">${fmtVal(slo)}</span>
           <span class="dsl-val" data-b="max">${fmtVal(shi)}</span>
@@ -1025,8 +1025,8 @@ function buildFilters(d, star) {
     parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${em.label}</span>
       <div class="dslider" data-rng="${em.key}" data-lo="${lo}" data-hi="${hi}" data-step="${step}" data-unit="${em.unit}">
         <div class="dslider-track"><div class="dslider-fill"></div></div>
-        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min">
-        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min" aria-label="${em.label} 최솟값">
+        <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max" aria-label="${em.label} 최댓값">
         <div class="dslider-labels">
           <span class="dsl-val" data-b="min">${fmt(lo)}</span>
           <span class="dsl-val" data-b="max">${fmt(hi)}</span>
@@ -1188,11 +1188,13 @@ function buildFilters(d, star) {
     minInp.oninput = () => {
       if (parseFloat(minInp.value) > parseFloat(maxInp.value)) minInp.value = maxInp.value;
       minLbl.textContent = fmtLabel(minInp.value);
+      minInp.setAttribute("aria-valuetext", fmtLabel(minInp.value));  // L-70
       updateFill(); applyToState();
     };
     maxInp.oninput = () => {
       if (parseFloat(maxInp.value) < parseFloat(minInp.value)) maxInp.value = minInp.value;
       maxLbl.textContent = fmtLabel(maxInp.value);
+      maxInp.setAttribute("aria-valuetext", fmtLabel(maxInp.value));  // L-70
       updateFill(); applyToState();
     };
     updateFill();
@@ -2407,7 +2409,7 @@ function renderAccount() {
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
-      return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}">
+      return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}" aria-label="${esc(x.b)} ${esc(x.m)} 상세 보기">
         <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
         <div class="pli-info">
@@ -2503,7 +2505,7 @@ function renderAccount() {
         const has = slot.slugs.some(sg => cats.has(sg));
         return `<span class="set-slot${has ? " on" : ""}" title="${slot.label}">${slot.icon}</span>`;
       }).join("");
-      return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}">
+      return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}" aria-label="${esc(s.title)} 세트 상세 보기">
         <div class="pli-info">
           <div class="pli-top">${esc(s.style || "세트")}</div>
           <div class="pli-name">${esc(s.title)}</div>
