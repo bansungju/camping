@@ -36,8 +36,8 @@
 | FE-CAT-06 | 빈 결과 시 가장 강한 제약 해제 제안 | TODO | M2 |
 | FE-CAT-07 | 모바일 필터 바텀시트 | TODO | M3 |
 | FE-CAT-08 | 품질 필터 토글(확정값만/데이터부족 제외) | TODO | M3 |
-| FE-CAT-09 | **상품 리스트: 검색 입력 풀너비 + 개수표시를 정렬 줄로 이동** | TODO | ↓ 상세 스펙 |
-| FE-CAT-10 | **'가성비순' 정렬 시 정의 설명 배너(삭제 가능)** | TODO | ↓ 상세 스펙 |
+| FE-CAT-09 | **상품 리스트: 검색 입력 풀너비 + 개수표시를 정렬 줄로 이동** | DONE | `.sortrow`로 `#count`를 `#sortchips` 형제로 이동(innerHTML 안전), `#q` 풀너비 |
+| FE-CAT-10 | **'가성비순' 정렬 시 정의 설명 배너(삭제 가능)** | DONE | `renderValueBanner(k)`·`.value-banner`, 닫기 `value_banner_dismissed` 영구기억 |
 
 #### 상세 스펙 — 상품 리스트 검색바 레이아웃 (FE-CAT-09)
 > 사용자 요청(2026-06-12). 대상: [category.html:62](site/category.html) `.toolbar` / `.sortchips`.
@@ -67,7 +67,7 @@
 | FE-ITEM-02 | 비교 담기(2~4개 나란히) 모달 | DONE | `compare-modal` |
 | FE-ITEM-03 | 쿠팡 파트너스 제휴 링크 슬롯 | WIP | ↔ 데이터: `coupang_links.csv`, AF6034597 |
 | FE-ITEM-04 | 가격 이력 표시 | TODO | M4, ↔ BE-CAT |
-| FE-ITEM-05 | **모든 가격 표기에 '최저가 기준' 명시**(전 화면 일관) | TODO | ↓ 상세 스펙 |
+| FE-ITEM-05 | **모든 가격 표기에 '최저가 기준' 명시**(전 화면 일관) | DONE | 공통 `priceLabeled()`+`.price-basis` 캡션, 7곳 적용. 상세 모달은 기존 `pmprice-note` 유지 |
 
 #### 상세 스펙 — '최저가 기준' 가격 표기 일관화 (FE-ITEM-05)
 > 사용자 요청(2026-06-12): 모든 상품 **가격 표기 부분에 '최저가 기준'** 이라고 적을 것. 실제 쿠팡 가격이 다른 경우가 많아서.
@@ -263,3 +263,6 @@
 - 2026-06-12 최초 작성 — 현행 코드/마이그레이션 기준으로 FE/BE 요건 정리, SSOT 연결.
 - 2026-06-12 FE-WISH-05/06 DONE — `showSetConfirm` 자동소멸 확인 카드 + '꾸러미 보기'→`openSetDetail` 확인 루트 구현(`app.js`/`style.css`). 로컬 프리뷰 AC1·2·3 검증, 콘솔 무에러.
 - 2026-06-12 FE-WISH-07 DONE — 세트 상세 표에서 '가격'·총가격 제거, 항목별 쿠팡 구매 버튼(`.set-buy`) 도입. `setItem`에 `coupang_url` 저장(결정=①), 미보유 항목은 '준비 중' 비활성, 클릭 시 `click_events` 집계. 로컬 프리뷰 AC1~4 검증, 콘솔 무에러. (기존/찜일괄 세트 항목은 링크 없어 '준비 중' 폴백)
+- 2026-06-12 FE-CAT-09 DONE — category.html `.toolbar`엔 `#q`만 남겨 풀너비(`.toolbar #q{flex:1 1 100%}`), `#count`를 `.sortrow`로 옮겨 `#sortchips`(innerHTML 갱신)와 형제 배치·우측 정렬. 데스크톱/모바일·다크 검증, 콘솔 무에러.
+- 2026-06-12 FE-CAT-10 DONE — `draw()`에서 `renderValueBanner(k)` 호출, 정렬키 `value`일 때만 `.value-banner` 표시(리스트 위). ✕ 닫기 시 `value_banner_dismissed=1` 영구기억. 칩 클릭 경로로 표시/숨김/지속 검증, 다크·모바일 OK, 콘솔 무에러.
+- 2026-06-12 FE-ITEM-05 DONE — 공통 `priceLabeled(n,nullHtml)`+`.price-basis` 캡션 도입, 가격 노출 7곳(목록·비교모달·추천·최근본·위시·세트목록·커뮤니티)에 '최저가 기준' 부착. 가격없음/—엔 캡션 미표시(AC4). 상세 모달은 기존 `pmprice-note` 유지. 목록(260)·추천(20) 검증, 다크 가독성·콘솔 무에러.

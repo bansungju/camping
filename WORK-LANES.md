@@ -35,11 +35,21 @@
 
 `*.lock`은 `.gitignore` 대상 — 커밋 금지, 로컬 런타임 상태일 뿐.
 
-## 루프 프롬프트 preamble (cron 노드 맨 앞에 넣을 것)
+## 루프 프롬프트 (레인을 프롬프트에 명시 — 기본값 의존 금지)
+
+> **중요:** `CronCreate`엔 `args` 필드가 없다. 따라서 `args.lane`을 cron에 넘길 수 없고, **레인은 cron 프롬프트 텍스트에 직접 명시**해야 한다.
+> 비워두면 preamble 기본값이 `CORE`라 **SOCIAL 루프도 CORE로 잡혀 핫파일(app.js/style.css)을 노린다.** 두 루프는 아래 정규 템플릿으로 명시 분리한다.
+>
+> - **CORE 루프** → [`.claude/loop-prompts/core-loop.md`](.claude/loop-prompts/core-loop.md) (lane=CORE 명시)
+> - **SOCIAL 루프** → [`.claude/loop-prompts/social-loop.md`](.claude/loop-prompts/social-loop.md) (lane=SOCIAL 명시)
+>
+> cron(세션 인메모리)을 새로 만들거나 교체할 때 해당 세션에서 위 템플릿 블록을 프롬프트로 그대로 사용한다.
+
+요약 preamble:
 ```
-① WORK-LANES.md 읽기   ② 내 레인 = args.lane (기본 CORE)
+① WORK-LANES.md 읽기   ② 내 레인 = (프롬프트에 명시된 CORE | SOCIAL)
 ③ bug-report.md 미해결(✅ 없음) 중 "내 레인 파일만 건드리는" 버그 5개 선택. GNB·커뮤니티(아카이브) 제외.
-④ 핫파일 필요 시 .claude/locks/ 확인 → 잠겨있으면 그 버그 스킵, 아니면 잠금 쓰고 작업·끝나면 해제.
+④ 핫파일 필요 시 .claude/locks/ 확인 → 잠겨있으면 그 버그 스킵, 아니면 잠금 쓰고 작업·끝나면 해제. (SOCIAL은 핫파일 수정 자체 금지)
 ⑤ 레인 밖 파일이 필요한 버그는 손대지 말고 [lane:X] 태그로 bug-report.md에 요청만.
 ⑥ 커밋: 명시적 git add(파일 나열)·제외목록 확인·stamp_version.py·build-item-pages.js 단계 준수.
 ```
