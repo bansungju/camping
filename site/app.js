@@ -525,6 +525,12 @@ async function renderHub() {
     }
   }
 
+  // L-110: 계정 삭제 완료 후 리다이렉트 메시지
+  if (new URLSearchParams(location.search).get('account_deleted') === '1') {
+    showToast('계정이 삭제됐어요. 이용해 주셔서 감사합니다.', 5000);
+    history.replaceState(null, '', location.pathname);
+  }
+
   renderRecent();   // 최근 본 상품(있으면)
   renderHotSection(m.categories);   // 이번 주 인기
 
@@ -639,7 +645,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=3c119cad").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=2cd7b927").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1562,11 +1568,13 @@ function syncFilterUI() {
 function cellVal(m, key) {
   // 스펙 컬럼은 표시되는 '값'으로 정렬(별점 아님) → 클릭한 컬럼이 단조 정렬돼 직관적.
   if (key.startsWith("spec:")) { const s = m.specs[key.slice(5)]; return s ? s.value : null; }
-  if (key === "value") {   // 가성비 = 주력지표 / 가격(만원), 클수록 좋음
+  if (key === "value") {   // 가성비 — value_score/value_per_g/value_per_l 별점 우선, fallback 기존 방식
+    const vs = m.specs.value_score || m.specs.value_per_g || m.specs.value_per_l;
+    if (vs && vs.stars != null) return vs.stars;
+    // fallback: 주력지표 별점 / 가격(만원)
     const pk = STATE.data.metrics.filter(x => x.is_star)[0];
     const s = pk && m.specs[pk.key];
     if (!s || !m.price_min) return null;
-    // 용량(L) 주력 카테고리(백패킹 가방·쿨러)는 '용량 대비 가격'(L/만원 = 원/L 역수)으로 평가.
     if (pk.unit === "L") return s.value != null ? s.value / (m.price_min / 10000) : null;
     if (s.stars == null) return null;
     return s.stars / (m.price_min / 10000);
@@ -1742,7 +1750,7 @@ function openProduct(m) {
     if (e.key === "Escape") { close(); return; }
     if (e.key !== "Tab") return;
     const box = modal.querySelector(".pmbox");
-    const f = box.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])');
+    const f = box.querySelectorAll('button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])');   // L-158: select·textarea 추가
     if (!f.length) return;
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
@@ -1865,7 +1873,10 @@ function wireReviews(modal, m, pcode) {
   const formbox = modal.querySelector("#pmrv-formbox");
   if (!addBtn || !formbox) return;
   let open = false;
-  const reset = () => { formbox.hidden = true; formbox.innerHTML = ""; open = false; addBtn.textContent = "✍️ 후기 남기기"; };
+  const reset = () => {
+    formbox.querySelectorAll("img").forEach(img => { if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src); });   // L-159: Blob URL 누수 방지
+    formbox.hidden = true; formbox.innerHTML = ""; open = false; addBtn.textContent = "✍️ 후기 남기기";
+  };
   addBtn.onclick = async () => {
     if (open) { reset(); return; }
     // 로그인 확인 — reviews_insert_own 정책상 authenticated만 작성 가능
@@ -2221,7 +2232,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=3c119cad"); }
+  try { idx = await getJSON("data/search.json?v=2cd7b927"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2447,11 +2458,7 @@ function renderRecent() {
     </div>`).join("") + `</div>`;
 }
 
-/* ---------- 내 정보 — Progressive Disclosure ---------- */
-function _accActiveTab() {
-  const t = sessionStorage.getItem("acc-tab");
-  return (t === "wish" || t === "sets" || t === "logs") ? t : "wish";
-}
+/* ---------- 내 정보 — 섹션 나열(FE-SOC-07) ---------- */
 /* 세트 상세 모달 — 수량 ± 편집 포함 */
 function openSetDetail(si) {
   const sets = getSets();
@@ -2558,16 +2565,6 @@ function openSetDetail(si) {
   };
 }
 
-function _accSetTab(tab) {
-  sessionStorage.setItem("acc-tab", tab);
-  document.querySelectorAll(".acc-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
-  ["wish-section", "sets-section", "logs-section"].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const map = { "wish-section": "wish", "sets-section": "sets", "logs-section": "logs" };
-    el.style.display = (map[id] === tab && el._accHasContent) ? "block" : "none";
-  });
-}
 function renderAccount() {
   if (!document.getElementById("wishlist")) return;
   const wishes = getWish();
@@ -2577,25 +2574,11 @@ function renderAccount() {
 
   const emptyEl = document.getElementById("acc-empty");
   const navEl = document.getElementById("acc-nav");
-  const tabsEl = document.getElementById("acc-tabs");
 
-  // 탭 바는 로그인 상태에서만 표시
-  if (tabsEl) {
-    if (isLoggedIn) {
-      tabsEl.style.display = "flex";
-      tabsEl.querySelectorAll(".acc-tab").forEach(b => {
-        b.onclick = () => { _accSetTab(b.dataset.tab); renderAccount(); };
-      });
-    } else {
-      tabsEl.style.display = "none";
-    }
-  }
-
+  // FE-SOC-07: 탭 제거 — 찜/세트/로그를 한 화면에 섹션으로 나열(탭 전환 없음).
   // 비로그인: navEl / emptyEl 모두 숨김 (찜·세트 섹션 자체가 비로그인 미표시)
   if (navEl) navEl.style.display = "none";
   if (emptyEl) emptyEl.style.display = "none";
-
-  const activeTab = _accActiveTab();
 
   // 내 로그 섹션 (로그인 사용자만)
   const logsSec = document.getElementById("logs-section");
@@ -2604,7 +2587,7 @@ function renderAccount() {
     const userId = window._accUser?.id;
     if (userId) {
       logsSec._accHasContent = true;
-      logsSec.style.display = (isLoggedIn && activeTab === "logs") ? "block" : "none";
+      logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
         import("./supabaseClient.js").then(async ({ supabase }) => {
@@ -2714,8 +2697,17 @@ function renderAccount() {
         }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; });
       }
     } else {
+      // L-39: 비로그인 시 섹션 숨김 대신 로그인 안내 표시
       logsSec._accHasContent = false;
-      logsSec.style.display = "none";
+      logsSec.style.display = "block";
+      if (myLogsList && !myLogsList.dataset.logLoginShown) {
+        myLogsList.dataset.logLoginShown = "1";
+        myLogsList.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--muted);font-size:14px">
+          <div style="font-size:28px;margin-bottom:10px">📝</div>
+          <div>로그인하면 내 캠핑 로그를 기록할 수 있어요</div>
+          <a href="account.html" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인</a>
+        </div>`;
+      }
     }
   }
 
@@ -2725,7 +2717,7 @@ function renderAccount() {
   const cnt = document.getElementById("wishcount");
   if (wishSec) {
     wishSec._accHasContent = true;
-    wishSec.style.display = (isLoggedIn && activeTab === "wish") ? "block" : "none";
+    wishSec.style.display = "block";   // L-22: 비로그인에도 섹션 표시 — 빈 상태에서 로그인 CTA 노출
   }
   if (cnt) cnt.textContent = wishes.length ? `${wishes.length}개` : "";
   let wishEmptyEl = document.getElementById("wish-empty");
@@ -2807,7 +2799,7 @@ function renderAccount() {
   const setsCnt = document.getElementById("setscount");
   if (setsSec) {
     setsSec._accHasContent = true;
-    setsSec.style.display = (isLoggedIn && activeTab === "sets") ? "block" : "none";
+    setsSec.style.display = isLoggedIn ? "block" : "none";
   }
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
   if (setsEl && !sets.length) {
@@ -2929,15 +2921,7 @@ function renderAccount() {
     });
   }
 
-  // 탭 레이블에 카운트 뱃지 업데이트
-  if (tabsEl && isLoggedIn) {
-    tabsEl.querySelectorAll(".acc-tab").forEach(b => {
-      const labels = { wish: `❤️ 찜목록${wishes.length ? ` <span style="font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 6px">${wishes.length}</span>` : ""}`,
-                       sets: `🎒 내 세트${sets.length ? ` <span style="font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 6px">${sets.length}</span>` : ""}`,
-                       logs: `📝 내 로그` };
-      b.innerHTML = labels[b.dataset.tab] || b.textContent;
-    });
-  }
+  // FE-SOC-07: 섹션 개수는 각 섹션 헤더의 .nd 뱃지(#wishcount/#setscount/#logscount)로 표시.
 }
 
 /* ---------- 커뮤니티 ---------- */
