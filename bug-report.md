@@ -1222,7 +1222,8 @@
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 일부 경로는 www→non-www, 일부는 non-www→www로 리다이렉트 방향이 혼재. canonical은 non-www로 통일되어 있으나 실제 리다이렉트 동작 불일치로 크롤링 일관성 저하. ([H-12] 근본 원인과 연관)
 
-### [L-13] JSON-LD 구조화 데이터 없음 — 리치 스니펫 노출 불가
+### [L-13] ✅ 해결완료(2026-06-12) — JSON-LD 구조화 데이터 없음 — 리치 스니펫 노출 불가
+- **해결:** Batch 4에서 index.html `<head>`에 WebSite+SearchAction JSON-LD 추가됨. 검증: index.html에 application/ld+json WebSite 존재. [site/index.html](site/index.html)
 - **영역:** 홈/메인 (SEO)
 - **URL:** https://www.gear-forest.com/
 - **증상:** schema.org JSON-LD 전혀 없음. Google 검색 결과에서 사이트링크 검색박스·상품 카드 등 리치 스니펫 노출 불가.
@@ -1690,7 +1691,8 @@
 
 ## 회차 63 — 상품상세 (11순환) 2026-06-12
 
-### [M-120] openReviewDetail ESC 키 시 후기 상세와 상품 모달 동시 닫힘
+### [M-120] ✅ 해결완료(2026-06-12) — openReviewDetail ESC 키 시 후기 상세와 상품 모달 동시 닫힘
+- **해결:** onKey를 capture+stopImmediatePropagation로 등록 → ESC가 하위 상품모달 핸들러까지 전파되지 않게. 검증: ESC→후기만 닫힘·상품모달 open 유지. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 유저 후기 상세 오버레이
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent (상품 클릭 → 후기 카드 클릭 → ESC)
 - **증상:** 상품 상세 모달에서 후기 카드 클릭 → `openReviewDetail` 오버레이 오픈 → ESC 키 입력 시 후기 상세 오버레이가 닫히고 동시에 상품 상세 모달도 닫힘. 사용자는 후기만 닫고 상품 상세로 돌아가려 했으나 모든 모달이 닫혀 목록으로 복귀됨.
@@ -1699,7 +1701,8 @@
 - **재현:** 카테고리 → 상품 클릭 → 후기 있는 경우 후기 카드 클릭 → ESC → 두 모달 동시 닫힘
 - **심각도:** 🟡 Medium
 
-### [L-105] renderThumbs() 후기 사진 리렌더 시 이전 Blob URL 미해제
+### [L-105] ✅ 해결완료(2026-06-12) — renderThumbs() 후기 사진 리렌더 시 이전 Blob URL 미해제
+- **해결:** renderThumbs 재렌더 전 기존 img의 blob: URL `revokeObjectURL` 호출 — 누수 방지. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 후기 작성 폼 사진 업로드
 - **증상:** 후기 작성 폼에서 사진 추가/삭제 시 `renderThumbs()`가 매번 `URL.createObjectURL(f)`로 새 Blob URL을 생성. 이전 렌더에서 생성한 Blob URL은 `URL.revokeObjectURL()` 미호출로 해제되지 않음. 사진 변경이 잦으면 Blob URL이 누적돼 메모리 사용량 증가 (사진 최대 4장이라 실제 영향은 미미).
 - **원인:** `app.js:1653` `thumbsEl.innerHTML = photos.map((f, i) => \`...<img src="${URL.createObjectURL(f)}"...\`).join("")` — 이전 URL 해제 없이 매번 신규 URL 생성.
@@ -1991,7 +1994,8 @@
 - **수정:** 외부 컨테이너(`#pmodal`, `#pmrv-detail`)에서 `role="dialog"`·`aria-modal="true"` 제거. `aria-labelledby`는 외부 컨테이너에 추가(내부 pmbox에서는 유지). 내부 `.pmbox`의 `role="dialog" aria-modal="true"`는 유지.
 - **파일:** [site/app.js](site/app.js) line ~1550, ~1563, ~1713, ~1716
 
-### [L-122] `openReviewDetail()` 포커스 관리 완전 누락 — 초기 포커스·복귀·트랩 모두 없음
+### [L-122] ✅ 해결완료(2026-06-12) — `openReviewDetail()` 포커스 관리 완전 누락 — 초기 포커스·복귀·트랩 모두 없음
+- **해결:** openReviewDetail에 초기포커스(.pmx)·prevFocus 복귀·Tab 포커스트랩 추가(openProduct 패턴). 검증: 열림 시 X버튼 포커스. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 후기 상세 라이트박스 모달
 - **심각도:** 🟢 Low
 - **증상:** `openReviewDetail()`(line ~1711) 모달 open 시 ① 닫기 버튼에 초기 포커스 미설정 ② 모달 닫힐 때 이전 포커스 복귀 코드 없음 ③ Tab 키가 모달 밖으로 탈출하는 포커스 트랩 없음. `openProduct()`는 `prevFocus` 캡처 → `xbtn.focus()` → 포커스 트랩(H-29 수정) 모두 구현됨. 두 모달이 함께 사용되는 상황(후기 카드 클릭)에서 후기 상세만 접근성 수준이 떨어짐.
