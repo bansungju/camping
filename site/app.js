@@ -428,6 +428,7 @@ function pushRecent(item) {
    탭 정의(TABS)·하단바(.bottom-nav)는 복구 대비 코드만 보존하고 플래그로 비활성. */
 const GNB_ENABLED = false;        // GNB(상/하단 탭바) 아카이브 — 복구하려면 true
 const COMMUNITY_ENABLED = false;  // 커뮤니티 임시 숨김(버그 다수) — 복구하려면 true
+const COMPARE_ENABLED = false;    // 스펙 비교 기능(⚖ 카드버튼·비교바·비교모달) 아카이브(2026-06-12) — 복구하려면 true. 코드(toggleCmp·updateCmpBar·openCmpModal)는 보존
 
 // href는 루트 기준 절대경로(H-38): 상세 페이지(/item/{cat}/item-N.html, 2단계 하위)에서도
 // 상대경로 404 없이 동작. 모바일 .bottom-nav와 동일 규칙.
@@ -1984,6 +1985,7 @@ let _cmpSet = [];  // 선택된 '모델 객체' 배열 (최대 3). 인덱스가 
                    // 정렬·필터로 rows 순서가 바뀌어도 같은 제품을 가리킨다(M-110).
 
 function toggleCmp(m, rows) {
+  if (!COMPARE_ENABLED) return;   // 비교 기능 아카이브
   const idx = _cmpSet.indexOf(m);
   if (idx >= 0) { _cmpSet.splice(idx, 1); }
   else if (_cmpSet.length < 3) { _cmpSet.push(m); }
@@ -1997,6 +1999,7 @@ function toggleCmp(m, rows) {
 }
 
 function updateCmpBar(rows) {
+  if (!COMPARE_ENABLED) { const b = document.getElementById("cmp-bar"); if (b) b.style.display = "none"; return; }   // 비교 기능 아카이브
   let bar = document.getElementById("cmp-bar");
   if (!bar) {
     bar = document.createElement("div");
@@ -2016,6 +2019,7 @@ function updateCmpBar(rows) {
 }
 
 function openCmpModal(rows) {
+  if (!COMPARE_ENABLED) return;   // 비교 기능 아카이브
   const d = STATE.data;
   const metrics = d.metrics.filter(m => m.is_star);
   const items = _cmpSet.filter(Boolean);
@@ -2157,7 +2161,7 @@ function draw() {
       </div>
       <div class="pli-side">
         <div class="pli-price">${priceLabeled(m.price_min)}</div>
-        <button type="button" class="pli-cmp${inCmp ? " on" : ""}" data-mi="${i}" aria-label="비교에 추가" aria-pressed="${inCmp}" title="비교에 추가">⚖</button>
+        ${COMPARE_ENABLED ? `<button type="button" class="pli-cmp${inCmp ? " on" : ""}" data-mi="${i}" aria-label="비교에 추가" aria-pressed="${inCmp}" title="비교에 추가">⚖</button>` : ""}
         <span class="pli-chev" aria-hidden="true">›</span>
       </div></a>`;
   }).join("");
