@@ -1660,7 +1660,8 @@
 - **수정 방향:** app.js 내 동적 import를 `"./supabaseClient.js?v=CURRENT_HASH"` 로 통일하거나, supabase singleton을 app.js 상단에서 한 번만 전역 임포트해 재사용. stamp_version.py가 동적 import URL도 버전 교체하도록 확장 필요. [site/app.js:1422,1551… (17곳)](site/app.js)
 - **심각도:** 🟡 Medium
 
-### [L-102] `data/search.json?v=ad0b6b03` — app.js 하드코딩 버전, stamp_version.py 미관리
+### [L-102] ✅ 해결완료(기구현·2026-06-12 검증) — `data/search.json?v=ad0b6b03` — app.js 하드코딩 버전, stamp_version.py 미관리
+- **확인:** `stamp_version.py` line 28-41(M-76)이 이미 `app.js`의 `"data/search.json?v=..."` 리터럴을 search.json 내용해시로 자동 치환함. 검증: app.js 리터럴 `ad0b6b03` == 현재 search.json md5 `ad0b6b03` 일치. 추가 조치 불필요. (L-128 중복)
 - **영역:** 홈/메인 — 검색 인덱스
 - **URL:** https://gear-forest.com/ (검색 기능)
 - **증상:** `setupHomeSearch`(app.js:473)에서 `data/search.json?v=ad0b6b03`로 검색 인덱스를 fetch. 이 버전 문자열은 하드코딩이라 stamp_version.py가 갱신하지 않음. search.json 내용이 변경돼도 브라우저는 이전 캐시를 재사용 → 신규 상품이 홈 검색에 미반영.
@@ -1996,7 +1997,8 @@
 - **수정:** `openProduct()` 패턴 동일 적용: `const prevFocus = document.activeElement`, `ov.querySelector(".pmx").focus()`, Tab/Shift+Tab 순환 포커스 트랩 추가. `close()` 내 `if (prevFocus) prevFocus.focus()` 추가.
 - **파일:** [site/app.js](site/app.js) line ~1711
 
-### [L-123] `site/item/**` 정적 페이지 `style.css?v=` 해시가 `stamp_version.py` 갱신 대상 제외 — CSS 변경 후 구버전 CSS 캐시 가능
+### [L-123] ✅ 해결완료(기구현·2026-06-12 검증) — `site/item/**` 정적 페이지 `style.css?v=` 해시가 `stamp_version.py` 갱신 대상 제외 — CSS 변경 후 구버전 CSS 캐시 가능
+- **확인:** `stamp_version.py` line 44-58(L-95)이 이미 item 페이지의 `../../app.js?v=`·`../../style.css?v=`를 매 스탬프마다 재기록함. 검증: style.css md5 `5c1374d1` == item-0 참조 `style.css?v=5c1374d1` 일치. 추가 조치 불필요.
 - **영역:** 상품상세 — 정적 상품 상세 페이지 (2277개)
 - **심각도:** 🟢 Low
 - **증상:** `stamp_version.py` 실행 시 `site/item/**` 페이지는 업데이트 대상 제외. CSS 변경 후 stamp가 실행돼도 item 페이지들의 `style.css?v=...` 해시는 갱신되지 않아 구버전 CSS를 캐시할 수 있음. stamp_version.py 갱신 대상은 `community.html, index.html, category.html, recommend.html, account.html, brand.html` 만이며 `site/item/**` 제외. 향후 CSS 변경 후 코어 HTML만 갱신되면 item 페이지와 버전 불일치 발생 가능.
@@ -2127,3 +2129,41 @@
 - **파일:** [site/app.js](site/app.js) line ~1935
 
 *다음 회차: 상품상세 (15순환)*
+
+---
+
+## R-76 상품상세 (15순환·SOCIAL 레인) — 2026-06-12
+
+### [L-136] `loadRemoteGearSets()` — `getUser()` 가드·명시적 `user_id` 필터 없음 (RLS 단독 의존)
+- **영역:** 상품상세 — 기어세트 동기화 / supabaseClient.js
+- **심각도:** 🟢 Low
+- **증상:** `supabaseClient.js` `loadRemoteGearSets()`(line 274)는 `getUser()` 확인 없이 바로 쿼리. 다른 모든 데이터 접근 함수(`loadRemoteWishlist`, `saveRemoteWishlist`, `createPost`, `createComment` 등)는 `getUser()`로 인증 먼저 확인하며, `loadRemoteWishlist()`는 추가로 `.eq('user_id', user.id)`를 애플리케이션 레이어에서 직접 적용. `loadRemoteGearSets()`는 RLS(`auth.uid() = user_id`)에만 의존. RLS 오설정·비활성화 시 모든 사용자의 세트가 반환될 수 있음.
+- **원인:** 기어세트 기능 추가 시 위시리스트 패턴(getUser + 명시적 eq) 미적용.
+- **수정:** `loadRemoteGearSets()` 시작 시 `getUser()` 호출 → user 없으면 null 반환; `.select(...)` 뒤에 `.eq('user_id', user.id)` 추가(RLS와 이중 보호).
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~274
+
+### [L-137] `auth-callback.html` — `background:#fff` 하드코딩, `data-theme` 초기화 스크립트 없음
+- **영역:** 인증 콜백 페이지
+- **심각도:** 🟢 Low
+- **증상:** `auth-callback.html:8`에 `body { background: #fff }` 하드코딩. 다크 모드 설정한 사용자가 OAuth 로그인 시 auth-callback.html에서 흰 화면이 잠깐 표시됨. `index.html`/`account.html`은 인라인 스크립트로 `localStorage.getItem('theme')`을 읽어 `data-theme=dark` 즉시 복원하지만, auth-callback.html에는 이 스크립트가 없음.
+- **원인:** auth-callback.html 생성 시 다크 테마 초기화 패턴 미적용.
+- **수정:** `<head>` 내 `<style>` 앞에 `<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>` 추가; CSS에서 `background: #fff` → `background: var(--bg, #fff)` 또는 미디어쿼리 `prefers-color-scheme:dark` 대응.
+- **파일:** [site/auth-callback.html](site/auth-callback.html) line ~8
+
+### [L-138] `auth-callback.html` — `getSession()` 경로에 `settled` 가드 없어 이중 `location.replace` 가능
+- **영역:** 인증 콜백 — implicit flow 처리
+- **심각도:** 🟢 Low
+- **증상:** `auth-callback.html` lines 47-57: `onAuthStateChange` 리스너는 `settled` 플래그로 중복 실행을 막지만, 이후 `await supabase.auth.getSession()`(line 56) 결과 처리 블록(line 57)은 `settled` 를 확인하지 않음. 리스너가 먼저 발화해 `settled=true` + `location.replace('./account.html')` 호출 후, `getSession()`도 유효 세션 반환 시 `location.replace('./account.html')`를 다시 호출함. `subscription.unsubscribe()`도 이미 해제된 구독에 재호출. 현재는 동일 URL 이중 replace로 무해하나, 향후 이동 대상이 달라질 경우 레이스 조건 발생.
+- **원인:** `getSession()` 블록에 `if (!settled)` 가드 누락.
+- **수정:** `if (session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }` → `if (session && !settled) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }` 로 변경.
+- **파일:** [site/auth-callback.html](site/auth-callback.html) line ~57
+
+### [L-139] `account.html` — 계정 삭제 후 `location.href` 사용으로 히스토리 잔존
+- **영역:** 계정/인증 — 계정 삭제
+- **심각도:** 🟢 Low
+- **증상:** `account.html:350`에서 계정 삭제 완료 후 `location.href = 'index.html?account_deleted=1'` 사용. `location.href` 는 히스토리에 항목을 추가하므로, 사용자가 홈으로 이동 후 뒤로가기 버튼을 누르면 계정이 삭제된 상태의 account.html로 돌아와 혼란 유발. 삭제 완료 후에는 뒤로가기 진입을 차단하는 `location.replace()`가 적절.
+- **원인:** 삭제 흐름 구현 시 `location.href` vs `location.replace()` 구분 미적용.
+- **수정:** `location.href = 'index.html?account_deleted=1'` → `location.replace('index.html?account_deleted=1')`.
+- **파일:** [site/account.html](site/account.html) line ~350
+
+*다음 회차: 계정/로그인 (15순환)*
