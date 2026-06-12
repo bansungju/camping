@@ -309,7 +309,7 @@ function setItem(m, slug) {
 function openSetModal(item) {
   let modal = document.getElementById("set-modal");
   if (!modal) {
-    modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true");
+    modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal";  // L-112: dialog role은 내부 .pmbox에만
     document.body.appendChild(modal);
   }
   const sets = getSets();
@@ -330,7 +330,9 @@ function openSetModal(item) {
       <button class="sm-create">만들기</button>
     </div></div>`;
   modal.classList.add("on");
-  const close = () => modal.classList.remove("on");
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };   // L-106: ESC 닫기
+  document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
@@ -915,14 +917,14 @@ function renderStyleChips(d) {
   if (!relevant.length) { el.style.display = "none"; return; }
   el.innerHTML = `<div class="sc-row">` +
     relevant.map(s =>
-      `<button class="sc-chip${STATE.campStyle === s.key ? " on" : ""}" data-style="${s.key}">${s.icon} ${s.label}</button>`
+      `<button class="sc-chip${STATE.campStyle === s.key ? " on" : ""}" data-style="${s.key}" aria-pressed="${STATE.campStyle === s.key}">${s.icon} ${s.label}</button>`
     ).join("") +
     `</div><div class="sc-tip" id="sc-tip-text">${STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : ""}</div>`;
   el.style.display = "block";
   el.querySelectorAll(".sc-chip").forEach(btn => btn.onclick = () => {
     const sk = btn.dataset.style;
     STATE.campStyle = STATE.campStyle === sk ? "" : sk;
-    el.querySelectorAll(".sc-chip").forEach(b => b.classList.toggle("on", b.dataset.style === STATE.campStyle));
+    el.querySelectorAll(".sc-chip").forEach(b => { const on = b.dataset.style === STATE.campStyle; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-120
     const tipEl = document.getElementById("sc-tip-text");
     if (tipEl) tipEl.textContent = STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : "";
     applyStyleSort(d);
@@ -1114,8 +1116,8 @@ function buildFilters(d, star) {
   const caps = [...new Set(ms.map(x => x.capacity).filter(x => x != null))].sort((a, b) => a - b);
   if (caps.length) {
     parts.push(`<div class="fgrp"><span class="flab">인원</span>` +
-      `<button class="ftag on" data-cap="">전체</button>` +
-      caps.map(c => `<button class="ftag" data-cap="${c}">${c}인</button>`).join("") + `</div>`);
+      `<button class="ftag on" data-cap="" aria-pressed="true">전체</button>` +
+      caps.map(c => `<button class="ftag" data-cap="${c}" aria-pressed="false">${c}인</button>`).join("") + `</div>`);  // L-119
   }
 
   // 가격 범위 — 듀얼 슬라이더
@@ -1204,7 +1206,7 @@ function buildFilters(d, star) {
   const sorted = Object.entries(bc).sort((a, b) => b[1] - a[1]);
   const top = sorted.slice(0, 12);
   parts.push(`<div class="fgrp"><span class="flab">브랜드</span>` +
-    top.map(([b, n]) => `<button class="ftag" data-brand="${esc(b)}">${esc(b)} <i>${n}</i></button>`).join("") +
+    top.map(([b, n]) => `<button class="ftag" data-brand="${esc(b)}" aria-pressed="false">${esc(b)} <i>${n}</i></button>`).join("") +
     (sorted.length > 12 ? `<select class="fsel" data-brandsel aria-label="브랜드 필터 선택">
        <option value="">＋ 브랜드 (${sorted.length})</option>` +
       sorted.map(([b, n]) => `<option value="${esc(b)}">${esc(b)} (${n})</option>`).join("") + `</select>` : "") + `</div>`);
@@ -1272,7 +1274,7 @@ function buildFilters(d, star) {
 
   if (presets.length) {
     parts.unshift(`<div class="fgrp fgrp-preset"><span class="flab">빠른 설정</span>` +
-      presets.map((p, i) => `<button type="button" class="ftag fpre" data-pi="${i}">${esc(p.label)}</button>`).join("") +
+      presets.map((p, i) => `<button type="button" class="ftag fpre" data-pi="${i}" aria-pressed="false">${esc(p.label)}</button>`).join("") +
       `</div>`);
   }
 
@@ -1280,8 +1282,9 @@ function buildFilters(d, star) {
 
   // 프리셋 클릭 핸들러
   if (presets.length) {
-    const syncPresetOn = () => bar.querySelectorAll(".fpre").forEach(x =>
-      x.classList.toggle("on", presets[+x.dataset.pi].isOn()));
+    const syncPresetOn = () => bar.querySelectorAll(".fpre").forEach(x => {
+      const on = presets[+x.dataset.pi].isOn(); x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on));  // L-119
+    });
     bar.querySelectorAll(".fpre").forEach(b => b.onclick = () => {
       presets[+b.dataset.pi].fn();
       syncPresetOn();   // 토글 결과(상호배타·재클릭 OFF)를 .on 표시에 반영 (M-68)
@@ -1292,9 +1295,13 @@ function buildFilters(d, star) {
   // 필터바 토글(모바일에서 노출). 기본은 펼침(default expanded) — 첫 화면에 필터가 바로 보이게.
   if (!document.getElementById("filtoggle")) {
     bar.insertAdjacentHTML("beforebegin",
-      `<button id="filtoggle" class="filtoggle" type="button"></button>`);
+      `<button id="filtoggle" class="filtoggle" type="button" aria-controls="filters"></button>`);  // L-121
     const tg = document.getElementById("filtoggle");
-    const syncLabel = () => tg.textContent = bar.classList.contains("collapsed") ? "필터 펼치기 ▾" : "필터 접기 ▴";
+    const syncLabel = () => {
+      const collapsed = bar.classList.contains("collapsed");
+      tg.textContent = collapsed ? "필터 펼치기 ▾" : "필터 접기 ▴";
+      tg.setAttribute("aria-expanded", String(!collapsed));   // L-121: 열림/닫힘 상태 고지
+    };
     tg.onclick = () => { bar.classList.toggle("collapsed"); syncLabel(); };
     bar.classList.remove("collapsed");   // 기본 펼침. 사용자가 토글로 접을 수 있음.
     syncLabel();
@@ -1453,8 +1460,8 @@ function clearAllFilters() {
 // 칩/입력 UI를 STATE에 동기화(활성칩에서 해제 시 컨트롤도 반영)
 function syncFilterUI() {
   const bar = document.getElementById("filters");
-  bar.querySelectorAll("[data-cap]").forEach(b => b.classList.toggle("on", b.dataset.cap === STATE.cap));
-  bar.querySelectorAll("[data-brand]").forEach(b => b.classList.toggle("on", STATE.brands.has(b.dataset.brand)));
+  bar.querySelectorAll("[data-cap]").forEach(b => { const on = b.dataset.cap === STATE.cap; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-119
+  bar.querySelectorAll("[data-brand]").forEach(b => { const on = STATE.brands.has(b.dataset.brand); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-119
   bar.querySelectorAll(".dslider").forEach(sl => {
     const key = sl.dataset.rng;
     const isWeight = sl.dataset.isweight === "1";
@@ -1549,7 +1556,7 @@ function openProduct(m) {
   pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
-  if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); document.body.appendChild(modal); }
+  if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }  // L-112: dialog role은 내부 .pmbox에만 — 중첩 제거
   const imgHtml = thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "pmimg", "pmicon");
   const specRows = star.map(mt => {
     const s = m.specs[mt.key];
@@ -1966,8 +1973,23 @@ function openCmpModal(rows) {
     <button type="button" id="cmp-save-set" style="margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">🎒 선택 장비를 세트로 저장</button>
   </div>`;
   modal.classList.add("on");
-  modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
-  modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+  // L-106·M-127: ESC 닫기 + 포커스 트랩 + 초기 포커스 (openProduct와 동일 패턴)
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  const onKey = e => {
+    if (e.key === "Escape") { close(); return; }
+    if (e.key !== "Tab") return;
+    const box = modal.querySelector(".pmbox");
+    const f = box.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])');
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener("keydown", onKey);
+  const cmpX = modal.querySelector(".pmx");
+  cmpX.onclick = close;
+  cmpX.focus();
+  modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector("#cmp-save-set").onclick = () => {
     const btn = modal.querySelector("#cmp-save-set");
     if (btn.disabled) return;  // L-82: 더블클릭 중복 저장 방지
@@ -2061,11 +2083,13 @@ function draw() {
   });
   // 찜 토글(카드 클릭=모달과 분리 → stopPropagation)
   document.querySelectorAll("#list .pli-wish").forEach(btn => btn.onclick = e => {
+    e.preventDefault();   // L-03 회귀: <a class=pli> 내부 버튼 → 기본 네비게이션 차단
     e.stopPropagation();
     btn.innerHTML = BOOKMARK_SVG;
     toggleWishWithHint(wishItem(rows[+btn.dataset.mi], STATE.slug), btn);
   });
   document.querySelectorAll("#list .pli-cmp").forEach(btn => btn.onclick = e => {
+    e.preventDefault();   // L-03 회귀: 카드 a태그 네비게이션 차단
     e.stopPropagation();
     toggleCmp(rows[+btn.dataset.mi], rows);
   });

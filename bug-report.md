@@ -2036,3 +2036,49 @@
 - **파일:** [site/app.js](site/app.js) line ~2738
 
 *다음 회차: 홈/메인 (15순환)*
+
+---
+
+## R-74 홈/메인 (15순환) — 2026-06-12
+
+### [L-127] `renderHub()` introbar 닫기 버튼 — `ib.remove()` 후 포커스 body 이탈
+- **영역:** 홈/메인 — 첫 진입 안내 배너
+- **심각도:** 🟢 Low
+- **증상:** `renderHub()`(line ~514)에서 introbar 닫기(.ix) 버튼 클릭 시 `ib.remove()`만 호출. 닫기 버튼 자체가 DOM에서 삭제되므로 포커스가 `<body>`로 떨어짐. 키보드 사용자가 포커스를 잃고 페이지 상단부터 다시 탐색해야 함.
+- **원인:** `ib.remove()` 후 명시적 포커스 이동 코드 없음. 모달 닫기 `prevFocus.focus()` 패턴과 달리, introbar는 prevFocus 캡처 없이 DOM 제거.
+- **수정:** `ib.remove()` 전 다음 포커스 대상(`main h1` 또는 `#homeq`) 참조 저장 후, 제거 후 `.focus()` 호출. `const nextFocus = document.querySelector("main h1") || document.querySelector("#homeq");` → `ib.remove();` → `nextFocus?.focus();`
+- **파일:** [site/app.js](site/app.js) line ~514
+
+### [L-128] `setupHomeSearch()` `data/search.json?v=ad0b6b03` — app.js 하드코딩, stamp_version.py 갱신 범위 밖
+- **영역:** 홈/메인 — 전역 검색
+- **심각도:** 🟢 Low
+- **증상:** `setupHomeSearch()`(line ~601)에서 `getJSON("data/search.json?v=ad0b6b03")` 호출 시 버전 쿼리 `?v=ad0b6b03`이 app.js 소스에 직접 리터럴로 박혀 있음. `stamp_version.py`는 `app.js`·`style.css` 해시를 HTML 파일에 주입하나, app.js 내부의 data 파일 버전은 갱신하지 않음. search.json 재생성 후 이 버전을 수동으로 업데이트하지 않으면 SW stale-while-revalidate 캐시에서 구버전 검색 인덱스가 서빙될 수 있음(L-123 패턴 변형).
+- **원인:** data 파일 버전 관리를 stamp_version.py가 아닌 수동으로 관리. build-item-pages.js가 search.json 재생성 시 app.js의 해당 버전도 자동 갱신하는 파이프라인 없음.
+- **수정:** `export_site.py`(`build-item-pages.js`) 내 search.json 생성 단계에서 파일 MD5 앞 8자리를 계산 후 `app.js` 내 `search.json?v=` 값을 자동 치환하거나, stamp_version.py에 data 파일 버전 갱신 로직 추가.
+- **파일:** [site/app.js](site/app.js) line ~601
+
+### [L-129] PWA 설치 배너 `role="alert"` + `aria-live="polite"` ARIA 의미 충돌
+- **영역:** 홈/메인 — PWA 설치 유도 배너
+- **심각도:** 🟢 Low
+- **증상:** `app.js` lines ~27-28에서 `banner.setAttribute("role", "alert")` + `banner.setAttribute("aria-live", "polite")` 조합 사용. WAI-ARIA 명세상 `role="alert"`는 `aria-live="assertive"`를 내포하며, 명시적 `aria-live` 설정이 우선이므로 "polite"로 재정의됨. 그러나 일부 AT(JAWS·NVDA)는 role=alert을 감지하면 aria-live 값과 무관하게 즉시 인터럽트 방식으로 고지할 수 있어, AT마다 동작이 달라짐. 비긴급 설치 유도 배너에 alert role 사용은 의미론적으로 부적절.
+- **원인:** L-118 수정 시 비긴급 배너에 `role="alert"` 선택. 비긴급 동적 메시지에는 `role="status"` + `aria-live="polite"`가 올바른 패턴.
+- **수정:** `banner.setAttribute("role", "alert")` → `banner.setAttribute("role", "status")` 변경. `aria-live="polite"`·`aria-atomic="true"` 유지.
+- **파일:** [site/app.js](site/app.js) line ~27
+
+### [L-130] `sw.js` push/notificationclick 기본 URL이 `/community.html` 하드코딩 (`COMMUNITY_ENABLED=false` 무시)
+- **영역:** 홈/메인 — PWA 푸시 알림
+- **심각도:** 🟢 Low
+- **증상:** `sw.js` line 82의 push 수신 핸들러 기본 data에 `data: { url: "/community.html" }`; line 95의 notificationclick 핸들러에 `const url = e.notification.data?.url \|\| "/community.html"`. 서버에서 URL을 지정하지 않은 알림 수신·클릭 시 항상 community.html로 라우팅. `COMMUNITY_ENABLED=false`로 커뮤니티 임시 숨김 상태에서 알림 클릭 시 사용자가 숨겨진 페이지로 이동.
+- **원인:** sw.js에 COMMUNITY_ENABLED 플래그를 런타임에 확인할 방법 없음. 기본 URL을 홈(`/`)으로 변경해야 함.
+- **수정:** `sw.js` line 82: `data: { url: "/" }` 변경. line 95: `\|\| "/community.html"` → `\|\| "/"` 변경.
+- **파일:** [site/sw.js](site/sw.js) line ~82, ~95 [lane:SOCIAL]
+
+### [L-131] `sw.js` notificationclick — 기존 탭 포커스 시 알림 URL로 미이동
+- **영역:** 홈/메인 — PWA 푸시 알림 클릭
+- **심각도:** 🟢 Low
+- **증상:** `sw.js` lines 96-99: `clients.matchAll()`로 기존 열린 탭을 찾으면 `existing.focus()`만 호출하고 알림의 `url`로 이동하지 않음. 예를 들어 사용자가 카테고리 페이지를 보는 중 새 인기 상품 알림을 클릭하면 현재 탭에 포커스만 주어질 뿐 해당 상품 페이지로 이동되지 않음. `clients.openWindow(url)`은 새 탭이 없을 때만 호출됨.
+- **원인:** `existing.focus()` 후 `existing.navigate?.(url)` 미호출 (또는 `postMessage` 미전송).
+- **수정:** `existing.focus()` 후 `existing.postMessage({ type: "sw-navigate", url })` 전송; `app.js`에서 `navigator.serviceWorker.addEventListener("message", e => { if (e.data?.type === "sw-navigate") location.href = e.data.url; })` 수신 처리 추가. 또는 `clients.openWindow(url)` 항상 호출로 단순화.
+- **파일:** [site/sw.js](site/sw.js) line ~96 [lane:SOCIAL]
+
+*다음 회차: 카테고리/목록 (15순환)*
