@@ -1890,3 +1890,41 @@
 - **파일:** [site/app.js](site/app.js) line ~2762
 
 *다음 회차: 홈/메인 (14순환)*
+
+---
+
+## R-70 홈/메인 (14순환) — 2026-06-12
+
+### [M-126] `renderHotSection` 비동기 완료 시 `#hot-section` display:none→block 전환으로 하단 콘텐츠 CLS 발생
+- **영역:** 홈/메인 — 이번 주 인기 섹션
+- **심각도:** 🟡 Medium
+- **증상:** `#hot-section`은 초기 HTML에서 `display:none`으로 숨겨져 있으며 `renderHub()`에서 `renderHotSection()` 호출은 await 없이 fire-and-forget. Supabase RPC(`get_hot_items`) 응답 후 `sec.style.display = "block"`으로 전환될 때 아래 위치한 `#personas`·`#grid`·footer가 아래로 밀리며 Cumulative Layout Shift(CLS) 발생. Lighthouse CLS 지표 영향.
+- **원인:** `app.js:510` `renderHotSection(m.categories)` — await 없이 비동기 실행. `#hot-section`이 초기 HTML에서 공간을 예약하지 않아 삽입 시 레이아웃 이동.
+- **수정 방향:** `#hot-section`에 `min-height` 또는 skeleton 높이를 CSS로 예약(예: `min-height:80px`)하거나, `#personas·#grid` 위가 아닌 아래로 위치 이동.
+- **파일:** [site/app.js](site/app.js) line ~510, [site/index.html](site/index.html) line ~61
+
+### [L-116] `renderHub()` 데이터 로드 실패 시 개발용 "(로컬서버 필요)" 메시지 사용자에게 노출
+- **영역:** 홈/메인 — 카테고리 그리드
+- **심각도:** 🟢 Low
+- **증상:** `data/manifest.json` fetch 실패 시 `#lead`에 `"데이터를 불러오지 못했습니다. (로컬서버 필요)"` 출력. 프로덕션 네트워크 장애 시 일반 사용자에게 개발 환경용 안내("로컬서버 필요")가 노출되어 혼란 유발.
+- **원인:** `app.js:487` catch 블록 메시지 하드코딩.
+- **수정:** `"잠시 후 다시 시도해주세요."` 등 사용자 친화적 메시지로 교체.
+- **파일:** [site/app.js](site/app.js) line ~487
+
+### [L-117] 홈 검색결과 listbox(`#homeres`) 내 `sres-footer` div — `role` 없어 ARIA `listbox` 규격 위반
+- **영역:** 홈/메인 — 전역 검색
+- **심각도:** 🟢 Low
+- **증상:** `#homeres`에 `role="listbox"` 적용됨. 내부 검색결과 항목들은 `role="option"` 부여되나, 하단 `<div class="sres-footer">` 및 `<div class="sres nd" role="option" aria-disabled="true">`(결과 없음)는 비표준 구조. `listbox` 자식은 `option` 또는 `group`/`presentation`이어야 하는데 `sres-footer`에 role 없어 ARIA 트리 오염.
+- **원인:** `app.js:693` `sres-footer` div 생성 시 `role="presentation"` 미부여.
+- **수정:** `sres-footer`에 `role="presentation"` 추가.
+- **파일:** [site/app.js](site/app.js) line ~693
+
+### [L-118] `#pwa-banner` 동적 삽입 시 `role="alert"` 또는 `aria-live` 미적용 — 스크린리더 미고지
+- **영역:** 홈/메인 — PWA 설치 배너
+- **심각도:** 🟢 Low
+- **증상:** `beforeinstallprompt` 이벤트 후 `#pwa-banner`에 innerHTML 삽입되어 배너가 동적으로 나타나지만, 배너 요소에 `role="alert"` 또는 `aria-live="polite"` 없어 스크린리더 사용자에게 배너 출현이 고지되지 않음.
+- **원인:** `app.js:25-51` `beforeinstallprompt` 핸들러 내 banner 요소에 role/aria-live 미설정.
+- **수정:** `banner` 요소에 `role="alert"` 또는 `aria-live="polite"` 추가.
+- **파일:** [site/app.js](site/app.js) line ~25
+
+*다음 회차: 카테고리/목록 (14순환)*
