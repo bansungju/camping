@@ -1629,7 +1629,7 @@
 
 ---
 
-### [M-116] renderProfile() 매 인증 이벤트마다 재호출 → btnSignout·btnDelete addEventListener 누적
+### [M-116] ✅ 해결완료(2026-06-13) — renderProfile() 매 인증 이벤트마다 재호출 → btnSignout·btnDelete addEventListener 누적
 - **영역:** 계정/로그인 — account.html
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 장시간 로그인 상태 유지 시(토큰 갱신·`TOKEN_REFRESHED` 이벤트 발화 시마다) 로그아웃/계정삭제 버튼에 클릭 이벤트 핸들러가 누적. 다음 로그아웃 클릭 시 `signOut()` 2회 이상 연속 호출, 계정삭제 시 `confirm()` 다이얼로그 2개 이상 중첩.
@@ -2233,7 +2233,7 @@
 - **수정:** `wishes.map(x => ({ b: x.b, m: x.m, s: x.s, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null, pcode: x.pcode ?? null, coupang_url: x.coupang_url ?? null }))` 로 교체.
 - **파일:** [site/app.js](site/app.js) line ~2697 [lane:CORE]
 
-### [L-140] `renderProfile()` — `onclick = null` + `addEventListener` 혼합 패턴으로 재호출 시 리스너 누적
+### [L-140] ✅ 해결완료(2026-06-13) — `renderProfile()` — `onclick = null` + `addEventListener` 혼합 패턴으로 재호출 시 리스너 누적
 - **영역:** 계정 — 프로필 렌더링 / 로그아웃·계정삭제 버튼
 - **심각도:** 🟢 Low
 - **증상:** `account.html` lines 307-350의 `renderProfile()`에서 `btnSignout.onclick = null; btnSignout.addEventListener('click', ...)` 혼합 사용. `onclick = null`은 `.onclick` 프로퍼티만 초기화하고 `addEventListener`로 등록된 리스너는 제거하지 않음. `renderProfile()`이 재호출될 때마다(M-116 초기화 시나리오) signOut·deleteAccount 리스너가 누적돼 버튼 클릭 1회에 중복 실행 가능.
