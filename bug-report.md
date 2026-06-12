@@ -1138,11 +1138,12 @@
 - **증상:** 찜 카드 `<div role="button" tabindex="0">` 안에 `<button class="pli-wish">` 찜 해제 버튼이 중첩. Interactive content 안에 interactive content 포함이 HTML 명세 위반이며 보조기술에서 예측 불가한 동작 유발.
 - **재현:** 찜 목록 DOM 확인 → `.pli[role="button"] button.pli-wish` 중첩 구조
 
-### [L-76] 세트 공유 URL 열람 시 열람자 본인의 찜·세트 데이터가 모달 뒤에 노출
+### [L-76] ✅ 해결완료(2026-06-13, SOCIAL) — 세트 공유 URL 열람 시 열람자 본인의 찜·세트 데이터가 모달 뒤에 노출
 - **영역:** 계정/로그인 — 세트 공유
 - **URL:** https://gear-forest.com/account.html?view-set=...
 - **증상:** 세트 공유 URL을 열면 공유 세트 모달과 함께 배경에 열람자 본인의 찜 목록·세트가 모두 노출됨. 수신자에게 자신의 개인 데이터가 공유 URL과 함께 표시되어 혼란 유발. 설계 의도 확인 필요.
 - **재현:** 세트 공유 링크 복사 → 브라우저에서 열기 → 공유 모달 + 본인 찜·세트 동시 노출
+- **해결:** `account.html` 모듈 스크립트에 `_isViewSet` 상수 추가. `?view-set=` 감지 시 ① `renderAccount()` 호출 억제(개인 섹션 초기 렌더 방지), ② `showLoggedInSections(true)` 조기 반환(로그인 후 섹션 표시 억제). 배경에 개인 데이터 미노출. [site/account.html](site/account.html)
 
 ### [L-77] ✅ 아카이브(커뮤니티/GNB 비활성화) — 비로그인 빈 피드 — "첫 이야기를 남겨보세요!" CTA가 클릭 불가 텍스트
 - **영역:** 커뮤니티/소셜 — 피드
