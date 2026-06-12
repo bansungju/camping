@@ -6,6 +6,7 @@
 
 ```
 [버그 수정 루프 — 레인 SOCIAL]
+⓪ /Users/1110765/camping/.claude/LOOP-PAUSED 파일이 있으면 아무 작업도 하지 말고 즉시 종료(정지 중).
 ① /Users/1110765/camping/WORK-LANES.md 먼저 읽기.
 ② 내 레인 = SOCIAL  (이 프롬프트로 고정 — 기본값 CORE 아님).
 ③ bug-report.md 미해결(✅ 없음) 중 "SOCIAL 레인 파일만 건드리는" 버그 최대 5개 선택.
