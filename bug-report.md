@@ -1638,7 +1638,7 @@
 - **수정 방향:** `renderProfile` 내 버튼 핸들러를 `onclick` 직접 할당(`btn.onclick = async () => {...}`)으로 교체하거나, 첫 호출 여부 플래그 추가. [site/account.html:327-352](site/account.html)
 - **심각도:** 🟡 Medium
 
-### [M-117] 로그아웃 후 재로그인 시 내 로그 섹션 stale — dataset.loaded 미초기화
+### [M-117] ✅ 해결완료(2026-06-13) — 로그아웃 후 재로그인 시 내 로그 섹션 stale — dataset.loaded 미초기화
 - **영역:** 계정/로그인 — 내 로그 탭
 - **URL:** https://gear-forest.com/account.html (로그 탭)
 - **증상:** 로그아웃 후 동일 탭에서 재로그인(또는 다른 계정으로 전환)하면 내 로그 섹션이 이전 세션 데이터를 그대로 표시. 새 사용자의 로그를 fetch하지 않음.
@@ -1649,7 +1649,7 @@
 
 ---
 
-### [L-97] account.html 로그인 확정 분기에서 renderAccount() 2회 연속 호출
+### [L-97] ✅ 해결완료(2026-06-13) — account.html 로그인 확정 분기에서 renderAccount() 2회 연속 호출
 - **영역:** 계정/로그인 — account.html
 - **증상:** 로그인 확정 시(profile.nickname 존재) renderAccount()가 line 388과 390 두 번 연속 호출되어 탭 상태가 한 프레임 내에서 두 번 계산됨. 체감 상 탭 active 상태 플래시 및 불필요한 DOM 조작.
 - **원인:** account.html initAuth 콜백 내 renderAccount() (388행), renderProfile(profile) (389행), renderAccount() (390행) 순서 — 390행 renderAccount()가 388행의 것을 덮어씀.
@@ -1821,7 +1821,7 @@
 - **수정 방향:** `account.html:259` `syncWishlistOnLogin()` 다음 줄에 `const u = await getUser(); if (u) syncGearSetsOnLogin(u.id)` 추가. [site/account.html:259](site/account.html)
 - **심각도:** 🟡 Medium
 
-### [L-109] initAuth 콜백에서 renderAccount() 중복 호출 — 찜·세트·로그 이중 렌더
+### [L-109] ✅ 해결완료(기구현·2026-06-13 검증) — initAuth 콜백에서 renderAccount() 중복 호출 — 찜·세트·로그 이중 렌더
 - **영역:** 계정/로그인 — account.html initAuth 콜백
 - **증상:** 로그인 상태 콜백 line 388에서 `renderAccount()`가 1회 호출되고 line 390에서 `if (typeof renderAccount === 'function') renderAccount()`로 또 1회 호출됨. 찜 목록·세트·로그가 두 번 렌더링되어 불필요한 DOM 조작 발생.
 - **원인:** `account.html:388` + `account.html:390` — 동일 함수 연속 두 번 호출.
