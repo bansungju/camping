@@ -2755,8 +2755,24 @@ function renderAccount() {
           <span class="pli-chev" aria-hidden="true">›</span>
         </div></div>`;
     }).join("");
-    wishEl.querySelectorAll(".pli").forEach(card => {
-      const go = () => { location.href = card.dataset.href; };
+    // M-53: 찜 카드 클릭 시 카테고리 이탈 대신 인라인 모달 열기
+    wishEl.querySelectorAll(".pli").forEach((card, ci) => {
+      const wx = wishes[ci];
+      const go = async () => {
+        if (!wx || !wx.s) { location.href = card.dataset.href; return; }
+        try {
+          const catJson = await fetch(`data/${wx.s}.json`).then(r => r.json());
+          const prod = (catJson.items || []).find(p => p.brand === wx.b && p.model === wx.m);
+          if (prod) {
+            const prevSlug = STATE.slug, prevData = STATE.data;
+            STATE.slug = wx.s; STATE.data = catJson;
+            openProduct(prod);
+            STATE.slug = prevSlug; STATE.data = prevData;
+            return;
+          }
+        } catch (_) {}
+        location.href = card.dataset.href;
+      };
       card.onclick = go;
       card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
     });

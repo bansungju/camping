@@ -469,7 +469,7 @@
 - **재현:** 홈 검색창에서 한글 마지막 글자 입력 → Enter 1회 → 의도치 않게 바로 페이지 이동
 - **해결(2026-06-11):** `setupHomeSearch()`의 keydown 핸들러 최상단에 `if (e.isComposing || e.keyCode === 229) return;` 추가 → 조합완료 Enter·화살표·Esc 등 IME 처리 키가 검색/탐색을 발동시키지 않음. 로컬 프리뷰 검증 — `isComposing:true` Enter·keyCode 229 Enter 모두 미이동, 일반 Enter(조합 아님)는 `category.html?cat=...&q=` 정상 이동(회귀 없음). [site/app.js](site/app.js)
 
-### [M-52] 계정 탭 URL 해시 딥링크 무시 — Back/Forward 탭 전환 불가
+### [M-52] ✅ 해결완료(2026-06-13) — 계정 탭 URL 해시 딥링크 무시 — Back/Forward 탭 전환 불가
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html#sets 등
 - **증상:** `account.html#sets`, `#logs`, `#settings` 등 해시로 직접 접근 시 해시 무시, 항상 wish 탭 표시. `_accSetTab()`이 `sessionStorage("acc-tab")`만 읽고 `location.hash` 미참조, `hashchange` 핸들러도 없음. 딥링크 공유·브라우저 Back/Forward 탭 전환 모두 불가.
@@ -546,7 +546,7 @@
 - **증상:** `.acc-set` 카드에 `role="button"` 및 `tabindex="0"`이 있어 클릭 가능해 보이지만, 클릭 시 세트 상세(구성 장비 목록) 진입 동작이 없음. 저장한 세트의 내용을 확인하는 방법이 없음.
 - **재현:** account.html → 세트 탭 → 세트 카드 클릭 → 아무 반응 없음
 
-### [M-74] 모바일 375px에서 account.html `<nav>` 렌더 크기 0×0 — 탭바 hit area 없음
+### [M-74] ✅ 아카이브(FE-SOC-07 nav 제거로 moot) — 모바일 375px에서 account.html `<nav>` 렌더 크기 0×0 — 탭바 hit area 없음
 - **영역:** 계정/로그인 (반응형)
 - **URL:** https://gear-forest.com/account.html (375px)
 - **증상:** 모바일 뷰포트(375px)에서 `<nav>` 요소 `getBoundingClientRect()` 결과 `width:0, height:0`. 탭바가 시각적으로 보여도 클릭 영역이 없어 탭 전환 불가 가능성. `position:sticky`이지만 실제 점유 면적 없음.
@@ -602,7 +602,7 @@
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `listPosts`에 `limit: 30` 하드코딩. 31번째 이후 게시글은 표시되지 않고, 더 불러오기 버튼이나 무한스크롤도 없음. 끝 도달 안내도 없어 사용자가 게시글이 30개뿐인지 더 있는지 알 수 없음.
 
-### [M-53] 계정 찜 탭에서 상품 카드 클릭 시 카테고리 페이지로 이탈
+### [M-53] ✅ 해결완료(2026-06-13) — 계정 찜 탭에서 상품 카드 클릭 시 카테고리 페이지로 이탈
 - **영역:** 계정/로그인 — 찜 탭
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 찜 탭의 상품 카드 클릭 시 계정 페이지 위에서 모달이 열리지 않고 `category.html?cat=...&q=상품명`으로 페이지 이동. 계정 컨텍스트 완전 이탈, 돌아오려면 Back 필요.
@@ -822,7 +822,7 @@
 - **증상:** 비로그인 상태에서 `auth-section`(로그인 CTA)과 `wish-section`·`sets-section`이 모두 `display:block`으로 동시 표시됨. 사용자는 로그인 없이 찜·세트 관리가 가능한 것으로 오인할 수 있으며, 로그인 전후 UI 구분이 없음.
 - **재현:** 비로그인 → `account.html` → 로그인 CTA + 찜/세트 목록 동시 노출 확인
 
-### [M-84] 계정 페이지 섹션 전환에 탭 ARIA 구조 미구현 — `role="tab"` 전혀 없음
+### [M-84] ✅ 아카이브(FE-SOC-07 탭→섹션 전환으로 moot) — 계정 페이지 섹션 전환에 탭 ARIA 구조 미구현 — `role="tab"` 전혀 없음
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 찜/세트/로그/설정은 탭 구조로 설계됐으나 DOM에 `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls` 속성이 전혀 없음. 섹션이 탭으로 전환되지 않고 수직 나열. 스크린리더 사용자는 탭 구조를 인식하지 못함.
@@ -1077,7 +1077,7 @@
 - **증상:** `[aria-live]` 요소가 0개로 찜 해제·세트 삭제·링크 복사 등 액션 결과를 스크린리더에 알려주는 live region이 없음.
 - **재현:** `account.html` DOM에서 `[aria-live]` 검색 → 0개
 
-### [L-64] Google OAuth 로그인 후 진입 hash(`#logs` 등) 유실
+### [L-64] ✅ 해결완료(2026-06-13) — Google OAuth 로그인 후 진입 hash(`#logs` 등) 유실
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html#logs
 - **증상:** `account.html#logs`에서 Google 로그인 버튼 클릭 시 OAuth `redirect_uri`에 원래 hash 정보가 없음. 로그인 완료 후 콜백이 `account.html`로 돌아오지만 `#logs` 위치로 복원되지 않음. M-52와 연관되나 OAuth 흐름 내 hash 보존 별도 문제.
@@ -2065,7 +2065,7 @@
 - **수정:** 내부 `.pmbox.sm-box`의 `role="dialog" aria-modal="true"` 제거(외부 컨테이너에만 유지); ESC 핸들러(`document.addEventListener("keydown", onKey)`) 추가 및 `close()` 내 `removeEventListener` 호출.
 - **파일:** [site/app.js](site/app.js) line ~312, ~321, ~333
 
-### [L-124] `#acc-tabs` 탭 버튼 ARIA 탭 시멘틱 미적용 — 선택 상태 스크린리더 미전달
+### [L-124] ✅ 아카이브(FE-SOC-07 탭→섹션 전환으로 moot) — `#acc-tabs` 탭 버튼 ARIA 탭 시멘틱 미적용 — 선택 상태 스크린리더 미전달
 - **영역:** 계정/로그인 — 찜목록·세트·로그 탭 바
 - **심각도:** 🟢 Low
 - **증상:** `account.html` `#acc-tabs` 컨테이너에 `role="tablist"` 없음. 내부 `.acc-tab` 버튼들에 `role="tab"` 및 `aria-selected` 없음. `_accSetTab()`(line ~2430)에서 `.active` CSS 클래스만 토글하며 `setAttribute("aria-selected", ...)` 호출 없음. 스크린리더가 어느 탭이 선택됐는지 파악 불가.
