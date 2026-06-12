@@ -39,6 +39,9 @@ def metric_badge(key, source_id, star_eligible, has_value):
 
 def export(con, outdir):
     os.makedirs(outdir, exist_ok=True)
+    # 쿠팡 파트너스 링크: seed_coupang.py --load 로 products.coupang_url 에 적재됨(수동 SSOT=coupang_links.csv).
+    # 컬럼이 있을 때만 방출(미적용 DB에서도 export가 깨지지 않게).
+    has_coupang = "coupang_url" in [r[1] for r in con.execute("PRAGMA table_info(products)")]
     rows = LM.build(con)            # 1단계 한계등급 로직 재사용
     grade_by_cat = {r["cat"]: r["grade"] for r in rows}
     cat_meta = []
@@ -97,12 +100,26 @@ def export(con, outdir):
                   AND p2.image_url IS NOT NULL AND p2.image_url<>'none'
                 ORDER BY p2.image_local IS NULL ASC
                 LIMIT 1""", (rep, cm, cap)).fetchone()
-            models.append({
+            mdict = {
                 "brand": brand, "model": cm, "capacity": cap, "variants": variants,
                 "price_min": pr[0] if pr else None, "price_max": pr[1] if pr else None,
                 "img": imgr[0] if imgr else None,
                 "specs": specs,
-            })
+            }
+            if has_coupang:
+                # 링크는 coupang_links.csv(rep_product_id=canonical_models.rep_product_id)로 적재됨.
+                # 가격과 '동일한' canonical_models 조인으로 그 rep의 coupang_url을 읽는다 →
+                # rep가 'pending' 변형이라 export rep(MIN verified id)과 달라도 정확히 매칭(이전 그룹조회는 capacity 변형서 3건 누락).
+                cu = con.execute("""SELECT pr2.coupang_url
+                    FROM canonical_models cm2
+                    JOIN products p ON p.id=?
+                    JOIN products pr2 ON pr2.id=cm2.rep_product_id
+                    WHERE cm2.brand_id=p.brand_id AND cm2.canonical_model=p.canonical_model
+                    AND IFNULL(cm2.capacity,-1)=IFNULL(p.capacity,-1)
+                    AND pr2.coupang_url IS NOT NULL""", (rep,)).fetchone()
+                if cu and cu[0]:
+                    mdict["coupang_url"] = cu[0]   # 쿠팡 딥링크(있을 때만 키 추가 — 기존 JSON 형태 유지)
+            models.append(mdict)
             search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap,
                                  "p": pr[0] if pr else None,
                                  "img": imgr[0] if imgr else None})
