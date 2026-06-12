@@ -18,6 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import limits_map as LM
+import value_metric as VM
 
 # 카테고리 한글명 → URL 슬러그
 SLUG = {
@@ -119,10 +120,45 @@ def export(con, outdir):
                     AND pr2.coupang_url IS NOT NULL""", (rep,)).fetchone()
                 if cu and cu[0]:
                     mdict["coupang_url"] = cu[0]   # 쿠팡 딥링크(있을 때만 키 추가 — 기존 JSON 형태 유지)
+            mdict["_rep_id"] = rep  # 가성비 패스용 임시 키
             models.append(mdict)
             search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap,
                                  "p": pr[0] if pr else None,
                                  "img": imgr[0] if imgr else None})
+
+        # 가성비 후처리 패스 — value_metric.CATEGORY_CONFIG에 있는 카테고리만
+        if slug in VM.CATEGORY_CONFIG:
+            cfg = VM.CATEGORY_CONFIG[slug]
+            metrics_meta = {m["key"]: {"direction": m["direction"]} for m in metrics}
+            # models에 id 필드 채워서 compute 호출
+            vm_models = [{"id": m["_rep_id"], "price_min": m["price_min"], "specs": m["specs"]}
+                         for m in models]
+            vm_results = VM.compute_value_score(vm_models, cfg, metrics_meta)
+            id_to_vm = {r["id"]: r for r in vm_results}
+            for m in models:
+                r = id_to_vm.get(m["_rep_id"])
+                if r and r["stars"] is not None:
+                    m["specs"][cfg["value_key"]] = {
+                        "value": r["value_display"],
+                        "stars": r["stars"],
+                        "badge": "참고",
+                    }
+            # metrics 목록에 가성비 추가 (중복 방지)
+            vkey = cfg["value_key"]
+            if not any(mt["key"] == vkey for mt in metrics):
+                metrics.append({
+                    "key": vkey,
+                    "label": cfg["label"],
+                    "unit": cfg.get("unit", ""),
+                    "direction": "lower_better" if vkey == "value_per_g" else "higher_better",
+                    "is_star": True,
+                    "fill": 100,
+                    "limit": False,
+                })
+
+        # _rep_id 임시 키 제거 후 직렬화
+        for m in models:
+            m.pop("_rep_id", None)
 
         data = {"name": cat, "slug": slug, "grade": grade_by_cat.get(cat, "—"),
                 "count": len(models), "verified": nv, "metrics": metrics, "models": models}
