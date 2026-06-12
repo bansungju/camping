@@ -1067,7 +1067,7 @@
 - **해결:** 찜 카드에 `aria-label="${brand} ${model} 상세 보기"`, 세트 카드에 `aria-label="${title} 세트 상세 보기"` 추가. [site/app.js](site/app.js)
 
 ### [L-63] ✅ 해결완료(2026-06-13, SOCIAL) — 계정 페이지 전체에 `aria-live` 영역 전무 — 찜 해제·삭제 후 결과 알림 없음
-- **해결:** `account.html`에 `#acc-sr-live` (`role=status aria-live=polite`) 추가 + `window.accAnnounce(msg)` 노출. 찜·세트 삭제 등 CORE 액션에서 `window.accAnnounce?.()` 호출은 [lane:CORE] 요청 — app.js가 wish/set 삭제 시 호출 추가 필요. [site/account.html](site/account.html)
+- **해결:** `account.html`에 `#acc-sr-live` (`role=status aria-live=polite`) 추가 + `window.accAnnounce(msg)` 노출(SOCIAL). app.js `renderAccount()` 내 찜 해제(`'찜 해제됐어요'`)·세트 삭제(`'세트가 삭제됐어요'`)·링크 복사(`'링크가 복사됐어요'`) 시 `window.accAnnounce?.()` 추가(CORE, 2026-06-13). [site/account.html](site/account.html), [site/app.js](site/app.js)
 
 ### [L-64] ✅ 해결완료(2026-06-13) — Google OAuth 로그인 후 진입 hash(`#logs` 등) 유실
 - **영역:** 계정/로그인
