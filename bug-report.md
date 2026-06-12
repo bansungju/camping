@@ -1682,4 +1682,24 @@
 
 ---
 
-*다음 회차: 카테고리/목록 (11순환)*
+## 회차 62 — 카테고리/목록 (11순환) 2026-06-12
+
+### [M-119] JSON-LD ItemList 개별 상품 url이 카테고리 URL로 고정
+- **영역:** 카테고리/목록 — SEO
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
+- **증상:** `draw()`가 생성하는 JSON-LD `ItemList`에서 각 `ListItem.item.url`이 모두 `catUrl`(카테고리 페이지 URL)로 동일하게 설정됨. 검색엔진이 각 상품을 개별 URL로 구분하지 못해 개별 상품 상세 페이지(`/item/{slug}/item-{idx}.html`)가 검색 결과에서 누락될 수 있음.
+- **원인:** `app.js:1911` — `"url": catUrl`로 하드코딩. 개별 상품 URL은 `app.js:1413`에서 `\`/item/${STATE.slug}/item-${d.models.indexOf(m)}.html\``으로 이미 계산되나 JSON-LD 생성 코드와 연동되지 않음.
+- **수정 방향:** `app.js:1904` `rows.slice(0, 20).map((m, i) => {...})` 내 `"url": catUrl`을 `"url": \`https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html\``으로 교체. `d.models.indexOf(m)`은 기존 openProduct 내 공유 버튼과 동일 패턴. [site/app.js:1911](site/app.js)
+- **심각도:** 🟡 Medium
+
+### [L-103] 0건 empty state "전체 카테고리에서 검색" 링크 — 홈이 ?q= 파라미터를 처리하지 않음
+- **영역:** 카테고리/목록 — UX
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent&q=헬리녹스 (0건 유도 시)
+- **증상:** 필터+검색 결과 0건일 때 표시되는 "전체 카테고리에서 '헬리녹스' 검색 →" 링크가 `/?q=헬리녹스`로 이동. 그러나 홈(`renderHub`)은 URL의 `?q=` 파라미터를 읽지 않아 `homeq` 입력란이 비어있는 상태로 홈 화면만 표시됨. 사용자가 검색어를 다시 입력해야 함.
+- **원인:** `app.js:1878` — 링크 href `/?q=${encodeURIComponent(STATE.q)}`. `setupHomeSearch(app.js:471)`는 URL params를 읽는 로직이 없음.
+- **수정 방향:** `setupHomeSearch`에서 `new URLSearchParams(location.search).get("q")`로 초기 쿼리를 읽어 `homeq` 입력에 자동 설정 + 검색 실행. 또는 링크를 `category.html?q=${...}` (cat 없이)로 변경해 renderBrowse 전역 검색 활용. [site/app.js:1878](site/app.js)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 상품상세 (11순환)*
