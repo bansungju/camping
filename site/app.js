@@ -24,8 +24,9 @@ window.addEventListener("beforeinstallprompt", e => {
   _pwaPrompt = e;
   const banner = document.getElementById("pwa-banner");
   if (!banner || localStorage.getItem("pwa-dismissed")) return;
-  banner.setAttribute("role", "alert");          // L-118: 동적 출현 배너 스크린리더 고지
+  banner.setAttribute("role", "status");         // L-118·L-129: 비긴급 배너 → status(+polite). alert(assertive 내포)와 polite 의미충돌 해소
   banner.setAttribute("aria-live", "polite");
+  banner.setAttribute("aria-atomic", "true");
   banner.innerHTML = `<div class="pwa-banner-inner">
     <span class="pwa-banner-ico">🌲</span>
     <span class="pwa-banner-msg">장비의 숲을 홈 화면에 추가하면 더 빠르게 열려요</span>
@@ -511,7 +512,12 @@ async function renderHub() {
         <span class="it"><b>별점은 같은 그룹 안에서의 순위를 환산한 값</b>이에요. 측정값만 쓰고, 추측은 없습니다.</span>
         <button type="button" class="ix" aria-label="안내 닫기">✕</button>`;
       h1.insertAdjacentElement("beforebegin", ib);
-      ib.querySelector(".ix").onclick = () => { try { localStorage.setItem("seenIntro", "1"); } catch (e) {} ib.remove(); };
+      ib.querySelector(".ix").onclick = () => {
+        try { localStorage.setItem("seenIntro", "1"); } catch (e) {}
+        const nextFocus = document.querySelector("main h1") || document.getElementById("homeq");  // L-127: 닫기 후 포커스 복귀(body 이탈 방지)
+        ib.remove();
+        if (nextFocus) { if (!nextFocus.hasAttribute("tabindex")) nextFocus.setAttribute("tabindex", "-1"); nextFocus.focus(); }
+      };
     }
   }
 
