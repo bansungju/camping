@@ -161,11 +161,12 @@ const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
 const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>' : won(a);
 
 /* 값 표시: 무게(g) 1000↑ → kg, 부피(cm3) 1000↑ → L 환산 */
+const _UNIT_DISPLAY = { C: "°C", m2: "m²" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑
 function fmtVal(v, unit) {
   if (v == null) return "—";
   if (unit === "g" && v >= 1000) return +(v / 1000).toFixed(2) + "kg";
   if (unit === "cm3" && v >= 1000) return +(v / 1000).toFixed(1) + "L";
-  return (+v.toFixed(2)) + (unit || "");
+  return (+v.toFixed(2)) + (_UNIT_DISPLAY[unit] || unit || "");
 }
 
 function stars(n) {
@@ -205,10 +206,12 @@ function esc(s) {
 
 /* 공통: 상품 썸네일 셀 — 이미지가 있으면 <img>, 없거나 로드 실패하면 '이미지 준비중' 카드.
    data-* 로 폴백에 쓸 톤/아이콘/클래스를 실어, 깨진 링크도 onerror로 우아하게 대체. */
+const _THUMB_SZ = {"pli-thumb":74,"sres-thumb":34,"cmp-thumb":70};  // L-50: CLS 방지용 명시적 크기
 function thumbCell(img, name, tint, icon, imgCls, noCls) {
   imgCls = imgCls || "pli-thumb"; noCls = noCls || "pli-noimg";
   if (!img) return `<div class="${noCls}" style="background:${tint}">${icon}<span>이미지 준비중</span></div>`;
-  return `<img class="${imgCls}" src="${esc(img)}" alt="${esc(name)}" loading="lazy"` +
+  const sz = _THUMB_SZ[imgCls]; const szAttr = sz ? ` width="${sz}" height="${sz}"` : "";
+  return `<img class="${imgCls}" src="${esc(img)}" alt="${esc(name)}" loading="lazy"${szAttr}` +
     ` data-tint="${tint}" data-icon="${icon}" data-fcls="${noCls}" onerror="thumbFallback(this)">`;
 }
 function thumbFallback(img) {
@@ -531,7 +534,14 @@ async function setupHomeSearch() {
     const bcount = {};
     idx.forEach(x => { if (terms[0] && x.b.toLowerCase().includes(terms[0])) bcount[x.b] = (bcount[x.b] || 0) + 1; });
     const brandHits = Object.entries(bcount).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const hits = idx.filter(x => { const text = (x.b + " " + x.m).toLowerCase(); return terms.every(t => text.includes(t)); }).slice(0, 30);
+    const q1 = terms.join(" ");
+    const hits = idx.filter(x => { const text = (x.b + " " + x.m).toLowerCase(); return terms.every(t => text.includes(t)); })
+      .sort((a, b) => {  // L-46: 정확 일치 → 접두어 → 부분 포함 순
+        const am = a.m.toLowerCase(), bm = b.m.toLowerCase();
+        const ae = am === q1, be = bm === q1, ap = am.startsWith(q1), bp = bm.startsWith(q1);
+        return (be - ae) || (bp - ap);
+      })
+      .slice(0, 30);
     box.style.display = "block";
     const brandHtml = brandHits.map(([b, n]) =>
       `<a class="sres sbrand" href="brand.html?b=${encodeURIComponent(b)}">
@@ -555,7 +565,8 @@ async function setupHomeSearch() {
       </div>`;
     }).join("")
       : (brandHtml ? "" : `<div class="sres nd" role="option" aria-disabled="true">"${esc(inp.value)}" 검색 결과 없음</div>`))
-      + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>` : "");
+      + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>`
+        : (!brandHtml ? `<div class="sres-footer"><a href="category.html" style="color:var(--accent);text-decoration:none">📂 카테고리 탐색하기</a></div>` : ""));  // L-07
     // 찜 버튼 이벤트
     box.querySelectorAll(".sres-wish").forEach(btn => {
       btn.onclick = e => {
