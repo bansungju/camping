@@ -53,7 +53,7 @@
 
   <!-- 찜한 상품 — 로그인 이후에만 표시 -->
   <div id="wish-section" style="display:none">
-    <h2 class="sec">🔖 찜한 상품 <span class="nd" id="wishcount"></span></h2>
+    <h2 class="sec" style="display:flex;align-items:baseline;gap:6px">🔖 찜한 상품 <span class="nd" id="wishcount"></span><button id="wish-clear-all" type="button" style="margin-left:auto;font-size:11px;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0;font-weight:400">전체 삭제</button></h2>
     <p id="wish-synchint" style="color:var(--muted);font-size:12.5px;margin:-4px 0 12px" hidden>
       로그인하면 찜 목록이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
     </p>
@@ -88,6 +88,23 @@
         <span class="switch-knob"></span>
       </button>
     </div>
+    <!-- L-20: 닉네임 변경 -->
+    <div class="set-row" id="nick-settings-row" style="display:none">
+      <div class="set-row-label">
+        <span class="set-row-title">닉네임</span>
+        <span class="set-row-desc" id="nick-settings-current" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">-</span>
+      </div>
+      <button id="nick-settings-btn" type="button" class="achip" style="font-size:13px;padding:6px 14px">변경</button>
+    </div>
+    <div id="nick-change-form" style="display:none;padding:12px;background:var(--card2);border-radius:8px;margin-top:4px">
+      <input id="nick-change-input" type="text" maxlength="20" autocomplete="off" placeholder="2~20자 · 한글/영문/숫자/_"
+        style="width:100%;padding:10px;border-radius:8px;border:1.5px solid var(--line);font-size:14px;box-sizing:border-box;background:var(--card);color:var(--txt)">
+      <p id="nick-change-hint" aria-live="polite" aria-atomic="true" style="font-size:12px;margin:6px 2px 0;min-height:14px;color:var(--muted)"></p>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="nick-change-save" type="button" disabled style="flex:1;padding:9px;border-radius:7px;border:none;background:var(--accent,#2f7a4e);color:#fff;font-size:13px;font-weight:600;cursor:pointer;opacity:.5">저장</button>
+        <button id="nick-change-cancel" type="button" style="flex:1;padding:9px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:13px;cursor:pointer">취소</button>
+      </div>
+    </div>
     <!-- M-85: PWA 설치 버튼 — beforeinstallprompt 가용 시 표시 -->
     <div class="set-row" id="pwa-install-row" style="display:none">
       <div class="set-row-label">
@@ -111,7 +128,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=de6f4ede"></script>
+<script src="app.js?v=a6fa1869"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -120,6 +137,16 @@
     el.textContent = '';
     setTimeout(() => { el.textContent = msg; }, 50);
   };
+
+  // L-37: 찜 전체 삭제 버튼
+  document.getElementById('wish-clear-all')?.addEventListener('click', () => {
+    const count = typeof getWish === 'function' ? getWish().length : 0;
+    if (!count) return;
+    if (!confirm(`찜한 상품 ${count}개를 모두 해제할까요?`)) return;
+    if (typeof setWish === 'function') setWish([]);
+    if (typeof renderAccount === 'function') renderAccount();
+    window.accAnnounce?.('찜한 상품 전체 해제됐어요');
+  });
 
   // M-85: PWA 설치 버튼 — beforeinstallprompt 캡처 및 핸들러
   (function initPwaInstall() {
@@ -386,6 +413,13 @@ function renderProfile(profile) {
       </div>
     </div>`
 
+  // L-20: 닉네임 설정 행 갱신
+  const nickRow = document.getElementById('nick-settings-row')
+  const nickCurr = document.getElementById('nick-settings-current')
+  if (nickRow) nickRow.style.display = ''
+  if (nickCurr) nickCurr.textContent = nickname
+  window._accNickname = nickname
+
   // 최하단 버튼 이벤트 연결 (bottom-actions는 showLoggedInSections로 표시됨)
   const btnSignout = document.getElementById('btn-signout')
   const btnDelete  = document.getElementById('btn-delete-account')
@@ -412,6 +446,62 @@ function renderProfile(profile) {
     })
   }
 }
+
+// L-20: 닉네임 변경 인라인 폼 핸들러
+;(function initNickChange() {
+  const btn    = document.getElementById('nick-settings-btn')
+  const form   = document.getElementById('nick-change-form')
+  const input  = document.getElementById('nick-change-input')
+  const hint   = document.getElementById('nick-change-hint')
+  const save   = document.getElementById('nick-change-save')
+  const cancel = document.getElementById('nick-change-cancel')
+  if (!btn || !form) return
+
+  const setH = (msg, ok) => { hint.textContent = msg; hint.style.color = ok ? '#2f7a4e' : '#e53e3e' }
+  const setOk = (on) => { save.disabled = !on; save.style.opacity = on ? '1' : '.5' }
+
+  btn.addEventListener('click', () => {
+    form.style.display = ''; input.value = ''; hint.textContent = ''; setOk(false)
+    setTimeout(() => input.focus(), 30)
+  })
+  cancel.addEventListener('click', () => { form.style.display = 'none' })
+
+  let debounce, lastChecked = null
+  input.addEventListener('input', () => {
+    const v = input.value.trim()
+    setOk(false); lastChecked = null; clearTimeout(debounce)
+    if (!v) { hint.textContent = ''; return }
+    if (!NICKNAME_RE.test(v)) { setH('2~20자, 한글/영문/숫자/_ 만 가능해요', false); return }
+    if (v === window._accNickname) { setH('현재 닉네임과 같아요', false); return }
+    setH('확인 중…', true); hint.style.color = 'var(--muted)'
+    debounce = setTimeout(async () => {
+      const ok = await isNicknameAvailable(v)
+      if (input.value.trim() !== v) return
+      if (ok === null) { setH('확인 실패 — 그래도 시도할 수 있어요', false); setOk(true); lastChecked = v }
+      else if (ok)     { setH('사용 가능한 닉네임이에요 ✓', true); setOk(true); lastChecked = v }
+      else             { setH('이미 사용 중인 닉네임이에요', false) }
+    }, 320)
+  })
+
+  save.addEventListener('click', async () => {
+    const v = input.value.trim()
+    if (!NICKNAME_RE.test(v)) return
+    clearTimeout(debounce); setOk(false); save.textContent = '저장 중…'
+    const { error } = await setNickname(v)
+    if (error) {
+      setH(getErrorMessage(error), false); save.textContent = '저장'; setOk(true)
+      return
+    }
+    window._accNickname = v
+    const nickCurr = document.getElementById('nick-settings-current')
+    if (nickCurr) nickCurr.textContent = v
+    // 프로필 헤더 닉네임도 즉시 갱신
+    const profileName = document.querySelector('#auth-section [style*="font-weight:700"]')
+    if (profileName) profileName.textContent = v
+    form.style.display = 'none'; save.textContent = '저장'
+    window.accAnnounce?.('닉네임이 변경됐어요')
+  })
+})()
 
 // URL에 auth_error 파라미터 있으면 에러 안내
 const params = new URLSearchParams(location.search)
