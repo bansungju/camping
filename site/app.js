@@ -358,8 +358,15 @@ function pushRecent(item) {
   try { localStorage.setItem("recent", JSON.stringify(a.slice(0, 12))); } catch (e) { /* 저장공간 부족 시 무시 */ }
 }
 
-/* 공통: 하단(모바일)/상단(데스크탑) 탭바 자동 주입 — 모든 페이지에서 app.js만 로드하면 노출.
-   로그인·커뮤니티는 계획 단계라 '준비중' 플레이스홀더로 연결. */
+/* ── 내비게이션 정책(2026-06) ────────────────────────────────────────────────
+   GNB(홈·탐색·커뮤·마이 상/하단 탭바)는 '아카이브'. 복구하려면 GNB_ENABLED=true.
+   · 탐색: 홈 검색과 기능 중복 → 제외
+   · 커뮤니티: 버그 다수로 임시 숨김 → COMMUNITY_ENABLED=false (복구 시 true)
+   · 마이: 헤더 우상단 아이콘으로 상시 노출(GNB 대체)
+   탭 정의(TABS)·하단바(.bottom-nav)는 복구 대비 코드만 보존하고 플래그로 비활성. */
+const GNB_ENABLED = false;        // GNB(상/하단 탭바) 아카이브 — 복구하려면 true
+const COMMUNITY_ENABLED = false;  // 커뮤니티 임시 숨김(버그 다수) — 복구하려면 true
+
 // href는 루트 기준 절대경로(H-38): 상세 페이지(/item/{cat}/item-N.html, 2단계 하위)에서도
 // 상대경로 404 없이 동작. 모바일 .bottom-nav와 동일 규칙.
 const TABS = [
@@ -370,19 +377,38 @@ const TABS = [
   { href: "/account.html", icon: "👤", label: "내 정보", match: ["account.html"] },
 ];
 window.addEventListener("DOMContentLoaded", () => {
-  if (document.querySelector(".tabbar")) return;
   const here = (location.pathname.split("/").pop() || "").toLowerCase();
-  const nav = document.createElement("nav");
-  nav.className = "tabbar";
-  nav.setAttribute("aria-label", "주 내비게이션");  // M-17
-  nav.innerHTML = `<div class="wrap tabbar-in">` + TABS.map(t => {
-    const on = t.match.includes(here);
-    return `<a class="tab${on ? " on" : ""}" href="${t.href}"${on ? ' aria-current="page"' : ""}>` +
-      `<span class="ti">${t.icon}</span><span class="tl">${t.label}</span></a>`;
-  }).join("") + `</div>`;
-  const header = document.querySelector("header.top");
-  if (header) header.insertAdjacentElement("afterend", nav);
-  else document.body.prepend(nav);
+
+  // 데스크톱 상단 탭바(GNB) — 아카이브: 플래그 켤 때만 주입
+  if (GNB_ENABLED && !document.querySelector(".tabbar")) {
+    const nav = document.createElement("nav");
+    nav.className = "tabbar";
+    nav.setAttribute("aria-label", "주 내비게이션");  // M-17
+    nav.innerHTML = `<div class="wrap tabbar-in">` + TABS
+      .filter(t => COMMUNITY_ENABLED || t.href !== "/community.html")
+      .map(t => {
+        const on = t.match.includes(here);
+        return `<a class="tab${on ? " on" : ""}" href="${t.href}"${on ? ' aria-current="page"' : ""}>` +
+          `<span class="ti">${t.icon}</span><span class="tl">${t.label}</span></a>`;
+      }).join("") + `</div>`;
+    const header = document.querySelector("header.top");
+    if (header) header.insertAdjacentElement("afterend", nav);
+    else document.body.prepend(nav);
+  }
+
+  // '마이' 아이콘 — 헤더 우상단 상시 노출(GNB 대체). 중복 주입 방지.
+  const hwrap = document.querySelector("header.top .wrap");
+  if (hwrap && !hwrap.querySelector(".header-my")) {
+    const onMy = here === "account.html";
+    const a = document.createElement("a");
+    a.className = "header-my" + (onMy ? " on" : "");
+    a.href = "/account.html";
+    a.setAttribute("aria-label", "내 정보");
+    a.title = "내 정보";
+    if (onMy) a.setAttribute("aria-current", "page");
+    a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`;
+    hwrap.appendChild(a);
+  }
 });
 
 /* 공통: 카테고리 네비게이션 바 (어느 카테고리든 직접 이동) */
@@ -1865,7 +1891,7 @@ function draw() {
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
     const inCmp = _cmpSet.includes(m);
-    return `<div class="pli" role="button" tabindex="0" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
+    return `<a class="pli" href="/item/${STATE.slug}/item-${i}.html" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       ${thumbCell(m.img, m.model, tint, icon)}
@@ -1878,7 +1904,7 @@ function draw() {
         <div class="pli-price">${priceRange(m.price_min, m.price_max)}</div>
         <button type="button" class="pli-cmp${inCmp ? " on" : ""}" data-mi="${i}" aria-label="비교에 추가" aria-pressed="${inCmp}" title="비교에 추가">⚖</button>
         <span class="pli-chev" aria-hidden="true">›</span>
-      </div></div>`;
+      </div></a>`;
   }).join("");
   const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q;
   document.getElementById("list").innerHTML = cards
@@ -1888,8 +1914,8 @@ function draw() {
        ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}
        ${STATE.q ? `<a href="/?q=${encodeURIComponent(STATE.q)}" class="achip" style="text-decoration:none;display:inline-block;margin-top:6px">전체 카테고리에서 "${esc(STATE.q)}" 검색 →</a>` : ""}</div>`;
   document.querySelectorAll("#list .pli").forEach(el => {
-    el.onclick = () => openProduct(rows[+el.dataset.mi]);
-    el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProduct(rows[+el.dataset.mi]); } };
+    el.onclick = e => { e.preventDefault(); openProduct(rows[+el.dataset.mi]); };
+    el.onkeydown = e => { if (e.key === " ") { e.preventDefault(); openProduct(rows[+el.dataset.mi]); } };
   });
   // 찜 토글(카드 클릭=모달과 분리 → stopPropagation)
   document.querySelectorAll("#list .pli-wish").forEach(btn => btn.onclick = e => {
@@ -3232,8 +3258,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch { /* 잘못된 파라미터 무시 */ }
   }
 
-  // 모바일 하단 내비게이션 바 (동적 삽입)
+  // 모바일 하단 내비게이션 바 (동적 삽입) — GNB 아카이브: 플래그 켤 때만 노출
   (function insertBottomNav() {
+    if (!GNB_ENABLED) return;
     const path = location.pathname;
 
     // 라인 아이콘(24x24, stroke=currentColor → 활성 시 --accent 자동 상속)
@@ -3246,7 +3273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabs = [
       { href: "/index.html",       icon: SVG.home,      label: "홈",    match: ["/", "/index.html"] },
       { href: "/category.html",    icon: SVG.explore,   label: "탐색",  match: ["/category", "/brand", "/recommend", "/item"] },
-      { href: "/community.html",   icon: SVG.community, label: "커뮤",  match: ["/community"] },
+      { href: "/community.html",   icon: SVG.community, label: "커뮤니티",  match: ["/community"] },
       { href: "/account.html",     icon: SVG.profile,   label: "마이",  match: ["/account"] },
     ];
 

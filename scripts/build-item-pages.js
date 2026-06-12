@@ -210,6 +210,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <header class="top"><div class="wrap">
   <a class="logo" href="../../index.html"><img class="logo-mark" src="../../icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></a>
   <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
+  <a href="../../account.html" class="header-acct" aria-label="내 계정">👤</a>
 </div></header>
 
 <main class="wrap" id="main">
