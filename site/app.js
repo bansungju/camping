@@ -2751,7 +2751,8 @@ function renderAccount() {
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
-      return `<div class="pli" role="button" tabindex="0" data-href="${esc(href)}" aria-label="${esc(x.b)} ${esc(x.m)} 상세 보기">
+      // L-75: role="button" + 내부 <button> 중첩 HTML 위반 → 찜 해제 버튼만 interactive, pli는 click 핸들러만 유지
+      return `<div class="pli" data-href="${esc(href)}" style="cursor:pointer">
         <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
         <div class="pli-info">
