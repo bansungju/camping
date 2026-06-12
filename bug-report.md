@@ -744,15 +744,17 @@
 ### [M-08] ✅ 해결완료(2026-06-11) — 상세 페이지 이미지 403/503 오류 + fallback 없음
 - **해결(2026-06-11):** `.item-img` 태그에 `onerror="this.onerror=null;this.style.display='none'"` 추가. 이미지 로드 실패 시 깨진 아이콘 대신 요소 숨김 처리. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [M-02] 모바일(375px)에서 스펙 레이블이 줄바꿈되어 카드 높이 불균일
+### [M-02] ✅ 해결완료(2026-06-12) — 모바일(375px)에서 스펙 레이블이 줄바꿈되어 카드 높이 불균일
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** '내한온도(ISO하한)' 같은 긴 스펙 레이블이 모바일에서 줄바꿈되어 카드 높이가 90px까지 늘어남. 셀 너비 제한(113~183px)으로 인한 wrapping.
+- **해결:** `.pli-spec i`에 `white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:10em` 추가. [site/style.css](site/style.css)
 
-### [M-03] 모바일에서 카테고리 서브탭(catnav)이 잘려 일부 탭 미표시
+### [M-03] ✅ 해결완료(2026-06-12) — 모바일에서 카테고리 서브탭(catnav)이 잘려 일부 탭 미표시
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 모바일 375px에서 가로 탭바가 화면 너비를 초과해 뒷 탭들이 잘림. 스크롤 가능 여부가 시각적으로 불분명.
+- **해결:** `.catnav-wrap::after` 그라디언트 페이드(오른쪽) 추가로 스크롤 가능 시각 힌트 제공. [site/style.css](site/style.css)
 
 ### [M-04] ✅ 해결완료(2026-06-11) — breadcrumb가 '홈 › …'으로 표시됨 (데이터 로드 실패 시)
 - **해결(2026-06-11):** `renderCategory()` 에러 catch 블록에 `crumbName.textContent = slug` 추가. [site/app.js](site/app.js)
@@ -1361,9 +1363,10 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 다크모드 토글 설명에 "어두운 테마로 전환합니다 (정비 중)" 문구가 사용자에게 그대로 노출됨. 기능 자체는 정상 동작(localStorage 저장, 새로고침 후 유지)하므로 "(정비 중)" 제거 필요.
 
-### [L-40] `manifest.webmanifest` `start_url`이 `./index.html` — canonical `/`과 불일치
+### [L-40] ✅ 해결완료(2026-06-12) — `manifest.webmanifest` `start_url`이 `./index.html` — canonical `/`과 불일치
 - **영역:** 홈/메인 (PWA)
 - **증상:** PWA로 실행 시 URL이 `gear-forest.com/index.html`로 집계되어 canonical(`gear-forest.com/`)과 달라 GA/분석에서 PWA 세션이 별도 경로로 기록됨. Lighthouse start_url ≠ canonical 경고 발생.
+- **해결:** `start_url: "./"` → `"/"`, `scope: "./"` → `"/"` 변경. [site/manifest.webmanifest](site/manifest.webmanifest)
 - **재현:** manifest.webmanifest 확인 → `start_url: "./index.html"`
 
 ### [L-42] 글쓰기 모달 — 첨부 이미지 선택 취소 버튼 없음
@@ -1473,7 +1476,7 @@
 - **해결방법(백엔드 수동 적용):** [supabase/APPLY.md](supabase/APPLY.md) §2(005_post_images.sql)·§3(review-images 버킷 생성 + 003_storage_policies.sql) 참고. 프론트엔드 코드 변경 불필요.
 - **제보:** 사용자 직접 제보
 
-### [L-93] `manifest.webmanifest` `start_url`이 `./index.html`로 apex URL과 불일치
+### [L-93] ✅ 해결완료(2026-06-12, L-40과 동시) — `manifest.webmanifest` `start_url`이 `./index.html`로 apex URL과 불일치
 - **영역:** 홈/메인 — PWA
 - **URL:** https://gear-forest.com/manifest.webmanifest
 - **증상:** PWA 매니페스트 `start_url`이 `"./index.html"`로 설정되어 PWA 실행 시 `/index.html`로 시작. 표준 URL `https://gear-forest.com/`과 분리 집계. Lighthouse PWA 감사 경고 발생 가능.
@@ -1550,10 +1553,11 @@
 - **재현:** 상세 페이지 → 맨 아래 스크롤 → 상단 이동 버튼 없음
 - **해결:** `<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">` 추가. style.css 스타일. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-82] 비교 모달 '세트로 저장' 버튼 더블클릭 시 동일 세트 중복 저장
+### [L-82] ✅ 해결완료(2026-06-12) — 비교 모달 '세트로 저장' 버튼 더블클릭 시 동일 세트 중복 저장
 - **영역:** 카테고리/목록 — 비교 모달
 - **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
 - **증상:** 비교 모달의 '세트로 저장' 버튼을 빠르게 더블클릭하면 동일 세트가 2개 저장됨.
+- **해결:** onclick 핸들러 시작에 `if (btn.disabled) return;` + 즉시 `btn.disabled = true` 설정. [site/app.js](site/app.js)
 - **원인:** onclick 핸들러 진입 시 on-entry guard(플래그)가 없어 브라우저가 두 클릭 이벤트를 큐에 넣어 연속 실행 가능.
 - **재현:** 2~3개 제품 비교 선택 → 비교하기 → '세트로 저장' 빠른 더블클릭 → 마이페이지에 동일 세트 2개
 
