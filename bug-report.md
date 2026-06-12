@@ -1727,6 +1727,49 @@
 - **수정 방향:** 각 `open*Modal` 함수에 `openProduct`와 동일하게 `const onKey = e => { if (e.key === "Escape") close(); }; document.addEventListener("keydown", onKey);` 추가 + `close` 시 `removeEventListener`. [site/app.js:324](site/app.js)
 - **심각도:** 🟢 Low
 
+### [M-121] 상품 상세(정적 item 페이지) 히어로 액션 버튼 너비 불일치 — 레이아웃 깨짐
+- **영역:** 상품상세 — 정적 item 페이지(`/item/{cat}/item-{idx}.html`) 히어로 영역
+- **URL:** https://gear-forest.com/item/backpacking-tent/item-0.html (JEEP 캡락 등 전 2277개 페이지 공통)
+- **증상:** `.item-hero` 안에서 액션 버튼들의 너비가 제각각이라 계단식으로 어긋나 보임. `찜하기`는 `inline-flex`로 내용폭(~100px), `장비 꾸러미에 담기`·`커뮤니티 장비 로그 작성`·`쿠팡에서 구매하기`는 `width:100%;max-width:320px`(320px)로 렌더됨. 또한 이미지가 `200px` 고정인데 정보 컬럼(세로로 쌓인 320px 버튼 스택)이 훨씬 길어 이미지 아래에 큰 빈 공간이 생기며 전체가 불균형/깨진 느낌.
+- **원인:** [scripts/build-item-pages.js:193](scripts/build-item-pages.js) `.item-wish{display:inline-flex;...}`(자동폭) vs [scripts/build-item-pages.js:198](scripts/build-item-pages.js)·[:201](scripts/build-item-pages.js)·[:203](scripts/build-item-pages.js) `.item-buy`/`.item-set-btn`/`.item-log-btn{display:block;width:100%;max-width:320px}` — 버튼 4종의 폭 규칙이 통일돼 있지 않음. `.item-hero{align-items:flex-start}` + `.item-img{width:200px}`로 좌우 컬럼 높이차에 따른 좌측 하단 여백 발생.
+- **수정 방향:** (1) 액션 버튼 4종을 공통 폭으로 통일 — `.item-wish`도 `display:block;width:100%;max-width:320px;justify-content:center`로 맞추거나, 4개 버튼을 `max-width:320px` 컨테이너(`<div class="item-actions">`)로 묶어 일괄 정렬. (2) 선택: 이미지를 더 키우거나(`240~280px`) 히어로를 2-컬럼 `grid`로 바꿔 좌측 빈 공간 축소. 정적 템플릿 수정 후 item 2277개 재생성 필요.
+- **재현:** 임의 상품 상세 페이지 접속 → 히어로 우측 버튼 4종 너비가 찜하기만 좁고 나머지는 넓음 → 이미지 아래 빈 공간.
+- **심각도:** 🟡 Medium
+
 ---
 
-*다음 회차: 커뮤니티/소셜 (12순환)*
+---
+
+## R-64 커뮤니티/소셜 (12순환) — 2026-06-12
+
+### [M-121] listComments — 소프트 삭제 댓글 미필터 (deleted_at IS NULL 누락)
+- **영역:** 커뮤니티/소셜 — 댓글 목록
+- **증상:** `deleteComment()`는 `deleted_at` 설정 방식의 소프트 삭제이며 DB 트리거(migration 015)도 이를 기반으로 `comment_count`를 감소시킴. 그러나 `listComments()` 쿼리에 `deleted_at IS NULL` 필터가 없어 삭제된 댓글이 게시글 상세 페이지에 그대로 노출됨.
+- **원인:** `supabaseClient.js:147` — `.select('*,...').eq('post_id', postId).order(...)` — `.is('deleted_at', null)` 조건 미포함.
+- **수정 방향:** `supabaseClient.js:150` `.order('created_at', ...)` 앞에 `.is('deleted_at', null)` 추가. [site/supabaseClient.js:150](site/supabaseClient.js)
+- **심각도:** 🟡 Medium
+
+### [M-122] getPost — 소프트 삭제 게시글 상세 직접 접근 가능 (deleted_at IS NULL 누락)
+- **영역:** 커뮤니티/소셜 — 게시글 상세
+- **증상:** `deletePost()`는 `deleted_at` 소프트 삭제이지만 `getPost(id)` 쿼리에 `deleted_at IS NULL` 필터가 없어 삭제된 게시글 URL(`#post=<id>`)을 통해 내용 전체가 노출됨. 피드 목록에서는 보이지 않지만 URL 직접 접근 시 삭제 전 내용 조회 가능.
+- **원인:** `supabaseClient.js:125` — `.select(POST_SELECT).eq('id', id).maybeSingle()` — `.is('deleted_at', null)` 미포함.
+- **수정 방향:** `supabaseClient.js:126` `.eq('id', id)` 뒤에 `.is('deleted_at', null)` 추가. [site/supabaseClient.js:126](site/supabaseClient.js)
+- **심각도:** 🟡 Medium
+
+### [L-107] community.html 피드 카드 `<a>` href 없음 — 키보드 접근 불가
+- **영역:** 커뮤니티/소셜 — 피드 목록
+- **증상:** 게시글 카드가 `<a class="cm-post" data-id="...">` 로 렌더링되는데 `href` 속성이 없음. HTML spec상 href 없는 `<a>`는 interactive element가 아니므로 Tab 키 포커스가 안 되고 스크린리더에서 링크로 인식되지 않음. 마우스 클릭만 동작.
+- **원인:** `community.html:181` — `<a class="cm-post" data-id="${esc(p.id)}">` — `href` 미포함. `onclick`을 `location.hash` 변경으로 처리하면서 href 생략.
+- **수정 방향:** `href="#post=${p.id}"` 추가로 키보드 접근성 및 스크린리더 인식 개선. [site/community.html:181](site/community.html)
+- **심각도:** 🟢 Low
+
+### [L-108] renderCompose — 업로드 이미지 작성 취소·이탈 시 orphan Storage 파일
+- **영역:** 커뮤니티/소셜 — 게시글 작성 폼
+- **증상:** 사진 선택 시 `uploadImage(f)` 호출로 즉시 Supabase Storage에 업로드됨. "취소" 클릭 또는 페이지 이탈 시 `pending` URL은 버려지지만 `review-images/{user_id}/{uuid}.ext` 파일은 Storage에 orphan으로 남음.
+- **원인:** `community.html:254` — 파일 선택 즉시 업로드 후 `pending.push(r.url)`. 취소 시 Storage 파일 삭제 로직 없음.
+- **수정 방향:** 취소 핸들러에서 `pending` URL들의 Storage path를 역산해 `supabase.storage.from(IMG_BUCKET).remove([path])` 호출. [site/community.html:231](site/community.html)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 계정/로그인 (12순환)*
