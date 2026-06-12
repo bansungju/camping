@@ -273,9 +273,13 @@ export function getErrorMessage(error) {
 
 // ── 기어 세트 동기화 ─────────────────────────────────────────────────────
 export async function loadRemoteGearSets() {
+  // L-136: getUser 가드 + 명시적 user_id 필터(RLS와 이중 보호)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
   const { data, error } = await supabase
     .from('gear_sets')
     .select('id, title, style, items, completeness, created_at, updated_at')
+    .eq('user_id', user.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
   if (error) return null
