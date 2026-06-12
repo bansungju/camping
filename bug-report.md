@@ -70,6 +70,7 @@
 | 56 | 카테고리/목록 (10순환) | 2026-06-11 | 2건 |
 | 57 | 상품상세 (10순환) | 2026-06-11 | 2건 (GoTrueClient 경고=양성·LCP/aggregateRating 중복 제외) |
 | 58 | 검색 (10순환) | 2026-06-11 | 1건 (대부분 기존 중복, 신규 M-111) |
+| 59 | 계정/로그인 (10순환) | 2026-06-12 | 5건 (M-116·M-117·L-97~L-99) |
 
 ---
 
@@ -1628,4 +1629,47 @@
 
 ---
 
-*다음 회차: 계정/로그인 (10순환)*
+### [M-116] renderProfile() 매 인증 이벤트마다 재호출 → btnSignout·btnDelete addEventListener 누적
+- **영역:** 계정/로그인 — account.html
+- **URL:** https://gear-forest.com/account.html
+- **증상:** 장시간 로그인 상태 유지 시(토큰 갱신·`TOKEN_REFRESHED` 이벤트 발화 시마다) 로그아웃/계정삭제 버튼에 클릭 이벤트 핸들러가 누적. 다음 로그아웃 클릭 시 `signOut()` 2회 이상 연속 호출, 계정삭제 시 `confirm()` 다이얼로그 2개 이상 중첩.
+- **원인:** `initAuth` 콜백 내에서 매번 `renderProfile(profile)` 호출(account.html:389). `renderProfile` 내부가 `btnSignout.onclick = null; btnSignout.addEventListener(...)` 패턴으로 구현되어 있어 `onclick = null`은 인라인 핸들러만 제거하고 `addEventListener` 중첩을 막지 못함. 토큰 갱신마다 반복 등록.
+- **재현:** 로그인 후 1시간 이상 탭 유지 → `TOKEN_REFRESHED` 이벤트 발화 → 로그아웃 클릭 → 2회 `signOut()` 호출 (콘솔에서 확인 가능)
+- **수정 방향:** `renderProfile` 내 버튼 핸들러를 `onclick` 직접 할당(`btn.onclick = async () => {...}`)으로 교체하거나, 첫 호출 여부 플래그 추가. [site/account.html:327-352](site/account.html)
+- **심각도:** 🟡 Medium
+
+### [M-117] 로그아웃 후 재로그인 시 내 로그 섹션 stale — dataset.loaded 미초기화
+- **영역:** 계정/로그인 — 내 로그 탭
+- **URL:** https://gear-forest.com/account.html (로그 탭)
+- **증상:** 로그아웃 후 동일 탭에서 재로그인(또는 다른 계정으로 전환)하면 내 로그 섹션이 이전 세션 데이터를 그대로 표시. 새 사용자의 로그를 fetch하지 않음.
+- **원인:** app.js에서 `myLogsList.dataset.loaded = "1"` 설정 후 `if (!myLogsList.dataset.loaded)` 로 재fetch를 막음(app.js:2258). 로그아웃 시 DOM 엘리먼트가 재생성되지 않아 `dataset.loaded`가 잔류 → 신규 로그인 시에도 fetch 건너뜀.
+- **재현:** 로그인 → 내 로그 탭 → 로그아웃 → 재로그인 → 내 로그 탭 → 이전 세션 로그 표시 (또는 빈 로딩 상태)
+- **수정 방향:** 로그아웃 시(`user=null` 분기) `myLogsList.dataset.loaded = ""` 초기화 추가. [site/app.js:2258](site/app.js)
+- **심각도:** 🟡 Medium
+
+---
+
+### [L-97] account.html 로그인 확정 분기에서 renderAccount() 2회 연속 호출
+- **영역:** 계정/로그인 — account.html
+- **증상:** 로그인 확정 시(profile.nickname 존재) renderAccount()가 line 388과 390 두 번 연속 호출되어 탭 상태가 한 프레임 내에서 두 번 계산됨. 체감 상 탭 active 상태 플래시 및 불필요한 DOM 조작.
+- **원인:** account.html initAuth 콜백 내 renderAccount() (388행), renderProfile(profile) (389행), renderAccount() (390행) 순서 — 390행 renderAccount()가 388행의 것을 덮어씀.
+- **수정 방향:** 388행 `renderAccount()` 제거(390행이 renderProfile 이후에 실행돼야 탭 상태가 정확하므로 390행만 유지). [site/account.html:388](site/account.html)
+- **심각도:** 🟢 Low
+
+### [L-98] showLoggedInSections()가 sets-section·logs-section·acc-tabs를 직접 관리하지 않음
+- **영역:** 계정/로그인 — account.html
+- **증상:** `showLoggedInSections(false)`(로그아웃 시) 호출로는 `sets-section`, `logs-section`, `acc-tabs`가 숨겨지지 않음. 현재는 뒤이어 호출되는 `renderAccount()`가 이를 처리하므로 정상 동작하나, 경로 의존성이 강해 향후 리팩터 시 노출 위험.
+- **원인:** account.html `showLoggedInSections`(265-272행)가 wish/settings/bottom-actions 3개만 처리, acc-tabs·sets/logs-section은 app.js `renderAccount()`에 위임.
+- **수정 방향:** `showLoggedInSections`에 `acc-tabs`, `sets-section`, `logs-section` hide 추가. [site/account.html:265](site/account.html)
+- **심각도:** 🟢 Low
+
+### [L-99] syncGearSetsOnLogin — 원격 세트 로컬 ID를 r.id.toString(36)으로 생성
+- **영역:** 계정/로그인 — 기어 세트 동기화
+- **증상:** 원격 세트를 로컬로 병합 시 로컬 ID가 `r.id.toString(36)` (DB integer를 base36 변환: `1`→`"1"`, `36`→`"10"` 등)으로 설정됨. 기존 로컬 세트 ID는 `Date.now().toString(36)`("lp4xxxx" 16자리 형식)이라 포맷 불일치. 충돌 확률은 낮으나 세트 ID가 짧은 숫자 문자열("1","2")로 설정되어 세트 목록 순서·중복 판별 로직 혼선 가능.
+- **원인:** account.html syncGearSetsOnLogin(176행) `id: r.id.toString(36) || Date.now().toString(36)`. DB `id`는 integer(예: 42), `.toString(36)`="16" — 빈 문자열이 아니므로 fallback이 발동하지 않음.
+- **수정 방향:** `id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6)` 형식으로 일관성 확보. [site/account.html:176](site/account.html)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 커뮤니티/소셜 (10순환)*
