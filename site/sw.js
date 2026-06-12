@@ -1,7 +1,7 @@
 /* 장비의 숲 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-d458293d";
+const CACHE = "camping-2b3c1ec8";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
@@ -18,7 +18,8 @@ self.addEventListener("install", (e) => {
     // 오프라인서 전 카테고리 탐색 가능하게 데이터 전체 precache
     try {
       const m = await (await fetch("data/manifest.json", { cache: "no-cache" })).json();
-      const urls = ["data/manifest.json", "data/search.json",
+      // L-145: data/search.json은 앱이 ?v= URL로 요청하므로 프리캐시에서 제외(캐시키 불일치)
+      const urls = ["data/manifest.json",
         ...m.categories.map((x) => `data/${x.slug}.json`)];
       await c.addAll(urls).catch(() => {});
     } catch (e) { /* 데이터 precache 실패해도 셸은 동작 */ }
@@ -89,13 +90,16 @@ self.addEventListener("push", (e) => {
   }));
 });
 
-// 알림 클릭 → 해당 URL 열기
+// 알림 클릭 → 해당 URL 열기 (L-131/L-152: URL 일치 탭 우선 탐색 + navigate)
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const url = e.notification.data?.url || "/community.html";
+  const absUrl = new URL(url, location.origin).href;
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-    const existing = list.find((c) => c.url.includes(location.origin));
-    if (existing) return existing.focus();
-    return clients.openWindow(url);
+    const exact = list.find((c) => c.url === absUrl);
+    if (exact) return exact.focus();
+    const any = list.find((c) => c.url.startsWith(location.origin));
+    if (any) return any.focus().then(() => any.navigate ? any.navigate(absUrl) : null).catch(() => clients.openWindow(absUrl));
+    return clients.openWindow(absUrl);
   }));
 });
