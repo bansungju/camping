@@ -2089,3 +2089,41 @@
 - **파일:** [site/sw.js](site/sw.js) line ~96 [lane:SOCIAL]
 
 *다음 회차: 카테고리/목록 (15순환)*
+
+---
+
+## R-75 카테고리/목록 (15순환) — 2026-06-12
+
+### [L-132] `buildFilters()` 인원·브랜드 버튼 onclick에서 `aria-pressed` 미갱신 — L-119 부분 수정 누락
+- **영역:** 카테고리/목록 — 인원·브랜드 필터 버튼
+- **심각도:** 🟢 Low
+- **증상:** `buildFilters()`(line ~1310-1320)의 인원 버튼과 브랜드 칩 onclick 핸들러에서 CSS `.on` 클래스만 수동 토글하고 `syncFilterUI()`를 호출하지 않음. 결과적으로 `aria-pressed`가 클릭 후에도 초기값 그대로 남음. L-119 수정은 HTML 생성 시 `aria-pressed` 초기값을 추가했고, `syncFilterUI()`(line ~1463)는 올바르게 갱신하나, cap/brand onclick 경로에서는 `syncFilterUI()`가 호출되지 않아 두 경로 간 불일치 발생.
+- **원인:** 인원 onclick(line ~1311): `btn.classList.add("on"); STATE.cap = ...; draw();` — `syncFilterUI()` 미호출. 브랜드 onclick(line ~1316): `btn.classList.toggle("on"); draw();` — 동일 누락.
+- **수정:** 인원 onclick에 `bar.querySelectorAll("[data-cap]").forEach(b => b.setAttribute("aria-pressed", String(b.classList.contains("on"))))` 추가, 또는 `draw()` 대신 `syncFilterUI(); draw();` 호출. 브랜드 onclick도 동일 패턴 적용.
+- **파일:** [site/app.js](site/app.js) line ~1313, ~1319
+
+### [L-133] `renderValueBanner()` `role="note"` + `aria-live` 없음 — 동적 배너 AT 미고지
+- **영역:** 카테고리/목록 — 가성비순 정렬 안내 배너
+- **심각도:** 🟢 Low
+- **증상:** `renderValueBanner()`(line ~1408)에서 동적 생성 배너에 `banner.setAttribute("role", "note")` 적용. `role="note"`는 라이브 영역이 아니므로, 정렬을 "가성비순"으로 변경할 때 배너가 동적으로 삽입되어도 AT 사용자에게 고지 안 됨. `role="alert"` 적용 사례(L-129)와 반대 방향이지만 같은 root cause — 동적 콘텐츠에 라이브 영역 미설정.
+- **원인:** `role="note"` 자체는 의미론 맞으나 라이브 영역 특성 없음. 동적 삽입 후 AT가 읽어주려면 `aria-live="polite"` 필요.
+- **수정:** `banner.setAttribute("role", "note")` 유지 + `banner.setAttribute("aria-live", "polite")` 추가. 또는 `role="status"`로 교체(`aria-live="polite"` + `aria-atomic="true"` 포함).
+- **파일:** [site/app.js](site/app.js) line ~1408
+
+### [L-134] `renderCatNav()` 활성 카테고리 링크에 `aria-current="page"` 없음
+- **영역:** 카테고리/목록 — 카테고리 네비게이션 바
+- **심각도:** 🟢 Low
+- **증상:** `renderCatNav()`(line ~486-488)에서 현재 카테고리 링크에 CSS 클래스 `.on`만 적용. `aria-current="page"` 미설정. 스크린리더가 어느 카테고리가 현재 페이지인지 파악 불가 — WCAG 2.1 SC 1.3.1(정보와 관계) + 탐색 네비게이션 WAI-ARIA 패턴.
+- **원인:** `renderCatNav()` 내 링크 생성 시 `${c.slug === activeSlug ? ' aria-current="page"' : ""}` 미포함.
+- **수정:** `<a class="navchip${c.slug === activeSlug ? " on" : ""}" ${c.slug === activeSlug ? 'aria-current="page"' : ''} href="...">` — 활성 링크에 `aria-current="page"` 추가.
+- **파일:** [site/app.js](site/app.js) line ~487
+
+### [L-135] `updateCmpBar()` 비교 취소 ✕ 버튼 `aria-label` 없음
+- **영역:** 카테고리/목록 — 비교 선택 바
+- **심각도:** 🟢 Low
+- **증상:** `updateCmpBar()`(line ~1935)에서 비교 취소 버튼 `<button class="cmp-bar-clear" id="cmp-clear">✕</button>` — 텍스트 내용이 "✕"(U+2715) 단독. AT가 "곱하기" 또는 "times" 등으로 읽을 수 있으며, 버튼 목적(비교 선택 해제) 미전달.
+- **원인:** 비교 바 렌더링 시 ✕ 버튼에 `aria-label` 미지정. 같은 패턴의 다른 닫기 버튼(`.pmx`, `.pwa-dismiss-btn`)은 `aria-label="닫기"` 지정됨.
+- **수정:** `<button type="button" class="cmp-bar-clear" id="cmp-clear" aria-label="비교 선택 해제">✕</button>` — `aria-label` 추가.
+- **파일:** [site/app.js](site/app.js) line ~1935
+
+*다음 회차: 상품상세 (15순환)*
