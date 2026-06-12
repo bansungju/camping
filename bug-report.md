@@ -2080,7 +2080,8 @@
 - **수정:** `account.html:78` 링크에 `id` 부여 후 `renderAccount()` 초기화 시 `COMMUNITY_ENABLED` 플래그에 따라 `display` 제어. 또는 `renderAccount()` 내 `#logs-section` 헤더 영역도 동적 렌더링으로 교체.
 - **파일:** [site/account.html](site/account.html) line ~78 [lane:SOCIAL]
 
-### [L-126] 무게 목표 설정 다이얼로그(line ~2738) `role="dialog"` · `aria-modal` · ESC 핸들러 모두 없음
+### [L-126] ✅ 해결완료(2026-06-12, CORE) — 무게 목표 설정 다이얼로그 `role="dialog"` · `aria-modal` · ESC 핸들러 모두 없음
+- **처리:** `renderAccount()` 무게목표 다이얼로그(app.js ~line 2858)에 `role="dialog"`·`aria-modal="true"`·`aria-labelledby="goal-title"` + h2 `id="goal-title"` 추가. `closeGoal()`로 통합(ESC 핸들러·prevFocus 복귀·초기 포커스 `.pmx`). 라이브검증은 배포 후.
 - **영역:** 계정/로그인 — 내 세트 무게 목표 설정
 - **심각도:** 🟢 Low
 - **증상:** `renderAccount()` 내 무게 목표 설정 다이얼로그(line ~2738) 생성 시 `dialog.className = "pmodal on"` 만 설정. `dialog.setAttribute("role","dialog")`·`aria-modal="true"`·`aria-labelledby` 모두 없음. 시각적으로는 동일한 `pmodal` 모달 오버레이로 나타나지만 스크린리더가 모달 진입을 감지 불가. ESC 닫기 핸들러도 없음(backdrop 클릭 또는 ✕ 버튼만 가능).
@@ -2253,7 +2254,8 @@
 
 ## R-78 홈/메인 (16순환) — 2026-06-12
 
-### [L-142] `openSetDetail` — ESC 핸들러·초기 포커스·`prevFocus` 복귀·`aria-labelledby` 모두 없음
+### [L-142] ✅ 해결완료(2026-06-12, CORE) — `openSetDetail` — ESC 핸들러·초기 포커스·`prevFocus` 복귀·`aria-labelledby` 모두 없음
+- **처리:** app.js `openSetDetail`(~line 2484)에 `aria-labelledby="set-detail-title"` + h2 `id` 추가. `close()` 함수로 통합(ESC keydown·prevFocus 복귀·초기 포커스 `.pmx`). 재진입(수량 ±) 시 prevFocus 1회만 저장(`modal._prevFocus`)·이전 keydown 리스너 정리. `set-to-log-btn`도 `close()` 경유. 프리뷰 검증: 모달 open·role/aria-modal/aria-labelledby·초기포커스·ESC 닫기 모두 확인.
 - **영역:** 홈/계정 — 장비 세트 상세 모달
 - **심각도:** 🟢 Low
 - **증상:** `openSetDetail()`(lines 2407-2432)에서 ① ESC 키 닫기 핸들러 없음(backdrop 클릭·X버튼만), ② `modal.classList.add("on")` 후 `.pmx.focus()` 미호출 → 포커스가 모달로 이동 안 됨, ③ `prevFocus` 저장·복귀 없어 닫을 때 포커스 소실, ④ `role="dialog"`가 있으나 `aria-labelledby`가 없어 AT가 다이얼로그 이름 미인식. `openSetModal()`(line 353: `.pmx.focus()`, line 335: ESC handler)·상품상세 `openProduct()`(line 1682: prevFocus)는 각각 일부 구현됨 — 일관성 부재.
@@ -2325,7 +2327,7 @@
 - **심각도:** 🟢 Low
 - **증상:** `openReviewDetail()`(line 1744)은 ESC 핸들러는 있으나 (line 1761) 오버레이 열릴 때 닫기 버튼(`.pmx`)으로 포커스를 이동하지 않음. 닫을 때도 `prevFocus`를 복귀하지 않아 키보드/AT 사용자의 포커스가 모달 밖 임의 위치로 이동. `aria-labelledby`도 없어 대화상자 제목을 AT가 읽지 못함.
 - **원인:** `openProduct()`(line 1684)의 `prevFocus` 패턴이 `openReviewDetail`에 미적용됨.
-- **수정:** (1) 열기 전 `const prevFocus = document.activeElement` 저장, (2) `ov.classList.add("on")` 후 `ov.querySelector(".pmx").focus()` 추가, (3) `close()` 내 `prevFocus?.focus()` 복귀, (4) dialog 요소에 `aria-labelledby` 연결.
+- **수정:** (1) 열기 전 `const prevFocus = document.activeElement` 저장, (2) `ov.classList.add("on")` 후 `ov.querySelector(".pmx").focus()` 추가, (3) `close()` 내 `prevFocus?.focus()` 복귀 — (1)~(3)은 L-122에서 기구현. (4) 다이얼로그 네이밍 보완: 후기 모달엔 제목 h2가 없어 `.pmrvd-box`에 `aria-label="{nick}님의 후기"` 추가(2026-06-12, CORE).
 - **파일:** [site/app.js](site/app.js) line ~1744 [lane:CORE]
 
 ### [L-149] ✅ 해결완료(기구현·2026-06-12 검증) — `openCmpModal()` — `prevFocus` 미저장·미복귀
