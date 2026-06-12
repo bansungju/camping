@@ -306,7 +306,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
   ${itemPager}
   <a class="back-link" href="../../category.html?cat=${catSlug}">← ${catLabel} 전체 비교 보기</a>
-  <a class="item-report" href="mailto:bangsungju@gmail.com?subject=${encodeURIComponent(`[오류 제보] ${brand} ${modelName}`)}&body=${encodeURIComponent(`제품명: ${brand} ${modelName}\n페이지: ${canonicalUrl}\n\n오류 내용:\n`)}">⚠️ 제품 정보 오류 신고</a>
+  <a class="item-report" href="mailto:bangsungju@gmail.com?subject=${encodeURIComponent(`[오류 제보] ${brand} ${modelName}`)}&body=${encodeURIComponent(`제품명: ${brand} ${modelName}\n페이지: ${canonicalUrl}\n\n오류 내용:\n`)}">상품의 정보가 달라요</a>
   <button type="button" class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로 이동">↑</button>
 </main>
 
