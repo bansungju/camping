@@ -1705,7 +1705,8 @@
 - **수정 방향:** `renderThumbs()` 상단에 기존 URL 해제 로직 추가: `thumbsEl.querySelectorAll("img").forEach(img => URL.revokeObjectURL(img.src));` 또는 URL 배열을 별도 관리해 교체 시 해제. [site/app.js:1651](site/app.js)
 - **심각도:** 🟢 Low
 
-### [L-106] openSetModal·openCmpModal — ESC 키 닫기 미지원
+### [L-106] ✅ 해결완료(2026-06-12) — openSetModal·openCmpModal — ESC 키 닫기 미지원
+- **해결:** 두 모달에 `onKey`(ESC→close)+removeEventListener 추가(openProduct 패턴). 비교모달엔 포커스트랩·초기포커스도(M-127 동시). 검증: 비교모달 ESC 닫힘. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 세트 추가 모달, 스펙 비교 모달
 - **증상:** `openSetModal`(set-modal)과 `openCmpModal`(cmp-modal) 모두 X 버튼 클릭과 바깥 클릭으로만 닫히며, ESC 키가 동작하지 않음. `openProduct` 모달은 ESC 지원됨 — 불일치.
 - **원인:** `app.js:324`(openSetModal), `app.js:1801`(openCmpModal) 모두 `document.addEventListener("keydown", ...)` 미등록.
@@ -1840,7 +1841,8 @@
 - **수정 방향:** 업로드 실패 시 `urls` 배열에 이미 쌓인 경로들을 `supabase.storage.from(IMG_BUCKET).remove([paths])` 로 정리 후 return. [site/app.js:1783](site/app.js)
 - **심각도:** 🟢 Low
 
-### [L-112] openProduct — #pmodal 외부 div와 내부 .pmbox 모두 role="dialog" 중첩
+### [L-112] ✅ 해결완료(2026-06-12) — openProduct — #pmodal 외부 div와 내부 .pmbox 모두 role="dialog" 중첩
+- **해결:** `#pmodal`·`#set-modal` 외부 div 생성 시 `role="dialog"`·`aria-modal` 제거 — 내부 `.pmbox`에만 유지. 검증: 외부 role none, 내부 dialog. [site/app.js](site/app.js)
 - **영역:** 상품상세 — 상품 상세 모달 접근성
 - **증상:** `#pmodal` 외부 컨테이너(backdrop)와 내부 `.pmbox` 모두 `role="dialog" aria-modal="true"`가 설정돼 스크린리더가 dialog 진입을 두 번 고지하거나 예기치 않은 동작 가능. WAI-ARIA spec상 nested `role="dialog"`는 anti-pattern.
 - **원인:** `app.js:1480` — modal 생성 시 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정. `app.js:1493` — innerHTML로 `<div class="pmbox" role="dialog" aria-modal="true" ...>` 삽입으로 중첩.
@@ -1935,7 +1937,8 @@
 
 ## R-71 카테고리/목록 (14순환) — 2026-06-12
 
-### [M-127] `openCmpModal()` ESC 키 핸들러 및 포커스 트랩 없음
+### [M-127] ✅ 해결완료(2026-06-12) — `openCmpModal()` ESC 키 핸들러 및 포커스 트랩 없음
+- **해결:** 비교모달에 `onKey`(ESC 닫기 + Tab 순환 포커스트랩) + 초기 포커스(`.pmx`) 추가. 검증: 모달 열림 시 X버튼 포커스, ESC 닫힘. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 스펙 비교 모달
 - **심각도:** 🟡 Medium
 - **증상:** `openCmpModal()`(line ~1919)로 열리는 비교 모달에 ESC 키 닫기 핸들러와 포커스 트랩이 없음. 비교 모달 열린 상태에서 ESC 키를 눌러도 닫히지 않으며, Tab 키가 모달 밖으로 빠져나감. `openProduct()`(line ~1550)는 동일 구조에 ESC 핸들러(`onKey`)·포커스 트랩·초기 포커스(`xbtn.focus()`)가 모두 구현돼 있으나 비교 모달은 누락.
@@ -1943,7 +1946,8 @@
 - **수정:** `openProduct()`의 `onKey`·포커스 트랩 패턴과 동일하게 비교 모달에도 적용(ESC 감지 후 `modal.classList.remove("on")`·`removeEventListener` 호출, Tab 순환).
 - **파일:** [site/app.js](site/app.js) line ~1967
 
-### [L-119] `buildFilters()` 내 인원·브랜드·프리셋 토글 버튼 `aria-pressed` 누락
+### [L-119] ✅ 해결완료(2026-06-12) — `buildFilters()` 내 인원·브랜드·프리셋 토글 버튼 `aria-pressed` 누락
+- **해결:** 인원(`data-cap`)·브랜드(`data-brand`)·프리셋(`.fpre`) 버튼에 `aria-pressed` 초기값 + `syncFilterUI`·`syncPresetOn`에서 `.on` 토글과 함께 동기화. 검증: cap=2 활성 시 해당 버튼 aria-pressed=true. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 필터바
 - **심각도:** 🟢 Low
 - **증상:** `buildFilters()`(line ~1105)에서 생성되는 인원 버튼(`data-cap`, line ~1115), 브랜드 칩(`data-brand`, line ~1205), 빠른설정 프리셋 칩(`.fpre`, line ~1272)에 `aria-pressed` 속성이 없음. 활성 상태는 `.on` CSS 클래스로만 표현되어 스크린리더가 선택 여부를 감지 불가. 정렬 칩(`.schip`)은 L-16 수정으로 `aria-pressed` 적용됨 — 필터 토글 버튼만 미적용으로 일관성도 깨짐.
@@ -1951,7 +1955,8 @@
 - **수정:** 인원·브랜드·프리셋 버튼 생성 시 `aria-pressed="false"` 초기값 설정; `syncFilterUI()` 및 클릭 핸들러에서 `setAttribute("aria-pressed", ...)` 갱신.
 - **파일:** [site/app.js](site/app.js) line ~1115, ~1205, ~1272, ~1454
 
-### [L-120] `renderStyleChips()` 스타일 칩 버튼 `aria-pressed` 누락
+### [L-120] ✅ 해결완료(2026-06-12) — `renderStyleChips()` 스타일 칩 버튼 `aria-pressed` 누락
+- **해결:** `.sc-chip` 생성 시 `aria-pressed` 초기값 + 클릭 핸들러서 전 칩 `setAttribute("aria-pressed", ...)` 갱신. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 캠핑 스타일 칩
 - **심각도:** 🟢 Low
 - **증상:** `renderStyleChips()`(line ~903)에서 생성되는 `.sc-chip` 버튼에 `aria-pressed` 속성 없음. 활성 스타일은 `.on` CSS 클래스만으로 표현. 클릭 핸들러(line ~920)에서 `STATE.campStyle`에 따라 `.on` 클래스를 토글하지만 `aria-pressed` 갱신은 없음. 스크린리더 사용자가 선택된 캠핑 스타일을 인지 불가.
@@ -1959,7 +1964,9 @@
 - **수정:** 칩 생성 시 `aria-pressed="${STATE.campStyle === s.key}"` 추가; 클릭 핸들러 내 모든 칩 `setAttribute("aria-pressed", b.dataset.style === STATE.campStyle)` 갱신.
 - **파일:** [site/app.js](site/app.js) line ~916, ~923
 
-### [L-121] `filtoggle` 버튼 `aria-expanded`·`aria-controls` 누락 — 필터 열림/닫힘 상태 미고지
+### [L-121] ✅ 해결완료(2026-06-12) — `filtoggle` 버튼 `aria-expanded`·`aria-controls` 누락 — 필터 열림/닫힘 상태 미고지
+- **해결:** `#filtoggle`에 `aria-controls="filters"` + `syncLabel()`서 `aria-expanded` 갱신. 검증: expanded=true, controls=filters. [site/app.js](site/app.js)
+- **추가발견:** L-03(카드 a태그화) 회귀 — `.pli-wish`/`.pli-cmp` 버튼이 `<a class=pli>` 내부라 클릭 시 stopPropagation만으론 카드 기본 네비게이션 발생 → 두 핸들러에 `e.preventDefault()` 추가. 검증: 비교/찜 버튼 클릭 시 페이지 이탈 없음. [site/app.js](site/app.js)
 - **영역:** 카테고리/목록 — 필터 토글 버튼
 - **심각도:** 🟢 Low
 - **증상:** `buildFilters()`(line ~1291)에서 생성되는 `#filtoggle` 버튼이 `#filters` 영역의 펼침/접힘을 제어하지만 `aria-expanded` 및 `aria-controls` 속성이 없음. `syncLabel()` 함수가 텍스트를 "필터 펼치기 ▾"/"필터 접기 ▴"로 변경하여 시각적 힌트는 있으나, `aria-expanded` 없이 보조기술이 영역의 열림 상태를 프로그래밍적으로 파악 불가.
