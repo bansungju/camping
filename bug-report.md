@@ -1663,7 +1663,7 @@
 - **수정 방향:** `showLoggedInSections`에 `acc-tabs`, `sets-section`, `logs-section` hide 추가. [site/account.html:265](site/account.html)
 - **심각도:** 🟢 Low
 
-### [L-99] syncGearSetsOnLogin — 원격 세트 로컬 ID를 r.id.toString(36)으로 생성
+### [L-99] ✅ 해결완료(2026-06-13) — syncGearSetsOnLogin — 원격 세트 로컬 ID를 r.id.toString(36)으로 생성
 - **영역:** 계정/로그인 — 기어 세트 동기화
 - **증상:** 원격 세트를 로컬로 병합 시 로컬 ID가 `r.id.toString(36)` (DB integer를 base36 변환: `1`→`"1"`, `36`→`"10"` 등)으로 설정됨. 기존 로컬 세트 ID는 `Date.now().toString(36)`("lp4xxxx" 16자리 형식)이라 포맷 불일치. 충돌 확률은 낮으나 세트 ID가 짧은 숫자 문자열("1","2")로 설정되어 세트 목록 순서·중복 판별 로직 혼선 가능.
 - **원인:** account.html syncGearSetsOnLogin(176행) `id: r.id.toString(36) || Date.now().toString(36)`. DB `id`는 integer(예: 42), `.toString(36)`="16" — 빈 문자열이 아니므로 fallback이 발동하지 않음.
