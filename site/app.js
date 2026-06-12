@@ -812,6 +812,8 @@ async function renderBrowse() {
   // 상단 검색창(홈 검색과 동일 동작) — 카테고리 내 검색용 #q 입력은 숨김
   const tb = document.querySelector(".toolbar"); if (tb) tb.style.display = "none";
   const sc = document.getElementById("sortchips"); if (sc) sc.innerHTML = "";
+  // M-115: 탐색 랜딩에서 cat-aside(사이드바) 숨김 — 카테고리 없으면 220px 빈 공간 생김
+  const aside = document.getElementById("cat-aside"); if (aside) aside.style.display = "none";
   // 카테고리 그리드를 #list에 렌더(홈과 동일 카드)
   const list = document.getElementById("list");
   list.className = "grid";
@@ -924,7 +926,7 @@ async function renderCategory() {
     qInp.setAttribute("aria-label", `${d.name || "카테고리"} 내 모델·브랜드 검색`);
     qInp.setAttribute("role", "searchbox");
     qInp.setAttribute("aria-autocomplete", "list");
-    qInp.oninput = e => { STATE.q = e.target.value.trim().toLowerCase(); draw(); };
+    qInp.oninput = e => { if (e.isComposing) return; STATE.q = e.target.value.trim().toLowerCase(); draw(); };  // L-59
   }
   draw();
   // 최근 본 상품·검색 결과·추천 카드처럼 brands+q로 단일 상품을 특정한 링크면
@@ -1148,7 +1150,7 @@ function buildFilters(d, star) {
   });
   // 브랜드 드롭다운(추가)
   const bsel = bar.querySelector("[data-brandsel]");
-  if (bsel) bsel.onchange = e => { if (e.target.value) { STATE.brands.add(e.target.value); e.target.value = ""; draw(); } };
+  if (bsel) bsel.onchange = e => { if (e.target.value) { STATE.brands.add(e.target.value); e.target.value = ""; syncFilterUI(); draw(); } };  // L-94
   // 듀얼 슬라이더 이벤트
   bar.querySelectorAll(".dslider").forEach(sl => {
     const key = sl.dataset.rng;
@@ -1713,6 +1715,8 @@ function updateCmpBar(rows) {
     bar = document.createElement("div");
     bar.id = "cmp-bar";
     bar.className = "cmp-bar";
+    bar.setAttribute("aria-live", "polite");  // L-58
+    bar.setAttribute("role", "status");
     document.body.appendChild(bar);
   }
   if (_cmpSet.length < 2) { bar.style.display = "none"; return; }
@@ -2994,6 +2998,7 @@ function openLogModal(presetSetIndex) {
   const modal = document.getElementById("log-modal");
   if (!modal) return;
   const body = document.getElementById("log-modal-body");
+  if (!body) return;   // M-112: body null → TypeError 방지
   if (!window._commUser) {
     body.innerHTML = `
       <div style="text-align:center;padding:20px 0">
@@ -3230,11 +3235,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }).join("");
     document.body.appendChild(nav);
 
-    // 내비 높이만큼 main/footer에 padding-bottom 확보
-    const pb = "64px";
-    const main = document.querySelector("main");
-    const footer = document.querySelector("footer");
-    if (main) main.style.paddingBottom = pb;
-    if (footer) footer.style.paddingBottom = pb;
+    // 내비 높이만큼 main/footer에 padding-bottom 확보 (모바일 전용 — L-43 데스크톱 잉여 공백 방지)
+    if (window.matchMedia("(max-width:767px)").matches) {
+      const pb = "64px";
+      const main = document.querySelector("main");
+      const footer = document.querySelector("footer");
+      if (main) main.style.paddingBottom = pb;
+      if (footer) footer.style.paddingBottom = pb;
+    }
   })();
 });
