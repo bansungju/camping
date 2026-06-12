@@ -2385,4 +2385,42 @@
 - **수정:** `buildFilters`의 EXTRA_SPECS 정보를 `STATE.extraSpecMeta = { [key]: { label, unit } }` 형태로 저장. `renderActiveFilters`·`diagnoseEmpty`의 레이블 조회 시 `STATE.extraSpecMeta[k]?.label`을 fallback으로 추가.
 - **파일:** [site/app.js](site/app.js) line ~1482, ~1598 [lane:CORE]
 
-*다음 회차: 상품상세 (17순환)*
+---
+
+## R-84 — 상품상세 (17순환) [2026-06-12]
+
+### [M-134] `wireReviews` — 사진 업로드 성공 후 `reviews.insert` 실패 시 Storage 파일 고아(orphan)
+- **영역:** 상품상세 — 후기 등록 폼
+- **심각도:** 🟡 Medium
+- **증상:** `form.onsubmit`(app.js line ~1946)에서 `photos` 배열의 파일을 `uploadImage(f)` 로 순차 업로드한 뒤 `supabase.from("reviews").insert(row)` 를 호출한다. INSERT가 실패(rate limit, RLS, 네트워크 오류 등)하면 이미 Storage에 업로드된 파일들이 `review-images` 버킷에 그대로 남는다. 사용자가 다시 "등록"을 누르면 기존 URL과 관계없이 새 UUID로 같은 파일을 재업로드 → 고아 파일 누적. 리뷰 삭제 기능이 없어 Storage 파일도 회수 불가.
+- **원인:** 업로드 후 INSERT 실패 시 올라간 파일들을 `supabase.storage.from(IMG_BUCKET).remove(paths)` 로 롤백하는 코드 없음.
+- **수정:** INSERT 실패 블록에서 `urls` 배열로 Storage 파일 삭제 시도 추가(실패해도 무시). 또는 처음부터 Pending 파일을 별도 폴더에 올리고 INSERT 성공 후 이동(copy-and-delete).
+- **파일:** [site/app.js](site/app.js) line ~1946 [lane:CORE]
+
+### [L-157] `openReviewDetail` — `role="dialog"` 요소에 `aria-labelledby` 없음
+- **영역:** 상품상세 — 리뷰 상세 오버레이
+- **심각도:** 🟢 Low
+- **증상:** `openReviewDetail()`(line 1782)의 `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">` 에 `aria-labelledby` 속성이 없다. 스크린 리더는 대화상자를 열 때 `aria-label` 또는 `aria-labelledby`가 없으면 "대화상자"만 읽고 제목을 안내하지 못한다. 사용자는 어떤 후기를 열었는지 컨텍스트 없이 닫기 버튼("✕")으로 포커스가 이동된다.
+- **원인:** `openProduct()`의 `aria-labelledby="pmodal-title"` 패턴이 `openReviewDetail`에 미적용.
+- **수정:** `ov.innerHTML` 내 `.pmbox.pmrvd-box`에 `aria-labelledby="pmrvd-title"` 추가. 내부에 `<span id="pmrvd-title" class="sr-only">리뷰 상세</span>` 또는 작성자 닉네임 요소에 id를 부여해 연결.
+- **파일:** [site/app.js](site/app.js) line ~1782 [lane:CORE]
+
+### [L-158] `openProduct` focus trap 셀렉터에 `textarea` 누락 — submit disabled 시 포커스 탈출
+- **영역:** 상품상세 — 상품 모달 포커스 트랩
+- **심각도:** 🟢 Low
+- **증상:** `openProduct()`의 `onKey` 핸들러(line 1731) 포커스 트랩 셀렉터 `'button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])'`에 `textarea`가 없다. 후기 폼이 열린 상태에서 사진 업로드 중 `submitBtn.disabled = true`이고 아직 리뷰 카드가 없을 때, Tab을 `.pmrv-ta`(textarea) → 비활성 submit(브라우저가 건너뜀) → .pmbox 밖으로 순서로 누르면 포커스가 모달 외부로 탈출한다.
+- **원인:** 셀렉터 설계 시 `textarea`·`select` 미포함.
+- **수정:** 셀렉터를 `'button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'` 로 확장.
+- **파일:** [site/app.js](site/app.js) line ~1731 [lane:CORE]
+
+### [L-159] `wireReviews` `reset()` — 마지막 `renderThumbs` Blob URL 미해제 → 메모리 누수
+- **영역:** 상품상세 — 후기 사진 썸네일
+- **심각도:** 🟢 Low
+- **증상:** `renderThumbs()`(line 1902) 재호출 시 이전 Blob URL을 `URL.revokeObjectURL`로 해제하지만, `reset()`(line 1854)은 `formbox.innerHTML = ""` 만 실행하고 마지막 `renderThumbs` 호출로 생성된 Blob URL을 해제하지 않는다. 후기 폼을 열고 사진을 추가했다가 닫거나 등록 완료 후 reset 할 때마다 Blob URL이 해제되지 않고 페이지 lifetime 동안 누적된다.
+- **원인:** `reset()` 내에서 `thumbsEl.querySelectorAll("img")` 에 대한 revoke 미수행.
+- **수정:** `reset()` 내 `formbox.innerHTML = ""` 전에 현재 썸네일 img src Blob URL을 revoke하는 로직 추가. 또는 `photos = []` 후 `renderThumbs()` 한 번 호출(내부에서 이전 URL revoke 후 빈 state 렌더).
+- **파일:** [site/app.js](site/app.js) line ~1854 [lane:CORE]
+
+> SOCIAL lane (supabaseClient.js · account.html · sw.js): 이번 순환에서 신규 버그 없음. 기존 미수정: M-132(initAuth 이중 발화), L-147(onWishChange 경쟁), L-150(닉네임 모달 syncGearSets 누락).
+
+*다음 회차: 계정/로그인 (17순환)*
