@@ -1300,15 +1300,13 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** 데스크톱(1280px)에서 `.personas` 그리드가 5열로 계산되나 카드는 4개뿐이어서 마지막 열이 빈 공간으로 남아 불균형한 레이아웃.
 
-### [L-02] 모바일에서 캠핑 스타일 카드 1열 세로 나열
+### [L-02] ✅ 해결완료(2026-06-12) — 모바일에서 캠핑 스타일 카드 1열 세로 나열
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션 (모바일)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 모바일 375px에서 `.personas` 그리드가 단일 열로 렌더링되어 카드 4개가 세로로 쌓임. 2열 그리드가 더 자연스러운 UX.
+- **해결:** `.personas` `minmax(200px,1fr)` → `minmax(150px,1fr)` — 375px에서 2열 허용(375÷150≈2.5). [site/style.css](site/style.css)
 
-### [L-29] 모바일(375px) 상세 페이지 스펙 테이블 레이블 중간 줄바꿈
+### [L-29] ✅ 해결완료(2026-06-12) — 모바일 상세 페이지 스펙 테이블 레이블 중간 줄바꿈
 - **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** '내한온도(ISO하한)' 등 긴 레이블이 375px 화면에서 단어 중간(`ISO하` / `한`)에서 줄바꿈되어 셀 높이가 59px로 불균일. `word-break:keep-all` 또는 `overflow-wrap` 조정으로 해결 가능.
+- **해결:** `.spec-table th` 인라인 스타일에 `word-break:keep-all` 추가 — 한글 어절 단위로 줄바꿈, 중간 분리 방지. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-32] 댓글 textarea — 연결된 `<label>` 없음
 - **영역:** 커뮤니티/소셜 — 댓글 폼
@@ -1332,10 +1330,9 @@
 - **영역:** 검색 (카테고리 페이지)
 - **해결:** `draw()` 빈 결과 표시 시 `STATE.q`가 있으면 `/?q=...` 전체 카테고리 검색 링크를 `.pli-empty` 안에 추가. [site/app.js](site/app.js)
 
-### [L-30] category.html `<title>` 초기값 "카테고리 비교" — JS 실행 후 카테고리명으로 교체
+### [L-30] ✅ 해결완료(2026-06-12) — category.html `<title>` 초기값 개선
 - **영역:** 카테고리/목록 (SEO)
-- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
-- **증상:** HTML `<title>`이 "카테고리 비교 — 장비의 숲"으로 하드코딩. JS 실행 후 "침낭 비교"로 변경됨. JS 미실행 크롤러가 잘못된 타이틀 색인, 탭 타이틀 깜빡임 발생.
+- **해결:** `<title>카테고리 비교 — 장비의 숲</title>` → `<title>캠핑 장비 비교 — 장비의 숲</title>`. JS 실행 전에도 의미있는 제목 유지. JS 후 카테고리명으로 동적 교체는 그대로. [site/category.html](site/category.html)
 
 ### [L-28] ✅ 해결완료(2026-06-12) — 상품 상세 모달에 role="dialog"·aria-modal 없음
 - **영역:** 카테고리/목록 — 상품 카드 모달
@@ -1382,10 +1379,9 @@
 - **URL:** https://www.gear-forest.com/account.html#logs
 - **증상:** 비로그인 상태로 직접 접근 시 해시 무시(M-52)로 wish 섹션만 표시, 왜 로그가 안 보이는지 안내 없음.
 
-### [L-36] 상품 상세 모달 `@media print` 스타일 없음 — 인쇄 시 UI 전체 노출
+### [L-36] ✅ 해결완료(2026-06-12) — 상품 상세 모달 `@media print` 스타일 없음
 - **영역:** 상품상세 모달 (인쇄)
-- **증상:** `style.css`에 `@media print` 규칙 없음. 브라우저 인쇄 미리보기 시 오버레이 배경·탭바·필터 등 전체 UI가 함께 출력됨. 상품 스펙 정보만 선택적으로 인쇄 불가.
-- **재현:** 상품 모달 열기 → Ctrl+P → 인쇄 미리보기 확인
+- **해결:** `style.css` 말미에 `@media print` 규칙 추가 — 헤더·탭바·필터·버튼 등 UI 크롬 숨김, 스펙 테이블·상품 정보만 출력. [site/style.css](site/style.css)
 
 ### [L-35] ✅ 해결완료(2026-06-12) — 카테고리 목록 스크롤 끝 "모두 표시됨" 안내 없음
 - **영역:** 카테고리/목록
@@ -1578,12 +1574,9 @@
 - **재현:** app.js 수정 → `stamp_version.py` 실행 → `grep -o 'app.js?v=[a-f0-9]*' site/item/mat/item-24.html` → 최상위 `category.html`의 버전과 불일치
 - **권장:** stamp 파이프라인에 `build-item-pages.js` 재실행 포함, 또는 stamp_version.py가 `item/**`도 순회하고 `(\.\./)*app\.js` 패턴을 매치하도록 확장.
 
-### [L-96] item 상세 페이지 BreadcrumbList 구조화 데이터 누락 (SEO)
+### [L-96] ✅ 해결완료(2026-06-12) — item 상세 페이지 BreadcrumbList 구조화 데이터 누락
 - **영역:** 상품상세 (정적 `item/*.html`)
-- **URL:** https://gear-forest.com/item/mat/item-24.html
-- **증상:** 페이지에 시각적 breadcrumb(홈 › 매트 › 상품명)은 있으나 대응하는 `BreadcrumbList` JSON-LD가 없다. `<head>`엔 `Product` 구조화 데이터만 존재. Google이 검색결과에 breadcrumb rich result를 그릴 근거가 없어 SEO 노출 기회를 놓친다.
-- **재현:** 상세 페이지 → `[...document.scripts].filter(s=>s.type==='application/ld+json').map(s=>s.textContent).join()` → `BreadcrumbList` 미포함
-- **권장:** `build-item-pages.js`에서 홈→카테고리→현재상품 3단계 `BreadcrumbList` JSON-LD 추가(시각 breadcrumb와 동일 구조).
+- **해결:** `build-item-pages.js`에 `BreadcrumbList` JSON-LD 생성 추가 — 홈(1)→카테고리(2)→현재상품(3) 3단계. Product JSON-LD와 별도 `<script type="application/ld+json">` 태그로 삽입. 2277개 재빌드. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [M-112] ✅ 해결완료(2026-06-12) — '이 세트로 커뮤니티 로그 작성' 클릭 시 앱 팅김
 - **해결(2026-06-12):** `openLogModal()` 내 `body` null 가드 추가 — `#log-modal-body` 미존재 시 TypeError 방지. [site/app.js](site/app.js)

@@ -132,6 +132,16 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   };
   Object.keys(jsonLd).forEach(k => jsonLd[k] === undefined && delete jsonLd[k]);
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "홈", "item": SITE_URL + "/" },
+      { "@type": "ListItem", "position": 2, "name": catLabel, "item": catUrl },
+      { "@type": "ListItem", "position": 3, "name": `${brand} ${modelName}`, "item": canonicalUrl }
+    ]
+  };
+
   const specRows = specTableRows(specs, metrics);
 
   return { pageSlug, html: `<!doctype html>
@@ -164,6 +174,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
 <link rel="stylesheet" href="../../style.css?v=${CSS_V}">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+<script type="application/ld+json">${JSON.stringify(breadcrumbLd)}</script>
 <style>
 .item-hero{display:flex;gap:20px;align-items:flex-start;margin:24px 0 20px;flex-wrap:wrap}
 .item-img{width:200px;height:200px;object-fit:contain;border-radius:8px;background:var(--card);border:1px solid var(--line);flex-shrink:0}
@@ -174,7 +185,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .item-rank{font-size:13px;color:var(--muted);margin-bottom:16px}
 .spec-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
 .spec-table th,.spec-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-.spec-table th{width:110px;color:var(--muted);font-weight:500}
+.spec-table th{width:110px;color:var(--muted);font-weight:500;word-break:keep-all}
 .spec-badge{font-size:11px;background:var(--card2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px}
 .spec-stars{color:var(--accent)}
 .back-link{display:inline-block;margin-top:20px;font-size:13px;color:var(--muted);text-decoration:none}
