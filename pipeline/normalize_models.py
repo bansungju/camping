@@ -74,6 +74,21 @@ HARD_PRICE_FLOOR = {
 }
 
 
+def dedup_price_observations(con):
+    """동일 (product_id, price_krw, seller, channel) 중복 관측을 최신 1행만 남기고 정리. 멱등.
+    폴링/재수확 잡이 같은 가격을 매 실행 새 행으로 적재(예: 705·416이 동일값 10여 행) → 테이블
+    비대 + 한 값이 과다 적재되면 canonical 중앙값을 점령(이상치 가드 역작동의 1차 원인이었음).
+    시계열 재기록은 freshness 신호일 뿐 최신 observed_at(=최대 id)만 있으면 충분하고, 실제 가격
+    '변동'은 다른 price_krw 행이라 보존된다 → 최신 1행만 유지해도 정보손실 없음. 반환: 삭제행수.
+    (flag_price_outliers의 '제품당 중앙값'이 이미 중복을 무해화하지만, 이 패스로 적재 자체를 정리
+     → 테이블 비대 방지 + 어떤 삽입 경로의 중복이든 매 빌드 자가치유.)"""
+    n = con.execute("""DELETE FROM price_observations WHERE id NOT IN (
+        SELECT MAX(id) FROM price_observations
+        GROUP BY product_id, price_krw, seller, channel)""").rowcount
+    con.commit()
+    return n
+
+
 def flag_price_outliers(con):
     """가격 이상치(부속·부품·오타 단가)를 valid=0으로 격리해 모델 min/max 오염 차단. 멱등.
     3단 검증:
@@ -189,6 +204,7 @@ def normalize_db(con):
             if len(stripped) >= 2:
                 con.execute("UPDATE products SET canonical_model=? WHERE id=?", (stripped, pid))
     con.commit()
+    dedup_price_observations(con)  # 중복 관측 정리(최신1행) → 적재 비대/중앙값 점령 방지
     flag_price_outliers(con)   # 부속·오타 단가 격리(valid=0) → 아래 집계서 제외
     con.execute("DROP TABLE IF EXISTS canonical_models")
     con.execute("""CREATE TABLE canonical_models AS
