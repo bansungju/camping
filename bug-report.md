@@ -2298,4 +2298,32 @@
 - **수정:** 모달 호출 시작부에 `const prevFocus = document.activeElement` 추가, `close()` 내 `prevFocus?.focus()` 복귀.
 - **파일:** [site/app.js](site/app.js) line ~1953 [lane:CORE]
 
-*다음 회차: 계정/로그인 (16순환)*
+---
+
+## R-81 — 계정/로그인 (16순환) [2026-06-12]
+
+### [M-132] `initAuth()` — 합성 `'INITIAL'` + `INITIAL_SESSION` 이중 발화 → 콜백 2회 실행·getProfile 2회 호출
+- **영역:** 계정 — 인증 초기화
+- **심각도:** 🟡 Medium
+- **증상:** `supabaseClient.js` `initAuth()`(line 19)는 `getSession()` 직후 `onStateChange(user, 'INITIAL')`를 동기 호출(line 22)한 뒤, `onAuthStateChange` 구독을 등록한다(line 23). Supabase SDK는 `onAuthStateChange` 등록 즉시 `INITIAL_SESSION` 이벤트를 발화하므로, 로그인 세션이 있는 상태에서 account.html 로드 시 콜백이 (`'INITIAL'`)→(`'INITIAL_SESSION'`) 2회 연속 실행된다. 각 실행이 `getProfile()`(서버 호출)을 시작하고 `renderAccount()`, `renderProfile()`까지 병렬 진행하므로 서버 네트워크 요청 2배 · 렌더링 중첩이 발생한다.
+- **원인:** `initAuth` 내 합성 `'INITIAL'` 이벤트 패턴이 Supabase의 `INITIAL_SESSION` 자동 발화와 겹침. 콜백 내에 중복 실행 방어 로직 없음.
+- **수정:** `initAuth`에서 line 22(`onStateChange(session?.user ?? null, 'INITIAL')`) 합성 호출 제거. `onAuthStateChange`의 `INITIAL_SESSION` 이벤트만으로 초기 상태 처리. 콜백 내 `event === 'INITIAL'` 분기가 있다면 함께 정리.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~22, [site/account.html](site/account.html) line ~367 [lane:SOCIAL]
+
+### [L-150] 닉네임 설정 완료 후 `syncGearSetsOnLogin` 미호출 — 신규 사용자 로컬 기어세트 원격 미업로드
+- **영역:** 계정 — 최초 로그인 닉네임 설정
+- **심각도:** 🟢 Low
+- **증상:** 최초 로그인(닉네임 미설정) 시 `initAuth` 콜백은 `renderNicknameModal()` 후 `return`하므로 line 393의 `syncGearSetsOnLogin(user.id)` 경로에 도달하지 않는다. 닉네임 저장 성공 후 `save` 클릭 핸들러(line 247)에서 `syncWishlistOnLogin()`은 호출하지만 `syncGearSetsOnLogin`은 호출하지 않는다. 닉네임 설정 전에 로컬 기어세트를 보유한 신규 사용자는 원격 동기화 기회를 영구적으로 놓친다(`SIGNED_IN` 이벤트는 이미 지나감).
+- **원인:** `renderNicknameModal` 내 `save` 핸들러에 `syncGearSetsOnLogin` 호출 누락.
+- **수정:** line 259(`syncWishlistOnLogin()`) 아래에 `syncGearSetsOnLogin(profile.id)` 추가. `profile`은 바로 위 `getProfile()` 반환값에서 획득 가능.
+- **파일:** [site/account.html](site/account.html) line ~259 [lane:SOCIAL]
+
+### [L-151] 닉네임 설정 모달 `#nick-hint` — `aria-live` 없음 → AT 사용자 유효성 피드백 미청취
+- **영역:** 계정 — 닉네임 설정 모달 접근성
+- **심각도:** 🟢 Low
+- **증상:** `renderNicknameModal()`(line 196) 내 `#nick-hint` `<p>` 요소에 `aria-live` 속성이 없다. `setHint()` 함수가 텍스트를 동적으로 변경해도("사용 가능한 닉네임이에요 ✓", "이미 사용 중인 닉네임이에요", "확인 중…") AT가 자동으로 읽어주지 않는다. 스크린 리더 사용자는 포커스를 hint 요소로 직접 이동하지 않는 한 닉네임 검사 결과를 인지할 수 없어 저장 버튼 활성화 여부를 파악하기 어렵다.
+- **원인:** `renderNicknameModal` 내 `#nick-hint` 요소 생성 시 `aria-live="polite"` 누락.
+- **수정:** `renderNicknameModal` 템플릿 내 `<p id="nick-hint" ...>` 에 `aria-live="polite"` 추가.
+- **파일:** [site/account.html](site/account.html) line ~206 [lane:SOCIAL]
+
+*다음 회차: 홈/메인 (17순환)*
