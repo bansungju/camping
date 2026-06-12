@@ -670,7 +670,7 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** canonical이 `https://gear-forest.com/account.html`(non-www). [H-12] 전 페이지 공통 이슈.
 
-### [M-29] auth_error=1 파라미터 도달 시 에러 메시지 미표시 — 로그인 실패 원인 안내 없음
+### [M-29] ✅ 해결완료(기구현·2026-06-13 검증) — auth_error=1 파라미터 도달 시 에러 메시지 미표시 — 로그인 실패 원인 안내 없음
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html?auth_error=1
 - **증상:** auth-callback.html 직접 접근 시 `account.html?auth_error=1`로 리다이렉트되지만 `#auth-error` 엘리먼트가 `display:none`이고 텍스트도 비어 있어 사용자에게 로그인 실패 원인이 전혀 표시되지 않음.
@@ -2194,7 +2194,7 @@
 - **수정:** `loadRemoteGearSets()` 시작 시 `getUser()` 호출 → user 없으면 null 반환; `.select(...)` 뒤에 `.eq('user_id', user.id)` 추가(RLS와 이중 보호).
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~274
 
-### [L-137] `auth-callback.html` — `background:#fff` 하드코딩, `data-theme` 초기화 스크립트 없음
+### [L-137] ✅ 해결완료(2026-06-13) — `auth-callback.html` — `background:#fff` 하드코딩, `data-theme` 초기화 스크립트 없음
 - **영역:** 인증 콜백 페이지
 - **심각도:** 🟢 Low
 - **증상:** `auth-callback.html:8`에 `body { background: #fff }` 하드코딩. 다크 모드 설정한 사용자가 OAuth 로그인 시 auth-callback.html에서 흰 화면이 잠깐 표시됨. `index.html`/`account.html`은 인라인 스크립트로 `localStorage.getItem('theme')`을 읽어 `data-theme=dark` 즉시 복원하지만, auth-callback.html에는 이 스크립트가 없음.
@@ -2202,7 +2202,7 @@
 - **수정:** `<head>` 내 `<style>` 앞에 `<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>` 추가; CSS에서 `background: #fff` → `background: var(--bg, #fff)` 또는 미디어쿼리 `prefers-color-scheme:dark` 대응.
 - **파일:** [site/auth-callback.html](site/auth-callback.html) line ~8
 
-### [L-138] `auth-callback.html` — `getSession()` 경로에 `settled` 가드 없어 이중 `location.replace` 가능
+### [L-138] ✅ 해결완료(2026-06-13) — `auth-callback.html` — `getSession()` 경로에 `settled` 가드 없어 이중 `location.replace` 가능
 - **영역:** 인증 콜백 — implicit flow 처리
 - **심각도:** 🟢 Low
 - **증상:** `auth-callback.html` lines 47-57: `onAuthStateChange` 리스너는 `settled` 플래그로 중복 실행을 막지만, 이후 `await supabase.auth.getSession()`(line 56) 결과 처리 블록(line 57)은 `settled` 를 확인하지 않음. 리스너가 먼저 발화해 `settled=true` + `location.replace('./account.html')` 호출 후, `getSession()`도 유효 세션 반환 시 `location.replace('./account.html')`를 다시 호출함. `subscription.unsubscribe()`도 이미 해제된 구독에 재호출. 현재는 동일 URL 이중 replace로 무해하나, 향후 이동 대상이 달라질 경우 레이스 조건 발생.
