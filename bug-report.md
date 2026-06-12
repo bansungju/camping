@@ -1755,7 +1755,7 @@
 - **수정 방향:** 각 `open*Modal` 함수에 `openProduct`와 동일하게 `const onKey = e => { if (e.key === "Escape") close(); }; document.addEventListener("keydown", onKey);` 추가 + `close` 시 `removeEventListener`. [site/app.js:324](site/app.js)
 - **심각도:** 🟢 Low
 
-### [M-121] 상품 상세(정적 item 페이지) 히어로 액션 버튼 너비 불일치 — 레이아웃 깨짐
+### [M-121] ✅ 기구현(기수정) — 상품 상세(정적 item 페이지) 히어로 액션 버튼 너비 불일치 — 레이아웃 깨짐
 - **영역:** 상품상세 — 정적 item 페이지(`/item/{cat}/item-{idx}.html`) 히어로 영역
 - **해결:** `.item-wish`를 `display:inline-flex`(자동폭) → `display:flex;justify-content:center;width:100%;max-width:320px;margin-top:14px;padding:11px 16px`로 변경해 나머지 3개 버튼(`.item-buy`/`.item-set-btn`/`.item-log-btn`, 320px)과 너비·정렬 통일. 검증: 찜하기·꾸러미 버튼 모두 320px(widthsMatch=true) 확인. item 2277+ 재생성. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **심각도:** 🟡 Medium
@@ -1877,7 +1877,7 @@
 
 ## R-68 상품상세 (13순환) — 2026-06-12
 
-### [L-111] 후기 작성 — 부분 사진 업로드 실패 시 이미 업로드된 이미지 orphan
+### [L-111] ✅ 해결완료(2026-06-13) — 후기 작성 — 부분 사진 업로드 실패 시 이미 업로드된 이미지 orphan
 - **영역:** 상품상세 — 후기 작성 폼 제출
 - **증상:** 후기 작성 시 복수 사진 업로드 중 중간 실패(두 번째 사진 오류 등)가 발생하면 앞서 성공한 사진은 `review-images` Storage에 남아 orphan이 됨. L-108(community.html)과 동일 패턴으로 review 제출 흐름에도 동일하게 존재.
 - **원인:** `app.js:1781-1785` — 사진 순차 업로드 루프에서 실패 시 `return`하지만 이미 `urls`에 들어간 업로드 완료 파일은 Storage에서 삭제하지 않음.
@@ -2430,7 +2430,7 @@
 
 ## R-84 — 상품상세 (17순환) [2026-06-12]
 
-### [M-134] `wireReviews` — 사진 업로드 성공 후 `reviews.insert` 실패 시 Storage 파일 고아(orphan)
+### [M-134] ✅ 해결완료(2026-06-13) — `wireReviews` — 사진 업로드 성공 후 `reviews.insert` 실패 시 Storage 파일 고아(orphan)
 - **영역:** 상품상세 — 후기 등록 폼
 - **심각도:** 🟡 Medium
 - **증상:** `form.onsubmit`(app.js line ~1946)에서 `photos` 배열의 파일을 `uploadImage(f)` 로 순차 업로드한 뒤 `supabase.from("reviews").insert(row)` 를 호출한다. INSERT가 실패(rate limit, RLS, 네트워크 오류 등)하면 이미 Storage에 업로드된 파일들이 `review-images` 버킷에 그대로 남는다. 사용자가 다시 "등록"을 누르면 기존 URL과 관계없이 새 UUID로 같은 파일을 재업로드 → 고아 파일 누적. 리뷰 삭제 기능이 없어 Storage 파일도 회수 불가.
@@ -2438,7 +2438,7 @@
 - **수정:** INSERT 실패 블록에서 `urls` 배열로 Storage 파일 삭제 시도 추가(실패해도 무시). 또는 처음부터 Pending 파일을 별도 폴더에 올리고 INSERT 성공 후 이동(copy-and-delete).
 - **파일:** [site/app.js](site/app.js) line ~1946 [lane:CORE]
 
-### [L-157] `openReviewDetail` — `role="dialog"` 요소에 `aria-labelledby` 없음
+### [L-157] ✅ 기구현(2026-06-13 검증, aria-label 적용됨) — `openReviewDetail` — `role="dialog"` 요소에 `aria-labelledby` 없음
 - **영역:** 상품상세 — 리뷰 상세 오버레이
 - **심각도:** 🟢 Low
 - **증상:** `openReviewDetail()`(line 1782)의 `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">` 에 `aria-labelledby` 속성이 없다. 스크린 리더는 대화상자를 열 때 `aria-label` 또는 `aria-labelledby`가 없으면 "대화상자"만 읽고 제목을 안내하지 못한다. 사용자는 어떤 후기를 열었는지 컨텍스트 없이 닫기 버튼("✕")으로 포커스가 이동된다.

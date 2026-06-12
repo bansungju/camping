@@ -224,7 +224,13 @@ export async function uploadImage(file) {
     .upload(path, file, { contentType: file.type, upsert: false })
   if (error) { console.error('uploadImage', error); return { error } }
   const { data } = supabase.storage.from(IMG_BUCKET).getPublicUrl(path)
-  return { url: data.publicUrl }
+  return { url: data.publicUrl, path }
+}
+
+// M-134/L-111: orphan 이미지 정리 — paths 배열을 Storage에서 삭제
+export async function removeUploadedImages(paths) {
+  if (!paths || !paths.length) return
+  await supabase.storage.from(IMG_BUCKET).remove(paths).catch(() => {})
 }
 
 // ── localStorage (incognito fallback) ────────────────────────────────────
