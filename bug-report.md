@@ -76,6 +76,40 @@
 
 ---
 
+## 🗂️ Medium 묶음 처리 계획 (2026-06-12)
+
+> 아래 클러스터는 동일 파일·동일 패턴이므로 PR 1개로 묶어서 수정 예정.
+
+### [클러스터 A] setItems 필드 누락 — `M-130` + `M-131`
+- **공통 원인:** 인라인 객체 수기 생성 시 `s·pcode·coupang_url` 필드 누락
+- **공통 수정:** `items.map(m => setItem(m, STATE.slug))` 헬퍼로 교체
+- **파일:** `site/app.js` 2곳 (bulkBtn ~line 2776, openCmpModal ~line 2076)
+
+### [클러스터 B] initAuth 이중 발화 → 핸들러 누적 — `M-132` + `M-116`
+- **공통 원인:** `initAuth` 합성 `'INITIAL'` 이벤트가 Supabase `INITIAL_SESSION`과 겹쳐 콜백 2회 실행 → `renderProfile` 2회 → `addEventListener` 누적
+- **공통 수정:** `supabaseClient.js` line 22 합성 호출 제거 + `renderProfile` 내 `addEventListener` → `onclick` 직접 할당으로 교체
+- **파일:** `site/supabaseClient.js`, `site/account.html`
+
+### [클러스터 C] account.html 탭 UI 묶음 — `M-52` + `M-53` + `M-74` + `M-84`
+- **공통 위치:** `account.html` 탭바 + `app.js` `renderAccount` 탭 섹션
+- M-52: 탭 URL 해시 딥링크 무시 → `history.replaceState` 연동
+- M-53: 찜 탭 카드 클릭 → 카테고리 이탈 → 상품 모달로 전환
+- M-74: 모바일 375px 탭바 `<nav>` 0×0 → CSS hit area 확보
+- M-84: `role="tab"` ARIA 미구현 → `role="tablist"` + `role="tab"` + `aria-selected` 추가
+- **파일:** `site/account.html`, `site/app.js`
+
+### [클러스터 D] supabaseClient.js 인증 버그 — `M-118` + `M-125`
+- M-118: `import("./supabaseClient.js")` 버전 없음 → GoTrueClient 이중 인스턴스 → `stamp_version.py` 동적 import도 교체 또는 싱글턴 패턴
+- M-125: 닉네임 save 시 `clearTimeout(debounce)` 미호출 → 중복 setNickname 가능
+- **파일:** `site/app.js` (dynamic import 교체), `pipeline/stamp_version.py`, `site/account.html`
+
+### [클러스터 E] account.html 로그인 후 동기화 — `M-117` + `M-123`
+- M-117: 로그아웃 후 재로그인 시 `myLogsList.dataset.loaded` stale → 로그아웃 분기에서 초기화 추가
+- M-123: 닉네임 설정 완료 후 `syncGearSetsOnLogin` 미호출 → save 핸들러에 호출 추가
+- **파일:** `site/app.js` (~line 2258), `site/account.html` (~line 259)
+
+---
+
 ## 🔴 High (즉시 수정 필요)
 
 ### [H-39] ✅ 해결완료(백엔드+코드, 2026-06-11) — Google 로그인 후 비로그인 복귀
@@ -229,7 +263,7 @@
 - **증상:** `/item/backpacking-tent/app.js` 및 `style.css`가 HTTP 504로 실패하여 상품 상세 내용이 없고 홈 페이지 콘텐츠(title: '장비의 숲 — 정량스펙 별점 DB')가 렌더링됨. 해당 카테고리 상품 상세 전체 접근 불가.
 - **해결(2026-06-11, 환경 변화로 해소):** 라이브 apex에서 `item/backpacking-tent/item-52.html` 200·정상 상세 렌더(title '니모이큅먼트 호넷 엘리트 오스모 1P …'). 504/홈 서빙 재현 안 됨. ([H-30]과 동일 정적 호스팅 이전으로 해소)
 
-### [H-14] 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 불가 ⚠️ 미연결(의도적)
+### [H-14] ✅ 해결중 — 모달 '구매하기' 버튼이 모든 상품에서 항상 disabled — 쿠팡 파트너스 연결 중
 - **영역:** 카테고리/목록 (모달)
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 상품 카드 클릭 시 열리는 모달의 '구매하기' 버튼이 `disabled` 상태 고정, '구매 링크를 준비 중입니다.' 안내만 표시. 침낭 244개 상품 전체 동일. 쿠팡 파트너스 수익화 핵심 기능 미작동. (상세 페이지 [H-08]과 동일 문제)
@@ -395,13 +429,13 @@
 - **증상:** 최근 본 상품 등 뷰포트 내 LCP 대상 이미지(`/images/922.jpg` 등)에 `loading="lazy"` 설정 및 `fetchpriority="high"` 누락. lazy 이미지는 브라우저가 뷰포트 진입 전까지 로드를 지연하여 LCP 점수를 직접 악화시킴. 또한 LCP 이미지에 대한 `<link rel="preload" as="image">` 힌트도 없어 JS 실행 후 늦게 요청됨.
 - **재현:** DevTools → Performance 탭 LCP 확인 또는 `document.querySelector('img[src*="922.jpg"]').loading` → `"lazy"`
 
-### [M-42] 글쓰기 폼 `<label>` — `for` 속성 없어 스크린리더 필드 인식 불가
+### [M-42] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글쓰기 폼 `<label>` — `for` 속성 없어 스크린리더 필드 인식 불가
 - **영역:** 커뮤니티/소셜 — 글쓰기 폼
 - **URL:** https://www.gear-forest.com/community.html#new
 - **증상:** `renderCompose()`가 생성하는 폼의 제목·내용·사진 `<label>` 3개 모두 `for` 속성 없음. 대응 input/textarea에 `id="cm-t"`, `id="cm-b"`가 있지만 label과 프로그래밍적으로 연결되지 않아 스크린리더가 필드를 올바르게 읽지 못함.
 - **재현:** 로그인 + 닉네임 설정 → 글쓰기 폼 열기 → DevTools Accessibility 탭에서 label 연결 미확인
 
-### [M-43] 커뮤니티 게시글 카드 `<a>`에 `href` 없음 — 키보드/스크린리더 탐색 불가
+### [M-43] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 게시글 카드 `<a>`에 `href` 없음 — 키보드/스크린리더 탐색 불가
 - **영역:** 커뮤니티/소셜 — 피드 목록
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 피드 게시글 카드가 `<a class="cm-post" data-id="…">` (href 없음)으로 렌더링됨. href 없는 `<a>`는 Tab 포커스 순서에 포함되지 않아 키보드만으로 진입 불가. onclick 핸들러만 동작.
@@ -449,7 +483,7 @@
 - **백엔드 근본 차단요인 발견·수정(2026-06-11):** 게시글 수정을 붙여도 **DB 레이어에서 하드 실패**하는 잠재 결함이 있었음 — `posts` UPDATE 시 `AFTER UPDATE` 트리거 `save_post_history()`가 `post_history`에 INSERT하는데, ① post_history 정책이 `WITH CHECK(false)`로 직접 insert 전면 차단 + INSERT GRANT 없음, ② 함수가 **SECURITY DEFINER가 아님** → 호출자 권한 INSERT가 `42501`로 실패 → 수정 UPDATE 트랜잭션 전체 abort. 동일 결함이 `save_review_history`(리뷰 수정), `update_comment_count`/`update_like_count`(타인 글 카운트 UPDATE가 posts RLS에 막혀 누락), `auto_hide_on_reports`(신고 자동숨김 미작동)에도 존재. → 신규 `016_trigger_security_definer.sql`로 6개 트리거 함수를 `SECURITY DEFINER + SET search_path=public`으로 재정의(트리거 유지·멱등). 이로써 카운트 정합성([H-34]의 cross-user 보강 포함)·이력 저장·자동숨김이 정상화되고, 게시글/리뷰 수정의 DB 차단요인이 제거됨. [supabase/migrations/016_trigger_security_definer.sql](supabase/migrations/016_trigger_security_definer.sql)
 - **⚠️ 남은 작업:** ① 대시보드에서 `016` 1회 적용(아래 APPLY.md 6단계). ② 프론트(본 백엔드 세션 범위 밖) — supabaseClient `editPost(id,{title,body})` + renderDetail 수정 버튼/폼 와이어링.
 
-### [M-55] 커뮤니티 카테고리 필터 없음 — 게시글 증가 시 탐색 불가
+### [M-55] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 카테고리 필터 없음 — 게시글 증가 시 탐색 불가
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 피드에 카테고리(팁/후기/질문 등) 또는 태그 필터 UI 전혀 없음. 게시글 수 증가 시 원하는 글을 찾을 수 없음.
@@ -534,7 +568,7 @@
 - **재현:** 비로그인 → 게시글 좋아요 클릭 → ♥ 표시 → 새로고침 → ♡로 복귀
 - **검증(2026-06-11, 백엔드+프론트 전수):** 증상이 현재 코드와 불일치 — ① community.html에 좋아요용 **localStorage 낙관적 업데이트 경로 없음**(localStorage는 gear_sets 전용, grep 확인). ② 피드 카드의 ❤️는 **표시 전용 `<span>`**이고 카드 클릭은 상세 모달만 오픈(`location.hash`). 좋아요 버튼(`#cm-like`)은 상세 모달에만 존재하며 **`canParticipate()` 가드**(비로그인 시 alert·DB 호출 안 함) + `r.error` 처리까지 완비(community.html:316~326). ③ 백엔드도 올바르게 제한적 — likes는 `likes_insert_own`(authenticated 전용) + GRANT INSERT가 anon에 없음. **라이브 익명 insert 검증: `POST /rest/v1/likes` → HTTP 401, 42501 permission denied**. 즉 비로그인은 UI상 누를 수 없고 DB도 차단되어 불일치가 발생하지 않음. (이전 구현 기준 리포트로, 현재 가드형 구현에서 해소) [site/community.html](site/community.html), [supabase/migrations/001_initial_schema.sql](supabase/migrations/001_initial_schema.sql)
 
-### [M-65] 게시글 상세 딥링크(공유 URL) 없음
+### [M-65] ✅ 아카이브(커뮤니티/GNB 비활성화) — 게시글 상세 딥링크(공유 URL) 없음
 - **영역:** 커뮤니티/소셜 — 게시글 상세
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 게시글 클릭 시 모달이 열리나 `history.pushState` 없어 URL이 변하지 않음. 특정 게시글 URL 공유 불가, 공유 버튼도 없음. M-59(계정 탭 해시)와 동일 패턴의 별도 영역 버그.
@@ -557,13 +591,13 @@
 - **증상:** `#cmp-modal` 및 내부 `.pmbox`에 `role="dialog"`, `aria-modal`, `aria-labelledby` 모두 없음. 주 상품 모달과 달리 비교 모달은 접근성 속성 전무.
 - **재현:** ⚖ 버튼 2개 클릭 → 비교 모달 열기 → 접근성 트리 확인
 
-### [M-57] 탭바 JS 동적 삽입으로 CLS 발생 — 초기 HTML 미포함
+### [M-57] ✅ 아카이브(커뮤니티/GNB 비활성화) — 탭바 JS 동적 삽입으로 CLS 발생 — 초기 HTML 미포함
 - **영역:** 홈/메인 (성능)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `.tabbar`가 초기 HTML에 없고 `DOMContentLoaded` 시점에 JS로 삽입됨. 헤더 렌더 → `<main>` 콘텐츠 렌더 → 탭바(약 44px) 삽입되면서 콘텐츠 전체가 아래로 밀리는 CLS 발생. Lighthouse CLS 점수 영향.
 - **재현:** 홈 첫 로드 → DevTools Performance → Layout Shift 이벤트 확인
 
-### [M-56] 커뮤니티 피드 30개 하드코딩 — 이후 게시글 접근 불가
+### [M-56] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 피드 30개 하드코딩 — 이후 게시글 접근 불가
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `listPosts`에 `limit: 30` 하드코딩. 31번째 이후 게시글은 표시되지 않고, 더 불러오기 버튼이나 무한스크롤도 없음. 끝 도달 안내도 없어 사용자가 게시글이 30개뿐인지 더 있는지 알 수 없음.
@@ -621,12 +655,12 @@
 - **증상:** 데스크톱 뷰에서 필터(정렬·스펙 필터 등)가 모바일 기준으로만 구현되어 있어 데스크톱 레이아웃에서도 모바일형 UI가 그대로 표시됨. 넓은 화면에 맞는 사이드바 필터 또는 가로형 레이아웃으로 전환되지 않음.
 - **제보:** 사용자 직접 제보
 
-### [M-34] 커뮤니티 글 상세 진입 시 document.title 미갱신
+### [M-34] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 글 상세 진입 시 document.title 미갱신
 - **영역:** 커뮤니티/소셜 (SEO)
 - **URL:** https://gear-forest.com/community.html#post={id}
 - **증상:** `renderDetail()` 실행 시 `document.title`이 '커뮤니티 — 장비의 숲'으로 고정, 글 제목으로 변경 안 됨. 브라우저 탭·히스토리·소셜 공유 미리보기에 글 제목 미반영.
 
-### [M-35] 개별 글 공유 가능한 독립 URL 없음 — hash 라우팅만 사용
+### [M-35] ✅ 아카이브(커뮤니티/GNB 비활성화) — 개별 글 공유 가능한 독립 URL 없음 — hash 라우팅만 사용
 - **영역:** 커뮤니티/소셜 (SEO)
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 글 상세가 `community.html#post={uuid}` 해시로만 접근 가능. og:url·canonical이 글마다 갱신 안 돼 SNS 공유·크롤러가 글 내용 인식 불가. 공유 버튼도 없음.
@@ -718,7 +752,7 @@
   - `<head>`에 supabase·jsdelivr `preconnect` + `supabaseClient.js` `modulepreload` 추가로 연결 설정 지연 단축.
 - **검증:** 프리뷰 재현 — `/rest/v1/posts` 요청 **2회 → 1회**, 콘솔 에러 0, 피드 즉시 렌더(빈 상태 정상 표시).
 
-### [M-13] empty state에서 글쓰기 CTA 없음 — 비로그인·로그인 모두 해당
+### [M-13] ✅ 아카이브(커뮤니티/GNB 비활성화) — empty state에서 글쓰기 CTA 없음 — 비로그인·로그인 모두 해당
 - **영역:** 커뮤니티/소셜
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** '아직 글이 없어요. 첫 이야기를 남겨보세요!' 문구에 클릭 가능한 글쓰기 버튼/링크 없음. 글쓰기 버튼은 `canParticipate()`가 true인 사용자의 `cm-bar`에만 렌더링되어, empty state에서는 로그인 사용자도 글쓰기로 이동 불가. *(구 [M-13]: 비로그인 케이스 → 로그인 포함으로 확장)*
@@ -800,7 +834,7 @@
 - **증상:** 브라우저가 PWA 설치 프롬프트(`beforeinstallprompt`)를 발생시키지만 앱에서 억제(preventDefault)만 하고 설정 섹션에 설치 버튼이 없어 사용자가 직접 설치할 방법이 없음. 브라우저 기본 메뉴를 직접 찾아야 함.
 - **재현:** `account.html` 콘솔 → `beforeinstallprompt` 억제 로그 확인 → 설정 섹션에 설치 버튼 없음
 
-### [M-86] `?open-log=1` 비로그인→로그인 경유 시 원클릭 흐름 단절 — H-35 엣지케이스
+### [M-86] ✅ 아카이브(커뮤니티/GNB 비활성화) — `?open-log=1` 비로그인→로그인 경유 시 원클릭 흐름 단절 — H-35 엣지케이스
 - **영역:** 커뮤니티/소셜 — open-log 원클릭 연결
 - **URL:** https://gear-forest.com/community.html?open-log=1&set=0
 - **증상:** 비로그인 상태에서 `open-log=1` 진입 후 `account.html`로 이동해 로그인하면, 커뮤니티 JS 컨텍스트가 소멸되고 복귀 시 파라미터가 없어 글쓰기 폼이 열리지 않음. H-35는 "해결완료"로 기록되어 있으나, 비로그인→로그인 경유 경로는 여전히 단절됨. 로그인 후 리다이렉트 URL에 `?open-log=1` 파라미터를 포함해야 복원 가능.
@@ -871,13 +905,13 @@
 - **증상:** UUID 형식 검증 없이 raw 문자열을 Supabase에 전달. 400 응답과 함께 콘솔에 `{code: 22P02, message: invalid input syntax for type uuid: "99999"}` DB 내부 에러가 노출됨. UI는 "글을 찾을 수 없어요"를 표시하나 내부 오류 코드/타입 정보가 노출됨.
 - **재현:** `community.html#post=99999` 접속 → 콘솔 확인 → Supabase 22P02 에러 확인
 
-### [M-98] 커뮤니티 피드 최신 30건 이후 페이지네이션·무한스크롤 없음
+### [M-98] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 피드 최신 30건 이후 페이지네이션·무한스크롤 없음
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `renderFeed()`가 `listPosts({ limit: 30 })`을 1회만 호출. "더 보기" 버튼이나 무한스크롤 없어 글이 30개를 초과하면 초과분이 영구적으로 보이지 않음. `listPosts`에는 `before` 커서 파라미터가 이미 구현되어 있으나 UI에서 미활용.
 - **재현:** DB에 글 31개 이상 존재 → 피드 최하단까지 스크롤 → 추가 로드 없음
 
-### [M-99] 댓글 수 헤더(상세)와 피드 카드 `💬` 카운트 값 불일치 가능
+### [M-99] ✅ 아카이브(커뮤니티/GNB 비활성화) — 댓글 수 헤더(상세)와 피드 카드 `💬` 카운트 값 불일치 가능
 - **영역:** 커뮤니티/소셜 — 글 상세 + 피드
 - **URL:** https://gear-forest.com/community.html#post=<id>
 - **증상:** 피드 카드 `💬 N`은 DB `comment_count`(트리거 관리)를 사용하나, 상세 페이지 "댓글 N" 헤더는 JS 배열 `.length`(현재 쿼리 결과)로 렌더링. 소프트 삭제 댓글 존재 등 상황에서 두 숫자가 다르게 표시됨. H-34(소프트삭제 count 불감소)와 연관.
@@ -960,7 +994,7 @@
 - **원인(2026-06-11):** view-set 핸들러 가드가 존재하지 않는 ID `acc-section`을 검사 → 항상 false → 분기 미진입. account.html의 실제 섹션 ID는 `auth-section`(account 전용, 타 페이지엔 없음).
 - **해결:** 가드를 `getElementById("auth-section")`으로 변경(account.html 전용 정확 스코프). 로컬 프리뷰 검증 — `?view-set=BASE64` 접근 시 공유세트 모달 오픈(이름·항목·총무게 1.3kg 표시), '내 세트에 추가' 클릭 시 localStorage gear_sets에 저장·모달 닫힘, index.html 등 비-account 페이지에선 미발동(가드 정상)·콘솔 에러 없음. [site/app.js](site/app.js)
 
-### [H-31] 🔧 백엔드/클라이언트 레이어 완료·UI 와이어링 대기 — 커뮤니티 댓글 수정·삭제 기능 완전 없음
+### [H-31] ✅ 해결완료(커뮤니티 아카이브로 이슈 해소) — 커뮤니티 댓글 수정·삭제 기능 완전 없음
 - **영역:** 커뮤니티/소셜 — 댓글
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `renderComments()`에서 댓글 행이 텍스트만 렌더링되고 수정·삭제 버튼이 없음. 게시글에는 삭제 버튼이 있으나 댓글은 작성 후 수정·삭제 불가. account.html 내 로그 섹션(my-log-edit/del)과 기능 불일치.
@@ -1049,19 +1083,19 @@
 - **증상:** `account.html#logs`에서 Google 로그인 버튼 클릭 시 OAuth `redirect_uri`에 원래 hash 정보가 없음. 로그인 완료 후 콜백이 `account.html`로 돌아오지만 `#logs` 위치로 복원되지 않음. M-52와 연관되나 OAuth 흐름 내 hash 보존 별도 문제.
 - **재현:** `account.html#logs` → Google 로그인 클릭 → OAuth URL state 파라미터 확인 → hash 없음 → 로그인 후 hash 복원 안 됨
 
-### [L-65] 커뮤니티 글 카드 `<a>`에 `href` 없음 — Tab 키 포커스 불가
+### [L-65] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 글 카드 `<a>`에 `href` 없음 — Tab 키 포커스 불가
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 글 카드가 `<a class="cm-post">` 태그이나 `href` 속성이 없고 클릭은 `onclick`으로만 처리됨. `href` 없는 `<a>`는 탭 포커스 순서에서 제외되어 키보드 사용자가 접근 불가. L-10(aria-label 없음)과 연관되나 `href` 자체 누락은 별도 접근성 문제.
 - **재현:** 커뮤니티 피드 → Tab 키 탐색 → 글 카드에 포커스 안 됨
 
-### [L-66] 비로그인 `community.html#new` 진입 시 로그인 안내 없이 피드로 조용히 이동
+### [L-66] ✅ 아카이브(커뮤니티/GNB 비활성화) — 비로그인 `community.html#new` 진입 시 로그인 안내 없이 피드로 조용히 이동
 - **영역:** 커뮤니티/소셜 — 글쓰기
 - **URL:** https://gear-forest.com/community.html#new
 - **증상:** 비로그인에서 `#new` 직접 접근 시 `canParticipate() === false`이면 `location.hash = ''` 실행 후 즉시 반환. "로그인이 필요합니다" 같은 안내 없이 피드 화면으로 조용히 전환됨. URL도 `community.html#`으로 trailing `#` 잔존(L-33 연동).
 - **재현:** 비로그인 → `community.html#new` 직접 접근 → 아무 안내 없이 피드로 이동, URL에 `#` 잔존
 
-### [L-67] 게시글·댓글 날짜가 `<time datetime="">` 아닌 `<span>`으로 렌더링 — 시맨틱 마크업 누락
+### [L-67] ✅ 아카이브(커뮤니티/GNB 비활성화) — 게시글·댓글 날짜가 `<time datetime="">` 아닌 `<span>`으로 렌더링 — 시맨틱 마크업 누락
 - **영역:** 커뮤니티/소셜 — 피드·글 상세·댓글
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `authorBlock()` 함수가 날짜를 `<span>${timeAgo(iso)}</span>` 형태로 렌더링. `<time datetime="ISO-8601">` 요소가 아니어서 스크린리더의 기계가독 날짜 파악 불가, 검색엔진의 날짜 메타데이터 인식 불가. M-10(날짜 포맷 불일치)과 연관되나 시맨틱 마크업 누락은 별도 문제.
@@ -1123,24 +1157,24 @@
 - **증상:** 세트 공유 URL을 열면 공유 세트 모달과 함께 배경에 열람자 본인의 찜 목록·세트가 모두 노출됨. 수신자에게 자신의 개인 데이터가 공유 URL과 함께 표시되어 혼란 유발. 설계 의도 확인 필요.
 - **재현:** 세트 공유 링크 복사 → 브라우저에서 열기 → 공유 모달 + 본인 찜·세트 동시 노출
 
-### [L-77] 비로그인 빈 피드 — "첫 이야기를 남겨보세요!" CTA가 클릭 불가 텍스트
+### [L-77] ✅ 아카이브(커뮤니티/GNB 비활성화) — 비로그인 빈 피드 — "첫 이야기를 남겨보세요!" CTA가 클릭 불가 텍스트
 - **영역:** 커뮤니티/소셜 — 피드
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 빈 피드에서 "첫 이야기를 남겨보세요!" 문구가 표시되나 로그인·글쓰기로 연결되는 링크·버튼이 없어 행동 유도 문구가 실제 행동 유도로 이어지지 않음.
 - **재현:** 비로그인 빈 피드 → "첫 이야기를 남겨보세요!" 텍스트 클릭 불가 확인
 
-### [L-78] 글 상세 본문 이미지 `alt` 빈 값 — 이미지 실패 시 대체 텍스트 없음
+### [L-78] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글 상세 본문 이미지 `alt` 빈 값 — 이미지 실패 시 대체 텍스트 없음
 - **영역:** 커뮤니티/소셜 — 글 상세
 - **URL:** https://gear-forest.com/community.html#post=<id>
 - **증상:** `renderDetail()`이 생성하는 `<img src="..." alt="">` 에 빈 `alt`. 피드 카드 썸네일(장식용)과 달리 본문 이미지는 콘텐츠 이미지이므로 설명이 필요. 이미지 오류 시 대체 텍스트 없어 스크린리더 사용자가 이미지 존재를 인지 불가.
 
-### [L-79] 글쓰기 폼 `<label>` 요소에 `for` 속성 없음 — 입력 필드와 미연결
+### [L-79] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글쓰기 폼 `<label>` 요소에 `for` 속성 없음 — 입력 필드와 미연결
 - **영역:** 커뮤니티/소셜 — 글쓰기 폼
 - **URL:** https://gear-forest.com/community.html#new
 - **증상:** `renderCompose()`가 생성하는 `<label>제목</label>`, `<label>내용</label>`에 `for` 속성 없음. 레이블 클릭 시 대응 입력 필드로 포커스 미이동, 스크린리더 연결 불가. L-32(댓글 textarea label 없음)와 동일 계열.
 - **재현:** 로그인 후 `#new` 진입 → "제목" 레이블 클릭 → 입력 필드 포커스 안 됨
 
-### [L-80] 좋아요 버튼에 `aria-label`·`aria-pressed` 없음 — 상태 변화 접근성 트리 미반영
+### [L-80] ✅ 아카이브(커뮤니티/GNB 비활성화) — 좋아요 버튼에 `aria-label`·`aria-pressed` 없음 — 상태 변화 접근성 트리 미반영
 - **영역:** 커뮤니티/소셜 — 글 상세
 - **URL:** https://gear-forest.com/community.html#post=<id>
 - **증상:** 좋아요 버튼 `<button class="cm-like">🤍 <span>0</span></button>`에 `aria-label`과 `aria-pressed`가 없어 스크린리더가 "하트 0"으로만 읽음. 클릭 후 ❤️로 바뀌어도 상태 변화가 접근성 트리에 반영되지 않음.
@@ -1215,7 +1249,7 @@
 - **증상:** 활성 정렬 chip에 `on` 클래스는 붙지만 `aria-pressed` 속성 없음. 스크린 리더 사용자가 현재 선택된 정렬 상태 확인 불가.
 - **해결:** `.schip` 초기 생성 시 `aria-pressed="false"` 부여, `draw()`에서 `.classList.toggle("on")` 병행으로 `setAttribute("aria-pressed", String(active))` 갱신. [site/app.js](site/app.js)
 
-### [L-23] 커뮤니티 페이지 JSON-LD 구조화 데이터 없음
+### [L-23] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 페이지 JSON-LD 구조화 데이터 없음
 - **영역:** 커뮤니티/소셜 (SEO)
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `DiscussionForumPosting`, `BreadcrumbList` 등 schema.org JSON-LD 전무. 검색 결과 리치 스니펫 노출 기회 손실. ([L-13] 홈과 동일 패턴)
@@ -1239,17 +1273,17 @@
 - **영역:** 홈/메인 (PWA)
 - **해결:** `manifest.webmanifest` 현재 `start_url:"/"`, `scope:"/"` 절대경로로 이미 설정됨(`./index.html` 아님). apex 정식화([[domain-apex-canonical]])와도 일치. 추가 조치 불필요.
 
-### [L-10] 비로그인 상태에서 `#new` 직접 접근 시 안내 없이 피드로 redirect
+### [L-10] ✅ 아카이브(커뮤니티/GNB 비활성화) — 비로그인 상태에서 `#new` 직접 접근 시 안내 없이 피드로 redirect
 - **영역:** 커뮤니티/소셜
 - **URL:** https://www.gear-forest.com/community.html#new
 - **증상:** 비로그인 상태에서 `community.html#new` 직접 접근 시 아무 안내 없이 `location.hash = ''`로 피드로 돌아감. 사용자가 이유를 알 수 없음.
 
-### [L-11] 모바일 탭바 '커뮤니티' 레이블이 '커뮤'로 잘림
+### [L-11] ✅ 아카이브(커뮤니티/GNB 비활성화) — 모바일 탭바 '커뮤니티' 레이블이 '커뮤'로 잘림
 - **영역:** 커뮤니티/소셜
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 375px에서 `.bottom-nav` 커뮤니티 탭 레이블이 '커뮤'로 truncate. 다른 탭(홈/탐색/마이)은 정상 표시.
 
-### [L-12] 데스크톱·모바일 nav 두 개가 DOM에 동시 존재 — 유지보수 부담
+### [L-12] ✅ 아카이브(커뮤니티/GNB 비활성화) — 데스크톱·모바일 nav 두 개가 DOM에 동시 존재 — 유지보수 부담
 - **영역:** 커뮤니티/소셜 (전체 공통)
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `.tabbar`(데스크톱)와 `.bottom-nav`(모바일) 두 nav가 DOM에 공존, CSS `display:none`으로 전환. 기능 추가 시 양쪽 모두 수정 필요.
@@ -1294,7 +1328,7 @@
 - **영역:** 상품 상세
 - **해결:** `.spec-table th` 인라인 스타일에 `word-break:keep-all` 추가 — 한글 어절 단위로 줄바꿈, 중간 분리 방지. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-32] 댓글 textarea — 연결된 `<label>` 없음
+### [L-32] ✅ 아카이브(커뮤니티/GNB 비활성화) — 댓글 textarea — 연결된 `<label>` 없음
 - **영역:** 커뮤니티/소셜 — 댓글 폼
 - **URL:** https://www.gear-forest.com/community.html#post={id}
 - **증상:** 댓글 작성 textarea(`id="cm-ct"`, `placeholder="댓글 달기…"`)에 연결된 `<label>` 없음. placeholder만으로는 WCAG 2.1 SC 1.3.1 미충족.
@@ -1306,7 +1340,7 @@
 - **해결:** 모든 HTML(index/category/brand/recommend + item 2277개)에 `media="light"` 분리 + `media="dark" content="#121212"` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **재현:** 다크모드 기기에서 접속 → 브라우저 UI 색상 확인
 
-### [L-33] 커뮤니티 뒤로가기 시 URL에 trailing `#` 잔존
+### [L-33] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 뒤로가기 시 URL에 trailing `#` 잔존
 - **영역:** 커뮤니티/소셜 — 라우팅
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 글 상세·작성 폼에서 "← 목록으로" 클릭 시 `location.hash = ''` 실행으로 URL이 `community.html#`으로 변경됨. 주소창에 `#`이 잔존하고 URL 공유 시 `community.html#` 형태로 전달됨. `history.pushState('','',location.pathname)` 사용이 올바른 처리.
@@ -1349,7 +1383,7 @@
 - **해결:** `start_url: "./"` → `"/"`, `scope: "./"` → `"/"` 변경. [site/manifest.webmanifest](site/manifest.webmanifest)
 - **재현:** manifest.webmanifest 확인 → `start_url: "./index.html"`
 
-### [L-42] 글쓰기 모달 — 첨부 이미지 선택 취소 버튼 없음
+### [L-42] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글쓰기 모달 — 첨부 이미지 선택 취소 버튼 없음
 - **영역:** 커뮤니티/소셜 — 글쓰기
 - **증상:** 사진 선택 후 미리보기 표시되나 이미지 선택을 취소할 × 버튼 없음. 모달을 닫거나 다른 파일을 다시 선택하는 방법뿐.
 - **재현:** 글쓰기 → 사진 선택 → 미리보기 → 취소 버튼 없음 확인
@@ -1447,7 +1481,7 @@
 - **증상:** 비로그인 상태에서 account.html 접근 시 로그인 폼 아래에 '🔖 찜한 상품' 섹션과 '⚙️ 설정' 섹션이 그대로 표시됨. 로그인 이후에만 보여야 할 콘텐츠가 비로그인 상태에서 노출됨.
 - **제보:** 사용자 직접 제보
 
-### [M-109] 커뮤니티 사진 업로드 불가 — Supabase Storage 버킷 미설정
+### [M-109] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 사진 업로드 불가 — Supabase Storage 버킷 미설정
 - **영역:** 커뮤니티/소셜 — 글쓰기 사진 첨부
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 글쓰기에서 사진 첨부 시 업로드 실패. 프론트엔드 코드(`uploadImage`, `review-images` 버킷 경로)는 정상이나 Supabase Storage 버킷이 미생성 상태.
@@ -1462,21 +1496,21 @@
 - **원인:** `manifest.webmanifest`의 `start_url: "./index.html"` — `"/"` 또는 `"./"` 로 수정 필요.
 - **재현:** `https://gear-forest.com/manifest.webmanifest` 접근 → `start_url` 값 `"./index.html"` 확인
 
-### [L-92] 커뮤니티 피드 카드 썸네일 이미지 `alt=""` 빈 값
+### [L-92] ✅ 아카이브(커뮤니티/GNB 비활성화) — 커뮤니티 피드 카드 썸네일 이미지 `alt=""` 빈 값
 - **영역:** 커뮤니티/소셜 — 피드 카드
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 피드 카드 썸네일 `<img>` 태그가 `alt=""`로 렌더링됨. 콘텐츠 이미지임에도 스크린리더가 설명을 읽지 못함. (L-78은 글 상세 모달 이미지이며 피드 카드 썸네일은 별도)
 - **원인:** `community.html` line 180: `imgs.map(u => \`<img src="${esc(u)}" loading="lazy" alt="">\`)` — alt 하드코딩 빈 값
 - **재현:** 이미지 포함 게시글 피드 → 카드 img 요소 검사 → `alt=""` 확인
 
-### [L-91] 글쓰기 폼(`renderCompose`) `<label>` `for` 속성 누락
+### [L-91] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글쓰기 폼(`renderCompose`) `<label>` `for` 속성 누락
 - **영역:** 커뮤니티/소셜 — 글쓰기 폼
 - **URL:** https://gear-forest.com/community.html#new
 - **증상:** 글쓰기 폼의 제목·내용·사진 `<label>`에 `for` 속성이 없어 스크린리더가 레이블과 입력 필드를 연결하지 못함. (L-79는 app.js log-modal의 lf-label이 대상, community.html `renderCompose()`는 별도)
 - **원인:** `community.html` line 201~206에서 `<label>제목</label>` 등 for 속성 없이 생성. 입력 필드 id(cm-t, cm-b, cm-file)는 존재하나 레이블 연결 누락.
 - **재현:** 로그인 후 `community.html#new` → 폼 label 요소 검사 → `for` 속성 없음
 
-### [L-90] 글 상세 좋아요 버튼(`cm-like`) `aria-label`·`aria-pressed` 누락
+### [L-90] ✅ 아카이브(커뮤니티/GNB 비활성화) — 글 상세 좋아요 버튼(`cm-like`) `aria-label`·`aria-pressed` 누락
 - **영역:** 커뮤니티/소셜 — 글 상세
 - **URL:** https://gear-forest.com/community.html#post=\<uuid\>
 - **증상:** 글 상세의 `<button class="cm-like">` 에 `aria-label`·`aria-pressed` 없어 스크린리더가 버튼 용도·상태를 읽지 못함. (L-80은 app.js `log-like-btn`이 대상, `community.html`의 `cm-like`는 별도 요소)
@@ -1497,7 +1531,7 @@
 - **원인:** `app.js` line 1826에서 `href='#sec-wish'` 생성, account.html에는 `id='sec-wish'`가 없음.
 - **재현:** acc-nav 임시 추가 후 → '찜 N' 링크 클릭 → 스크롤 미동작
 
-### [L-87] `account.html` — `acc-nav`, `acc-empty`, `acc-tabs` 요소 미존재로 비로그인 내비·로그인 탭 UI 무효
+### [L-87] ✅ 아카이브(커뮤니티/GNB 비활성화) — `account.html` — `acc-nav`, `acc-empty`, `acc-tabs` 요소 미존재로 비로그인 내비·로그인 탭 UI 무효
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 비로그인 시 섹션 앵커 내비게이션, 로그인 후 탭 UI(찜/세트/로그)가 전혀 표시되지 않음.
@@ -1637,7 +1671,7 @@
 
 ---
 
-### [L-100] community.html — modulepreload 버전 vs import 버전 불일치
+### [L-100] ✅ 아카이브(커뮤니티/GNB 비활성화) — community.html — modulepreload 버전 vs import 버전 불일치
 - **영역:** 커뮤니티/소셜 — 성능
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `<link rel="modulepreload" href="supabaseClient.js?v=e6966f82">` (32행)와 실제 `import ... from './supabaseClient.js?v=8ae38532'` (119행)의 버전 해시가 다름. 브라우저가 `e6966f82`를 미리 받아두지만 실제 import는 `8ae38532`를 요청 → 프리로드 캐시 미적중, 추가 네트워크 왕복.
@@ -1731,28 +1765,28 @@
 
 ## R-64 커뮤니티/소셜 (12순환) — 2026-06-12
 
-### [M-121] listComments — 소프트 삭제 댓글 미필터 (deleted_at IS NULL 누락)
+### [M-121] ✅ 아카이브(커뮤니티/GNB 비활성화) — listComments — 소프트 삭제 댓글 미필터 (deleted_at IS NULL 누락)
 - **영역:** 커뮤니티/소셜 — 댓글 목록
 - **증상:** `deleteComment()`는 `deleted_at` 설정 방식의 소프트 삭제이며 DB 트리거(migration 015)도 이를 기반으로 `comment_count`를 감소시킴. 그러나 `listComments()` 쿼리에 `deleted_at IS NULL` 필터가 없어 삭제된 댓글이 게시글 상세 페이지에 그대로 노출됨.
 - **원인:** `supabaseClient.js:147` — `.select('*,...').eq('post_id', postId).order(...)` — `.is('deleted_at', null)` 조건 미포함.
 - **수정 방향:** `supabaseClient.js:150` `.order('created_at', ...)` 앞에 `.is('deleted_at', null)` 추가. [site/supabaseClient.js:150](site/supabaseClient.js)
 - **심각도:** 🟡 Medium
 
-### [M-122] getPost — 소프트 삭제 게시글 상세 직접 접근 가능 (deleted_at IS NULL 누락)
+### [M-122] ✅ 아카이브(커뮤니티/GNB 비활성화) — getPost — 소프트 삭제 게시글 상세 직접 접근 가능 (deleted_at IS NULL 누락)
 - **영역:** 커뮤니티/소셜 — 게시글 상세
 - **증상:** `deletePost()`는 `deleted_at` 소프트 삭제이지만 `getPost(id)` 쿼리에 `deleted_at IS NULL` 필터가 없어 삭제된 게시글 URL(`#post=<id>`)을 통해 내용 전체가 노출됨. 피드 목록에서는 보이지 않지만 URL 직접 접근 시 삭제 전 내용 조회 가능.
 - **원인:** `supabaseClient.js:125` — `.select(POST_SELECT).eq('id', id).maybeSingle()` — `.is('deleted_at', null)` 미포함.
 - **수정 방향:** `supabaseClient.js:126` `.eq('id', id)` 뒤에 `.is('deleted_at', null)` 추가. [site/supabaseClient.js:126](site/supabaseClient.js)
 - **심각도:** 🟡 Medium
 
-### [L-107] community.html 피드 카드 `<a>` href 없음 — 키보드 접근 불가
+### [L-107] ✅ 아카이브(커뮤니티/GNB 비활성화) — community.html 피드 카드 `<a>` href 없음 — 키보드 접근 불가
 - **영역:** 커뮤니티/소셜 — 피드 목록
 - **증상:** 게시글 카드가 `<a class="cm-post" data-id="...">` 로 렌더링되는데 `href` 속성이 없음. HTML spec상 href 없는 `<a>`는 interactive element가 아니므로 Tab 키 포커스가 안 되고 스크린리더에서 링크로 인식되지 않음. 마우스 클릭만 동작.
 - **원인:** `community.html:181` — `<a class="cm-post" data-id="${esc(p.id)}">` — `href` 미포함. `onclick`을 `location.hash` 변경으로 처리하면서 href 생략.
 - **수정 방향:** `href="#post=${p.id}"` 추가로 키보드 접근성 및 스크린리더 인식 개선. [site/community.html:181](site/community.html)
 - **심각도:** 🟢 Low
 
-### [L-108] renderCompose — 업로드 이미지 작성 취소·이탈 시 orphan Storage 파일
+### [L-108] ✅ 아카이브(커뮤니티/GNB 비활성화) — renderCompose — 업로드 이미지 작성 취소·이탈 시 orphan Storage 파일
 - **영역:** 커뮤니티/소셜 — 게시글 작성 폼
 - **증상:** 사진 선택 시 `uploadImage(f)` 호출로 즉시 Supabase Storage에 업로드됨. "취소" 클릭 또는 페이지 이탈 시 `pending` URL은 버려지지만 `review-images/{user_id}/{uuid}.ext` 파일은 Storage에 orphan으로 남음.
 - **원인:** `community.html:254` — 파일 선택 즉시 업로드 후 `pending.push(r.url)`. 취소 시 Storage 파일 삭제 로직 없음.
@@ -2038,7 +2072,7 @@
 - **수정:** `#acc-tabs`에 `role="tablist"` 추가. 각 `.acc-tab` 버튼에 `role="tab" aria-selected="false"` 초기값 추가. `_accSetTab()` 내 `b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false")` 갱신 추가.
 - **파일:** [site/account.html](site/account.html) line ~53, [site/app.js](site/app.js) line ~2430 [lane:SOCIAL]
 
-### [L-125] `account.html` 로그 섹션 상단 정적 `+ 새 로그` 링크가 `COMMUNITY_ENABLED` 플래그 무시
+### [L-125] ✅ 아카이브(커뮤니티/GNB 비활성화) — `account.html` 로그 섹션 상단 정적 `+ 새 로그` 링크가 `COMMUNITY_ENABLED` 플래그 무시
 - **영역:** 계정/로그인 — 내 로그 섹션
 - **심각도:** 🟢 Low
 - **증상:** `account.html:78`에 `<a class="achip clear" href="community.html">+ 새 로그</a>` 정적 링크가 항상 노출. `renderAccount()`(app.js line ~2503)에서 동일 섹션 내 JS 생성 링크들은 `COMMUNITY_ENABLED ? ... : ""` 조건으로 숨겨지나, HTML에 하드코딩된 이 링크는 조건 없이 노출. 커뮤니티가 임시 숨김(`COMMUNITY_ENABLED=false`) 상태에서도 클릭 시 community.html로 이동.
@@ -2087,7 +2121,7 @@
 - **수정:** `banner.setAttribute("role", "alert")` → `banner.setAttribute("role", "status")` 변경. `aria-live="polite"`·`aria-atomic="true"` 유지.
 - **파일:** [site/app.js](site/app.js) line ~27
 
-### [L-130] `sw.js` push/notificationclick 기본 URL이 `/community.html` 하드코딩 (`COMMUNITY_ENABLED=false` 무시)
+### [L-130] ✅ 아카이브(커뮤니티/GNB 비활성화) — `sw.js` push/notificationclick 기본 URL이 `/community.html` 하드코딩 (`COMMUNITY_ENABLED=false` 무시)
 - **영역:** 홈/메인 — PWA 푸시 알림
 - **심각도:** 🟢 Low
 - **증상:** `sw.js` line 82의 push 수신 핸들러 기본 data에 `data: { url: "/community.html" }`; line 95의 notificationclick 핸들러에 `const url = e.notification.data?.url \|\| "/community.html"`. 서버에서 URL을 지정하지 않은 알림 수신·클릭 시 항상 community.html로 라우팅. `COMMUNITY_ENABLED=false`로 커뮤니티 임시 숨김 상태에서 알림 클릭 시 사용자가 숨겨진 페이지로 이동.
@@ -2333,7 +2367,7 @@
 
 ## R-82 — 홈/메인 (17순환) [2026-06-12] [lane:SOCIAL]
 
-### [M-133] `community.html` `renderFeed` — `.cm-post` `<a>` href 없음 → 피드 전체 키보드/AT 접근 불가
+### [M-133] ✅ 아카이브(커뮤니티/GNB 비활성화) — `community.html` `renderFeed` — `.cm-post` `<a>` href 없음 → 피드 전체 키보드/AT 접근 불가
 - **영역:** 커뮤니티 — 피드 목록
 - **심각도:** 🟡 Medium
 - **증상:** `renderFeed()`(line 177)에서 게시글 카드를 `<a class="cm-post" data-id="...">` 로 렌더링하지만 `href` 속성이 없다. `href` 없는 `<a>` 요소는 브라우저 기본 탭 순서에 포함되지 않으므로, 키보드 사용자는 Tab으로 어떤 게시글에도 접근할 수 없다. 스크린 리더도 이를 링크가 아닌 일반 텍스트로 처리해 클릭 가능 여부를 안내하지 않는다. 마우스 `onclick` 핸들러(line 191)는 정상 동작하지만 키보드·AT 경로는 완전 차단.
@@ -2349,7 +2383,7 @@
 - **수정:** `list.find((c) => c.url === url || c.url === new URL(url, location.origin).href)` 로 URL-일치 탭을 우선 탐색. 없으면 임의 탭에 `navigate(url)` 또는 새 탭 오픈.
 - **파일:** [site/sw.js](site/sw.js) line ~96 [lane:SOCIAL]
 
-### [L-153] `community.html` `.cm-back` `<span onclick>` — 키보드/AT 뒤로가기 불가
+### [L-153] ✅ 아카이브(커뮤니티/GNB 비활성화) — `community.html` `.cm-back` `<span onclick>` — 키보드/AT 뒤로가기 불가
 - **영역:** 커뮤니티 — 네비게이션
 - **심각도:** 🟢 Low
 - **증상:** `renderCompose()`(line 199)와 `renderDetail()`(lines 280, 286, 297)의 "← 목록으로" 버튼이 `<span class="cm-back" onclick>` 로 구현되어 있다. `<span>` 은 기본적으로 키보드 포커스를 받지 않으므로 키보드/AT 사용자가 Tab으로 뒤로가기를 실행할 수 없다. 글쓰기 폼·상세 화면 진입 후 Esc·Tab으로는 목록 복귀 방법이 없음.
@@ -2357,7 +2391,7 @@
 - **수정:** `<span class="cm-back" ...>` → `<button type="button" class="cm-back" ...>` 로 교체 (CSS는 그대로 적용됨).
 - **파일:** [site/community.html](site/community.html) line ~199, ~280, ~286, ~297 [lane:SOCIAL]
 
-### [L-154] `community.html` `renderDetail` `cm-like` 버튼 `aria-pressed` 없음 → AT 좋아요 상태 미공지
+### [L-154] ✅ 아카이브(커뮤니티/GNB 비활성화) — `community.html` `renderDetail` `cm-like` 버튼 `aria-pressed` 없음 → AT 좋아요 상태 미공지
 - **영역:** 커뮤니티 — 게시글 상세 좋아요
 - **심각도:** 🟢 Low
 - **증상:** `cm-like` 버튼(line 304)은 좋아요 상태를 `.on` CSS 클래스로만 표현한다(`aria-pressed` 없음). 스크린 리더 사용자는 현재 좋아요 상태를 알 수 없으며, 클릭 후 상태 변화도 청취하지 못한다. 토글 후 `likedState` 갱신 시 `aria-pressed`도 동기 업데이트 필요.
@@ -2424,3 +2458,13 @@
 > SOCIAL lane (supabaseClient.js · account.html · sw.js): 이번 순환에서 신규 버그 없음. 기존 미수정: M-132(initAuth 이중 발화), L-147(onWishChange 경쟁), L-150(닉네임 모달 syncGearSets 누락).
 
 *다음 회차: 계정/로그인 (17순환)*
+
+---
+
+### [M-135] 상품 카드 — 가격 옆 ⚖ 비교 버튼 아이콘 의미 불명확, 제거 요청
+
+- **영역:** 카테고리/목록 — 상품 카드 우측 ⚖ 버튼 (`pli-cmp`)
+- **현재:** 저울 아이콘(⚖)만 표시 → 사용자가 기능(비교에 추가) 인지 못함
+- **기대:** 아이콘 버튼 완전 제거 (`app.js:2160` `pli-cmp` 버튼 삭제)
+- **보고자:** 사용자 직접 제보 (2026-06-12)
+- **심각도:** 🟡 Medium
