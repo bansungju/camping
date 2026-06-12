@@ -1755,11 +1755,29 @@ function openReviewDetail(r) {
       <div class="pmrv-fulltext">${esc(r.body)}</div>
     </div></div>`;
   ov.classList.add("on");
-  const close = () => { ov.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  const prevFocus = document.activeElement;   // L-122: 닫을 때 포커스 복귀(보통 하위 상품모달의 후기 카드)
+  const close = () => {
+    ov.classList.remove("on");
+    document.removeEventListener("keydown", onKey, true);
+    if (prevFocus && prevFocus.focus) prevFocus.focus();
+  };
   ov.onclick = e => { if (e.target === ov) close(); };
-  ov.querySelector(".pmx").onclick = close;
-  const onKey = e => { if (e.key === "Escape") close(); };
-  document.addEventListener("keydown", onKey);
+  const xbtn = ov.querySelector(".pmx");
+  xbtn.onclick = close;
+  xbtn.focus();   // L-122: 초기 포커스
+  // M-120: capture+stopImmediatePropagation — ESC가 하위 상품모달 onKey까지 전파돼 동시에 닫히는 것 방지
+  // L-122: Tab 포커스 트랩
+  const onKey = e => {
+    if (e.key === "Escape") { e.stopImmediatePropagation(); close(); return; }
+    if (e.key !== "Tab") return;
+    const box = ov.querySelector(".pmbox");
+    const f = box.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])');
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener("keydown", onKey, true);
 }
 
 async function loadReviews(modal, pcode) {
@@ -1849,6 +1867,8 @@ function wireReviews(modal, m, pcode) {
     ta.oninput = () => { taCnt.textContent = `${ta.value.length} / 2000`; };
 
     function renderThumbs() {
+      // L-105: 재렌더 전 이전 Blob URL 해제(메모리 누수 방지)
+      thumbsEl.querySelectorAll("img").forEach(img => { if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src); });
       thumbsEl.innerHTML = photos.map((f, i) =>
         `<span class="pmrv-thumb"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" class="pmrv-thumb-x" data-i="${i}" aria-label="사진 삭제">✕</button></span>`
       ).join("");
