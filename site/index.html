@@ -19,7 +19,10 @@
 <meta name="twitter:title" content="장비의 숲 — 데이터 기반 캠핑용품 추천">
 <meta name="twitter:description" content="감성 후기가 아닌 측정 데이터로 가성비 좋은 캠핑 장비를 추천합니다">
 <meta name="twitter:image" content="https://gear-forest.com/og-image.png">
-<meta name="theme-color" content="#2f7a4e">
+<meta name="theme-color" content="#2f7a4e" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta property="og:image:alt" content="장비의 숲 — 데이터 기반 캠핑용품 추천">
+<meta name="twitter:image:alt" content="장비의 숲 — 데이터 기반 캠핑용품 추천">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -28,15 +31,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=974aa61c">
+<link rel="stylesheet" href="style.css?v=4cbb207d">
 </head>
 <body>
+<a class="skip-link" href="#main">메인 콘텐츠로 바로가기</a>
 <div id="pwa-banner" style="display:none"></div>
 <header class="top"><div class="wrap">
   <div class="logo"><img class="logo-mark" src="icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></div>
   <div class="sub">정량 스펙을 세그먼트 내 순위로 별점화 · 브랜드 제품만 · 측정값만</div>
 </div></header>
-<main class="wrap">
+<main class="wrap" id="main">
   <h1>무엇을 찾으세요?</h1>
   <p class="lead" id="lead">불러오는 중…</p>
 
