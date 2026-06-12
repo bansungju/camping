@@ -31,11 +31,11 @@
 | FE-CAT-01 | 허브(카테고리 네비 + 핫아이템) 렌더 | DONE | `renderHub`, `renderCatNav` |
 | FE-CAT-02 | 홈 클라이언트 검색 + 자동완성 | DONE | `setupHomeSearch` (클라 인덱스) |
 | FE-CAT-03 | 필터 칩(인원/별점/브랜드) + 활성 상태 표시 | DONE | |
-| FE-CAT-04 | 필터 상태 **URL 직렬화**(공유·뒤로가기 복원) | TODO | STAGE2-PLAN M2 |
-| FE-CAT-05 | 가격대 슬라이더 + 스펙 범위 슬라이더(무게≤X, 내수압≥X) | TODO | M2 |
-| FE-CAT-06 | 빈 결과 시 가장 강한 제약 해제 제안 | TODO | M2 |
-| FE-CAT-07 | 모바일 필터 바텀시트 | TODO | M3 |
-| FE-CAT-08 | 품질 필터 토글(확정값만/데이터부족 제외) | TODO | M3 |
+| FE-CAT-04 | 필터 상태 **URL 직렬화**(공유·뒤로가기 복원) | DONE(기구현) | `serializeState()`+`history.replaceState`·복원([app.js](site/app.js)). 코드 존재 확인 |
+| FE-CAT-05 | 가격대 슬라이더 + 스펙 범위 슬라이더(무게≤X, 내수압≥X) | DONE(기구현) | 가격·무게·두께·R값 범위 슬라이더 동작 확인(프리뷰) |
+| FE-CAT-06 | 빈 결과 시 가장 강한 제약 해제 제안 | DONE(기구현) | `diagnoseEmpty()`가 해제 시 최다 복귀 필터 제안([app.js:1527](site/app.js)) |
+| FE-CAT-07 | 모바일 필터 바텀시트 | DONE | `#cat-aside`를 ≤640px에서 하단 시트화(백드롭·스크롤잠금·핸들·결과보기), 기본 닫힘. 데스크톱 무영향 |
+| FE-CAT-08 | 품질 필터 토글(확정값만/데이터부족 제외) | DONE(기구현) | `qExclude`/`data-qx` "스펙값 있는 것만" 동작 |
 | FE-CAT-09 | **상품 리스트: 검색 입력 풀너비 + 개수표시를 정렬 줄로 이동** | DONE | `.sortrow`로 `#count`를 `#sortchips` 형제로 이동(innerHTML 안전), `#q` 풀너비 |
 | FE-CAT-10 | **'가성비순' 정렬 시 정의 설명 배너(삭제 가능)** | DONE | `renderValueBanner(k)`·`.value-banner`, 닫기 `value_banner_dismissed` 영구기억 |
 
@@ -266,3 +266,4 @@
 - 2026-06-12 FE-CAT-09 DONE — category.html `.toolbar`엔 `#q`만 남겨 풀너비(`.toolbar #q{flex:1 1 100%}`), `#count`를 `.sortrow`로 옮겨 `#sortchips`(innerHTML 갱신)와 형제 배치·우측 정렬. 데스크톱/모바일·다크 검증, 콘솔 무에러.
 - 2026-06-12 FE-CAT-10 DONE — `draw()`에서 `renderValueBanner(k)` 호출, 정렬키 `value`일 때만 `.value-banner` 표시(리스트 위). ✕ 닫기 시 `value_banner_dismissed=1` 영구기억. 칩 클릭 경로로 표시/숨김/지속 검증, 다크·모바일 OK, 콘솔 무에러.
 - 2026-06-12 FE-ITEM-05 DONE — 공통 `priceLabeled(n,nullHtml)`+`.price-basis` 캡션 도입, 가격 노출 7곳(목록·비교모달·추천·최근본·위시·세트목록·커뮤니티)에 '최저가 기준' 부착. 가격없음/—엔 캡션 미표시(AC4). 상세 모달은 기존 `pmprice-note` 유지. 목록(260)·추천(20) 검증, 다크 가독성·콘솔 무에러.
+- 2026-06-12 FE-CAT-07 DONE — 모바일(≤640px) 필터를 `#cat-aside` 하단 바텀시트로 전환(열기버튼 `🎛️필터`·백드롭·`body` 스크롤잠금·드래그핸들·헤더/✕·결과보기 푸터·Esc), 기본 닫힘 → 목록 즉시 노출. 데스크톱은 sticky 사이드바 그대로(시트 크롬 숨김). 핫파일 잠금 프로토콜로 작업. FE-CAT-04/05/06/08은 기구현 확인 → DONE 정리.
