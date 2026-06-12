@@ -2365,4 +2365,24 @@
 - **수정:** 초기 렌더 시 `aria-pressed="${liked}"` 추가. `likeBtn.onclick` 핸들러 내 `likeBtn.setAttribute('aria-pressed', String(likedState))` 추가.
 - **파일:** [site/community.html](site/community.html) line ~304, ~322 [lane:SOCIAL]
 
-*다음 회차: 카테고리/목록 (17순환)*
+---
+
+## R-83 — 카테고리/목록 (17순환) [2026-06-12]
+
+### [L-155] `buildFilters` `syncPresetOn` — URL 복원 후 재호출 없음 → 공유·복원 URL에서 프리셋 버튼 `.on` 표시 누락
+- **영역:** 카테고리 — 필터 프리셋 UI
+- **심각도:** 🟢 Low
+- **증상:** `buildFilters()`(line 1149) 마지막에 `syncPresetOn()`(line 1332)을 호출하여 프리셋 버튼의 `.on` 클래스와 `aria-pressed`를 갱신한다. 그러나 이 호출은 `restoreState(params)`(line 1123) 실행 *전*에 이루어진다. `restoreState`가 `STATE.range`·`STATE.cap`를 복원해도 `syncPresetOn`은 재호출되지 않으며, 이후 `syncFilterUI()`(line 1128)도 프리셋 버튼을 포함하지 않는다. 결과: 공유 URL(예: `?weight_g__max=1000`)이나 뒤로가기로 진입 시 필터는 정상 적용되지만 "🪶 경량 우선" 등 프리셋 버튼이 비활성으로 표시된다.
+- **원인:** `buildFilters` 내 `syncPresetOn` 로컬 함수가 반환 후 접근 불가. `syncFilterUI`에 프리셋 동기화 미포함.
+- **수정:** `buildFilters`가 `syncPresetOn`을 반환하거나, 프리셋 동기화 로직을 `syncFilterUI`로 이관. `renderCategory`에서 `restoreState` 이후 해당 함수 호출.
+- **파일:** [site/app.js](site/app.js) line ~1332, ~1128 [lane:CORE]
+
+### [L-156] `renderActiveFilters` / `diagnoseEmpty` — EXTRA_SPECS 키 한국어 레이블 없음 → 활성 필터 칩·0건 힌트에 영문 raw key 노출
+- **영역:** 카테고리 — 활성 필터 칩 / 0건 진단
+- **심각도:** 🟢 Low
+- **증상:** `renderActiveFilters()`(line 1482)와 `diagnoseEmpty()`(line 1598)에서 레이블 조회 시 `STATE.data.metrics.find(m => m.key === k).label`만 참조한다. `EXTRA_SPECS`(water_head, floor_area, comfort_temp, fill_weight, r_value, brightness 등)는 `d.metrics`에 없으므로 label 조회 실패 → 영문 raw key 표시. 내수압 슬라이더 활성 후 활성 필터 칩에 "water_head 범위 ✕"가, 0건 힌트에 "water_head 범위 조건을 빼면 N개"가 노출된다.
+- **원인:** EXTRA_SPECS 메타데이터가 `buildFilters` 내에서만 정의되고 STATE에 저장되지 않음. label lookup이 `d.metrics`만 참조.
+- **수정:** `buildFilters`의 EXTRA_SPECS 정보를 `STATE.extraSpecMeta = { [key]: { label, unit } }` 형태로 저장. `renderActiveFilters`·`diagnoseEmpty`의 레이블 조회 시 `STATE.extraSpecMeta[k]?.label`을 fallback으로 추가.
+- **파일:** [site/app.js](site/app.js) line ~1482, ~1598 [lane:CORE]
+
+*다음 회차: 상품상세 (17순환)*
