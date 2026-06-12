@@ -380,9 +380,13 @@ await initAuth(async (user, event) => {
     return
   }
   setSyncHint(true)
+  // M-117: 재로그인 시 내 로그 stale 방지 — 이전 세션 loaded 플래그 초기화
+  if (event === 'SIGNED_IN') {
+    const ml = document.getElementById('my-logs-list')
+    if (ml) { delete ml.dataset.loaded; delete ml.dataset.logLoginShown; }
+  }
   renderAccount()
   renderProfile(profile)
-  if (typeof renderAccount === 'function') renderAccount()
   if (event === 'SIGNED_IN') {
     syncWishlistOnLogin()
     syncGearSetsOnLogin(user.id)
