@@ -600,13 +600,44 @@ function _closestBrand(q, brands) {
   return bestD <= tol ? best : null;
 }
 
+// M-70: 브랜드 영문 별칭 — 인덱스가 한글 음차만 포함해 "Helinox" 등 영문 검색이 0건이던 문제.
+// 값은 소문자 영문(공백구분 변형 허용). 검색 시 브랜드 한글명에 이 별칭을 합쳐 매칭한다.
+const BRAND_ALIAS = {
+  "코베아":"kovea","네이처하이크":"naturehike","카즈미":"kazmi","씨투써밋":"sea to summit seatosummit",
+  "그레고리":"gregory","컬럼비아":"columbia","오스프리":"osprey","노스페이스":"the north face northface tnf",
+  "콜맨":"coleman","반고":"vango","니모이큅먼트":"nemo equipment","블랙야크":"blackyak","스노우피크":"snow peak snowpeak",
+  "스노우라인":"snowline","미니멀웍스":"minimal works minimalworks","몽벨":"montbell mont-bell","헬리녹스":"helinox",
+  "캠핑문":"camping moon campingmoon","밀레":"millet","노마드":"nomad","써미트":"summit","메사":"mesa","썬터치":"suntouch",
+  "레드렌서":"ledlenser","노스피크":"north peak northpeak","폴라리스":"polaris","시마노":"shimano","도이터":"deuter",
+  "피엘라벤":"fjallraven fjall raven","백컨트리":"backcountry","코오롱스포츠":"kolon sport kolonsport","블랙독":"blackdog black dog",
+  "스탠리":"stanley","제드코리아":"zed","써머레스트":"thermarest therm-a-rest","바낙스":"banax","티에라":"tierra",
+  "헬스포츠":"helsport","마운틴이큅먼트":"mountain equipment mountainequipment","이와타니":"iwatani","지라프":"giraffe",
+  "에코플로우":"ecoflow","소토":"soto","듀랑고":"durango","힐레베르그":"hilleberg","이글루":"igloo","캡스톤":"capstone",
+  "마무트":"mammut","로고스":"logos","모비가든":"mobi garden mobigarden","노르디스크":"nordisk","마운티아":"mountia",
+  "필립스":"philips","아크테릭스":"arcteryx arc'teryx","밴프":"banff","유니프레임":"uniflame","테라노바":"terra nova terranova",
+  "펠리칸":"pelican","오라이트":"olight","헬리콘텍스":"helikon-tex helikon","나이트코어":"nitecore","루메나":"lumena",
+  "페닉스":"fenix","빅아그네스":"big agnes bigagnes","살로몬":"salomon","위너웰":"winnerwell","페크론":"pecron",
+  "블랙다이아몬드":"black diamond blackdiamond","켈티":"kelty","네파":"nepa","제로그램":"zerogram","잭커리":"jackery",
+  "에너자이저":"energizer","아이캠퍼":"ikamper","프로스펙스":"prospecs","인텍스":"intex","캠프타운":"camptown","다이와":"daiwa",
+  "샤오미":"xiaomi","페츨":"petzl","아이더":"eider","프리머스":"primus","내셔널지오그래픽":"national geographic natgeo",
+  "랩":"rab","데카트론":"decathlon","에버뉴":"evernew","웨버":"weber","페트로막스":"petromax","도메틱":"dometic",
+  "골제로":"goal zero goalzero","살레와":"salewa","큐물러스":"cumulus","퀘차":"quechua","몬테인":"montane",
+  "킹캠프":"king camp kingcamp","사마야":"samaya","파이어메이플":"fire maple firemaple","마운틴스미스":"mountainsmith",
+  "글라스락":"glasslock","예티":"yeti","베스트웨이":"bestway","파이브스타":"five star fivestar","쟈칼":"jackal",
+  "스패로우":"sparrow","듀라맥스":"duramax","제스트":"zest","콜핑":"kolping","마운틴하이커":"mountain hiker",
+  "도플갱어아웃도어":"doppelganger","캠프365":"camp365","코스모스":"cosmos","아우토반디자인하우스":"autobahn",
+  "콜럼버스코리아":"columbus","하이그라운즈":"high grounds highgrounds","몬테라":"montera","스위스마운틴":"swiss mountain",
+  "마운트리버":"mount river mountriver","레토":"reto","디노맥스":"dinomax","삼성비즈솔루션":"samsung","리베로":"libero",
+};
+const _brandAlias = b => BRAND_ALIAS[b] || "";
+
 async function setupHomeSearch() {
   // L-14: search.json(298KB)을 페이지 로드 시점이 아닌 검색창 첫 상호작용(focus·input) 시 지연 로드
   let idx = null, idxLoading = null, _brandList = null;
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=ad0b6b03").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=ad2a5934").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -668,10 +699,10 @@ async function setupHomeSearch() {
     if (!idx) { ensureIdx().then(run); return; }  // L-14: 인덱스 미로드 시 로드 후 재실행
     // 브랜드 단위 매치 — 첫 번째 토큰으로 브랜드 히트, 전체 토큰 AND로 상품 히트
     const bcount = {};
-    idx.forEach(x => { if (terms[0] && x.b.toLowerCase().includes(terms[0])) bcount[x.b] = (bcount[x.b] || 0) + 1; });
+    idx.forEach(x => { if (terms[0] && (x.b.toLowerCase().includes(terms[0]) || _brandAlias(x.b).includes(terms[0]))) bcount[x.b] = (bcount[x.b] || 0) + 1; });  // M-70: 영문 별칭 매칭
     const brandHits = Object.entries(bcount).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const q1 = terms.join(" ");
-    const hits = idx.filter(x => { const text = (x.b + " " + x.m).toLowerCase(); return terms.every(t => text.includes(t)); })
+    const hits = idx.filter(x => { const text = (x.b + " " + x.m + " " + _brandAlias(x.b)).toLowerCase(); return terms.every(t => text.includes(t)); })  // M-70: 브랜드 영문 별칭 포함
       .sort((a, b) => {  // L-46: 정확 일치 → 접두어 → 부분 포함 순
         const am = a.m.toLowerCase(), bm = b.m.toLowerCase();
         const ae = am === q1, be = bm === q1, ap = am.startsWith(q1), bp = bm.startsWith(q1);
@@ -776,7 +807,8 @@ async function setupHomeSearch() {
     if (!idx) { ensureIdx().then(run); return; }  // L-14: 미로드 시 로드 후 드롭다운 표시
     // 브랜드명 정확 일치 우선 (H-39): "헬리녹스" 입력 시 brand.html 이동 (모델 매치보다 먼저)
     const ql = q.toLowerCase();
-    const exactBrand = idx.find(x => x.b.toLowerCase() === ql);
+    // M-70: 영문 별칭 정확 일치도 브랜드로 간주 ("helinox" → 헬리녹스)
+    const exactBrand = idx.find(x => x.b.toLowerCase() === ql || _brandAlias(x.b).split(" ").includes(ql));
     if (exactBrand) { location.href = `brand.html?b=${encodeURIComponent(exactBrand.b)}`; return; }
     // 카테고리명 정확 일치 (M-94): "침낭" → category.html?cat=sleeping-bag (공백 정규화)
     const catMap = {};
@@ -785,12 +817,12 @@ async function setupHomeSearch() {
     if (catSlugHit) { location.href = `category.html?cat=${catSlugHit}`; return; }
     // 첫 번째 모델 매치의 카테고리 슬러그로 이동 (드롭다운과 동일한 토큰 AND 매칭, M-111)
     const terms2 = ql.split(/\s+/).filter(Boolean);
-    const first = idx.find(x => { const t = (x.b + " " + x.m).toLowerCase(); return terms2.every(tok => t.includes(tok)); });
+    const first = idx.find(x => { const t = (x.b + " " + x.m).toLowerCase(); return terms2.every(tok => t.includes(tok)); });  // (한글 q만 category로 — 영문 브랜드는 아래 brandMatch가 brand.html로)
     if (first) {
       location.href = `category.html?cat=${first.s}&q=${encodeURIComponent(q)}`;
     } else {
       // 부분 브랜드 매치면 brand 페이지
-      const brandMatch = idx.find(x => x.b.toLowerCase().includes(ql));
+      const brandMatch = idx.find(x => x.b.toLowerCase().includes(ql) || _brandAlias(x.b).includes(ql));  // M-70
       if (brandMatch) {
         location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
       } else {
@@ -2171,7 +2203,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=ad0b6b03"); }
+  try { idx = await getJSON("data/search.json?v=ad2a5934"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
