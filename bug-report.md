@@ -682,10 +682,11 @@
 ### [M-26] ✅ 해결완료(2026-06-11) — 검색창 커스텀 X 버튼 없음
 - **해결(2026-06-11):** JS로 커스텀 X 버튼 동적 삽입. 입력값 있을 때만 표시, 클릭 시 input 초기화+드롭다운 닫기. [site/app.js](site/app.js)
 
-### [M-27] search.html 전용 검색 결과 페이지 없음 — 검색어 URL 공유·북마크 불가 (SEO)
+### [M-27] ✅ 해결완료(2026-06-13, CORE) — search.html 전용 검색 결과 페이지 없음 — 검색어 URL 공유·북마크 불가 (SEO)
 - **영역:** 검색 (SEO)
 - **URL:** https://www.gear-forest.com/search.html
 - **증상:** `/search.html?q=키워드` 접근 시 index.html로 리다이렉트. 검색 결과를 URL로 공유·북마크 불가. 검색엔진 인덱싱도 불가.
+- **해결:** `site/search.html` 신규 생성. `setupHomeSearch()` 재사용 — `?q=` URL 복원·결과 표시 모두 기존 로직으로 처리. 인라인 스크립트에서 `?q` 감지 시 `<title>`·`<h1>` 동적 업데이트. app.js 변경 없음. [site/search.html](site/search.html)
 
 ### [M-21] ✅ 해결완료(SITE_URL 확인) — 상세 페이지 canonical URL non-www
 - **해결(2026-06-11):** `build-item-pages.js` `SITE_URL = "https://gear-forest.com"` 확인. 실제 서빙도 apex 정규화됨(www→apex 301). canonical과 서빙 일치. 코드 변경 불필요.
