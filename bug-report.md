@@ -1612,7 +1612,7 @@
 
 ---
 
-### [M-114] 상품 찜 버튼 — 비로그인 상태에서 찜 누를 시 로그인 유도 없이 로컬 저장만 처리됨
+### [M-114] ✅ 기구현(2026-06-13 검증) — 상품 찜 버튼 — 비로그인 상태에서 찜 누를 시 로그인 유도 없이 로컬 저장만 처리됨
 
 - **영역:** 상품 상세 / 목록 페이지
 - **재현:** 비로그인 상태에서 찜(♡) 버튼 클릭
@@ -1908,7 +1908,7 @@
 - **수정:** save 클릭 핸들러 첫 줄에 `clearTimeout(debounce)` 추가.
 - **파일:** [site/account.html](site/account.html) line ~247
 
-### [L-113] `wish-bulk-add` 버튼 — `renderAccount()` 재호출 시 `disabled` 상태 미초기화, 찜 0개 시 DOM 잔존
+### [L-113] ✅ 해결완료(2026-06-13) — `wish-bulk-add` 버튼 — `renderAccount()` 재호출 시 `disabled` 상태 미초기화, 찜 0개 시 DOM 잔존
 - **영역:** 계정/로그인 — 찜 탭
 - **심각도:** 🟢 Low
 - **증상:** ①"찜한 N개 전체 → 새 세트로 저장" 버튼 클릭 후 `disabled=true` 세팅. 이후 `renderAccount()` 재호출 시 `bulkBtn.textContent`·`onclick`은 갱신되나 `bulkBtn.disabled = false` 재설정 없어 버튼이 영구 비활성화됨. ②찜을 모두 제거하면 `wishEl.innerHTML = ""`로 목록은 초기화되나 `bulkBtn`(`#wish-bulk-add`)은 `wishEl.after()` 위치에 잔존 — 찜 0개 상태에서도 버튼이 DOM에 남음.
