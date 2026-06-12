@@ -72,6 +72,12 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .toolbar input,.toolbar select{background:var(--card2);border:1px solid var(--line);color:var(--txt);
   padding:8px 11px;border-radius:9px;font-size:13px}
 .toolbar input{min-width:200px}
+/* FE-CAT-09: 카테고리 검색 입력은 줄 좌우 끝까지 풀너비(개수표시는 정렬 줄로 이동) */
+.toolbar #q{flex:1 1 100%;min-width:0}
+/* 정렬 칩 + 결과 개수 한 줄 — 개수는 우측 정렬 */
+.sortrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+.sortrow .sortchips{margin:0;flex:0 1 auto}
+.sortrow .count{flex:0 0 auto}
 .count{color:var(--muted);font-size:13px;margin-left:auto}
 .stars{color:var(--star);letter-spacing:1px;font-size:12px}
 .stars .e{color:#e2e2e4}
@@ -273,6 +279,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sres:hover{background:var(--card2)}
 .sres.sres-active{background:var(--card2);outline:2px solid var(--accent);outline-offset:-2px}
 .sres .sb{color:var(--muted)}
+/* L-48: 오타 제안 항목 */
+.sres-suggest{color:var(--accent);border-top:1px solid var(--line)}
+.sres-suggest b{color:var(--accent);font-weight:700}
 .sres i{font-style:normal;color:var(--faint);font-size:12px}
 .sres-thumb{flex:0 0 auto;width:34px;height:34px;border-radius:7px;object-fit:contain;
   background:#fafafa;border:1px solid var(--line)}
@@ -671,6 +680,26 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pwa-dismiss-btn{border:none;background:none;color:rgba(255,255,255,0.7);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0}
 .acc-set-share{border:none;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
 .acc-set-share:hover{color:var(--accent)}
+/* FE-WISH-07 — 세트 상세 표 항목별 구매 버튼 */
+.set-buy{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:700;padding:5px 10px;cursor:pointer;white-space:nowrap;line-height:1.2}
+.set-buy:hover{filter:brightness(1.06)}
+.set-buy.is-off{background:var(--card2);color:var(--muted);border-color:var(--line);cursor:not-allowed;font-weight:600}
+/* FE-WISH-05/06 — 장비 꾸러미 담기 확인 카드(2~3초 자동소멸 + '꾸러미 보기' 루트) */
+.set-added-card{position:fixed;left:50%;bottom:24px;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);z-index:9999;width:min(360px,calc(100vw - 28px));background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:13px 14px 0;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;overflow:hidden}
+.set-added-card.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.sac-body{display:flex;align-items:flex-start;gap:10px}
+.sac-text{flex:1;min-width:0}
+.sac-title{font-size:14px;font-weight:600;color:var(--txt);line-height:1.35;word-break:break-word}
+.sac-title b{color:var(--accent);font-weight:700}
+.sac-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.sac-close{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:3px 5px;border-radius:6px}
+.sac-close:hover{color:var(--txt);background:var(--card2)}
+.sac-actions{margin-top:11px}
+.sac-view{width:100%;padding:9px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+.sac-view:hover{filter:brightness(1.06)}
+.sac-bar{margin:12px -14px 0;height:3px;background:var(--line)}
+.sac-bar>i{display:block;height:100%;background:var(--accent);transform-origin:left center;transform:scaleX(1)}
+@media(prefers-reduced-motion:reduce){.set-added-card{transition:opacity .15s ease}.sac-bar>i{transition:none!important}}
 /* 모바일 하단 내비게이션 바 */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;background:var(--card);border-top:1px solid var(--line);height:56px;safe-area-inset-bottom:env(safe-area-inset-bottom)}
 @supports(padding-bottom:env(safe-area-inset-bottom)){

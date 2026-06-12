@@ -20,6 +20,7 @@ const CSS_V = _assetV("style.css");
 
 const CAT_LABELS = {
   "backpacking-tent": "백패킹 텐트",
+  "backpacking-bag": "백패킹 가방",
   "auto-tent": "오토캠핑 텐트",
   "shelter": "쉘터",
   "misc": "기타용품",
@@ -52,6 +53,13 @@ function starsHtml(stars) {
 }
 
 const UNIT_DISPLAY = { m2: "m²", cm3: "cm³", C: "°C" };
+// L-05: 배지 유형별 색상·설명 — 공식(확정)과 참고/외형/부족을 시각적으로 구분
+const BADGE_META = {
+  "확정":       { cls: "b-ok",  title: "공식·측정 확정값" },
+  "외형기준":   { cls: "b-out", title: "외형 치수 기준 산출값" },
+  "참고":       { cls: "b-ref", title: "참고값(비공식·추정)" },
+  "데이터부족": { cls: "b-low", title: "데이터 부족" },
+};
 function specTableRows(specs, metrics) {
   return metrics
     .filter(m => specs[m.key] != null)
@@ -60,7 +68,8 @@ function specTableRows(specs, metrics) {
       const unit = UNIT_DISPLAY[m.unit] || m.unit;
       const val = s.value != null ? `${s.value}${unit}` : "-";
       const stars = s.stars != null ? starsHtml(s.stars) : "";
-      const badge = s.badge ? `<span class="spec-badge">${s.badge}</span>` : "";
+      const bm = s.badge ? (BADGE_META[s.badge] || { cls: "b-ref", title: "" }) : null;
+      const badge = bm ? `<span class="spec-badge ${bm.cls}"${bm.title ? ` title="${bm.title}"` : ""}>${s.badge}</span>` : "";
       const starsLabel = s.stars != null ? ` aria-label="${s.stars}점"` : "";
       return `<tr><th scope="row">${m.label}</th><td>${val} ${badge}</td><td class="spec-stars"${starsLabel}>${stars}</td></tr>`;
     })
@@ -143,6 +152,21 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   };
 
   const specRows = specTableRows(specs, metrics);
+  // L-72: 같은 카테고리 내 이전/다음 상품 내비게이션 (rank 순서 = allModels 인덱스 순)
+  const prevM = idx > 0 ? allModels[idx - 1] : null;
+  const nextM = idx < allModels.length - 1 ? allModels[idx + 1] : null;
+  const itemPager = (prevM || nextM)
+    ? `<nav class="item-pager" aria-label="같은 카테고리 상품 이동">
+    ${prevM ? `<a class="item-pager-link prev" href="item-${idx - 1}.html" rel="prev"><span class="ip-dir">← 이전 상품</span><span class="ip-name">${prevM.brand} ${prevM.model}</span></a>` : `<span class="item-pager-link empty"></span>`}
+    ${nextM ? `<a class="item-pager-link next" href="item-${idx + 1}.html" rel="next"><span class="ip-dir">다음 상품 →</span><span class="ip-name">${nextM.brand} ${nextM.model}</span></a>` : `<span class="item-pager-link empty"></span>`}
+  </nav>`
+    : "";
+  // L-05: 이 상품 스펙에 실제로 등장하는 배지 유형만 범례로 표시
+  const presentBadges = [...new Set(metrics.filter(m => specs[m.key] != null && specs[m.key].badge).map(m => specs[m.key].badge))]
+    .filter(b => BADGE_META[b]);
+  const specLegend = presentBadges.length
+    ? `<div class="spec-legend">${presentBadges.map(b => `<span class="sl-item"><span class="spec-badge ${BADGE_META[b].cls}">${b}</span>${BADGE_META[b].title}</span>`).join("")}</div>`
+    : "";
 
   return { pageSlug, html: `<!doctype html>
 <html lang="ko">
@@ -187,13 +211,29 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .spec-table th,.spec-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
 .spec-table th{width:110px;color:var(--muted);font-weight:500;word-break:keep-all}
 .spec-badge{font-size:11px;background:var(--card2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px}
+/* L-05: 배지 유형별 색상 — 확정(공식)·외형기준·참고·데이터부족 구분 */
+.spec-badge.b-ok{background:rgba(47,122,78,.14);color:var(--accent);font-weight:600}
+.spec-badge.b-out{background:rgba(217,119,6,.14);color:var(--outer)}
+.spec-badge.b-low{background:rgba(154,154,158,.16);color:var(--faint)}
+.spec-legend{margin-top:10px;font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px}
+.spec-legend .sl-item{display:inline-flex;align-items:center;gap:4px}
+.spec-legend .spec-badge{margin-left:0}
 .spec-stars{color:var(--accent)}
 .back-link{display:inline-block;margin-top:20px;font-size:13px;color:var(--muted);text-decoration:none}
 .back-link:hover{color:var(--accent)}
+/* L-72: 같은 카테고리 이전/다음 상품 페이저 */
+.item-pager{display:flex;gap:10px;margin-top:24px}
+.item-pager-link{flex:1;display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--card);text-decoration:none;min-width:0}
+.item-pager-link.empty{border:0;background:none;pointer-events:none}
+.item-pager-link.next{text-align:right}
+.item-pager-link:hover{border-color:var(--accent)}
+.item-pager-link .ip-dir{font-size:12px;color:var(--muted)}
+.item-pager-link .ip-name{font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-pager-link:hover .ip-name{color:var(--accent)}
 .item-report{display:inline-block;margin:20px 0 0 14px;font-size:13px;color:var(--muted);text-decoration:none}
 .item-report:hover{color:var(--accent)}
 @media(max-width:640px){.item-report{margin-left:0;display:block}}
-.item-wish{display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:9px 16px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.item-wish{display:flex;justify-content:center;align-items:center;gap:6px;width:100%;max-width:320px;margin-top:14px;padding:11px 16px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
 .item-wish:hover{border-color:var(--accent);color:var(--accent)}
 .item-wish.on{border-color:var(--accent);background:var(--accent);color:#fff}
 .item-wish .wish-ico{width:18px;height:18px;fill:none}
@@ -248,8 +288,10 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
     <caption style="position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden">${brand} ${modelName} 실측 스펙</caption>
     <tbody>${specRows}</tbody>
   </table>
+  ${specLegend}
 
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
+  ${itemPager}
   <a class="back-link" href="../../category.html?cat=${catSlug}">← ${catLabel} 전체 비교 보기</a>
   <a class="item-report" href="mailto:bangsungju@gmail.com?subject=${encodeURIComponent(`[오류 제보] ${brand} ${modelName}`)}&body=${encodeURIComponent(`제품명: ${brand} ${modelName}\n페이지: ${canonicalUrl}\n\n오류 내용:\n`)}">⚠️ 제품 정보 오류 신고</a>
   <button type="button" class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로 이동">↑</button>

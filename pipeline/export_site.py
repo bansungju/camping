@@ -21,7 +21,7 @@ import limits_map as LM
 
 # 카테고리 한글명 → URL 슬러그
 SLUG = {
-    "백패킹텐트": "backpacking-tent", "오토캠핑텐트": "auto-tent",
+    "백패킹텐트": "backpacking-tent", "백패킹가방": "backpacking-bag", "오토캠핑텐트": "auto-tent",
     "쉘터": "shelter", "기타용품": "misc",
     "타프": "tarp", "침낭": "sleeping-bag", "매트": "mat", "의자": "chair", "테이블": "table",
     "아이스박스": "cooler", "버너": "burner", "코펠": "cookware", "랜턴": "lantern",
