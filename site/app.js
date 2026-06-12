@@ -2740,6 +2740,8 @@ function renderAccount() {
       if (wishEmptyEl) wishEmptyEl.style.display = "none";
     }
   }
+  // L-113: 찜 0개 시 bulkBtn 숨김
+  if (wishEl && !wishes.length) { const bb = document.getElementById("wish-bulk-add"); if (bb) bb.style.display = "none"; }
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
@@ -2790,6 +2792,8 @@ function renderAccount() {
       bulkBtn.style.cssText = "margin-top:10px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)";
       wishEl.after(bulkBtn);
     }
+    // L-113: 재호출 시 disabled 초기화
+    bulkBtn.disabled = false;
     bulkBtn.textContent = `🎒 찜한 ${wishes.length}개 전체 → 새 세트로 저장`;
     bulkBtn.onclick = () => {
       const dateStr = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
