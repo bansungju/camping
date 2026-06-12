@@ -31,7 +31,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=1818d0a9">
+<link rel="stylesheet" href="style.css?v=c998e5e2">
 </head>
 <body>
 <a class="skip-link" href="#main">메인 콘텐츠로 바로가기</a>
@@ -61,10 +61,12 @@
     <div id="cat-body">
       <div class="toolbar">
         <input id="q" type="search" placeholder="이 카테고리에서 브랜드·모델 검색">
+      </div>
+      <!-- 빠른 정렬 칩(항상 노출 — 모바일에서 필터바 접혀도 정렬) + 결과 개수(우측) -->
+      <div class="sortrow">
+        <div class="sortchips" id="sortchips"></div>
         <span class="count" id="count"></span>
       </div>
-      <!-- 빠른 정렬 칩(항상 노출 — 모바일에서 필터바 접혀도 정렬) -->
-      <div class="sortchips" id="sortchips"></div>
       <!-- 활성 필터 요약 칩 -->
       <div class="activefilters" id="activefilters"></div>
       <div id="list" class="plist"></div>
@@ -75,7 +77,7 @@
 
 <footer><div class="wrap" id="foot"></div></footer>
 
-<script src="app.js?v=8a6894ab"></script>
+<script src="app.js?v=56a273c2"></script>
 <script>renderCategory();</script>
 </body>
 </html>

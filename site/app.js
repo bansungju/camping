@@ -65,7 +65,7 @@ const LEGAL_LINKS = ` · <a href="privacy.html" style="color:var(--muted);text-d
 /* 세트 수량 한도: 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
 const SET_QTY_MAX = {
   "backpacking-tent": 1, "auto-tent": 1, "shelter": 1, "tarp": 1,
-  "sleeping-bag": 1, "mat": 1, "cot": 1,
+  "sleeping-bag": 1, "mat": 1, "cot": 1, "backpacking-bag": 1,
 };
 const qtyMax = slug => SET_QTY_MAX[slug] ?? (slug === "chair" ? 4 : slug === "table" ? 2 : 4);
 
@@ -79,6 +79,7 @@ const SET_SLOTS = [
   { slugs: ["chair"], icon: "🪑", label: "의자" },
   { slugs: ["table"], icon: "🪵", label: "테이블" },
   { slugs: ["lantern"], icon: "🔦", label: "랜턴" },
+  { slugs: ["backpacking-bag"], icon: "🎒", label: "가방" },
 ];
 
 /* 운영자 모드일 땐 눈에 띄는 배너+끄기 버튼(조용히 갇히는 것 방지) */
@@ -294,7 +295,8 @@ function addToSet(setId, item) {
 function setItem(m, slug) {
   return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
-           weight_g: m.specs?.weight?.value ?? null };
+           weight_g: m.specs?.weight?.value ?? null,
+           coupang_url: m.coupang_url ?? null };   // FE-WISH-07: 세트 표 항목별 구매 버튼용
 }
 
 function openSetModal(item) {
@@ -324,29 +326,76 @@ function openSetModal(item) {
   const close = () => modal.classList.remove("on");
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
-  const showSetToast = (setId) => {
-    const s = getSets().find(x => x.id === setId);
-    if (!s) return;
-    const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
-    const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
-    const wStr = tw >= 1000 ? `${(tw/1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
-    const pStr = tp > 0 ? `${tp.toLocaleString()}원` : null;
-    const parts = [wStr && `⚖️ ${wStr}`, pStr && `💰 ${pStr}`].filter(Boolean);
-    showToast(`"${s.title}" 추가됨${parts.length ? " · " + parts.join(" · ") : ""}`, 2800);
-  };
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
     addToSet(btn.dataset.sid, item);
     btn.textContent = "✓ 추가됨"; btn.disabled = true;
-    setTimeout(() => { close(); showSetToast(btn.dataset.sid); }, 400);
+    setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);
   });
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
     const s = newSet(t); addToSet(s.id, item);
-    close(); showSetToast(s.id);
+    close(); showSetConfirm(s.id);
   };
   inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
   modal.querySelector(".pmx").focus();
+}
+
+/* FE-WISH-05/06 — 장비 꾸러미 담기 직후 '2~3초 자동소멸 확인 카드' + '꾸러미 보기' 확인 루트.
+   순수 프론트(app.js+style.css). 확인 루트는 openSetDetail(인덱스)로 어느 페이지·로그인 상태에서도
+   세트 내용을 모달로 열람 보장(account 세트 섹션은 비로그인 시 숨겨지므로 페이지 이동에 의존하지 않음). */
+function showSetConfirm(setId) {
+  const sets = getSets();
+  const s = sets.find(x => x.id === setId);
+  if (!s) return;
+  const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
+  const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
+  const wStr = tw >= 1000 ? `${(tw / 1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
+  const pStr = tp > 0 ? `${tp.toLocaleString()}원` : null;
+  const meta = [`${s.items.length}개 장비`, wStr && `⚖️ ${wStr}`, pStr && `💰 ${pStr}`].filter(Boolean).join(" · ");
+
+  let card = document.getElementById("set-added-card");
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "set-added-card";
+    card.className = "set-added-card";
+    card.setAttribute("role", "status");
+    card.setAttribute("aria-live", "polite");
+    document.body.appendChild(card);
+  }
+  clearTimeout(card._tid);
+  card.innerHTML = `
+    <div class="sac-body">
+      <div class="sac-text">
+        <div class="sac-title">🎒 <b>${esc(s.title)}</b>에 담았어요</div>
+        <div class="sac-meta">${esc(meta)}</div>
+      </div>
+      <button type="button" class="sac-close" aria-label="확인 닫기">✕</button>
+    </div>
+    <div class="sac-actions"><button type="button" class="sac-view">꾸러미 보기 ›</button></div>
+    <div class="sac-bar" aria-hidden="true"><i></i></div>`;
+
+  const DUR = 2500; // 2~3초 자동소멸(AC1)
+  const dismiss = () => { clearTimeout(card._tid); card.classList.remove("on"); };
+  const startTimer = () => { clearTimeout(card._tid); card._tid = setTimeout(dismiss, DUR); };
+
+  card.querySelector(".sac-close").onclick = dismiss;
+  card.querySelector(".sac-view").onclick = () => {     // AC2: 한 번의 액션으로 방금 담은 꾸러미 내용 열람
+    dismiss();
+    const idx = getSets().findIndex(x => x.id === setId);
+    if (idx >= 0) openSetDetail(idx);
+  };
+  // 사용자가 카드 위에 머무는 동안엔 자동소멸 일시정지(버튼 누르려는 중 사라짐 방지). 무조작 시엔 그대로 소멸.
+  card.onpointerenter = () => clearTimeout(card._tid);
+  card.onpointerleave = startTimer;
+
+  card.classList.add("on");
+  const bar = card.querySelector(".sac-bar > i");
+  if (bar) {
+    bar.style.transition = "none"; bar.style.transform = "scaleX(1)";
+    requestAnimationFrame(() => { bar.style.transition = `transform ${DUR}ms linear`; bar.style.transform = "scaleX(0)"; });
+  }
+  startTimer();
 }
 
 /* 최근 본 상품 — 상세 모달 열 때 기록. 최신순, 중복 제거, 최대 12개. */
@@ -505,9 +554,39 @@ async function renderHub() {
     : `같은 그룹 안에서 순위로 환산한 별점 · 측정값 기반. <span class="disc">이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</span>`) + LEGAL_LINKS;
 }
 
+// L-48: 오타 제안용 편집거리(Levenshtein) — 짧은 검색어 한정으로 가벼움
+function _lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], cur[j - 1]);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+// L-48: 브랜드 목록 중 입력어와 편집거리 1~2 이내 가장 가까운 브랜드 1개
+function _closestBrand(q, brands) {
+  const ql = q.toLowerCase();
+  let best = null, bestD = Infinity;
+  for (const b of brands) {
+    const bl = b.toLowerCase();
+    if (bl.includes(ql) || ql.includes(bl)) return null;  // 부분일치는 오타 아님 → 제안 안 함
+    const d = _lev(ql, bl);
+    if (d < bestD) { bestD = d; best = b; }
+  }
+  // 길이에 비례한 허용 오차(짧은 단어는 1, 길면 2)
+  const tol = ql.length <= 3 ? 1 : 2;
+  return bestD <= tol ? best : null;
+}
+
 async function setupHomeSearch() {
   // L-14: search.json(298KB)을 페이지 로드 시점이 아닌 검색창 첫 상호작용(focus·input) 시 지연 로드
-  let idx = null, idxLoading = null;
+  let idx = null, idxLoading = null, _brandList = null;
+  const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
     if (!idxLoading) idxLoading = getJSON("data/search.json?v=ad0b6b03").then(d => (idx = d)).catch(() => (idx = []));
@@ -593,6 +672,12 @@ async function setupHomeSearch() {
       const re = new RegExp(`(${tms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
       return esc(text).replace(re, `<mark class="shl">$1</mark>`);
     };
+    // L-48: 결과·브랜드 매치 모두 없을 때 가장 가까운 브랜드 오타 제안
+    let sugHtml = "";
+    if (!hits.length && !brandHits.length && q1.length >= 2) {
+      const sug = _closestBrand(q1, brandList());
+      if (sug) sugHtml = `<a class="sres sres-suggest" href="brand.html?b=${encodeURIComponent(sug)}">혹시 <b>${esc(sug)}</b> 찾으셨나요?</a>`;
+    }
     box.innerHTML = (brandHtml || "") + (hits.length ? hits.map((x, i) => {
       const wk = wishKey(x.b, x.m, x.cap || null);
       const wished = inWish(wk);
@@ -604,7 +689,7 @@ async function setupHomeSearch() {
         <button type="button" class="sres-wish${wished ? " on" : ""}" data-hi="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       </div>`;
     }).join("")
-      : (brandHtml ? "" : `<div class="sres nd" role="option" aria-disabled="true">"${esc(inp.value)}" 검색 결과 없음</div>`))
+      : (brandHtml ? "" : `<div class="sres nd" role="option" aria-disabled="true">"${esc(inp.value)}" 검색 결과 없음</div>` + sugHtml))
       + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>`
         : (!brandHtml ? `<div class="sres-footer"><a href="category.html" style="color:var(--accent);text-decoration:none">📂 카테고리 탐색하기</a></div>` : ""));  // L-07
     // 찜 버튼 이벤트
@@ -693,10 +778,13 @@ async function setupHomeSearch() {
         location.href = `brand.html?b=${encodeURIComponent(brandMatch.b)}`;
       } else {
         // L-61: 일치 결과 없음 — "결과 없음" 박스 열어 피드백 표시
-        box.innerHTML = `<div class="sres nd" role="option" aria-disabled="true">"${esc(q)}" 검색 결과 없음</div>`;
+        // L-48: 오타로 추정되면 가장 가까운 브랜드 제안 동봉
+        const sug = _closestBrand(q, brandList());
+        const sugHtml = sug ? `<a class="sres sres-suggest" href="brand.html?b=${encodeURIComponent(sug)}">혹시 <b>${esc(sug)}</b> 찾으셨나요?</a>` : "";
+        box.innerHTML = `<div class="sres nd" role="option" aria-disabled="true">"${esc(q)}" 검색 결과 없음</div>` + sugHtml;
         box.style.display = "block";
         inp.setAttribute("aria-expanded", "true");
-        if (srStatus) srStatus.textContent = "결과 없음";
+        if (srStatus) srStatus.textContent = sug ? `결과 없음, ${sug} 제안` : "결과 없음";
       }
     }
   });
@@ -1967,7 +2055,7 @@ function draw() {
         "@type": "Product",
         "name": `${m.brand} ${m.model}`,
         "brand": { "@type": "Brand", "name": m.brand },
-        "url": catUrl,
+        "url": `https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html`,  // M-119: 개별 상품 상세 URL (카테고리 URL 중복 제거)
         ...(m.price_min != null ? { "offers": { "@type": "Offer", "priceCurrency": "KRW", "price": m.price_min, "availability": "https://schema.org/InStock" } } : {})
       }
     }))
@@ -2220,16 +2308,17 @@ function openSetDetail(si) {
   if (!s) return;
   const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
   const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
-  const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
   const rows = s.items.map((x, ii) => {
     const w = x.weight_g != null ? fmtW(x.weight_g * (x.qty || 1)) : "—";
-    const p = x.p != null ? won(x.p * (x.qty || 1)) : "—";
     const qty = x.qty || 1;
     const max = qtyMax(x.s);
+    // FE-WISH-07: 항목별 구매 버튼. coupang_url 있으면 활성, 없으면 '준비 중' 비활성(상품 상세 pmbuy 패턴)
+    const buyCell = x.coupang_url
+      ? `<button type="button" class="set-buy" data-ii="${ii}">🛒 구매</button>`
+      : `<button type="button" class="set-buy is-off" disabled aria-disabled="true" title="구매 링크 준비 중">준비 중</button>`;
     return `<tr>
       <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px">${esc(x.b || "")} ${esc(x.m || "")}</td>
       <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${w}</td>
-      <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--accent)">${p}</td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--line)">
         <div class="qty-ctrl">
           <button class="qty-dec" data-ii="${ii}" aria-label="수량 감소">−</button>
@@ -2237,6 +2326,7 @@ function openSetDetail(si) {
           <button class="qty-inc" data-ii="${ii}" aria-label="수량 증가"${qty >= max ? ' disabled' : ''}>＋</button>
         </div>
       </td>
+      <td style="padding:4px 8px;border-bottom:1px solid var(--line);text-align:right">${buyCell}</td>
     </tr>`;
   }).join("");
   let modal = document.getElementById("set-detail-modal");
@@ -2249,14 +2339,14 @@ function openSetDetail(si) {
       <thead><tr>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">수량</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">구매</th>
       </tr></thead>
       <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">장비가 없어요</td></tr>'}</tbody>
       <tfoot><tr>
         <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
         <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtW(tw) : "—"}</td>
-        <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tp ? won(tp) : "—"}</td>
+        <td></td>
         <td></td>
       </tr></tfoot>
     </table>
@@ -2280,6 +2370,22 @@ function openSetDetail(si) {
     if ((item.qty || 1) >= qtyMax(item.s)) return;
     item.qty = (item.qty || 1) + 1;
     saveSets(arr); renderAccount(); openSetDetail(si);
+  });
+  // FE-WISH-07: 항목별 쿠팡 구매 — 새 탭으로 열고 click_events 집계(상품 상세 pmbuy와 동일 패턴)
+  modal.querySelectorAll(".set-buy:not(.is-off)").forEach(btn => btn.onclick = async e => {
+    e.stopPropagation();
+    const item = getSets()[si]?.items[+btn.dataset.ii];
+    const url = item?.coupang_url;
+    if (!url) return;
+    window.open(url, "_blank", "noopener");
+    try {
+      const { supabase } = await import("./supabaseClient.js");
+      let sessionId = localStorage.getItem("_sid");
+      if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
+      await supabase.from("click_events").insert({
+        slug: item.s, brand: item.b, model: item.m, coupang_url: url, session_id: sessionId
+      });
+    } catch (_) {}
   });
   const setToLogBtn = modal.querySelector("#set-to-log-btn");
   if (setToLogBtn) setToLogBtn.onclick = () => {
