@@ -396,18 +396,26 @@ window.addEventListener("DOMContentLoaded", () => {
     else document.body.prepend(nav);
   }
 
-  // '마이' 아이콘 — 헤더 우상단 상시 노출(GNB 대체). 중복 주입 방지.
+  // '마이' 아이콘 — 헤더 우상단 상시 노출(GNB 대체).
+  // 대부분 페이지는 HTML에 .header-acct(👤)가 하드코딩돼 있음 → 그대로 사용(중복 주입 금지).
+  // 누락 페이지(account/terms/privacy/404 등)에만 동일 모양으로 주입해 전 페이지 일관 노출.
   const hwrap = document.querySelector("header.top .wrap");
-  if (hwrap && !hwrap.querySelector(".header-my")) {
-    const onMy = here === "account.html";
+  if (hwrap && !hwrap.querySelector(".header-acct")) {
     const a = document.createElement("a");
-    a.className = "header-my" + (onMy ? " on" : "");
+    a.className = "header-acct";
     a.href = "/account.html";
-    a.setAttribute("aria-label", "내 정보");
-    a.title = "내 정보";
-    if (onMy) a.setAttribute("aria-current", "page");
-    a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`;
+    a.setAttribute("aria-label", "내 계정");
+    a.title = "내 계정";
+    if (here === "account.html") a.setAttribute("aria-current", "page");
+    a.textContent = "👤";
     hwrap.appendChild(a);
+  }
+
+  // 커뮤니티 임시 숨김(버그 다수): HTML에 하드코딩된 커뮤니티 진입 링크 일괄 제거.
+  // 상세페이지의 .item-log-btn(📝 커뮤니티 장비 로그 작성) 등. 복구는 COMMUNITY_ENABLED=true.
+  // community.html 자체는 직접 URL 접근 시 디버깅용으로 동작하도록 그 페이지에선 제거하지 않음.
+  if (!COMMUNITY_ENABLED && here !== "community.html") {
+    document.querySelectorAll('a[href*="community.html"], .item-log-btn').forEach(el => el.remove());
   }
 });
 
@@ -498,8 +506,13 @@ async function renderHub() {
 }
 
 async function setupHomeSearch() {
-  let idx = [];
-  try { idx = await getJSON("data/search.json?v=ad0b6b03"); } catch (e) { return; }
+  // L-14: search.json(298KB)을 페이지 로드 시점이 아닌 검색창 첫 상호작용(focus·input) 시 지연 로드
+  let idx = null, idxLoading = null;
+  const ensureIdx = () => {
+    if (idx) return Promise.resolve(idx);
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=ad0b6b03").then(d => (idx = d)).catch(() => (idx = []));
+    return idxLoading;
+  };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
   if (!inp || !box) return;
   // WAI-ARIA combobox 패턴 (H-17) — 입력창/목록에 역할·상태 부여
@@ -556,6 +569,7 @@ async function setupHomeSearch() {
     const q = inp.value.trim().toLowerCase();
     const terms = q.split(/\s+/).filter(Boolean);
     if (!terms.length) { closeBox(); return; }
+    if (!idx) { ensureIdx().then(run); return; }  // L-14: 인덱스 미로드 시 로드 후 재실행
     // 브랜드 단위 매치 — 첫 번째 토큰으로 브랜드 히트, 전체 토큰 AND로 상품 히트
     const bcount = {};
     idx.forEach(x => { if (terms[0] && x.b.toLowerCase().includes(terms[0])) bcount[x.b] = (bcount[x.b] || 0) + 1; });
@@ -622,7 +636,7 @@ async function setupHomeSearch() {
   // 한글 IME 조합 중에는 자동완성을 트리거하지 않고, 조합이 끝나면 1회 실행 (M-49)
   inp.oninput = e => { if (e.isComposing) return; run(); };
   inp.addEventListener("compositionend", run);
-  inp.onfocus = run;
+  inp.onfocus = () => { ensureIdx(); run(); };  // L-14: 포커스 시 인덱스 선로드(타이핑 전 준비)
   inp.onblur = () => { setTimeout(() => { box.style.display = "none"; inp.setAttribute("aria-expanded", "false"); }, 150); }
   inp.addEventListener("keydown", e => {
     // IME 조합 중 키(특히 조합완료 Enter)는 검색/탐색을 발동시키지 않는다 (M-50)
@@ -648,7 +662,16 @@ async function setupHomeSearch() {
     // 활성 옵션이 있으면 그 항목으로 이동 (↓로 선택 후 Enter)
     if (active >= 0 && opts[active]) { location.href = opts[active].href; return; }
     const q = inp.value.trim();
-    if (!q) return;
+    if (!q) {
+      // L-06: 빈 입력으로 Enter 시 무반응 → 안내 박스 + 포커스로 피드백 제공
+      inp.focus();
+      box.innerHTML = `<div class="sres nd" role="option" aria-disabled="true">검색어를 입력해 주세요</div>`;
+      box.style.display = "block";
+      inp.setAttribute("aria-expanded", "true");
+      if (srStatus) srStatus.textContent = "검색어를 입력해 주세요";
+      return;
+    }
+    if (!idx) { ensureIdx().then(run); return; }  // L-14: 미로드 시 로드 후 드롭다운 표시
     // 브랜드명 정확 일치 우선 (H-39): "헬리녹스" 입력 시 brand.html 이동 (모델 매치보다 먼저)
     const ql = q.toLowerCase();
     const exactBrand = idx.find(x => x.b.toLowerCase() === ql);
@@ -2237,7 +2260,7 @@ function openSetDetail(si) {
         <td></td>
       </tr></tfoot>
     </table>
-    <button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>
+    ${COMMUNITY_ENABLED ? `<button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>` : ""}
   </div>`;
   modal.classList.add("on");
   modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
@@ -2258,7 +2281,8 @@ function openSetDetail(si) {
     item.qty = (item.qty || 1) + 1;
     saveSets(arr); renderAccount(); openSetDetail(si);
   });
-  modal.querySelector("#set-to-log-btn").onclick = () => {
+  const setToLogBtn = modal.querySelector("#set-to-log-btn");
+  if (setToLogBtn) setToLogBtn.onclick = () => {
     modal.classList.remove("on");
     if (document.getElementById("log-modal")) openLogModal(si);
     else location.href = `community.html?open-log=1&set=${si}`;
@@ -2331,7 +2355,7 @@ function renderAccount() {
                 <div style="font-size:36px;margin-bottom:10px">📝</div>
                 <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
                 <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
-                <a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>
+                ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>` : ""}
               </div>`;
             return;
           }
@@ -2339,7 +2363,7 @@ function renderAccount() {
           const renderMyLogs = (list) => {
             myLogsList.innerHTML = `
               <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-                <a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>
+                ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>` : ""}
               </div>` +
               list.map((p, pi) => {
                 const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
@@ -2408,7 +2432,7 @@ function renderAccount() {
                       <div style="font-size:36px;margin-bottom:10px">📝</div>
                       <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
                       <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
-                      <a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>
+                      ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>` : ""}
                     </div>`;
                 } else {
                   if (logsCnt) logsCnt.textContent = `${remaining.length}개`;

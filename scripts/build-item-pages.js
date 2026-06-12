@@ -190,6 +190,9 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .spec-stars{color:var(--accent)}
 .back-link{display:inline-block;margin-top:20px;font-size:13px;color:var(--muted);text-decoration:none}
 .back-link:hover{color:var(--accent)}
+.item-report{display:inline-block;margin:20px 0 0 14px;font-size:13px;color:var(--muted);text-decoration:none}
+.item-report:hover{color:var(--accent)}
+@media(max-width:640px){.item-report{margin-left:0;display:block}}
 .item-wish{display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:9px 16px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
 .item-wish:hover{border-color:var(--accent);color:var(--accent)}
 .item-wish.on{border-color:var(--accent);background:var(--accent);color:#fff}
@@ -248,6 +251,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
   <a class="back-link" href="../../category.html?cat=${catSlug}">← ${catLabel} 전체 비교 보기</a>
+  <a class="item-report" href="mailto:bangsungju@gmail.com?subject=${encodeURIComponent(`[오류 제보] ${brand} ${modelName}`)}&body=${encodeURIComponent(`제품명: ${brand} ${modelName}\n페이지: ${canonicalUrl}\n\n오류 내용:\n`)}">⚠️ 제품 정보 오류 신고</a>
   <button type="button" class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로 이동">↑</button>
 </main>
 
