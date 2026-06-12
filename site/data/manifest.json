@@ -1,13 +1,13 @@
 {
-  "generated": "2026-06-11",
-  "total_verified": 2461,
+  "generated": "2026-06-12",
+  "total_verified": 2426,
   "categories": [
     {
       "slug": "backpacking-tent",
       "name": "백패킹텐트",
       "grade": "🟢 A",
-      "count": 164,
-      "verified": 189,
+      "count": 159,
+      "verified": 184,
       "star_metrics": [
         "최소무게",
         "내수압",
@@ -65,7 +65,7 @@
       "name": "의자",
       "grade": "🟢 A",
       "count": 172,
-      "verified": 178,
+      "verified": 177,
       "star_metrics": [
         "최소무게",
         "내하중"
@@ -101,8 +101,8 @@
       "slug": "burner",
       "name": "버너",
       "grade": "🔴 한계",
-      "count": 226,
-      "verified": 243,
+      "count": 227,
+      "verified": 244,
       "star_metrics": [
         "최소무게",
         "최대화력"
@@ -152,8 +152,8 @@
       "slug": "cookware",
       "name": "코펠",
       "grade": "🔴 한계",
-      "count": 85,
-      "verified": 85,
+      "count": 86,
+      "verified": 86,
       "star_metrics": [
         "최소무게",
         "용량"
@@ -194,43 +194,6 @@
       "star_metrics": [
         "최소무게",
         "정격출력",
-        "용량"
-      ],
-      "limits": [
-        "용량"
-      ]
-    },
-    {
-      "slug": "shelter",
-      "name": "쉘터",
-      "grade": "🟡 B",
-      "count": 24,
-      "verified": 26,
-      "star_metrics": [
-        "최소무게",
-        "내수압",
-        "바닥면적"
-      ],
-      "limits": [
-        "바닥면적"
-      ]
-    },
-    {
-      "slug": "misc",
-      "name": "기타용품",
-      "grade": "—",
-      "count": 5,
-      "verified": 5,
-      "star_metrics": [],
-      "limits": []
-    },
-    {
-      "slug": "backpacking-bag",
-      "name": "백패킹 가방",
-      "grade": "🔴 C",
-      "count": 596,
-      "verified": 596,
-      "star_metrics": [
         "용량"
       ],
       "limits": [

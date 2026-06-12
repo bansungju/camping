@@ -333,7 +333,8 @@ function openSetModal(item) {
       <button class="sm-create">만들기</button>
     </div></div>`;
   modal.classList.add("on");
-  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
   const onKey = e => { if (e.key === "Escape") close(); };   // L-106: ESC 닫기
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
@@ -1145,6 +1146,33 @@ async function renderCategory() {
   }
 }
 
+let _syncPresetOn = null;   // L-155: 현재 필터바의 프리셋 .on 동기화 함수(buildFilters가 설정)
+// L-156: 별점지표 외 추가 슬라이더 메타 — 모듈 스코프로 올려 renderActiveFilters·diagnoseEmpty도 레이블 조회 가능
+const EXTRA_SPECS = {
+  "backpacking-tent": [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+  "auto-tent":        [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+  "shelter":          [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+  "tarp":             [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
+  "sleeping-bag":     [{key:"comfort_temp",label:"쾌적온도",unit:"°C"},{key:"fill_weight",label:"다운충전량",unit:"g"}],
+  "mat":              [{key:"r_value",label:"R값",unit:""},{key:"thickness",label:"두께",unit:"mm"}],
+  "lantern":          [{key:"brightness",label:"밝기",unit:"lm"},{key:"runtime",label:"사용시간",unit:"h"}],
+  "burner":           [{key:"power_output",label:"출력",unit:"W"}],
+  "powerbank":        [{key:"capacity_mah",label:"용량",unit:"mAh"},{key:"power_output",label:"출력",unit:"W"}],
+  "cooler":           [{key:"capacity_l",label:"용량",unit:"L"}],
+  "cookware":         [{key:"capacity_l",label:"용량",unit:"L"}],
+  "chair":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+  "table":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+  "cot":              [{key:"max_load",label:"최대하중",unit:"kg"}],
+  "wagon":            [{key:"max_load",label:"최대하중",unit:"kg"}],
+};
+// L-156: 지표 레이블 조회 — d.metrics 우선, 없으면 EXTRA_SPECS(현재 슬러그)에서. 둘 다 없으면 key 그대로.
+function metricLabel(key) {
+  if (key === "price") return "가격";
+  const m = STATE.data && STATE.data.metrics && STATE.data.metrics.find(x => x.key === key);
+  if (m) return m.label;
+  const ex = (EXTRA_SPECS[STATE.slug] || []).find(e => e.key === key);
+  return ex ? ex.label : key;
+}
 /* 필터 바 (카테고리 상단) — 범위·멀티브랜드·정렬·품질 */
 function buildFilters(d, star) {
   const bar = document.getElementById("filters");
@@ -1203,23 +1231,6 @@ function buildFilters(d, star) {
   });
 
   // 카테고리별 핵심 스펙 추가 슬라이더
-  const EXTRA_SPECS = {
-    "backpacking-tent": [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
-    "auto-tent":        [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
-    "shelter":          [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
-    "tarp":             [{key:"water_head",label:"내수압",unit:"mm"},{key:"floor_area",label:"바닥면적",unit:"m²"}],
-    "sleeping-bag":     [{key:"comfort_temp",label:"쾌적온도",unit:"°C"},{key:"fill_weight",label:"다운충전량",unit:"g"}],
-    "mat":              [{key:"r_value",label:"R값",unit:""},{key:"thickness",label:"두께",unit:"mm"}],
-    "lantern":          [{key:"brightness",label:"밝기",unit:"lm"},{key:"runtime",label:"사용시간",unit:"h"}],
-    "burner":           [{key:"power_output",label:"출력",unit:"W"}],
-    "powerbank":        [{key:"capacity_mah",label:"용량",unit:"mAh"},{key:"power_output",label:"출력",unit:"W"}],
-    "cooler":           [{key:"capacity_l",label:"용량",unit:"L"}],
-    "cookware":         [{key:"capacity_l",label:"용량",unit:"L"}],
-    "chair":            [{key:"max_load",label:"최대하중",unit:"kg"}],
-    "table":            [{key:"max_load",label:"최대하중",unit:"kg"}],
-    "cot":              [{key:"max_load",label:"최대하중",unit:"kg"}],
-    "wagon":            [{key:"max_load",label:"최대하중",unit:"kg"}],
-  };
   const starKeys = new Set(star.map(m => m.key));
   const extraMeta = (EXTRA_SPECS[d.slug] || []).filter(em => !starKeys.has(em.key));
   extraMeta.forEach(em => {
@@ -1325,12 +1336,13 @@ function buildFilters(d, star) {
     const syncPresetOn = () => bar.querySelectorAll(".fpre").forEach(x => {
       const on = presets[+x.dataset.pi].isOn(); x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on));  // L-119
     });
+    _syncPresetOn = syncPresetOn;   // L-155: syncFilterUI(복원 후)에서 재호출하도록 노출
     bar.querySelectorAll(".fpre").forEach(b => b.onclick = () => {
       presets[+b.dataset.pi].fn();
       syncPresetOn();   // 토글 결과(상호배타·재클릭 OFF)를 .on 표시에 반영 (M-68)
     });
     syncPresetOn();     // 초기 진입 시(URL 복원 등) 활성 프리셋 강조
-  }
+  } else { _syncPresetOn = null; }
 
   // FE-CAT-07: 모바일에선 필터를 하단 바텀시트로 노출(데스크톱은 사이드바 그대로).
   // 열기 버튼은 본문 흐름(cat-body) 상단, 시트 크롬(헤더/푸터)·백드롭은 1회 구성. 기본 닫힘 → 첫 화면에 목록 바로 노출.
@@ -1479,7 +1491,7 @@ function renderActiveFilters() {
   if (STATE.cap) chips.push([`인원 ${STATE.cap}인`, () => { STATE.cap = ""; }]);
   STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
   Object.entries(STATE.range).forEach(([k, r]) => {
-    const lab = k === "price" ? "가격" : (STATE.data.metrics.find(m => m.key === k) || {}).label || k;
+    const lab = metricLabel(k);   // L-156: EXTRA_SPECS 키도 한글 레이블
     const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");
     // 무게(g) 필터는 STATE.range에 g 단위로 저장되지만 사용자에게는 kg으로 표시
     const isWeight = rawUnit === "g";
@@ -1543,6 +1555,7 @@ function syncFilterUI() {
   // 정렬 셀렉트도 복원상태 반영(URL→컨트롤). 기본 주력지표 정렬이면 '기본' 표시
   const ssel = bar.querySelector("[data-sort]");
   if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : (STATE.sortKey || "");
+  if (_syncPresetOn) _syncPresetOn();   // L-155: 복원/변경 후 프리셋 버튼 .on·aria-pressed 동기화
 }
 
 function cellVal(m, key) {
@@ -1595,7 +1608,7 @@ function diagnoseEmpty(sortK) {
   if (STATE.brands.size) filters.push(["brands", `브랜드(${[...STATE.brands].join("·")})`]);
   if (STATE.q) filters.push(["q", `검색 "${STATE.q}"`]);
   Object.keys(STATE.range).forEach(key => {
-    const lab = key === "price" ? "가격" : (d.metrics.find(m => m.key === key) || {}).label || key;
+    const lab = metricLabel(key);   // L-156: EXTRA_SPECS 키도 한글 레이블
     filters.push(["range:" + key, `${lab} 범위`]);
   });
   if (STATE.qExclude) filters.push(["qx", "스펙값 있는 것만"]);
@@ -2051,7 +2064,8 @@ function openCmpModal(rows) {
   </div>`;
   modal.classList.add("on");
   // L-106·M-127: ESC 닫기 + 포커스 트랩 + 초기 포커스 (openProduct와 동일 패턴)
-  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); };
+  const prevFocus = document.activeElement;   // L-149: 닫을 때 포커스 복귀
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
   const onKey = e => {
     if (e.key === "Escape") { close(); return; }
     if (e.key !== "Tab") return;
