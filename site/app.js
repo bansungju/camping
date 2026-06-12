@@ -24,6 +24,8 @@ window.addEventListener("beforeinstallprompt", e => {
   _pwaPrompt = e;
   const banner = document.getElementById("pwa-banner");
   if (!banner || localStorage.getItem("pwa-dismissed")) return;
+  banner.setAttribute("role", "alert");          // L-118: 동적 출현 배너 스크린리더 고지
+  banner.setAttribute("aria-live", "polite");
   banner.innerHTML = `<div class="pwa-banner-inner">
     <span class="pwa-banner-ico">🌲</span>
     <span class="pwa-banner-msg">장비의 숲을 홈 화면에 추가하면 더 빠르게 열려요</span>
@@ -160,6 +162,11 @@ const PERSONAS = [
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
 const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>' : won(a);
+// FE-ITEM-05: 표시가는 price_min(최저가) 기준 — 실제 쿠팡가와 다를 수 있어 가격 옆 '최저가 기준' 캡션을 일관 부착.
+const PRICE_BASIS_CAP = '<span class="price-basis">최저가 기준</span>';
+// 가격 + 캡션. 값 없으면 캡션 없이 nullHtml(곳마다 '가격없음'/'—' 등) 반환(AC4).
+const priceLabeled = (n, nullHtml = '<span class="nd">가격없음</span>') =>
+  n == null ? nullHtml : won(n) + PRICE_BASIS_CAP;
 
 /* 값 표시: 무게(g) 1000↑ → kg, 부피(cm3) 1000↑ → L 환산 */
 const _UNIT_DISPLAY = { C: "°C", m2: "m²" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑
@@ -484,7 +491,7 @@ async function renderCatNav(activeSlug) {
 async function renderHub() {
   let m;
   try { m = await getJSON("data/manifest.json"); }
-  catch (e) { document.getElementById("lead").textContent = "데이터를 불러오지 못했습니다. (로컬서버 필요)"; return; }
+  catch (e) { document.getElementById("lead").textContent = "데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요."; return; }
   // 헤드라인 카운트를 앱 전체와 동일하게 dedup 모델 기준으로 통일(변형 포함 raw와 불일치 해소)
   const totalModels = m.categories.reduce((s, c) => s + (c.count || 0), 0);
   document.getElementById("lead").innerHTML =
@@ -690,8 +697,8 @@ async function setupHomeSearch() {
       </div>`;
     }).join("")
       : (brandHtml ? "" : `<div class="sres nd" role="option" aria-disabled="true">"${esc(inp.value)}" 검색 결과 없음</div>` + sugHtml))
-      + (hits.length ? `<div class="sres-footer">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>`
-        : (!brandHtml ? `<div class="sres-footer"><a href="category.html" style="color:var(--accent);text-decoration:none">📂 카테고리 탐색하기</a></div>` : ""));  // L-07
+      + (hits.length ? `<div class="sres-footer" role="presentation">${hits.length}개 결과${hits.length >= 30 ? " · 상위 30개" : ""}</div>`
+        : (!brandHtml ? `<div class="sres-footer" role="presentation"><a href="category.html" style="color:var(--accent);text-decoration:none">📂 카테고리 탐색하기</a></div>` : ""));  // L-07 · L-117 role=presentation
     // 찜 버튼 이벤트
     box.querySelectorAll(".sres-wish").forEach(btn => {
       btn.onclick = e => {
@@ -1379,6 +1386,30 @@ function buildFilters(d, star) {
   if (qx) qx.onchange = e => { STATE.qExclude = e.target.checked; draw(); };
 }
 
+// FE-CAT-10: '가성비순(value)' 정렬 활성 시 정의 안내 배너. ✕로 닫으면 localStorage로 영구 기억.
+function renderValueBanner(sortKey) {
+  const list = document.getElementById("list");
+  if (!list) return;
+  let banner = document.getElementById("value-banner");
+  const dismissed = (() => { try { return localStorage.getItem("value_banner_dismissed") === "1"; } catch (e) { return false; } })();
+  const show = sortKey === "value" && !dismissed;
+  if (!show) { if (banner) banner.remove(); return; }
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "value-banner";
+    banner.className = "value-banner";
+    banner.setAttribute("role", "note");
+    list.parentNode.insertBefore(banner, list);   // 리스트 바로 위(활성필터 아래)
+  }
+  banner.innerHTML = `<span class="vb-ico" aria-hidden="true">💡</span>
+    <span class="vb-txt"><b>가성비순</b> = 별점 대비 가격이 좋은 순으로 정렬돼요</span>
+    <button type="button" class="vb-x" aria-label="안내 닫기">✕</button>`;
+  banner.querySelector(".vb-x").onclick = () => {
+    try { localStorage.setItem("value_banner_dismissed", "1"); } catch (e) {}
+    banner.remove();
+  };
+}
+
 // 활성 필터 요약 칩(개별 해제) + 전체해제
 function renderActiveFilters() {
   const el = document.getElementById("activefilters");
@@ -2002,7 +2033,7 @@ function draw() {
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
     const inCmp = _cmpSet.includes(m);
-    return `<a class="pli" href="/item/${STATE.slug}/item-${i}.html" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
+    return `<a class="pli" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       ${thumbCell(m.img, m.model, tint, icon)}
@@ -2012,7 +2043,7 @@ function draw() {
         <div class="pli-specs">${specs}</div>
       </div>
       <div class="pli-side">
-        <div class="pli-price">${priceRange(m.price_min, m.price_max)}</div>
+        <div class="pli-price">${priceLabeled(m.price_min)}</div>
         <button type="button" class="pli-cmp${inCmp ? " on" : ""}" data-mi="${i}" aria-label="비교에 추가" aria-pressed="${inCmp}" title="비교에 추가">⚖</button>
         <span class="pli-chev" aria-hidden="true">›</span>
       </div></a>`;
@@ -2040,6 +2071,7 @@ function draw() {
   });
   const ec = document.getElementById("emptyclear"); if (ec) ec.onclick = clearAllFilters;
   document.getElementById("count").textContent = `${rows.length} / ${d.models.length}개`;
+  renderValueBanner(k);   // FE-CAT-10: '가성비순' 정렬 시 정의 안내 배너(닫기 가능)
   serializeState();   // 필터상태를 URL에 반영(공유·뒤로가기·새로고침 보존)
 
   // JSON-LD Product schema (현재 표시 중인 상위 20개)
@@ -2105,7 +2137,7 @@ async function renderBrand() {
             <div class="pli-name">${esc(x.m)}</div>
           </div>
           <div class="pli-side">
-            <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
+            <div class="pli-price">${priceLabeled(x.p)}</div>
             <span class="pli-chev" aria-hidden="true">›</span>
           </div></a>`).join("");
       return `<h2 class="sec" style="margin-top:24px">
@@ -2199,7 +2231,7 @@ async function renderRecommend() {
         <div class="rb">${esc(m.brand)}${m.capacity != null ? ` · ${m.capacity}인` : ""}</div>
         <div class="rm">${esc(m.model)}</div>
         <div class="rs"><b>${esc(mt.label)} ${fmtVal(s.value, mt.unit)}</b>${starHtml}${opsBadge}</div>
-        <div class="rp">${won(m.price_min)}</div>
+        <div class="rp">${priceLabeled(m.price_min, '<span class="nd">—</span>')}</div>
       </a>`;
     }).join("");
     return `<section class="rsec"><div class="rsec-h"><h2>${esc(pick.label)}</h2>
@@ -2291,7 +2323,7 @@ function renderRecent() {
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
         <div class="recard-b">${esc(x.b)}</div>
         <div class="recard-m">${esc(x.m)}</div>
-        <div class="recard-p">${x.p != null ? won(x.p) : '<span class="nd">—</span>'}</div>
+        <div class="recard-p">${priceLabeled(x.p, '<span class="nd">—</span>')}</div>
       </a>
     </div>`).join("") + `</div>`;
 }
@@ -2596,7 +2628,7 @@ function renderAccount() {
           <div class="pli-name">${esc(x.m)}</div>
         </div>
         <div class="pli-side">
-          <div class="pli-price">${x.p != null ? won(x.p) : '<span class="nd">가격없음</span>'}</div>
+          <div class="pli-price">${priceLabeled(x.p)}</div>
           <span class="pli-chev" aria-hidden="true">›</span>
         </div></div>`;
     }).join("");
@@ -2693,7 +2725,7 @@ function renderAccount() {
           <div class="set-slots">${slotBadges}</div>
         </div>
         <div class="pli-side">
-          <div class="pli-price">${totalPrice(s.items) ? won(totalPrice(s.items)) : '<span class="nd">—</span>'}</div>
+          <div class="pli-price">${priceLabeled(totalPrice(s.items) || null, '<span class="nd">—</span>')}</div>
           <button type="button" class="acc-set-share" data-si="${si}" aria-label="링크 복사" title="공유 링크 복사">🔗</button>
           <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
         </div></div>`;
@@ -2926,7 +2958,7 @@ async function renderBestGear() {
             <div class="comm-gear-model">${esc(m.model)}</div>
             <div class="comm-gear-spec">${star.label} ${fmtVal(m.specs[star.key].value, star.unit)}</div>
           </div>
-          <div class="comm-gear-price">${m.price_min != null ? won(m.price_min) : '<span class="nd">—</span>'}</div>
+          <div class="comm-gear-price">${priceLabeled(m.price_min, '<span class="nd">—</span>')}</div>
         </a>`
       ).join("");
 

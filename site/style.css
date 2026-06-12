@@ -543,7 +543,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .log-detail-box{max-width:440px;width:100%;padding:24px;max-height:85vh;overflow-y:auto}
 .share-btn{margin-left:10px;padding:4px 10px;border:1.5px solid var(--line);border-radius:20px;background:var(--card);cursor:pointer;font-size:14px;vertical-align:middle}
 /* 이번 주 인기 */
+#hot-section{min-height:92px}  /* M-126: 비동기 로드 전 공간 예약 — display 토글 CLS 방지 */
 #hot-list{display:flex;flex-direction:column;gap:12px}
+.hot-skel{height:56px;border-radius:12px;background:var(--card2)}  /* M-126: 로드 전 스켈레톤 */
 /* fallback chip */
 .hot-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);text-decoration:none;color:var(--fg);font-size:14px;font-weight:600;width:auto;flex-shrink:0}
 .hot-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -680,6 +682,15 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pwa-dismiss-btn{border:none;background:none;color:rgba(255,255,255,0.7);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0}
 .acc-set-share{border:none;background:none;font-size:14px;color:var(--muted);cursor:pointer;padding:2px 4px;line-height:1}
 .acc-set-share:hover{color:var(--accent)}
+/* FE-ITEM-05 — 표시가 '최저가 기준' 캡션(모든 가격 표기 공통) */
+.price-basis{display:block;font-size:10px;font-weight:400;color:var(--muted);line-height:1.2;margin-top:1px;letter-spacing:-.2px;font-variant-numeric:normal}
+/* FE-CAT-10 — '가성비순' 정의 안내 배너(닫기 가능) */
+.value-banner{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:9px 12px;background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px}
+.value-banner .vb-ico{flex-shrink:0;font-size:14px;line-height:1}
+.value-banner .vb-txt{flex:1;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.4}
+.value-banner .vb-txt b{color:var(--txt);font-weight:700}
+.value-banner .vb-x{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:3px 5px;border-radius:6px}
+.value-banner .vb-x:hover{color:var(--txt);background:var(--card)}
 /* FE-WISH-07 — 세트 상세 표 항목별 구매 버튼 */
 .set-buy{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:700;padding:5px 10px;cursor:pointer;white-space:nowrap;line-height:1.2}
 .set-buy:hover{filter:brightness(1.06)}
