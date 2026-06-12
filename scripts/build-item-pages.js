@@ -167,10 +167,17 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   const specLegend = presentBadges.length
     ? `<div class="spec-legend">${presentBadges.map(b => `<span class="sl-item"><span class="spec-badge ${BADGE_META[b].cls}">${b}</span>${BADGE_META[b].title}</span>`).join("")}</div>`
     : "";
-  // 가성비 별점 선정 기준 안내 — value_per_l(용량대비 가격) 메트릭이 있는 카테고리에만 표시
-  const valueNote = specs.value_per_l != null
-    ? `<p class="spec-note">💡 <b>가성비</b> 별점은 <b>용량 1L당 가격(원/L)</b> 기준입니다 — 1L를 더 저렴하게 담을수록(원/L이 낮을수록) 별점이 높아요. 별점은 같은 카테고리 안에서 순위로 환산했습니다(절대 점수 아님).</p>`
-    : "";
+  // 가성비 별점 선정 기준 안내 — 카테고리별 동적 생성
+  let valueNote = "";
+  if (specs.value_per_l != null) {
+    valueNote = `<p class="spec-note">💡 <b>가성비</b> 별점은 <b>용량 1L당 가격(원/L)</b> 기준입니다 — 1L를 더 저렴하게 담을수록(원/L이 낮을수록) 별점이 높아요. 별점은 같은 카테고리 안에서 순위로 환산했습니다(절대 점수 아님).</p>`;
+  } else if (specs.value_per_g != null) {
+    valueNote = `<p class="spec-note">💡 <b>가성비</b> 별점은 <b>무게 1g당 가격(원/g)</b> 기준입니다 — 같은 무게를 더 저렴하게 살수록(원/g이 낮을수록) 별점이 높아요. 별점은 같은 카테고리 안에서 순위로 환산했습니다(절대 점수 아님).</p>`;
+  } else if (specs.value_score != null) {
+    const vmMetrics = metrics.filter(m => m.is_star && m.key !== "value_score").map(m => m.label);
+    const metricStr = vmMetrics.join("·") || "스펙";
+    valueNote = `<p class="spec-note">💡 <b>가성비 지수</b>는 ${metricStr} 등 ${vmMetrics.length}개 지표의 평균 품질을 가격으로 나눈 값입니다. 같은 카테고리 안에서 순위로 환산했습니다(절대 점수 아님).</p>`;
+  }
 
   return { pageSlug, html: `<!doctype html>
 <html lang="ko">
