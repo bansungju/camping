@@ -61,7 +61,8 @@ function specTableRows(specs, metrics) {
       const val = s.value != null ? `${s.value}${unit}` : "-";
       const stars = s.stars != null ? starsHtml(s.stars) : "";
       const badge = s.badge ? `<span class="spec-badge">${s.badge}</span>` : "";
-      return `<tr><th>${m.label}</th><td>${val} ${badge}</td><td class="spec-stars">${stars}</td></tr>`;
+      const starsLabel = s.stars != null ? ` aria-label="${s.stars}점"` : "";
+      return `<tr><th scope="row">${m.label}</th><td>${val} ${badge}</td><td class="spec-stars"${starsLabel}>${stars}</td></tr>`;
     })
     .join("\n");
 }
@@ -151,6 +152,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <meta property="og:image:width" content="800">
 <meta property="og:image:height" content="600">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@gear_forest">
 <meta name="twitter:title" content="${brand} ${modelName} — 장비의 숲">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="${imgUrl}">
@@ -229,11 +231,13 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 
   <h2 style="font-size:16px;font-weight:600;margin-bottom:8px">실측 스펙</h2>
   <table class="spec-table">
+    <caption style="position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden">${brand} ${modelName} 실측 스펙</caption>
     <tbody>${specRows}</tbody>
   </table>
 
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
   <a class="back-link" href="../../category.html?cat=${catSlug}">← ${catLabel} 전체 비교 보기</a>
+  <button type="button" class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로 이동">↑</button>
 </main>
 
 <footer><div class="wrap">정량 스펙 기반 정직 비교 · <a href="${canonicalUrl}" style="color:inherit">${brand} ${modelName}</a></div></footer>

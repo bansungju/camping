@@ -982,18 +982,21 @@
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
 - **재현:** 아무 페이지 접속 → DevTools Console → SW 404 에러 확인
 
-### [L-53] 비교 모달 스펙 테이블 `<thead>/<th scope>` 없음
+### [L-53] ✅ 해결완료(2026-06-12) — 비교 모달 스펙 테이블 `<thead>/<th scope>` 없음
 - **영역:** 카테고리/목록 — 비교 모달 스펙 테이블
 - **증상:** 비교 모달(`.pmbox`) 스펙 테이블에 `<thead>` 및 `<th scope="col/row">` 속성 없음. 스크린리더가 헤더-셀 관계를 파악하지 못해 WCAG 1.3.1 위반.
+- **해결:** 비교 모달 행 레이블 `<td>` → `<th scope="row">` 변환, visually-hidden `<caption>` 추가. [site/app.js](site/app.js)
 
-### [L-54] 상세 페이지 스펙 테이블 `<thead>/<th scope>` 없음
+### [L-54] ✅ 해결완료(2026-06-12) — 상세 페이지 스펙 테이블 `<thead>/<th scope>` 없음
 - **영역:** 상품 상세
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** 상세 페이지 스펙 테이블에도 `<thead>` 및 `<th scope>` 없음. L-53과 동일 패턴.
+- **해결:** `specTableRows()`에서 `<th>` → `<th scope="row">` 변환. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-55] 스펙 테이블 `<caption>` 없음
+### [L-55] ✅ 해결완료(2026-06-12) — 스펙 테이블 `<caption>` 없음
 - **영역:** 상품 상세 / 비교 모달
 - **증상:** 스펙 테이블에 `<caption>` 요소 없음. 스크린리더 사용자가 테이블 목적을 사전 파악 불가.
+- **해결:** item 페이지에 visually-hidden `<caption>` 추가 (build-item-pages.js), 비교 모달도 동일. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-56] ✅ 해결완료(2026-06-12) — 모달 닫기(✕) 버튼 `type="submit"` — 의도치 않은 폼 제출 위험
 - **영역:** 카테고리/목록 — 비교 모달 · 상품 상세 모달
@@ -1082,11 +1085,12 @@
 - **재현:** DOM 검사 → `input[type="range"].dsl-input` 8개 모두 aria-label null
 - **해결:** 가격/스펙/추가스펙 슬라이더 3종 템플릿에 `aria-label="XXX 최솟값/최댓값"` 추가. oninput에서 `aria-valuetext` 포맷팅 값으로 동기화. [site/app.js](site/app.js)
 
-### [L-71] 상세 페이지 별점 셀(`.spec-stars`)에 `aria-label` 없음 — 원시 유니코드 문자 읽힘
+### [L-71] ✅ 해결완료(2026-06-12) — 상세 페이지 별점 셀(`.spec-stars`)에 `aria-label` 없음 — 원시 유니코드 문자 읽힘
 - **영역:** 상품 상세 — 스펙 테이블
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** `.spec-stars` 셀에 `aria-label`이 없어 스크린리더가 "★★★★☆ (4)" 원시 유니코드를 읽음. ◐(반별)도 접근 가능한 텍스트 없음. "4점 만점에 3.5점" 같은 `aria-label` 필요.
 - **재현:** DOM 검사 → `document.querySelectorAll('.spec-stars')` → ariaLabel null
+- **해결:** `specTableRows()`에서 `s.stars != null` 시 `aria-label="${s.stars}점"` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-72] 상세 페이지 — 같은 카테고리 이전/다음 상품 내비게이션 없음
 - **영역:** 상품 상세
@@ -1383,11 +1387,12 @@
 - **증상:** `style.css`에 `@media print` 규칙 없음. 브라우저 인쇄 미리보기 시 오버레이 배경·탭바·필터 등 전체 UI가 함께 출력됨. 상품 스펙 정보만 선택적으로 인쇄 불가.
 - **재현:** 상품 모달 열기 → Ctrl+P → 인쇄 미리보기 확인
 
-### [L-35] 카테고리 목록 스크롤 끝 "모두 표시됨" 안내 없음
+### [L-35] ✅ 해결완료(2026-06-12) — 카테고리 목록 스크롤 끝 "모두 표시됨" 안내 없음
 - **영역:** 카테고리/목록
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag 등
 - **증상:** 무한스크롤 마지막 아이템 이후 종료 인디케이터가 없어 로딩 중인지 목록의 끝인지 구분 불가. sleeping-bag(244개), table(52개) 등 모두 해당.
 - **재현:** 카테고리 페이지에서 맨 아래까지 스크롤 → 마지막 카드 아래 빈 공간만 있음
+- **해결:** `draw()`에서 카드 있을 때 `─ 총 N개 모두 표시됨 ─` `.list-end` div 추가. style.css 스타일 추가. [site/app.js](site/app.js)
 
 ### [M-106] ✅ 해결완료 — 데스크톱 탭바 홈 탭 레이블이 '비교'로 오표기
 - **해결(2026-06-11):** `app.js` `TABS` 배열 첫 탭 `label: "비교"` → `label: "홈"` 수정. 데스크톱 `.tabbar`와 모바일 `.bottom-nav` 레이블 일치. [site/app.js](site/app.js)
@@ -1531,17 +1536,19 @@
 - **원인:** `app.js`에서 SW 등록 시 상대경로 `'sw.js'` 사용. item 페이지는 2단계 하위 경로(`/item/{cat}/`)이므로 루트 절대경로 `'/sw.js'`로 수정 필요.
 - **재현:** `/item/sleeping-bag/item-232.html` 직접 접근 → DevTools 콘솔 → 'sw.js 404' 에러 확인
 
-### [L-84] 상품상세 페이지 `twitter:site` 메타태그 누락
+### [L-84] ✅ 해결완료(2026-06-12) — 상품상세 페이지 `twitter:site` 메타태그 누락
 - **영역:** 상품상세 — SNS 메타
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** `twitter:card`·`twitter:title`·`twitter:image`는 있으나 `twitter:site`(@계정) 없음. Twitter/X 공유 카드에 사이트 계정이 표시되지 않음.
 - **재현:** 상세 페이지 → `document.querySelector('meta[name="twitter:site"]')` → null
+- **해결:** 아이템 페이지 템플릿에 `twitter:site` content="@gear_forest" 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-83] 상품상세 페이지 스크롤-투-탑 버튼 없음
+### [L-83] ✅ 해결완료(2026-06-12) — 상품상세 페이지 스크롤-투-탑 버튼 없음
 - **영역:** 상품상세
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** 긴 스펙 테이블·관련 상품 섹션까지 스크롤 후 상단 복귀 수단이 없음. fixed position 스크롤-투-탑 버튼 미구현.
 - **재현:** 상세 페이지 → 맨 아래 스크롤 → 상단 이동 버튼 없음
+- **해결:** `<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">` 추가. style.css 스타일. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-82] 비교 모달 '세트로 저장' 버튼 더블클릭 시 동일 세트 중복 저장
 - **영역:** 카테고리/목록 — 비교 모달
@@ -1556,10 +1563,11 @@
 - **증상:** `id="homeq"` 검색 입력에 연결된 `<label>`, `aria-label`, `aria-labelledby` 모두 없음. `role="combobox"`, `aria-autocomplete="list"`는 있으나 레이블 연결 누락 — 스크린리더가 입력 목적을 인식하지 못함.
 - **재현:** DevTools → Elements → `#homeq` 확인 → `aria-label` 없음
 
-### [L-27] 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
+### [L-27] ✅ 해결완료(2026-06-12) — 푸터에 법적 링크(개인정보처리방침·이용약관) 미존재
 - **영역:** 홈/메인 — 공통 푸터
 - **URL:** https://www.gear-forest.com/
 - **증상:** 하단 푸터에 '개인정보처리방침', '이용약관' 링크가 없음. 국내 개인정보보호법·정보통신망법상 서비스 운영 시 필수 고지 항목. 저작권 표시(`© 2024 장비의 숲`)와 연락처 정보도 전무.
+- **해결:** `LEGAL_LINKS` const로 개인정보처리방침·이용약관 링크 생성, 모든 페이지 푸터에 추가(홈/카테고리/브랜드/추천). [site/app.js](site/app.js)
 
 ### [M-110] ✅ 해결완료 — 비교 세트가 위치 인덱스를 저장해 정렬·필터 후 엉뚱한 상품 비교
 - **영역:** 카테고리/목록 — 비교(⚖) 기능
