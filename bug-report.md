@@ -1310,10 +1310,11 @@
 - **URL:** https://www.gear-forest.com/community.html#post={id}
 - **증상:** 댓글 작성 textarea(`id="cm-ct"`, `placeholder="댓글 달기…"`)에 연결된 `<label>` 없음. placeholder만으로는 WCAG 2.1 SC 1.3.1 미충족.
 
-### [L-34] `<meta name="theme-color">` 다크모드 변형 없음
+### [L-34] ✅ 해결완료(2026-06-12) — `<meta name="theme-color">` 다크모드 변형 없음
 - **영역:** 홈/메인 (PWA/다크모드)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `theme-color` 메타태그가 라이트모드 색상(`#2f7a4e`) 하나만 존재. `media="(prefers-color-scheme: dark)"` 변형이 없어 다크모드 기기에서 브라우저 주소창·상태바가 라이트 그린으로 고정됨.
+- **해결:** 모든 HTML(index/category/brand/recommend + item 2277개)에 `media="light"` 분리 + `media="dark" content="#121212"` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **재현:** 다크모드 기기에서 접속 → 브라우저 UI 색상 확인
 
 ### [L-33] 커뮤니티 뒤로가기 시 URL에 trailing `#` 잔존
@@ -1340,11 +1341,12 @@
 - **재현:** 카테고리 페이지에서 카드 클릭 → DevTools에서 `.pmodal` 속성 확인
 - **해결:** #set-modal, #pmodal, #pmrv-detail, #set-detail-modal 생성 코드에 `role="dialog"` · `aria-modal="true"` 추가. [site/app.js](site/app.js)
 
-### [L-26] Skip-to-content 링크 미존재 — 키보드/스크린리더 접근성 미흡
+### [L-26] ✅ 해결완료(2026-06-12) — Skip-to-content 링크 미존재 — 키보드/스크린리더 접근성 미흡
 - **영역:** 홈/메인 (접근성)
 - **URL:** https://www.gear-forest.com/
 - **증상:** `<a href="#main" class="skip-to-content">` 등 메인 콘텐츠 바로가기 링크가 없어 키보드 사용자가 Tab으로 탐색할 때 상단 nav 전체를 순회해야 함. WCAG 2.4.1(G1) 준수 미흡.
 - **재현:** 홈 접속 → Tab 키 반복 → 콘텐츠 바로가기 링크 없음 확인
+- **해결:** index/category/brand/recommend.html + item 페이지에 `<a class="skip-link" href="#main">` 추가. `<main id="main">` 추가. style.css에 `.skip-link` 포커스 시 visible 스타일. [site/style.css](site/style.css)
 
 ### [L-37] 계정 찜 탭 전체 삭제 기능 없음
 - **영역:** 계정/로그인 — 찜 탭
@@ -1365,10 +1367,11 @@
 - **증상:** 사진 선택 후 미리보기 표시되나 이미지 선택을 취소할 × 버튼 없음. 모달을 닫거나 다른 파일을 다시 선택하는 방법뿐.
 - **재현:** 글쓰기 → 사진 선택 → 미리보기 → 취소 버튼 없음 확인
 
-### [L-41] `og:image:alt` / `twitter:image:alt` 메타태그 누락
+### [L-41] ✅ 해결완료(2026-06-12) — `og:image:alt` / `twitter:image:alt` 메타태그 누락
 - **영역:** 홈/메인 (SEO·접근성)
 - **URL:** https://www.gear-forest.com/
 - **증상:** SNS 공유 시 og:image, twitter:image 존재하나 `og:image:alt`, `twitter:image:alt` 없음. 스크린리더 사용자가 SNS 공유 링크 접근 시 이미지 설명 없음.
+- **해결:** 모든 HTML(index/category/brand/recommend + item 2277개)에 `og:image:alt` / `twitter:image:alt` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-39] 비로그인 상태 `account.html#logs` 직접 접근 시 안내 없는 빈 화면
 - **영역:** 계정/로그인

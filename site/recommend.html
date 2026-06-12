@@ -19,7 +19,10 @@
 <meta name="twitter:title" content="캠핑 스타일 추천 — 장비의 숲">
 <meta name="twitter:description" content="캠핑 스타일에 맞춰 측정 스펙 기준으로 장비를 추천합니다">
 <meta name="twitter:image" content="https://gear-forest.com/og-image.png">
-<meta name="theme-color" content="#2f7a4e">
+<meta name="theme-color" content="#2f7a4e" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta property="og:image:alt" content="캠핑 스타일 추천 — 장비의 숲">
+<meta name="twitter:image:alt" content="캠핑 스타일 추천 — 장비의 숲">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -28,9 +31,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=974aa61c">
+<link rel="stylesheet" href="style.css?v=4cbb207d">
 </head>
 <body>
+<a class="skip-link" href="#main">메인 콘텐츠로 바로가기</a>
 <header class="top"><div class="wrap">
   <a class="logo" href="index.html"><img class="logo-mark" src="icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></a>
   <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
@@ -38,7 +42,7 @@
 
 <nav class="catnav-wrap"><div class="wrap"><div id="catnav" class="catnav"></div></div></nav>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <div class="crumb"><a href="index.html">홈</a> › <span>스타일 추천</span> › <span id="crumbName">…</span></div>
 
   <!-- 스타일 전환 -->

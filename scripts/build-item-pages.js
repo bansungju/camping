@@ -154,7 +154,10 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <meta name="twitter:title" content="${brand} ${modelName} — 장비의 숲">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="${imgUrl}">
-<meta name="theme-color" content="#2f7a4e">
+<meta name="theme-color" content="#2f7a4e" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta property="og:image:alt" content="${brand} ${modelName} — 장비의 숲">
+<meta name="twitter:image:alt" content="${brand} ${modelName} — 장비의 숲">
 <link rel="icon" type="image/png" href="../../icon-192.png">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
 <link rel="stylesheet" href="../../style.css?v=${CSS_V}">
@@ -190,12 +193,13 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">메인 콘텐츠로 바로가기</a>
 <header class="top"><div class="wrap">
   <a class="logo" href="../../index.html"><img class="logo-mark" src="../../icon-192.png" alt="" width="26" height="26">장비의 <b>숲</b></a>
   <div class="sub">정량 스펙 별점 · 브랜드만 · 측정값만</div>
 </div></header>
 
-<main class="wrap">
+<main class="wrap" id="main">
   <nav style="font-size:12px;color:var(--muted);margin-top:16px;margin-bottom:4px">
     <a href="../../index.html" style="color:var(--muted);text-decoration:none">홈</a> ›
     <a href="../../category.html?cat=${catSlug}" style="color:var(--muted);text-decoration:none">${catLabel}</a> ›

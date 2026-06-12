@@ -21,6 +21,9 @@
   --header-bg:rgba(18,18,18,.88); --tabbar-bg:rgba(30,30,30,.96);
 }
 .theme-toggle{display:none !important}
+/* L-26: Skip-to-content link (visually hidden until focused) */
+.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;background:var(--accent);color:#fff;padding:8px 16px;font-size:14px;font-weight:600;border-radius:4px;text-decoration:none;z-index:9999}
+.skip-link:focus{position:fixed;left:20px;top:20px;width:auto;height:auto;overflow:visible}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo",sans-serif;
