@@ -2169,3 +2169,33 @@
 - **파일:** [site/account.html](site/account.html) line ~350
 
 *다음 회차: 계정/로그인 (15순환)*
+
+---
+
+## R-77 계정/로그인 (15순환) — 2026-06-12
+
+### [M-130] `bulkBtn` setItems 생성 시 `s`·`pcode`·`coupang_url` 필드 누락 — qtyMax fallback + 클릭 추적 불가
+- **영역:** 계정 — 찜목록 "전체 세트 담기" 기능
+- **심각도:** 🟡 Medium
+- **증상:** `renderAccount()` line ~2697의 `bulkBtn` 핸들러에서 `setItems`를 `wishes.map(x => ({ b, m, cap, weight_g, qty, img, p }))` 로 생성. `s`(카테고리 슬러그), `pcode`, `coupang_url` 세 필드가 누락됨. `openSetDetail()` 내 `qtyMax(item.s)` 호출 시 `item.s === undefined` → fallback `4` 사용(실제 재고 한도 무시). `click_events` 집계 시 `item.s` 없어 카테고리별 클릭 추적 불가.
+- **원인:** bulkBtn 구현 시 `wishes.map()` 에 `s: x.s`, `pcode: x.pcode ?? null`, `coupang_url: x.coupang_url ?? null` 미포함.
+- **수정:** `wishes.map(x => ({ b: x.b, m: x.m, s: x.s, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null, pcode: x.pcode ?? null, coupang_url: x.coupang_url ?? null }))` 로 교체.
+- **파일:** [site/app.js](site/app.js) line ~2697 [lane:CORE]
+
+### [L-140] `renderProfile()` — `onclick = null` + `addEventListener` 혼합 패턴으로 재호출 시 리스너 누적
+- **영역:** 계정 — 프로필 렌더링 / 로그아웃·계정삭제 버튼
+- **심각도:** 🟢 Low
+- **증상:** `account.html` lines 307-350의 `renderProfile()`에서 `btnSignout.onclick = null; btnSignout.addEventListener('click', ...)` 혼합 사용. `onclick = null`은 `.onclick` 프로퍼티만 초기화하고 `addEventListener`로 등록된 리스너는 제거하지 않음. `renderProfile()`이 재호출될 때마다(M-116 초기화 시나리오) signOut·deleteAccount 리스너가 누적돼 버튼 클릭 1회에 중복 실행 가능.
+- **원인:** `removeEventListener` 없이 `addEventListener`만 쌓음. 올바른 패턴은 `onclick = handler` 단일 방식이거나, `removeEventListener`로 이전 리스너 명시 제거.
+- **수정:** `btnSignout.onclick = null; btnSignout.addEventListener(...)` → `btnSignout.onclick = async () => { await signOut(); ... }` 로 단일 `.onclick` 방식으로 통일. `btnDelete`도 동일 패턴 적용.
+- **파일:** [site/account.html](site/account.html) line ~331 [lane:SOCIAL]
+
+### [L-141] `supabaseClient.js` — `unhandledrejection` 전역 리스너 라이브러리 모듈 최상위에 등록
+- **영역:** 공통 — supabaseClient.js 사이드이펙트
+- **심각도:** 🟢 Low
+- **증상:** `supabaseClient.js` lines 305-307에 `window.addEventListener('unhandledrejection', e => console.error(...))` 등록. 라이브러리 모듈 최상위에서 전역 이벤트 핸들러를 등록하면 Supabase 외 모든 페이지 rejection을 가로챔. `e.preventDefault()` 없어 브라우저 콘솔 경고 억제도 안 되며 단순 duplicate `console.error` 추가 효과뿐. 앱 코드의 에러 처리 로직과 충돌 가능.
+- **원인:** 디버깅용 핸들러를 라이브러리 파일에 남긴 것으로 추정. 앱 진입점(app.js/index.html)이나 별도 error-boundary 모듈에 두어야 함.
+- **수정:** `supabaseClient.js`의 `unhandledrejection` 핸들러 제거. 필요하면 `app.js` 초기화 블록에 이동.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~305 [lane:SOCIAL]
+
+*다음 회차: 홈/메인 (16순환)*
