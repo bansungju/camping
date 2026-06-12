@@ -1899,7 +1899,7 @@
 
 ## R-69 계정/로그인 (13순환) — 2026-06-12
 
-### [M-125] 닉네임 설정 모달 — save 클릭 시 `clearTimeout(debounce)` 미호출 → `enable(true)` 경쟁 조건으로 중복 setNickname 가능
+### [M-125] ✅ 해결완료(2026-06-12) — 닉네임 설정 모달 — save 클릭 시 `clearTimeout(debounce)` 미호출 → `enable(true)` 경쟁 조건으로 중복 setNickname 가능
 - **영역:** 계정/로그인 — 닉네임 설정 모달
 - **심각도:** 🟡 Medium
 - **증상:** 닉네임 입력 중(마지막 키 입력 후 320ms 이내) 바로 "시작하기" 클릭 시, `save.addEventListener` 핸들러가 `clearTimeout(debounce)` 없이 `setNickname(v)` await을 시작함. 320ms 뒤 debounce 타이머가 발화해 `isNicknameAvailable` 결과에 따라 `enable(true)`(`save.disabled = false`) 호출 가능 → `setNickname` 완료 전 버튼 재활성화 → 사용자가 한 번 더 클릭하면 `setNickname(v)` 두 번 호출.
@@ -2209,7 +2209,7 @@
 - **수정:** `if (session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }` → `if (session && !settled) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }` 로 변경.
 - **파일:** [site/auth-callback.html](site/auth-callback.html) line ~57
 
-### [L-139] `account.html` — 계정 삭제 후 `location.href` 사용으로 히스토리 잔존
+### [L-139] ✅ 해결완료(2026-06-12) — `account.html` — 계정 삭제 후 `location.href` 사용으로 히스토리 잔존
 - **영역:** 계정/인증 — 계정 삭제
 - **심각도:** 🟢 Low
 - **증상:** `account.html:350`에서 계정 삭제 완료 후 `location.href = 'index.html?account_deleted=1'` 사용. `location.href` 는 히스토리에 항목을 추가하므로, 사용자가 홈으로 이동 후 뒤로가기 버튼을 누르면 계정이 삭제된 상태의 account.html로 돌아와 혼란 유발. 삭제 완료 후에는 뒤로가기 진입을 차단하는 `location.replace()`가 적절.
@@ -2223,7 +2223,7 @@
 
 ## R-77 계정/로그인 (15순환) — 2026-06-12
 
-### [M-130] `bulkBtn` setItems 생성 시 `s`·`pcode`·`coupang_url` 필드 누락 — qtyMax fallback + 클릭 추적 불가
+### [M-130] ✅ 해결완료(2026-06-12) — `bulkBtn` setItems 생성 시 `s`·`pcode`·`coupang_url` 필드 누락 — qtyMax fallback + 클릭 추적 불가
 - **영역:** 계정 — 찜목록 "전체 세트 담기" 기능
 - **심각도:** 🟡 Medium
 - **증상:** `renderAccount()` line ~2697의 `bulkBtn` 핸들러에서 `setItems`를 `wishes.map(x => ({ b, m, cap, weight_g, qty, img, p }))` 로 생성. `s`(카테고리 슬러그), `pcode`, `coupang_url` 세 필드가 누락됨. `openSetDetail()` 내 `qtyMax(item.s)` 호출 시 `item.s === undefined` → fallback `4` 사용(실제 재고 한도 무시). `click_events` 집계 시 `item.s` 없어 카테고리별 클릭 추적 불가.
@@ -2261,7 +2261,7 @@
 - **수정:** ① `modal.classList.add("on")` 후 `const _prev = document.activeElement; modal.querySelector(".pmx").focus()` 추가. ② 닫기 함수에 `if (_prev?.focus) _prev.focus()` 추가. ③ `document.addEventListener("keydown", onEsc)` 등록(ESC 시 닫기). ④ 모달 내 `<h2>`에 id 추가 후 `modal.setAttribute("aria-labelledby", "...")`.
 - **파일:** [site/app.js](site/app.js) line ~2430 [lane:CORE]
 
-### [L-143] `openSetModal` 닫기 시 `prevFocus` 미복귀 — 포커스 소실
+### [L-143] ✅ 해결완료(기구현·2026-06-12 검증) — `openSetModal` 닫기 시 `prevFocus` 미복귀 — 포커스 소실
 - **영역:** 홈/카테고리/상품상세 — 장비 꾸러미에 담기 모달
 - **심각도:** 🟢 Low
 - **증상:** `openSetModal()`의 `close()` 함수(line ~334)에서 `modal.classList.remove("on")` 후 `prevFocus` 복귀 없음. ESC 닫기(L-106 ✅)와 이중 dialog role(M-129 ✅)은 수정됐으나 focus 복귀는 미처리. 닫힌 뒤 포커스가 `<body>`로 이동해 키보드 사용자가 모달 트리거 전 위치를 잃음. `openProduct()` line 1682의 `prevFocus` 패턴이 정석이나 `openSetModal()`에 미적용.
@@ -2291,7 +2291,7 @@
 - **수정:** ① sw.js install 목록에서 `"data/search.json"` 제거(앱이 명시적 `?v=` URL을 쓰므로 프리캐시 불필요). 또는 ② L-128 수정 시 `search.json` 버전 쿼리를 stamp_version.py가 자동 관리하는 형태로 바꾸면서 sw.js URL도 동기화.
 - **파일:** [site/sw.js](site/sw.js) line ~22 [lane:SOCIAL]
 
-### [L-146] `syncGearSetsOnLogin()` — `remoteIds` 변수 선언 후 미사용 (데드 코드)
+### [L-146] ✅ 해결완료(2026-06-12) — `syncGearSetsOnLogin()` — `remoteIds` 변수 선언 후 미사용 (데드 코드)
 - **영역:** 계정 — 기어세트 로그인 동기화
 - **심각도:** 🟢 Low
 - **증상:** `account.html` `syncGearSetsOnLogin()` line 165: `const remoteIds = new Set(remote.map(r => r.id))` 선언 후 함수 내 어디에서도 `remoteIds`를 참조하지 않음. 실제 필터링은 `localLinked` (line 166)와 `.remoteId` 직접 비교(line 168)로 처리. `remoteIds`는 이전 구현의 잔여물로 추정.
@@ -2299,7 +2299,7 @@
 - **수정:** `const remoteIds = new Set(remote.map(r => r.id))` 라인 삭제.
 - **파일:** [site/account.html](site/account.html) line ~165 [lane:SOCIAL]
 
-### [L-147] `syncWishlistOnLogin()` — `window.onWishChange` 할당이 비동기 완료 후 → 로그인 직후 위시리스트 변경 원격 저장 누락
+### [L-147] ✅ 해결완료(2026-06-12) — `syncWishlistOnLogin()` — `window.onWishChange` 할당이 비동기 완료 후 → 로그인 직후 위시리스트 변경 원격 저장 누락
 - **영역:** 계정 — 위시리스트 로그인 동기화
 - **심각도:** 🟢 Low
 - **증상:** `syncWishlistOnLogin()`(line 185)에서 `window.onWishChange` 핸들러 등록(line 191)이 `await loadRemoteWishlist()` + `await saveRemoteWishlist()` 완료 후에 이루어짐. `SIGNED_IN` 이벤트 후 사용자가 200~500ms 이내에 카테고리 페이지에서 찜 버튼을 클릭하면, `app.js`의 `setWish()`가 `window.onWishChange`를 호출하지만 아직 null → 원격 저장 건너뜀. 로컬에는 저장되지만 원격 반영이 지연/누락됨.
@@ -2320,7 +2320,7 @@
 - **수정:** 인라인 map을 `items.map(m => setItem(m, STATE.slug))` 로 교체. `setItem()`(app.js line ~303)은 `pcode`, `b`, `m`, `cap`, `s`, `p`, `img`, `weight_g`, `coupang_url`을 모두 포함.
 - **파일:** [site/app.js](site/app.js) line ~2024 [lane:CORE]
 
-### [L-148] `openReviewDetail()` — 초기 포커스(`.pmx.focus()`) 없음, `prevFocus` 미복귀
+### [L-148] ✅ 해결완료(기구현·2026-06-12 검증) — `openReviewDetail()` — 초기 포커스(`.pmx.focus()`) 없음, `prevFocus` 미복귀
 - **영역:** 상품상세 — 리뷰 상세 오버레이
 - **심각도:** 🟢 Low
 - **증상:** `openReviewDetail()`(line 1744)은 ESC 핸들러는 있으나 (line 1761) 오버레이 열릴 때 닫기 버튼(`.pmx`)으로 포커스를 이동하지 않음. 닫을 때도 `prevFocus`를 복귀하지 않아 키보드/AT 사용자의 포커스가 모달 밖 임의 위치로 이동. `aria-labelledby`도 없어 대화상자 제목을 AT가 읽지 못함.
@@ -2328,7 +2328,7 @@
 - **수정:** (1) 열기 전 `const prevFocus = document.activeElement` 저장, (2) `ov.classList.add("on")` 후 `ov.querySelector(".pmx").focus()` 추가, (3) `close()` 내 `prevFocus?.focus()` 복귀, (4) dialog 요소에 `aria-labelledby` 연결.
 - **파일:** [site/app.js](site/app.js) line ~1744 [lane:CORE]
 
-### [L-149] `openCmpModal()` — `prevFocus` 미저장·미복귀
+### [L-149] ✅ 해결완료(기구현·2026-06-12 검증) — `openCmpModal()` — `prevFocus` 미저장·미복귀
 - **영역:** 상품상세 — 비교 모달
 - **심각도:** 🟢 Low
 - **증상:** `openCmpModal()`(line 1953)은 ESC, 포커스 트랩, `cmpX.focus()` 초기 포커스는 올바르게 구현되어 있으나, 모달 열기 전 `prevFocus = document.activeElement`를 저장하지 않고 `close()` 시 복귀도 없음. 비교 모달 닫은 후 키보드/AT 포커스가 DOM 최상단으로 이동.
@@ -2340,7 +2340,7 @@
 
 ## R-81 — 계정/로그인 (16순환) [2026-06-12]
 
-### [M-132] `initAuth()` — 합성 `'INITIAL'` + `INITIAL_SESSION` 이중 발화 → 콜백 2회 실행·getProfile 2회 호출
+### [M-132] ✅ 해결완료(2026-06-12) — `initAuth()` — 합성 `'INITIAL'` + `INITIAL_SESSION` 이중 발화 → 콜백 2회 실행·getProfile 2회 호출
 - **영역:** 계정 — 인증 초기화
 - **심각도:** 🟡 Medium
 - **증상:** `supabaseClient.js` `initAuth()`(line 19)는 `getSession()` 직후 `onStateChange(user, 'INITIAL')`를 동기 호출(line 22)한 뒤, `onAuthStateChange` 구독을 등록한다(line 23). Supabase SDK는 `onAuthStateChange` 등록 즉시 `INITIAL_SESSION` 이벤트를 발화하므로, 로그인 세션이 있는 상태에서 account.html 로드 시 콜백이 (`'INITIAL'`)→(`'INITIAL_SESSION'`) 2회 연속 실행된다. 각 실행이 `getProfile()`(서버 호출)을 시작하고 `renderAccount()`, `renderProfile()`까지 병렬 진행하므로 서버 네트워크 요청 2배 · 렌더링 중첩이 발생한다.

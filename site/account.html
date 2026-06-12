@@ -105,7 +105,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=a463083b"></script>
+<script src="app.js?v=da81572b"></script>
 <script>
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
@@ -129,7 +129,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=8ae38532'
+} from './supabaseClient.js?v=c10ddf43'
 
 const section = document.getElementById('auth-section')
 
@@ -162,7 +162,6 @@ async function syncGearSetsOnLogin(userId) {
   if (remote === null) return
   const local  = localSets.get()
   // 원격에 없는 로컬 세트 → upsert
-  const remoteIds = new Set(remote.map(r => r.id))
   const localLinked = new Set(local.map(s => s.remoteId).filter(Boolean))
   // upsert local-only sets
   const toUpsert = local.filter(s => !s.remoteId)
@@ -183,12 +182,12 @@ async function syncGearSetsOnLogin(userId) {
 
 // 로그인 직후 1회: 로컬↔원격 찜 병합 → 양쪽 저장 → 이후 변경은 onWishChange로 원격 반영
 async function syncWishlistOnLogin() {
+  window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   const remote = await loadRemoteWishlist()
   if (remote === null) return                 // 네트워크/권한 실패 시 로컬 유지(비파괴)
   const merged = mergeWishlists(localWish.get(), remote)
   localWish.set(merged)
   if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
-  window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   if (typeof renderAccount === 'function') renderAccount()        // 병합본으로 다시 그림
 }
 
@@ -247,6 +246,7 @@ function renderNicknameModal() {
   save.addEventListener('click', async () => {
     const v = input.value.trim()
     if (!NICKNAME_RE.test(v)) return
+    clearTimeout(debounce)
     enable(false); save.textContent = '저장 중…'
     const { error } = await setNickname(v)
     if (error) {
@@ -347,7 +347,7 @@ function renderProfile(profile) {
       }
       await signOut()
       localStorage.removeItem('wish'); localStorage.removeItem('gear_sets')
-      location.href = 'index.html?account_deleted=1'
+      location.replace('index.html?account_deleted=1')
     })
   }
 }
