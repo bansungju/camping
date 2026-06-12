@@ -1816,3 +1816,18 @@
 ---
 
 *다음 회차: 카테고리/목록 (13순환)*
+
+---
+
+## R-67 카테고리/목록 (13순환) — 2026-06-12
+
+### [M-124] draw() 카드 href — 필터/정렬 인덱스 사용으로 잘못된 상품 정적 페이지 링크
+- **영역:** 카테고리/목록 — 상품 카드 링크
+- **증상:** 필터나 정렬이 적용된 상태에서 상품 카드를 Ctrl+클릭(새 탭)하거나 스크린리더가 href를 따라가면 전혀 다른 상품의 정적 페이지가 열림. 예: 원본 d.models[5]가 rows[0]으로 필터됐을 때 href = `/item/slug/item-0.html` (rows 인덱스)이지만 실제 해당 상품 페이지는 `/item/slug/item-5.html` (원본 인덱스). 카드 클릭 자체는 `onclick → e.preventDefault() → openProduct(rows[i])` 경로로 정상 동작하지만 href 자체가 틀림.
+- **원인:** `app.js:1950` `rows.map((m, i) => ...)` — `i`는 필터·정렬 후 배열의 위치. `app.js:1964` `href="/item/${STATE.slug}/item-${i}.html"` — 정적 item 페이지는 원본 `d.models` 기준으로 생성되므로 인덱스가 불일치.
+- **수정 방향:** `app.js:1964` href를 `"/item/${STATE.slug}/item-${d.models.indexOf(m)}.html"`로 변경 (M-119 JSON-LD fix와 동일한 패턴). [site/app.js:1964](site/app.js)
+- **심각도:** 🟡 Medium
+
+---
+
+*다음 회차: 상품상세 (13순환)*
