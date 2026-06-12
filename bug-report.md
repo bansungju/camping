@@ -1092,11 +1092,9 @@
 - **재현:** DOM 검사 → `document.querySelectorAll('.spec-stars')` → ariaLabel null
 - **해결:** `specTableRows()`에서 `s.stars != null` 시 `aria-label="${s.stars}점"` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-72] 상세 페이지 — 같은 카테고리 이전/다음 상품 내비게이션 없음
+### [L-72] ✅ 해결완료(2026-06-12) — 상세 페이지 — 같은 카테고리 이전/다음 상품 내비게이션 없음
 - **영역:** 상품 상세
-- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
-- **증상:** 카테고리 내 순차 탐색(`← 이전 상품` / `다음 상품 →`)이 없음. 하단 "비슷한 제품 3개" 링크와 카테고리 목록 복귀 링크만 있어 상품 간 순서 탐색 불가.
-- **재현:** 상세 페이지 → 이전/다음 이동 버튼 없음 확인
+- **해결:** 관련제품 섹션 아래에 `.item-pager` 추가 — allModels 인덱스 기준 `← 이전 상품`/`다음 상품 →` 링크(인접 상품 브랜드·모델명 표시). 양 끝은 빈 슬롯. 검증: item-1에서 prev=JEEP 캡락, next=MSR Elixir2 확인. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-73] 헤더 슬로건 텍스트가 필터 버튼으로 오인 유발 — 클릭 불가 정적 텍스트
 - **영역:** 상품 상세 — 헤더
@@ -1168,16 +1166,13 @@
 - **영역:** 검색 — 홈 자동완성
 - **해결:** `hits` 필터 후 정렬 추가 — 모델명 정확 일치 → 접두어 → 부분 포함 순. [site/app.js](site/app.js)
 
-### [L-47] 검색 결과 클릭 후 뒤로가기 시 홈 검색창 내용 미복원
+### [L-47] ✅ 해결완료(M-62 기처리·검증) — 검색 결과 클릭 후 뒤로가기 시 홈 검색창 내용 미복원
 - **영역:** 검색 — 홈 내비게이션
-- **URL:** https://gear-forest.com/
-- **증상:** 홈 검색창에 검색어 입력 → 자동완성 클릭 → category.html 이동 → 브라우저 뒤로가기 시 홈 검색창이 빈 상태. sessionStorage나 history.state에 검색어를 보존하지 않아 직전 검색어를 처음부터 재입력해야 함.
-- **재현:** 홈 → "헬리녹스" 입력 → 자동완성 클릭 → 뒤로가기 → 검색창 값 "" 확인
+- **해결완료(M-62에서 기처리, 2026-06-12 검증):** 타이핑 시 `history.replaceState`로 `?q=` URL 반영 → 자동완성 클릭 후 뒤로가기 착지 URL이 `/?q=검색어`가 되고, `setupHomeSearch`의 M-62 분기가 이를 읽어 input 복원+검색 실행. 검증: `/?q=헬리녹스` 진입 시 input 값 "헬리녹스" 복원 확인. ✅
 
-### [L-48] 오타 입력 시 유사어 제안 없음 — "헬리넉스" 검색 시 결과 없음만 표시
+### [L-48] ✅ 해결완료(2026-06-12) — 오타 입력 시 유사어 제안 없음 — "헬리넉스" 검색 시 결과 없음만 표시
 - **영역:** 검색 — 홈 자동완성
-- **URL:** https://gear-forest.com/
-- **증상:** "헬리넉스"(헬리녹스 흔한 오타) 등 1글자 오타 입력 시 "검색 결과 없음"만 표시. "혹시 '헬리녹스'를 찾으셨나요?" 류의 단순 제안 안내도 없음.
+- **해결:** Levenshtein 편집거리(`_lev`)로 결과 0건+브랜드 0건 시 가장 가까운 브랜드 1개 제안 — `혹시 OOO 찾으셨나요?` 링크(brand.html). 허용오차: 3자 이하 1, 그 이상 2. 부분일치는 오타 아님으로 제외. 드롭다운·Enter 분기 모두 적용. 검증: "헬리넉스"→"혹시 헬리녹스 찾으셨나요?" 확인. [site/app.js](site/app.js)
 - **재현:** 홈 검색창 → "헬리넉스" 입력 → 결과 없음 확인
 
 ### [L-43] ✅ 해결완료(2026-06-12) — 데스크톱 footer 불필요한 `padding-bottom: 64px` 잔류
@@ -1236,10 +1231,9 @@
 - **영역:** 홈/메인 (성능)
 - **해결:** `setupHomeSearch`에서 즉시 `await getJSON` 제거 → `ensureIdx()` 지연 로더 도입. 검색창 focus/input 첫 상호작용 시 로드. run()·Enter 핸들러에 미로드 가드 추가. 검증: 페이지 로드 시 search.json 미요청(0), focus 후 1회 요청 확인. [site/app.js](site/app.js)
 
-### [L-15] PWA manifest start_url 상대경로 설정 — www·non-www 불일치와 복합
+### [L-15] ✅ 해결완료(기적용·2026-06-12 검증) — PWA manifest start_url 상대경로 설정 — www·non-www 불일치와 복합
 - **영역:** 홈/메인 (PWA)
-- **URL:** https://www.gear-forest.com/manifest.webmanifest
-- **증상:** `start_url`이 `./index.html`(상대경로). [H-12] canonical non-www 불일치와 결합 시 PWA 설치 후 시작 URL·canonical·실제 서빙 URL이 3개로 분열될 수 있음.
+- **해결:** `manifest.webmanifest` 현재 `start_url:"/"`, `scope:"/"` 절대경로로 이미 설정됨(`./index.html` 아님). apex 정식화([[domain-apex-canonical]])와도 일치. 추가 조치 불필요.
 
 ### [L-10] 비로그인 상태에서 `#new` 직접 접근 시 안내 없이 피드로 redirect
 - **영역:** 커뮤니티/소셜
@@ -1275,10 +1269,9 @@
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 페이지 로드 시 Cloudflare Web Analytics beacon 스크립트가 503 반환. 분석 데이터 수집 불가.
 
-### [L-05] 스펙 배지가 모두 '참고'로 표시 — 공식/비공식 구분 없음
+### [L-05] ✅ 해결완료(2026-06-12) — 스펙 배지가 모두 '참고'로 표시 — 공식/비공식 구분 없음
 - **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 스펙 테이블의 모든 행에 '참고' 배지만 표시되어 공식 측정값과 참고값 구분 불가. 사용자가 데이터 신뢰도 판단 어려움.
+- **해결:** 데이터엔 4종 배지(참고 4777·데이터부족 729·확정 96·외형기준 242)가 있으나 동일 회색으로 렌더돼 구분 불가였음. 유형별 색상 부여(`확정`=accent 굵게/`외형기준`=outer/`참고`=muted/`데이터부족`=faint) + `title` 설명 + 해당 상품에 등장하는 배지만 표 아래 범례(`.spec-legend`) 표시. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-03] 상품 카드가 `<a>` 링크 없이 role=button으로만 구현 — 접근성 미흡
 - **영역:** 카테고리/목록
@@ -1679,12 +1672,9 @@
 
 ## 회차 62 — 카테고리/목록 (11순환) 2026-06-12
 
-### [M-119] JSON-LD ItemList 개별 상품 url이 카테고리 URL로 고정
+### [M-119] ✅ 해결완료(2026-06-12) — JSON-LD ItemList 개별 상품 url이 카테고리 URL로 고정
 - **영역:** 카테고리/목록 — SEO
-- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
-- **증상:** `draw()`가 생성하는 JSON-LD `ItemList`에서 각 `ListItem.item.url`이 모두 `catUrl`(카테고리 페이지 URL)로 동일하게 설정됨. 검색엔진이 각 상품을 개별 URL로 구분하지 못해 개별 상품 상세 페이지(`/item/{slug}/item-{idx}.html`)가 검색 결과에서 누락될 수 있음.
-- **원인:** `app.js:1911` — `"url": catUrl`로 하드코딩. 개별 상품 URL은 `app.js:1413`에서 `\`/item/${STATE.slug}/item-${d.models.indexOf(m)}.html\``으로 이미 계산되나 JSON-LD 생성 코드와 연동되지 않음.
-- **수정 방향:** `app.js:1904` `rows.slice(0, 20).map((m, i) => {...})` 내 `"url": catUrl`을 `"url": \`https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html\``으로 교체. `d.models.indexOf(m)`은 기존 openProduct 내 공유 버튼과 동일 패턴. [site/app.js:1911](site/app.js)
+- **해결:** `draw()` ItemList의 각 `ListItem.item.url`을 `catUrl` → `https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html` 개별 상세 URL로 교체. ItemList 최상위 `url`은 카테고리 URL 유지. [site/app.js](site/app.js)
 - **심각도:** 🟡 Medium
 
 ### [L-103] ✅ 해결완료(M-62에서 기처리, 2026-06-12 검증) — 0건 empty state "전체 카테고리에서 검색" 링크 — 홈이 ?q= 파라미터를 처리하지 않음
@@ -1724,11 +1714,7 @@
 
 ### [M-121] 상품 상세(정적 item 페이지) 히어로 액션 버튼 너비 불일치 — 레이아웃 깨짐
 - **영역:** 상품상세 — 정적 item 페이지(`/item/{cat}/item-{idx}.html`) 히어로 영역
-- **URL:** https://gear-forest.com/item/backpacking-tent/item-0.html (JEEP 캡락 등 전 2277개 페이지 공통)
-- **증상:** `.item-hero` 안에서 액션 버튼들의 너비가 제각각이라 계단식으로 어긋나 보임. `찜하기`는 `inline-flex`로 내용폭(~100px), `장비 꾸러미에 담기`·`커뮤니티 장비 로그 작성`·`쿠팡에서 구매하기`는 `width:100%;max-width:320px`(320px)로 렌더됨. 또한 이미지가 `200px` 고정인데 정보 컬럼(세로로 쌓인 320px 버튼 스택)이 훨씬 길어 이미지 아래에 큰 빈 공간이 생기며 전체가 불균형/깨진 느낌.
-- **원인:** [scripts/build-item-pages.js:193](scripts/build-item-pages.js) `.item-wish{display:inline-flex;...}`(자동폭) vs [scripts/build-item-pages.js:198](scripts/build-item-pages.js)·[:201](scripts/build-item-pages.js)·[:203](scripts/build-item-pages.js) `.item-buy`/`.item-set-btn`/`.item-log-btn{display:block;width:100%;max-width:320px}` — 버튼 4종의 폭 규칙이 통일돼 있지 않음. `.item-hero{align-items:flex-start}` + `.item-img{width:200px}`로 좌우 컬럼 높이차에 따른 좌측 하단 여백 발생.
-- **수정 방향:** (1) 액션 버튼 4종을 공통 폭으로 통일 — `.item-wish`도 `display:block;width:100%;max-width:320px;justify-content:center`로 맞추거나, 4개 버튼을 `max-width:320px` 컨테이너(`<div class="item-actions">`)로 묶어 일괄 정렬. (2) 선택: 이미지를 더 키우거나(`240~280px`) 히어로를 2-컬럼 `grid`로 바꿔 좌측 빈 공간 축소. 정적 템플릿 수정 후 item 2277개 재생성 필요.
-- **재현:** 임의 상품 상세 페이지 접속 → 히어로 우측 버튼 4종 너비가 찜하기만 좁고 나머지는 넓음 → 이미지 아래 빈 공간.
+- **해결:** `.item-wish`를 `display:inline-flex`(자동폭) → `display:flex;justify-content:center;width:100%;max-width:320px;margin-top:14px;padding:11px 16px`로 변경해 나머지 3개 버튼(`.item-buy`/`.item-set-btn`/`.item-log-btn`, 320px)과 너비·정렬 통일. 검증: 찜하기·꾸러미 버튼 모두 320px(widthsMatch=true) 확인. item 2277+ 재생성. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 - **심각도:** 🟡 Medium
 
 ---
