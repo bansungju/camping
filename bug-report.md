@@ -1180,7 +1180,8 @@
 - **증상:** 좋아요 버튼 `<button class="cm-like">🤍 <span>0</span></button>`에 `aria-label`과 `aria-pressed`가 없어 스크린리더가 "하트 0"으로만 읽음. 클릭 후 ❤️로 바뀌어도 상태 변화가 접근성 트리에 반영되지 않음.
 - **재현:** 글 상세 → 좋아요 버튼 DOM 검사 → aria-label·aria-pressed null
 
-### [L-52] `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
+### [L-52] ✅ 해결완료(기구현 확인) — `favicon.ico` 404 — 브라우저 탭 기본 아이콘 표시
+- **처리:** site/favicon.ico 파일 존재 확인. 재현 불가.
 - **영역:** 전체 (정적 리소스)
 - **URL:** https://gear-forest.com/favicon.ico
 - **증상:** favicon.ico 파일 없어 404 반환. `<link rel="icon" type="image/png" href="icon-192.png">`는 있으나 브라우저 기본 favicon.ico 자동 요청에 대한 응답 없음. 콘솔에 매 페이지마다 404 에러 노출.
@@ -1230,7 +1231,7 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** meta description이 '구글 로그인·찜 목록 동기화'(8자)로 권장 50~160자 기준에 크게 미달.
 
-### [L-22] 비로그인 상태에서 찜 섹션 완전 은닉 — 기능 인지 불가
+### [L-22] ✅ 해결완료(2026-06-13) — 비로그인 상태에서 찜 섹션 완전 은닉 — 기능 인지 불가
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `#wish-section` 전체 `display:none` 처리. 비로그인 사용자가 찜 기능의 존재를 알 수 없으며 로그인 유도 CTA 없음.
@@ -1394,7 +1395,7 @@
 - **증상:** SNS 공유 시 og:image, twitter:image 존재하나 `og:image:alt`, `twitter:image:alt` 없음. 스크린리더 사용자가 SNS 공유 링크 접근 시 이미지 설명 없음.
 - **해결:** 모든 HTML(index/category/brand/recommend + item 2277개)에 `og:image:alt` / `twitter:image:alt` 추가. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-39] 비로그인 상태 `account.html#logs` 직접 접근 시 안내 없는 빈 화면
+### [L-39] ✅ 해결완료(2026-06-13) — 비로그인 상태 `account.html#logs` 직접 접근 시 안내 없는 빈 화면
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html#logs
 - **증상:** 비로그인 상태로 직접 접근 시 해시 무시(M-52)로 wish 섹션만 표시, 왜 로그가 안 보이는지 안내 없음.
@@ -1524,7 +1525,7 @@
 - **원인:** `community.html`의 `renderDetail()`/`renderCompose()`/404 분기 모두 `<span class="cm-back">← 목록으로</span>` 사용. role·tabindex 미부여.
 - **재현:** 글 상세 → Tab 키 순환 시 '← 목록으로' 건너뜀 → 요소에 role/tabindex 없음 확인
 
-### [L-88] `account.html` 비로그인 앵커 링크 `href="#sec-wish"` id 불일치
+### [L-88] ✅ 해결완료(기구현·2026-06-13 검증) — `account.html` 비로그인 앵커 링크 `href="#sec-wish"` id 불일치
 - **영역:** 계정/로그인
 - **URL:** https://gear-forest.com/account.html
 - **증상:** acc-nav의 '찜 N' 링크가 `href="#sec-wish"`를 가리키지만 실제 DOM에는 `id="wish-section"`만 존재. 앵커 클릭 시 해당 섹션으로 스크롤되지 않음. (acc-nav 자체 L-87 이슈와 동반)
@@ -1835,7 +1836,7 @@
 
 ## R-66 홈/메인 (13순환) — 2026-06-12
 
-### [L-110] renderHub — account_deleted=1 URL param 미처리 → 계정 삭제 완료 메시지 없음
+### [L-110] ✅ 해결완료(2026-06-13) — renderHub — account_deleted=1 URL param 미처리 → 계정 삭제 완료 메시지 없음
 - **영역:** 홈/메인 — 홈 진입 처리
 - **증상:** `account.html`에서 계정 삭제 성공 시 `location.href = 'index.html?account_deleted=1'`로 홈으로 리디렉션되지만, `renderHub()`는 `?account_deleted=1` 파라미터를 읽지 않아 성공 안내 메시지를 표시하지 않음. 사용자 입장에서 계정이 정말 삭제된 건지 피드백이 없음.
 - **원인:** `app.js renderHub()` 내에 `new URLSearchParams(location.search).get("account_deleted")` 처리 코드가 없음.
@@ -2442,7 +2443,8 @@
 - **수정:** `ov.innerHTML` 내 `.pmbox.pmrvd-box`에 `aria-labelledby="pmrvd-title"` 추가. 내부에 `<span id="pmrvd-title" class="sr-only">리뷰 상세</span>` 또는 작성자 닉네임 요소에 id를 부여해 연결.
 - **파일:** [site/app.js](site/app.js) line ~1782 [lane:CORE]
 
-### [L-158] `openProduct` focus trap 셀렉터에 `textarea` 누락 — submit disabled 시 포커스 탈출
+### [L-158] ✅ 해결완료(2026-06-13, CORE) — `openProduct` focus trap 셀렉터에 `textarea` 누락 — submit disabled 시 포커스 탈출
+- **처리:** app.js line 1745 포커스 트랩 셀렉터에 `select, textarea` 추가.
 - **영역:** 상품상세 — 상품 모달 포커스 트랩
 - **심각도:** 🟢 Low
 - **증상:** `openProduct()`의 `onKey` 핸들러(line 1731) 포커스 트랩 셀렉터 `'button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])'`에 `textarea`가 없다. 후기 폼이 열린 상태에서 사진 업로드 중 `submitBtn.disabled = true`이고 아직 리뷰 카드가 없을 때, Tab을 `.pmrv-ta`(textarea) → 비활성 submit(브라우저가 건너뜀) → .pmbox 밖으로 순서로 누르면 포커스가 모달 외부로 탈출한다.
@@ -2450,7 +2452,8 @@
 - **수정:** 셀렉터를 `'button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'` 로 확장.
 - **파일:** [site/app.js](site/app.js) line ~1731 [lane:CORE]
 
-### [L-159] `wireReviews` `reset()` — 마지막 `renderThumbs` Blob URL 미해제 → 메모리 누수
+### [L-159] ✅ 해결완료(2026-06-13, CORE) — `wireReviews` `reset()` — 마지막 `renderThumbs` Blob URL 미해제 → 메모리 누수
+- **처리:** reset() 내 `formbox.innerHTML=""` 전에 `querySelectorAll("img")` blob URL revoke 추가.
 - **영역:** 상품상세 — 후기 사진 썸네일
 - **심각도:** 🟢 Low
 - **증상:** `renderThumbs()`(line 1902) 재호출 시 이전 Blob URL을 `URL.revokeObjectURL`로 해제하지만, `reset()`(line 1854)은 `formbox.innerHTML = ""` 만 실행하고 마지막 `renderThumbs` 호출로 생성된 Blob URL을 해제하지 않는다. 후기 폼을 열고 사진을 추가했다가 닫거나 등록 완료 후 reset 할 때마다 Blob URL이 해제되지 않고 페이지 lifetime 동안 누적된다.
