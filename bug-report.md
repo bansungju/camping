@@ -735,15 +735,11 @@
 - **URL:** https://www.gear-forest.com/login.html
 - **증상:** 별도 로그인 URL로 직접 접근 시 아무런 안내 없이 비어 보이는 점검 페이지 표시. 리다이렉트나 안내 링크 없음.
 
-### [M-05] 상세 페이지 커뮤니티 로그 연결 버튼 없음
-- **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
-- **증상:** `a95b92a` 커밋('세트 상세 → 커뮤니티 로그 작성 원클릭 연결')이 머지됐으나 실제 상세 페이지에 해당 버튼이 없음.
+### [M-05] ✅ 해결완료(2026-06-11) — 상세 페이지 커뮤니티 로그 연결 버튼 없음
+- **해결(2026-06-11):** `build-item-pages.js`에 `.item-log-btn` 링크 추가됨. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [M-07] 모바일(375px)에서 상세 hero 섹션 레이아웃 미반응형
-- **영역:** 상품 상세
-- **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** `.item-hero`가 모바일에서도 `flex-direction: row` 유지. 이미지(200px 고정폭)와 상품 정보가 가로 배치되어 상품명·가격·순위 텍스트가 극도로 좁은 영역에 압축됨. `column` 전환 필요.
+### [M-07] ✅ 해결완료(2026-06-11) — 모바일(375px)에서 상세 hero 섹션 레이아웃 미반응형
+- **해결(2026-06-11):** `@media(max-width:480px){.item-hero{flex-direction:column}...}` 추가됨. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [M-08] ✅ 해결완료(2026-06-11) — 상세 페이지 이미지 403/503 오류 + fallback 없음
 - **해결(2026-06-11):** `.item-img` 태그에 `onerror="this.onerror=null;this.style.display='none'"` 추가. 이미지 로드 실패 시 깨진 아이콘 대신 요소 숨김 처리. [scripts/build-item-pages.js](scripts/build-item-pages.js)
@@ -998,9 +994,10 @@
 - **영역:** 상품 상세 / 비교 모달
 - **증상:** 스펙 테이블에 `<caption>` 요소 없음. 스크린리더 사용자가 테이블 목적을 사전 파악 불가.
 
-### [L-56] 모달 닫기(✕) 버튼 `type="submit"` — 의도치 않은 폼 제출 위험
+### [L-56] ✅ 해결완료(2026-06-12) — 모달 닫기(✕) 버튼 `type="submit"` — 의도치 않은 폼 제출 위험
 - **영역:** 카테고리/목록 — 비교 모달 · 상품 상세 모달
 - **증상:** 모달 내 ✕ 닫기 버튼에 `type="button"` 대신 기본값(`type="submit"`)이 적용되어 있음. 폼 컨텍스트 내 포함될 경우 폼 제출 트리거 가능. 모든 닫기·UI 전용 버튼은 명시적 `type="button"` 필요.
+- **해결:** app.js 내 모든 `<button class="pmx" aria-label="닫기">` → `<button type="button" class="pmx" aria-label="닫기">` 일괄 변경(replace_all). [site/app.js](site/app.js)
 
 ### [L-57] 오류 신고 버튼이 상세 페이지(`item/*.html`)에 없음
 - **영역:** 상품 상세
@@ -1061,17 +1058,19 @@
 - **증상:** `authorBlock()` 함수가 날짜를 `<span>${timeAgo(iso)}</span>` 형태로 렌더링. `<time datetime="ISO-8601">` 요소가 아니어서 스크린리더의 기계가독 날짜 파악 불가, 검색엔진의 날짜 메타데이터 인식 불가. M-10(날짜 포맷 불일치)과 연관되나 시맨틱 마크업 누락은 별도 문제.
 - **재현:** 커뮤니티 피드 HTML 소스 확인 → `<span>3일 전</span>` 형태, `<time>` 요소 없음
 
-### [L-68] 무게 슬라이더 URL 파라미터 부동소수점 오류 — `2015.0000000000002` 등 삽입
+### [L-68] ✅ 해결완료(2026-06-12) — 무게 슬라이더 URL 파라미터 부동소수점 오류 — `2015.0000000000002` 등 삽입
 - **영역:** 카테고리/목록 — 무게 필터 슬라이더
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag&weight_min__max=2015.0000000000002
 - **증상:** 무게 슬라이더를 2.0kg로 설정하면 URL에 `weight_min__max=2015.0000000000002` 같은 부동소수점 오류값이 삽입됨. kg→g 변환(×1000) 시 JavaScript 부동소수점 연산 오류. 가격(정수)·온도(raw float)는 정상.
 - **재현:** 카테고리 페이지 → 최소무게 슬라이더 이동 → URL 파라미터 확인
+- **해결:** `toStateVal`에서 `Math.round(parseFloat(v) * 1000)` 적용 → 정수 g값 보장. [site/app.js](site/app.js)
 
-### [L-69] 정렬·브랜드 `<select>` 요소에 `aria-label` 없음
+### [L-69] ✅ 해결완료(2026-06-12) — 정렬·브랜드 `<select>` 요소에 `aria-label` 없음
 - **영역:** 카테고리/목록 — 필터바
 - **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** `[data-sort]` 정렬 선택과 `[data-brandsel]` 브랜드 추가 select 모두 `aria-label`·`aria-labelledby`·`id` 없음. 스크린리더가 "콤보박스" 이상의 컨텍스트를 읽지 못함.
 - **재현:** DOM 검사 → `select[data-sort]`, `select[data-brandsel]` aria-label null 확인
+- **해결:** 코드 확인 시 이미 `aria-label="브랜드 필터 선택"` / `aria-label="정렬 기준 선택"` 존재 — 사전 적용됨. [site/app.js](site/app.js)
 
 ### [L-70] 범위 슬라이더 `<input type="range">` `aria-label`·`aria-valuetext` 없음
 - **영역:** 카테고리/목록 — 필터 슬라이더
@@ -1210,10 +1209,11 @@
 - **URL:** https://www.gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** h1이 '매직 100'만 표시, 브랜드명 '큐물러스'는 별도 `p.item-brand`에만 있음. 페이지 title('큐물러스 매직 100 — 침낭 스펙 비교')과 불일치.
 
-### [L-16] 정렬 chip 버튼에 aria-pressed 속성 없음
+### [L-16] ✅ 해결완료(2026-06-12) — 정렬 chip 버튼에 aria-pressed 속성 없음
 - **영역:** 카테고리/목록 (접근성)
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** 활성 정렬 chip에 `on` 클래스는 붙지만 `aria-pressed` 속성 없음. 스크린 리더 사용자가 현재 선택된 정렬 상태 확인 불가.
+- **해결:** `.schip` 초기 생성 시 `aria-pressed="false"` 부여, `draw()`에서 `.classList.toggle("on")` 병행으로 `setAttribute("aria-pressed", String(active))` 갱신. [site/app.js](site/app.js)
 
 ### [L-23] 커뮤니티 페이지 JSON-LD 구조화 데이터 없음
 - **영역:** 커뮤니티/소셜 (SEO)
@@ -1329,11 +1329,12 @@
 - **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
 - **증상:** HTML `<title>`이 "카테고리 비교 — 장비의 숲"으로 하드코딩. JS 실행 후 "침낭 비교"로 변경됨. JS 미실행 크롤러가 잘못된 타이틀 색인, 탭 타이틀 깜빡임 발생.
 
-### [L-28] 상품 상세 모달에 role="dialog"·aria-modal 없음
+### [L-28] ✅ 해결완료(2026-06-12) — 상품 상세 모달에 role="dialog"·aria-modal 없음
 - **영역:** 카테고리/목록 — 상품 카드 모달
 - **URL:** https://www.gear-forest.com/category.html?cat=backpacking-tent
 - **증상:** 상품 카드 클릭 시 열리는 모달(`.pmodal`)에 `role="dialog"`, `aria-modal`, `aria-labelledby` 속성 없음. 스크린리더가 모달 진입을 인식하지 못함.
 - **재현:** 카테고리 페이지에서 카드 클릭 → DevTools에서 `.pmodal` 속성 확인
+- **해결:** #set-modal, #pmodal, #pmrv-detail, #set-detail-modal 생성 코드에 `role="dialog"` · `aria-modal="true"` 추가. [site/app.js](site/app.js)
 
 ### [L-26] Skip-to-content 링크 미존재 — 키보드/스크린리더 접근성 미흡
 - **영역:** 홈/메인 (접근성)
