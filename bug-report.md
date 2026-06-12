@@ -2270,4 +2270,32 @@
 - **수정:** `window.onWishChange = (items) => { saveRemoteWishlist(items) }` 할당을 `await loadRemoteWishlist()` 호출 전으로 이동. 동기 중 원격 저장이 중복 발생할 수 있으나 `upsert` 특성상 멱등.
 - **파일:** [site/account.html](site/account.html) line ~191 [lane:SOCIAL]
 
-*다음 회차: 상품상세 (16순환)*
+---
+
+## R-80 — 상품상세 (16순환) [2026-06-12]
+
+### [M-131] `openCmpModal` 세트저장 시 `s`·`pcode`·`coupang_url` 누락 — M-130 동일 패턴
+- **영역:** 상품상세 — 비교 모달 세트 저장
+- **심각도:** 🟡 Medium
+- **증상:** `openCmpModal()`(line 2024)에서 "세트로 저장" 버튼이 생성하는 `setItems`에 `s`(카테고리 슬러그), `pcode`, `coupang_url`이 빠져 있음. 저장된 세트를 `openSetDetail()`에서 열면 `qtyMax(item.s)`가 `undefined` → 폴백 4로 처리되고, 구매 버튼 클릭 시 `click_events` 카테고리 집계가 null로 들어가며, 세트 상세에서 상품별 쿠팡 링크를 생성할 수 없음.
+- **원인:** `setItem()` 헬퍼 함수를 재사용하지 않고 인라인으로 객체를 수기 생성하면서 필드 누락. M-130(account.html bulkBtn)과 동일한 패턴.
+- **수정:** 인라인 map을 `items.map(m => setItem(m, STATE.slug))` 로 교체. `setItem()`(app.js line ~303)은 `pcode`, `b`, `m`, `cap`, `s`, `p`, `img`, `weight_g`, `coupang_url`을 모두 포함.
+- **파일:** [site/app.js](site/app.js) line ~2024 [lane:CORE]
+
+### [L-148] `openReviewDetail()` — 초기 포커스(`.pmx.focus()`) 없음, `prevFocus` 미복귀
+- **영역:** 상품상세 — 리뷰 상세 오버레이
+- **심각도:** 🟢 Low
+- **증상:** `openReviewDetail()`(line 1744)은 ESC 핸들러는 있으나 (line 1761) 오버레이 열릴 때 닫기 버튼(`.pmx`)으로 포커스를 이동하지 않음. 닫을 때도 `prevFocus`를 복귀하지 않아 키보드/AT 사용자의 포커스가 모달 밖 임의 위치로 이동. `aria-labelledby`도 없어 대화상자 제목을 AT가 읽지 못함.
+- **원인:** `openProduct()`(line 1684)의 `prevFocus` 패턴이 `openReviewDetail`에 미적용됨.
+- **수정:** (1) 열기 전 `const prevFocus = document.activeElement` 저장, (2) `ov.classList.add("on")` 후 `ov.querySelector(".pmx").focus()` 추가, (3) `close()` 내 `prevFocus?.focus()` 복귀, (4) dialog 요소에 `aria-labelledby` 연결.
+- **파일:** [site/app.js](site/app.js) line ~1744 [lane:CORE]
+
+### [L-149] `openCmpModal()` — `prevFocus` 미저장·미복귀
+- **영역:** 상품상세 — 비교 모달
+- **심각도:** 🟢 Low
+- **증상:** `openCmpModal()`(line 1953)은 ESC, 포커스 트랩, `cmpX.focus()` 초기 포커스는 올바르게 구현되어 있으나, 모달 열기 전 `prevFocus = document.activeElement`를 저장하지 않고 `close()` 시 복귀도 없음. 비교 모달 닫은 후 키보드/AT 포커스가 DOM 최상단으로 이동.
+- **원인:** `openProduct()`(line 1684) 패턴과 달리 `prevFocus` 변수가 선언되지 않음.
+- **수정:** 모달 호출 시작부에 `const prevFocus = document.activeElement` 추가, `close()` 내 `prevFocus?.focus()` 복귀.
+- **파일:** [site/app.js](site/app.js) line ~1953 [lane:CORE]
+
+*다음 회차: 계정/로그인 (16순환)*
