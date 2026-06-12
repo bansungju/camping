@@ -2012,7 +2012,8 @@
 
 ## R-73 계정/로그인 (14순환) — 2026-06-12
 
-### [M-129] `openSetModal()` — 외부·내부 이중 `role="dialog"` + ESC 닫기 핸들러 없음
+### [M-129] ✅ 해결완료(Batch 8 기처리·2026-06-12 검증) — `openSetModal()` — 외부·내부 이중 `role="dialog"` + ESC 닫기 핸들러 없음
+- **해결:** Batch 8에서 L-112(외부 `#set-modal` role/aria-modal 제거 — 내부 `.pmbox.sm-box`에만 dialog 유지)·L-106(onKey ESC 닫기 + removeEventListener)로 동시 해결됨. 검증: set-modal 외부 role 없음(line 312)·내부 dialog 단일·ESC 핸들러 존재. (수정 방향은 내부 제거였으나 외부 제거+내부 유지가 WAI-ARIA상 올바른 선택 — 결과는 동일하게 단일 dialog)
 - **영역:** 계정/로그인 — 세트 담기 모달
 - **심각도:** 🟡 Medium
 - **증상:** `openSetModal()`(line ~309)에서 외부 컨테이너 `#set-modal`에 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정 후(line ~312), `modal.innerHTML`로 삽입하는 내부 `.pmbox.sm-box`에도 `role="dialog" aria-modal="true"` 중복 부여(line ~321). M-128과 동일한 이중 dialog 패턴. 또한 `close()` 함수는 있으나 `document.addEventListener("keydown", onKey)` 미등록으로 ESC 닫기 불가 — M-127 패턴. `modal.querySelector(".pmx").focus()` 초기 포커스는 구현됨.
@@ -2058,7 +2059,8 @@
 - **수정:** `ib.remove()` 전 다음 포커스 대상(`main h1` 또는 `#homeq`) 참조 저장 후, 제거 후 `.focus()` 호출. `const nextFocus = document.querySelector("main h1") || document.querySelector("#homeq");` → `ib.remove();` → `nextFocus?.focus();`
 - **파일:** [site/app.js](site/app.js) line ~514
 
-### [L-128] `setupHomeSearch()` `data/search.json?v=ad0b6b03` — app.js 하드코딩, stamp_version.py 갱신 범위 밖
+### [L-128] ✅ 해결완료(기구현·2026-06-12 검증, L-102 중복) — `setupHomeSearch()` `data/search.json?v=ad0b6b03` — app.js 하드코딩, stamp_version.py 갱신 범위 밖
+- **확인:** L-102와 동일 — `stamp_version.py`(M-76)가 이미 app.js의 search.json 버전을 내용해시로 자동 치환. 리터럴 `ad0b6b03` == search.json md5 일치 확인. 추가 조치 불필요.
 - **영역:** 홈/메인 — 전역 검색
 - **심각도:** 🟢 Low
 - **증상:** `setupHomeSearch()`(line ~601)에서 `getJSON("data/search.json?v=ad0b6b03")` 호출 시 버전 쿼리 `?v=ad0b6b03`이 app.js 소스에 직접 리터럴로 박혀 있음. `stamp_version.py`는 `app.js`·`style.css` 해시를 HTML 파일에 주입하나, app.js 내부의 data 파일 버전은 갱신하지 않음. search.json 재생성 후 이 버전을 수동으로 업데이트하지 않으면 SW stale-while-revalidate 캐시에서 구버전 검색 인덱스가 서빙될 수 있음(L-123 패턴 변형).
