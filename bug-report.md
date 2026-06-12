@@ -760,7 +760,7 @@
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** 글 없을 때 '첫 이야기를 남겨보세요!' 문구가 표시되지만 비로그인 사용자에게는 글쓰기 버튼이 없어 액션 불가. 로그인 유도 없이 단순 권유 문구만 표시.
 
-### [M-09] 로그인 후 프로필 영역에 실제 이메일 주소 노출 — 개인정보
+### [M-09] ✅ 해결완료(2026-06-13) — 로그인 후 프로필 영역에 실제 이메일 주소 노출 — 개인정보
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** `renderProfile()`이 `profile.email`을 UI에 직접 렌더링. 코드 주석에 '실명/이메일을 표시명으로 쓰지 않는다'고 명시되어 있음에도 이메일이 노출됨.
@@ -1145,7 +1145,7 @@
 - **증상:** URL hash가 `#settings`이지만 DOM ID는 `settings-section`. 브라우저 기본 anchor 동작이 작동하지 않아 직접 접근·링크 공유 시 설정 섹션으로 자동 스크롤되지 않음. `#wish`, `#sets`, `#logs`도 동일 패턴 확인 필요.
 - **재현:** `account.html#settings` 직접 접근 → 최상단에 머무름, 설정 섹션 미스크롤
 
-### [L-75] 찜 카드 `div[role="button"]` 내부에 `<button>` 중첩 — HTML 명세 위반
+### [L-75] ✅ 해결완료(2026-06-13) — 찜 카드 `div[role="button"]` 내부에 `<button>` 중첩 — HTML 명세 위반
 - **영역:** 계정/로그인 — 찜 탭
 - **URL:** https://gear-forest.com/account.html
 - **증상:** 찜 카드 `<div role="button" tabindex="0">` 안에 `<button class="pli-wish">` 찜 해제 버튼이 중첩. Interactive content 안에 interactive content 포함이 HTML 명세 위반이며 보조기술에서 예측 불가한 동작 유발.
@@ -1226,7 +1226,7 @@
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** 커뮤니티 로그에 닉네임이 사용되는 구조임에도 닉네임 설정·변경 입력 필드 없음. 최초 자동 생성 닉네임 변경 불가 상태.
 
-### [L-21] account.html meta description 8자로 SEO 기준 미달
+### [L-21] ✅ 해결완료(2026-06-13) — account.html meta description 8자로 SEO 기준 미달
 - **영역:** 계정/로그인 (SEO)
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** meta description이 '구글 로그인·찜 목록 동기화'(8자)로 권장 50~160자 기준에 크게 미달.
@@ -1518,7 +1518,7 @@
 - **원인:** `community.html` `renderDetail()` line 304에서 버튼 생성 시 aria 속성 미포함.
 - **재현:** 글 상세 URL 접속 → 좋아요 버튼 요소 검사 → `aria-label`, `aria-pressed` 없음
 
-### [L-89] `← 목록으로` `<span>` 요소 키보드 접근 불가
+### [L-89] ✅ 아카이브(커뮤니티 비활성화) — `← 목록으로` `<span>` 요소 키보드 접근 불가
 - **영역:** 커뮤니티/소셜
 - **URL:** https://gear-forest.com/community.html#post=00000000-0000-0000-0000-000000000000
 - **증상:** 글 상세·존재하지 않는 글·글쓰기 폼의 '← 목록으로' 버튼이 `<span>` 으로 구현되어 `role="button"`, `tabindex` 없음 → 키보드 포커스 불가, 스크린리더 인터랙티브 미인식.
