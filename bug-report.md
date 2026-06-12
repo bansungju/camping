@@ -1801,3 +1801,18 @@
 ---
 
 *다음 회차: 홈/메인 (13순환)*
+
+---
+
+## R-66 홈/메인 (13순환) — 2026-06-12
+
+### [L-110] renderHub — account_deleted=1 URL param 미처리 → 계정 삭제 완료 메시지 없음
+- **영역:** 홈/메인 — 홈 진입 처리
+- **증상:** `account.html`에서 계정 삭제 성공 시 `location.href = 'index.html?account_deleted=1'`로 홈으로 리디렉션되지만, `renderHub()`는 `?account_deleted=1` 파라미터를 읽지 않아 성공 안내 메시지를 표시하지 않음. 사용자 입장에서 계정이 정말 삭제된 건지 피드백이 없음.
+- **원인:** `app.js renderHub()` 내에 `new URLSearchParams(location.search).get("account_deleted")` 처리 코드가 없음.
+- **수정 방향:** `renderHub()` 진입부에서 `account_deleted=1` 감지 시 토스트 또는 인트로바 형태로 "계정이 삭제되었습니다" 안내를 1회 표시하고 URL에서 파라미터 제거 (`history.replaceState`). [site/app.js:435](site/app.js)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 카테고리/목록 (13순환)*
