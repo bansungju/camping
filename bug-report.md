@@ -867,7 +867,7 @@
 ### [M-91] ✅ 해결완료(M-38 동시 수정) — 상세 페이지 장비 꾸러미 담기 버튼 없음
 - **해결(2026-06-11):** M-38 수정에서 `build-item-pages.js`에 `<button id="item-set-add" class="item-set-btn">＋ 장비 꾸러미에 담기</button>` 추가. 2277개 상세 페이지에 버튼 생성됨. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [M-92] SW 스크립트 404 에러 — 매 페이지 로드 시 콘솔에 반복 발생
+### [M-92] ✅ 아카이브(stale·H-19/H-28 해소 후 재현불가) — SW 스크립트 404 에러 — 매 페이지 로드 시 콘솔에 반복 발생
 - **영역:** 상품 상세 (전체 페이지 공통)
 - **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 페이지 로드 시 "A bad HTTP response code (404) was received when fetching the script." 에러가 콘솔에 발생. SW(`sw.js`)가 이미 삭제된 경로의 스크립트를 프리캐시 시도하는 것으로 추정. H-19/H-28 관련 잔여 이슈.
@@ -1016,7 +1016,7 @@
 - **재현:** 텐트 상세 페이지 → 스펙 테이블 바닥면적 행 확인
 - **해결:** `UNIT_DISPLAY` 맵(`m2`→`m²`, `cm3`→`cm³`, `C`→`°C`) 추가, `specTableRows`에서 적용 후 item 페이지 2277개 재생성. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-45] SW 스크립트 404 콘솔 에러 — 매 페이지 로드마다 발생
+### [L-45] ✅ 아카이브(stale·재현불가) — SW 스크립트 404 콘솔 에러 — 매 페이지 로드마다 발생
 - **영역:** 전체 (PWA/서비스워커)
 - **URL:** 모든 페이지
 - **증상:** 모든 페이지 로드 시 콘솔에 "A bad HTTP response code (404) was received when fetching the script." 에러 발생. 현재 SW가 캐시한 이전 버전 리소스 중 일부가 더 이상 존재하지 않아 404 발생하는 것으로 추정. 기능 동작에는 영향 없으나 콘솔에 에러 지속 노출.
@@ -1862,7 +1862,8 @@
 
 ---
 
-### [M-116] 상품 카드 — ⚠️ 신고 버튼 아이콘 의미 불명확, UX 개선 필요
+### [M-116] ✅ 해결완료(2026-06-13, CORE) — 상품 카드 — ⚠️ 신고 버튼 아이콘 의미 불명확, UX 개선 필요
+- **처리:** app.js `.pmreport` 버튼 제거 → 모달 하단 `.pm-report-link` "상품의 정보가 달라요" 텍스트 버튼으로 교체. style.css pm-report-row/link 스타일(muted·underline). build-item-pages.js 정적 페이지 링크 텍스트 동일 문구로 통일, 2875개 재생성. 프리뷰 검증: ⚠️ 버튼 없음·하단 링크 렌더 확인.
 
 - **영역:** 카테고리/목록 — 상품 카드 우상단 ⚠️ 버튼
 - **현재:** 경고 아이콘(⚠️) 버튼으로 노출 → 사용자가 기능을 인지 못함
@@ -2131,7 +2132,7 @@
 - **수정:** `sw.js` line 82: `data: { url: "/" }` 변경. line 95: `\|\| "/community.html"` → `\|\| "/"` 변경.
 - **파일:** [site/sw.js](site/sw.js) line ~82, ~95 [lane:SOCIAL]
 
-### [L-131] `sw.js` notificationclick — 기존 탭 포커스 시 알림 URL로 미이동
+### [L-131] ✅ 해결완료(2026-06-13) — `sw.js` notificationclick — 기존 탭 포커스 시 알림 URL로 미이동
 - **영역:** 홈/메인 — PWA 푸시 알림 클릭
 - **심각도:** 🟢 Low
 - **증상:** `sw.js` lines 96-99: `clients.matchAll()`로 기존 열린 탭을 찾으면 `existing.focus()`만 호출하고 알림의 `url`로 이동하지 않음. 예를 들어 사용자가 카테고리 페이지를 보는 중 새 인기 상품 알림을 클릭하면 현재 탭에 포커스만 주어질 뿐 해당 상품 페이지로 이동되지 않음. `clients.openWindow(url)`은 새 탭이 없을 때만 호출됨.
@@ -2287,7 +2288,7 @@
 
 ## R-79 카테고리/목록 (16순환·SOCIAL 레인) — 2026-06-12
 
-### [L-145] `sw.js` install — `data/search.json` 버전 없이 프리캐시, 앱은 `?v=` URL로 요청 → 캐시 키 불일치로 프리캐시 미사용
+### [L-145] ✅ 해결완료(2026-06-13) — `sw.js` install — `data/search.json` 버전 없이 프리캐시, 앱은 `?v=` URL로 요청 → 캐시 키 불일치로 프리캐시 미사용
 - **영역:** 서비스워커 — 오프라인 캐시 / 홈 검색
 - **심각도:** 🟢 Low
 - **증상:** `sw.js` install 핸들러(line ~22)에서 `"data/search.json"` (버전 없음)을 `c.addAll()`에 포함. 그러나 앱은 `setupHomeSearch()`에서 `getJSON("data/search.json?v=ad0b6b03")` (L-128 추적 중)으로 요청. 서비스워커 캐시 키는 전체 URL이므로 `search.json`과 `search.json?v=...`는 별개 항목. 앱 요청 시 캐시 미스 → 네트워크 페치 후 `search.json?v=...`로 저장. 프리캐시된 `search.json` (298KB)는 영구 미사용 상태로 스토리지만 낭비.
@@ -2380,7 +2381,7 @@
 - **수정:** `<a class="cm-post" href="#post=${esc(p.id)}" data-id="${esc(p.id)}">` 로 변경. href 추가 시 hashchange 리스너(line 386)가 자동으로 `renderDetail`을 호출하므로 별도 `onclick` 불필요.
 - **파일:** [site/community.html](site/community.html) line ~181 [lane:SOCIAL]
 
-### [L-152] `sw.js` `notificationclick` — URL 일치 탭 우선 탐색 없음 → 알림 대상 URL 대신 임의 탭 포커스
+### [L-152] ✅ 해결완료(2026-06-13) — `sw.js` `notificationclick` — URL 일치 탭 우선 탐색 없음 → 알림 대상 URL 대신 임의 탭 포커스
 - **영역:** PWA — 푸시 알림 클릭
 - **심각도:** 🟢 Low
 - **증상:** `notificationclick` 핸들러(sw.js line 96)에서 `list.find((c) => c.url.includes(location.origin))`로 기존 탭을 탐색한다. 알림 대상 URL이 `/community.html`이어도 `account.html` 탭이 이미 열려있으면 account.html을 포커스하고 종료 — 사용자는 커뮤니티가 아닌 다른 화면을 보게 된다. `clients.openWindow(url)` 경로(새 탭)는 URL이 올바르지만, 기존 탭이 있을 때는 항상 URL 무시.
