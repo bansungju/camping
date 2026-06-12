@@ -1982,7 +1982,8 @@
 
 ## R-72 상품상세 (14순환) — 2026-06-12
 
-### [M-128] `openProduct()` · `openReviewDetail()` — 외부 오버레이와 내부 `.pmbox` 양쪽에 `role="dialog"` 중복 설정
+### [M-128] ✅ 해결완료(2026-06-12) — `openProduct()` · `openReviewDetail()` — 외부 오버레이와 내부 `.pmbox` 양쪽에 `role="dialog"` 중복 설정
+- **해결:** `openProduct`는 Batch 8 L-112서 외부 role 제거 완료. 이번에 `openReviewDetail` 외부 `#pmrv-detail` role/aria-modal 제거(내부 `.pmbox`만 dialog). 검증: 외부 none·내부 dialog.
 - **영역:** 상품상세 — 제품 상세 모달 / 후기 상세 모달
 - **심각도:** 🟡 Medium
 - **증상:** `openProduct()`(line ~1550)에서 외부 컨테이너 `#pmodal`에 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정 후, `modal.innerHTML`로 삽입하는 내부 `.pmbox`에도 `role="dialog" aria-modal="true" aria-labelledby="pm-title"` 중복 부여. `openReviewDetail()`(line ~1713)도 동일하게 외부 `#pmrv-detail`과 내부 `.pmbox pmrvd-box` 양쪽에 `role="dialog"`. ARIA 기준상 `role="dialog"`는 단일 요소에만 지정해야 하며, 외부 오버레이(backdrop)가 아닌 내부 콘텐츠 박스에만 위치해야 한다. 외부 오버레이에 role이 있어 `aria-labelledby`도 내부 요소와 연결이 끊김.
@@ -2101,7 +2102,8 @@
 
 ## R-75 카테고리/목록 (15순환) — 2026-06-12
 
-### [L-132] `buildFilters()` 인원·브랜드 버튼 onclick에서 `aria-pressed` 미갱신 — L-119 부분 수정 누락
+### [L-132] ✅ 해결완료(2026-06-12) — `buildFilters()` 인원·브랜드 버튼 onclick에서 `aria-pressed` 미갱신 — L-119 부분 수정 누락
+- **해결:** 인원·브랜드 onclick에서 `.on` 토글과 함께 `aria-pressed` 직접 갱신. 검증: cap=2 클릭→true·전체→false, 브랜드 클릭→true.
 - **영역:** 카테고리/목록 — 인원·브랜드 필터 버튼
 - **심각도:** 🟢 Low
 - **증상:** `buildFilters()`(line ~1310-1320)의 인원 버튼과 브랜드 칩 onclick 핸들러에서 CSS `.on` 클래스만 수동 토글하고 `syncFilterUI()`를 호출하지 않음. 결과적으로 `aria-pressed`가 클릭 후에도 초기값 그대로 남음. L-119 수정은 HTML 생성 시 `aria-pressed` 초기값을 추가했고, `syncFilterUI()`(line ~1463)는 올바르게 갱신하나, cap/brand onclick 경로에서는 `syncFilterUI()`가 호출되지 않아 두 경로 간 불일치 발생.
@@ -2109,7 +2111,8 @@
 - **수정:** 인원 onclick에 `bar.querySelectorAll("[data-cap]").forEach(b => b.setAttribute("aria-pressed", String(b.classList.contains("on"))))` 추가, 또는 `draw()` 대신 `syncFilterUI(); draw();` 호출. 브랜드 onclick도 동일 패턴 적용.
 - **파일:** [site/app.js](site/app.js) line ~1313, ~1319
 
-### [L-133] `renderValueBanner()` `role="note"` + `aria-live` 없음 — 동적 배너 AT 미고지
+### [L-133] ✅ 해결완료(2026-06-12) — `renderValueBanner()` `role="note"` + `aria-live` 없음 — 동적 배너 AT 미고지
+- **해결:** 배너에 `aria-live="polite"` 추가(role=note 유지). 검증: role=note·aria-live=polite.
 - **영역:** 카테고리/목록 — 가성비순 정렬 안내 배너
 - **심각도:** 🟢 Low
 - **증상:** `renderValueBanner()`(line ~1408)에서 동적 생성 배너에 `banner.setAttribute("role", "note")` 적용. `role="note"`는 라이브 영역이 아니므로, 정렬을 "가성비순"으로 변경할 때 배너가 동적으로 삽입되어도 AT 사용자에게 고지 안 됨. `role="alert"` 적용 사례(L-129)와 반대 방향이지만 같은 root cause — 동적 콘텐츠에 라이브 영역 미설정.
@@ -2117,7 +2120,8 @@
 - **수정:** `banner.setAttribute("role", "note")` 유지 + `banner.setAttribute("aria-live", "polite")` 추가. 또는 `role="status"`로 교체(`aria-live="polite"` + `aria-atomic="true"` 포함).
 - **파일:** [site/app.js](site/app.js) line ~1408
 
-### [L-134] `renderCatNav()` 활성 카테고리 링크에 `aria-current="page"` 없음
+### [L-134] ✅ 해결완료(2026-06-12) — `renderCatNav()` 활성 카테고리 링크에 `aria-current="page"` 없음
+- **해결:** 활성 카테고리 `.navchip`에 `aria-current="page"` 추가. 검증: .navchip.on aria-current=page.
 - **영역:** 카테고리/목록 — 카테고리 네비게이션 바
 - **심각도:** 🟢 Low
 - **증상:** `renderCatNav()`(line ~486-488)에서 현재 카테고리 링크에 CSS 클래스 `.on`만 적용. `aria-current="page"` 미설정. 스크린리더가 어느 카테고리가 현재 페이지인지 파악 불가 — WCAG 2.1 SC 1.3.1(정보와 관계) + 탐색 네비게이션 WAI-ARIA 패턴.
@@ -2125,7 +2129,8 @@
 - **수정:** `<a class="navchip${c.slug === activeSlug ? " on" : ""}" ${c.slug === activeSlug ? 'aria-current="page"' : ''} href="...">` — 활성 링크에 `aria-current="page"` 추가.
 - **파일:** [site/app.js](site/app.js) line ~487
 
-### [L-135] `updateCmpBar()` 비교 취소 ✕ 버튼 `aria-label` 없음
+### [L-135] ✅ 해결완료(2026-06-12) — `updateCmpBar()` 비교 취소 ✕ 버튼 `aria-label` 없음
+- **해결:** ✕ 버튼에 `aria-label="비교 선택 해제"` 추가. 검증 완료.
 - **영역:** 카테고리/목록 — 비교 선택 바
 - **심각도:** 🟢 Low
 - **증상:** `updateCmpBar()`(line ~1935)에서 비교 취소 버튼 `<button class="cmp-bar-clear" id="cmp-clear">✕</button>` — 텍스트 내용이 "✕"(U+2715) 단독. AT가 "곱하기" 또는 "times" 등으로 읽을 수 있으며, 버튼 목적(비교 선택 해제) 미전달.
@@ -2202,3 +2207,33 @@
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~305 [lane:SOCIAL]
 
 *다음 회차: 홈/메인 (16순환)*
+
+---
+
+## R-78 홈/메인 (16순환) — 2026-06-12
+
+### [L-142] `openSetDetail` — ESC 핸들러·초기 포커스·`prevFocus` 복귀·`aria-labelledby` 모두 없음
+- **영역:** 홈/계정 — 장비 세트 상세 모달
+- **심각도:** 🟢 Low
+- **증상:** `openSetDetail()`(lines 2407-2432)에서 ① ESC 키 닫기 핸들러 없음(backdrop 클릭·X버튼만), ② `modal.classList.add("on")` 후 `.pmx.focus()` 미호출 → 포커스가 모달로 이동 안 됨, ③ `prevFocus` 저장·복귀 없어 닫을 때 포커스 소실, ④ `role="dialog"`가 있으나 `aria-labelledby`가 없어 AT가 다이얼로그 이름 미인식. `openSetModal()`(line 353: `.pmx.focus()`, line 335: ESC handler)·상품상세 `openProduct()`(line 1682: prevFocus)는 각각 일부 구현됨 — 일관성 부재.
+- **원인:** openSetDetail 구현 시 다른 모달에 적용된 포커스·키보드 패턴 미적용.
+- **수정:** ① `modal.classList.add("on")` 후 `const _prev = document.activeElement; modal.querySelector(".pmx").focus()` 추가. ② 닫기 함수에 `if (_prev?.focus) _prev.focus()` 추가. ③ `document.addEventListener("keydown", onEsc)` 등록(ESC 시 닫기). ④ 모달 내 `<h2>`에 id 추가 후 `modal.setAttribute("aria-labelledby", "...")`.
+- **파일:** [site/app.js](site/app.js) line ~2430 [lane:CORE]
+
+### [L-143] `openSetModal` 닫기 시 `prevFocus` 미복귀 — 포커스 소실
+- **영역:** 홈/카테고리/상품상세 — 장비 꾸러미에 담기 모달
+- **심각도:** 🟢 Low
+- **증상:** `openSetModal()`의 `close()` 함수(line ~334)에서 `modal.classList.remove("on")` 후 `prevFocus` 복귀 없음. ESC 닫기(L-106 ✅)와 이중 dialog role(M-129 ✅)은 수정됐으나 focus 복귀는 미처리. 닫힌 뒤 포커스가 `<body>`로 이동해 키보드 사용자가 모달 트리거 전 위치를 잃음. `openProduct()` line 1682의 `prevFocus` 패턴이 정석이나 `openSetModal()`에 미적용.
+- **원인:** L-106·M-129 수정 시 prevFocus 복귀 로직 미포함.
+- **수정:** `openSetModal()` 첫 줄에 `const prevFocus = document.activeElement;` 추가 후, `close()` 함수에 `if (prevFocus?.focus) prevFocus.focus();` 추가.
+- **파일:** [site/app.js](site/app.js) line ~334 [lane:CORE]
+
+### [L-144] `renderHub` — `#lead` 비동기 갱신에 `aria-live` 없음
+- **영역:** 홈 — 메인 소개 문구
+- **심각도:** 🟢 Low
+- **증상:** `index.html:47`의 `<p class="lead" id="lead">불러오는 중…</p>`는 `renderHub()`에서 manifest.json 비동기 로드 후 `document.getElementById("lead").innerHTML = ...` (line ~500)으로 교체됨. `#lead`에 `aria-live` 없어, AT가 "불러오는 중…"을 먼저 읽은 뒤 실제 모델 수 업데이트를 고지받지 못함.
+- **원인:** `#lead` 생성 시 `aria-live="polite"` 미설정.
+- **수정:** `index.html:47` → `<p class="lead" id="lead" aria-live="polite" aria-atomic="true">불러오는 중…</p>` 로 변경. 또는 `renderHub()` 초기에 `lead.setAttribute("aria-live", "polite")` 추가.
+- **파일:** [site/index.html](site/index.html) line 47 [lane:CORE]
+
+*다음 회차: 카테고리/목록 (16순환)*
