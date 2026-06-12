@@ -2788,6 +2788,7 @@ function renderAccount() {
     wishEl.querySelectorAll(".pli-wish").forEach(b => b.onclick = e => {
       e.stopPropagation();
       const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
+      window.accAnnounce?.('찜 해제됐어요');
     });
 
     // 찜 → 세트 일괄 추가 버튼
@@ -2929,6 +2930,7 @@ function renderAccount() {
         const url = `${location.origin}/account.html?view-set=${encoded}`;
         navigator.clipboard.writeText(url).then(() => {
           b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
+          window.accAnnounce?.('링크가 복사됐어요');
         }).catch(() => { prompt("링크를 복사해 주세요:", url); });
       } catch { alert("링크 생성에 실패했어요."); }
     });
@@ -2940,6 +2942,7 @@ function renderAccount() {
         window._deleteRemoteGearSet(deleted.remoteId);
       }
       saveSets(arr); renderAccount();
+      window.accAnnounce?.('세트가 삭제됐어요');
     });
 
     // 세트 카드 클릭 → 상세 모달 (수량 ± 편집 포함)
