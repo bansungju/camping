@@ -167,6 +167,10 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   const specLegend = presentBadges.length
     ? `<div class="spec-legend">${presentBadges.map(b => `<span class="sl-item"><span class="spec-badge ${BADGE_META[b].cls}">${b}</span>${BADGE_META[b].title}</span>`).join("")}</div>`
     : "";
+  // 가성비 별점 선정 기준 안내 — value_per_l(용량대비 가격) 메트릭이 있는 카테고리에만 표시
+  const valueNote = specs.value_per_l != null
+    ? `<p class="spec-note">💡 <b>가성비</b> 별점은 <b>용량 1L당 가격(원/L)</b> 기준입니다 — 1L를 더 저렴하게 담을수록(원/L이 낮을수록) 별점이 높아요. 별점은 같은 카테고리 안에서 순위로 환산했습니다(절대 점수 아님).</p>`
+    : "";
 
   return { pageSlug, html: `<!doctype html>
 <html lang="ko">
@@ -211,6 +215,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 .spec-table th,.spec-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
 .spec-table th{width:110px;color:var(--muted);font-weight:500;word-break:keep-all}
 .spec-badge{font-size:11px;background:var(--card2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px}
+.spec-note{font-size:12px;line-height:1.6;color:var(--muted);background:var(--card2);border-radius:8px;padding:9px 12px;margin:10px 0 0}
 /* L-05: 배지 유형별 색상 — 확정(공식)·외형기준·참고·데이터부족 구분 */
 .spec-badge.b-ok{background:rgba(47,122,78,.14);color:var(--accent);font-weight:600}
 .spec-badge.b-out{background:rgba(217,119,6,.14);color:var(--outer)}
@@ -289,6 +294,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
     <tbody>${specRows}</tbody>
   </table>
   ${specLegend}
+  ${valueNote}
 
   ${buildRelatedSection(catSlug, catLabel, model, allModels || [], idx)}
   ${itemPager}
