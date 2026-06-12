@@ -1702,4 +1702,31 @@
 
 ---
 
-*다음 회차: 상품상세 (11순환)*
+## 회차 63 — 상품상세 (11순환) 2026-06-12
+
+### [M-120] openReviewDetail ESC 키 시 후기 상세와 상품 모달 동시 닫힘
+- **영역:** 상품상세 — 유저 후기 상세 오버레이
+- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent (상품 클릭 → 후기 카드 클릭 → ESC)
+- **증상:** 상품 상세 모달에서 후기 카드 클릭 → `openReviewDetail` 오버레이 오픈 → ESC 키 입력 시 후기 상세 오버레이가 닫히고 동시에 상품 상세 모달도 닫힘. 사용자는 후기만 닫고 상품 상세로 돌아가려 했으나 모든 모달이 닫혀 목록으로 복귀됨.
+- **원인:** `openProduct`(app.js:1495)와 `openReviewDetail`(app.js:1562) 각각 `document.addEventListener("keydown", onKey)` 등록. ESC 이벤트가 두 핸들러 모두에 전파됨. `openProduct`의 핸들러가 먼저 등록돼 있어 상품 모달 `close()` 실행 후, `openReviewDetail`의 핸들러까지 실행. 두 `close()` 모두 동작.
+- **수정 방향:** `openReviewDetail`의 `onKey` 핸들러에서 `e.stopImmediatePropagation()` 추가 → 후기 상세 닫힘 후 상품 모달 ESC 전파 차단. 추가로 `openReviewDetail` 오픈 시 `.pmx` 버튼에 `focus()` 및 간단한 포커스 트랩 추가 권장. [site/app.js:1561](site/app.js)
+- **재현:** 카테고리 → 상품 클릭 → 후기 있는 경우 후기 카드 클릭 → ESC → 두 모달 동시 닫힘
+- **심각도:** 🟡 Medium
+
+### [L-105] renderThumbs() 후기 사진 리렌더 시 이전 Blob URL 미해제
+- **영역:** 상품상세 — 후기 작성 폼 사진 업로드
+- **증상:** 후기 작성 폼에서 사진 추가/삭제 시 `renderThumbs()`가 매번 `URL.createObjectURL(f)`로 새 Blob URL을 생성. 이전 렌더에서 생성한 Blob URL은 `URL.revokeObjectURL()` 미호출로 해제되지 않음. 사진 변경이 잦으면 Blob URL이 누적돼 메모리 사용량 증가 (사진 최대 4장이라 실제 영향은 미미).
+- **원인:** `app.js:1653` `thumbsEl.innerHTML = photos.map((f, i) => \`...<img src="${URL.createObjectURL(f)}"...\`).join("")` — 이전 URL 해제 없이 매번 신규 URL 생성.
+- **수정 방향:** `renderThumbs()` 상단에 기존 URL 해제 로직 추가: `thumbsEl.querySelectorAll("img").forEach(img => URL.revokeObjectURL(img.src));` 또는 URL 배열을 별도 관리해 교체 시 해제. [site/app.js:1651](site/app.js)
+- **심각도:** 🟢 Low
+
+### [L-106] openSetModal·openCmpModal — ESC 키 닫기 미지원
+- **영역:** 상품상세 — 세트 추가 모달, 스펙 비교 모달
+- **증상:** `openSetModal`(set-modal)과 `openCmpModal`(cmp-modal) 모두 X 버튼 클릭과 바깥 클릭으로만 닫히며, ESC 키가 동작하지 않음. `openProduct` 모달은 ESC 지원됨 — 불일치.
+- **원인:** `app.js:324`(openSetModal), `app.js:1801`(openCmpModal) 모두 `document.addEventListener("keydown", ...)` 미등록.
+- **수정 방향:** 각 `open*Modal` 함수에 `openProduct`와 동일하게 `const onKey = e => { if (e.key === "Escape") close(); }; document.addEventListener("keydown", onKey);` 추가 + `close` 시 `removeEventListener`. [site/app.js:324](site/app.js)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 커뮤니티/소셜 (12순환)*
