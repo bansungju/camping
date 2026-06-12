@@ -1793,7 +1793,7 @@ function openReviewDetail(r) {
   if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
   const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy">`).join("");
-  ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true">
+  ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true" aria-label="${nick}님의 후기">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}
     <div class="pmrvd-body">
@@ -2481,10 +2481,10 @@ function openSetDetail(si) {
     </tr>`;
   }).join("");
   let modal = document.getElementById("set-detail-modal");
-  if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); document.body.appendChild(modal); }
+  if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); modal.setAttribute("aria-labelledby","set-detail-title"); document.body.appendChild(modal); }
   modal.innerHTML = `<div class="pmbox" style="max-width:520px;width:100%;padding:20px">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
-    <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
+    <h2 id="set-detail-title" style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
     <table style="width:100%;border-collapse:collapse">
       <thead><tr>
@@ -2503,9 +2503,21 @@ function openSetDetail(si) {
     </table>
     ${COMMUNITY_ENABLED ? `<button type="button" id="set-to-log-btn" style="margin-top:16px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt)">📝 이 세트로 커뮤니티 로그 작성</button>` : ""}
   </div>`;
+  // L-142: prevFocus 저장(재진입 시 최초 1회만)·ESC 닫기·초기 포커스 — 다른 모달과 일관
+  const reopening = modal.classList.contains("on");
+  if (!reopening) modal._prevFocus = document.activeElement;
+  if (modal._onKey) document.removeEventListener("keydown", modal._onKey);
   modal.classList.add("on");
-  modal.querySelector(".pmx").onclick = () => modal.classList.remove("on");
-  modal.onclick = e => { if (e.target === modal) modal.classList.remove("on"); };
+  const close = () => {
+    modal.classList.remove("on");
+    document.removeEventListener("keydown", modal._onKey);
+    if (modal._prevFocus && modal._prevFocus.focus) modal._prevFocus.focus();
+  };
+  modal._onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", modal._onKey);
+  modal.querySelector(".pmx").onclick = close;
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").focus();
   modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
@@ -2540,7 +2552,7 @@ function openSetDetail(si) {
   });
   const setToLogBtn = modal.querySelector("#set-to-log-btn");
   if (setToLogBtn) setToLogBtn.onclick = () => {
-    modal.classList.remove("on");
+    close();
     if (document.getElementById("log-modal")) openLogModal(si);
     else location.href = `community.html?open-log=1&set=${si}`;
   };
@@ -2777,7 +2789,7 @@ function renderAccount() {
       const all0 = getSets();
       const dup = all0.filter(s => s.title && s.title.startsWith(base)).length;
       const setName = dup ? `${base} (${dup + 1})` : base;
-      const setItems = wishes.map(x => ({ b: x.b, m: x.m, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null }));
+      const setItems = wishes.map(x => ({ b: x.b, m: x.m, cap: x.cap ?? null, weight_g: x.weight_g ?? null, qty: 1, img: x.img ?? null, p: x.p ?? null, s: x.s ?? null, pcode: x.pcode ?? null, coupang_url: x.coupang_url ?? null }));
       const s = { id: Date.now().toString(36), title: setName, style: "찜", items: setItems, created_at: new Date().toISOString() };
       const all = getSets(); all.unshift(s); saveSets(all);
       const tw = setItems.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g : sum, 0);
@@ -2854,11 +2866,15 @@ function renderAccount() {
       e.stopPropagation();
       const setId = btn.dataset.si;
       const current = getGoal(setId) || 5000;
+      const prevFocus = document.activeElement;   // L-126: 닫을 때 포커스 복귀
       const dialog = document.createElement("div");
       dialog.className = "pmodal on";
+      dialog.setAttribute("role", "dialog");
+      dialog.setAttribute("aria-modal", "true");
+      dialog.setAttribute("aria-labelledby", "goal-title");
       dialog.innerHTML = `<div class="pmbox" style="max-width:320px;width:100%;padding:24px">
         <button type="button" class="pmx" aria-label="닫기">✕</button>
-        <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 무게 목표 설정</h2>
+        <h2 id="goal-title" style="font-size:16px;font-weight:700;margin-bottom:16px">🎯 무게 목표 설정</h2>
         <div style="text-align:center;font-size:24px;font-weight:700;margin-bottom:8px" id="goal-display">${fmtWeight(current)}</div>
         <input type="range" id="goal-slider" min="500" max="15000" step="100" value="${current}" style="width:100%;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:16px">
@@ -2870,11 +2886,19 @@ function renderAccount() {
       const slider = dialog.querySelector("#goal-slider");
       const display = dialog.querySelector("#goal-display");
       slider.oninput = () => { display.textContent = fmtWeight(+slider.value); };
-      dialog.querySelector(".pmx").onclick = () => dialog.remove();
-      dialog.onclick = ev => { if (ev.target === dialog) dialog.remove(); };
-      dialog.querySelector("#goal-save").onclick = () => {
-        setGoal(setId, +slider.value); dialog.remove(); renderAccount();
+      const closeGoal = () => {
+        dialog.remove();
+        document.removeEventListener("keydown", onGoalKey);
+        if (prevFocus && prevFocus.focus) prevFocus.focus();
       };
+      const onGoalKey = ev => { if (ev.key === "Escape") closeGoal(); };   // L-126: ESC 닫기
+      document.addEventListener("keydown", onGoalKey);
+      dialog.querySelector(".pmx").onclick = closeGoal;
+      dialog.onclick = ev => { if (ev.target === dialog) closeGoal(); };
+      dialog.querySelector("#goal-save").onclick = () => {
+        setGoal(setId, +slider.value); closeGoal(); renderAccount();
+      };
+      dialog.querySelector(".pmx").focus();   // L-126: 초기 포커스
     });
     setsEl.querySelectorAll(".acc-set-share").forEach(b => b.onclick = e => {
       e.stopPropagation();

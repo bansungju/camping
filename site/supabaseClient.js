@@ -21,6 +21,7 @@ export async function initAuth(onStateChange) {
   const { data: { session } } = await supabase.auth.getSession()
   if (onStateChange) onStateChange(session?.user ?? null, 'INITIAL')
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION') return   // M-132: 위에서 수동으로 'INITIAL' 이미 발화
     if (onStateChange) onStateChange(session?.user ?? null, event)
   })
   authSubscription = subscription
