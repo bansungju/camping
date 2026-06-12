@@ -1006,10 +1006,9 @@
 - **증상:** 모달 내 ✕ 닫기 버튼에 `type="button"` 대신 기본값(`type="submit"`)이 적용되어 있음. 폼 컨텍스트 내 포함될 경우 폼 제출 트리거 가능. 모든 닫기·UI 전용 버튼은 명시적 `type="button"` 필요.
 - **해결:** app.js 내 모든 `<button class="pmx" aria-label="닫기">` → `<button type="button" class="pmx" aria-label="닫기">` 일괄 변경(replace_all). [site/app.js](site/app.js)
 
-### [L-57] 오류 신고 버튼이 상세 페이지(`item/*.html`)에 없음
+### [L-57] ✅ 해결완료(2026-06-12) — 오류 신고 버튼이 상세 페이지(`item/*.html`)에 없음
 - **영역:** 상품 상세
-- **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
-- **증상:** 카테고리 목록 비교 모달에는 "오류 신고" 버튼(`mailto:bangsungju@gmail.com`)이 있으나, 상세 페이지 직접 접근 시에는 해당 버튼이 없음. 상세 페이지 전용 오류 신고 경로 부재.
+- **해결:** 상세 페이지 템플릿 back-link 옆에 `⚠️ 제품 정보 오류 신고` mailto 링크 추가 — subject·body에 제품명·페이지 URL prefill. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
 ### [L-58] ✅ 해결완료(2026-06-12) — 비교 바(`#cmp-bar`) `aria-live` 없음
 - **해결(2026-06-12):** `updateCmpBar()` 내 bar 생성 시 `aria-live="polite"` + `role="status"` 추가. [site/app.js](site/app.js)
@@ -1155,10 +1154,9 @@
 - **영역:** 홈/메인 (전체 상품 카드)
 - **해결:** `thumbCell()` 에 `_THUMB_SZ` 맵 추가 (`pli-thumb:74`, `sres-thumb:34`, `cmp-thumb:70`). 해당 클래스 이미지에 `width`/`height` HTML 속성 자동 주입 → 브라우저 early layout reservation 가능. [site/app.js](site/app.js)
 
-### [L-51] `sitemap.xml` 클린 URL — 실제 서빙 경로(`category.html?cat=`)와 불일치 (SEO)
+### [L-51] ✅ 해결완료(2026-06-12) — `sitemap.xml` 클린 URL — 실제 서빙 경로(`category.html?cat=`)와 불일치 (SEO)
 - **영역:** SEO
-- **URL:** https://gear-forest.com/sitemap.xml
-- **증상:** sitemap.xml에 `gear-forest.com/category/backpacking-tent` 형태 클린 URL 기재. 실제 접근 시 `category.html?cat=backpacking-tent`로 이동됨(301). sitemap canonical과 실제 URL이 달라 Google이 리다이렉트 후 URL을 정규 URL로 처리할 수 있음.
+- **해결:** sitemap.xml 18개 카테고리 URL을 `category/{slug}` → `category.html?cat={slug}`로 변경 — 실제 서빙 경로·canonical과 일치, 301 리다이렉트 제거. [site/sitemap.xml](site/sitemap.xml)
 
 ### [L-49] 구글 로그인 버튼 `type="submit"` — `<form>` 없이 submit 타입 설정
 - **영역:** 계정/로그인
@@ -1234,10 +1232,9 @@
 - **URL:** https://www.gear-forest.com/
 - **증상:** schema.org JSON-LD 전혀 없음. Google 검색 결과에서 사이트링크 검색박스·상품 카드 등 리치 스니펫 노출 불가.
 
-### [L-14] search.json(298KB) 페이지 로드 시 즉시 선제 로딩
+### [L-14] ✅ 해결완료(2026-06-12) — search.json(298KB) 페이지 로드 시 즉시 선제 로딩
 - **영역:** 홈/메인 (성능)
-- **URL:** https://www.gear-forest.com/
-- **증상:** 검색창 포커스 전에 `data/search.json` 298KB가 즉시 로드됨. 검색창 포커스 시점에 lazy load하는 것이 권장됨.
+- **해결:** `setupHomeSearch`에서 즉시 `await getJSON` 제거 → `ensureIdx()` 지연 로더 도입. 검색창 focus/input 첫 상호작용 시 로드. run()·Enter 핸들러에 미로드 가드 추가. 검증: 페이지 로드 시 search.json 미요청(0), focus 후 1회 요청 확인. [site/app.js](site/app.js)
 
 ### [L-15] PWA manifest start_url 상대경로 설정 — www·non-www 불일치와 복합
 - **영역:** 홈/메인 (PWA)
@@ -1265,10 +1262,9 @@
 - **증상:** 헤더에 로고만 있고 계정 아이콘 없음. 하단 탭바('내 정보')로만 계정 진입 가능. 일반적인 웹 UX 패턴과 다름.
 
 
-### [L-06] 빈 문자열로 검색 시 아무 피드백 없음
+### [L-06] ✅ 해결완료(2026-06-12) — 빈 문자열로 검색 시 아무 피드백 없음
 - **영역:** 검색
-- **URL:** https://www.gear-forest.com/
-- **증상:** 검색창에 아무것도 입력하지 않고 Enter를 눌러도 페이지 이동·오류 메시지·포커스 안내 모두 없음. 버튼이 동작하지 않는다는 오해 유발 가능.
+- **해결:** 홈 검색 Enter 핸들러 빈 입력 분기에서 `"검색어를 입력해 주세요"` 안내 박스 표시 + `aria-expanded=true` + SR 고지 + 포커스 유지. 검증 완료. [site/app.js](site/app.js)
 
 ### [L-07] ✅ 해결완료(2026-06-12) — 검색 결과 없음 시 대안 탐색 경로 미제공
 - **영역:** 검색
@@ -1773,3 +1769,25 @@
 ---
 
 *다음 회차: 계정/로그인 (12순환)*
+
+---
+
+## R-65 계정/로그인 (12순환) — 2026-06-12
+
+### [M-123] 첫 로그인 닉네임 설정 완료 후 syncGearSetsOnLogin 미호출 — 세트 동기화 누락
+- **영역:** 계정/로그인 — 닉네임 설정 모달
+- **증상:** 처음 로그인한 사용자가 닉네임 설정을 완료하면 `syncWishlistOnLogin()`만 호출되고 `syncGearSetsOnLogin(user.id)`는 호출되지 않음. 이로 인해 로컬 세트가 서버에 업로드되지 않고 서버 세트가 로컬에 병합되지 않음. `initAuth`의 `SIGNED_IN` 분기에서 `syncGearSetsOnLogin`을 호출하지만 닉네임 미설정 사용자는 early return으로 해당 분기에 진입하지 않음.
+- **원인:** `account.html:247-260` — `setNickname` 성공 후 `syncWishlistOnLogin()` 만 호출. `syncGearSetsOnLogin(user.id)` 미포함.
+- **수정 방향:** `account.html:259` `syncWishlistOnLogin()` 다음 줄에 `const u = await getUser(); if (u) syncGearSetsOnLogin(u.id)` 추가. [site/account.html:259](site/account.html)
+- **심각도:** 🟡 Medium
+
+### [L-109] initAuth 콜백에서 renderAccount() 중복 호출 — 찜·세트·로그 이중 렌더
+- **영역:** 계정/로그인 — account.html initAuth 콜백
+- **증상:** 로그인 상태 콜백 line 388에서 `renderAccount()`가 1회 호출되고 line 390에서 `if (typeof renderAccount === 'function') renderAccount()`로 또 1회 호출됨. 찜 목록·세트·로그가 두 번 렌더링되어 불필요한 DOM 조작 발생.
+- **원인:** `account.html:388` + `account.html:390` — 동일 함수 연속 두 번 호출.
+- **수정 방향:** `account.html:390`의 두 번째 `renderAccount()` 호출 제거. [site/account.html:390](site/account.html)
+- **심각도:** 🟢 Low
+
+---
+
+*다음 회차: 홈/메인 (13순환)*
