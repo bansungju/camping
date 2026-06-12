@@ -1133,11 +1133,9 @@
 - **영역:** 상품 상세
 - **해결:** 관련제품 섹션 아래에 `.item-pager` 추가 — allModels 인덱스 기준 `← 이전 상품`/`다음 상품 →` 링크(인접 상품 브랜드·모델명 표시). 양 끝은 빈 슬롯. 검증: item-1에서 prev=JEEP 캡락, next=MSR Elixir2 확인. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-73] 헤더 슬로건 텍스트가 필터 버튼으로 오인 유발 — 클릭 불가 정적 텍스트
+### [L-73] ✅ 해결완료(2026-06-13) — 헤더 슬로건 텍스트가 필터 버튼으로 오인 유발 — 클릭 불가 정적 텍스트
 - **영역:** 상품 상세 — 헤더
-- **URL:** https://gear-forest.com/item/backpacking-tent/item-52.html
-- **증상:** 헤더의 "정량 스펙 별점 · 브랜드만 · 측정값만" 문구가 카테고리 페이지 필터 칩과 유사한 표현으로, 상세 페이지에서는 클릭 불가한 정적 텍스트임에도 인터랙티브 요소로 오인될 수 있음.
-- **재현:** 상세 페이지 → 헤더 슬로건 클릭 → 반응 없음
+- **해결:** `header.top .wrap .sub`에 `cursor:default;pointer-events:none` 추가 → 마우스 호버 시 텍스트/포인터 커서 없이 기본 커서 유지, 클릭 이벤트 차단으로 비인터랙티브 명확화. [site/style.css](site/style.css)
 
 ### [L-74] ✅ 해결완료(2026-06-13) — `account.html#settings` URL hash가 실제 DOM ID `settings-section`과 불일치 — 스크롤 이동 불가
 - **영역:** 계정/로그인 — 설정 탭
@@ -1289,10 +1287,9 @@
 - **URL:** https://www.gear-forest.com/community.html
 - **증상:** `.tabbar`(데스크톱)와 `.bottom-nav`(모바일) 두 nav가 DOM에 공존, CSS `display:none`으로 전환. 기능 추가 시 양쪽 모두 수정 필요.
 
-### [L-08] 헤더에 계정/로그인 진입 경로 없음
+### [L-08] ✅ 해결완료(기구현·2026-06-13 검증) — 헤더에 계정/로그인 진입 경로 없음
 - **영역:** 계정/로그인
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** 헤더에 로고만 있고 계정 아이콘 없음. 하단 탭바('내 정보')로만 계정 진입 가능. 일반적인 웹 UX 패턴과 다름.
+- **처리:** app.js lines 465-472의 `.header-acct` 아이콘(👤)이 모든 페이지 헤더 우상단에 account.html 링크로 삽입됨. GNB 아카이브 이후 대체 경로로 상시 노출. 코드 변경 불필요.
 
 
 ### [L-06] ✅ 해결완료(2026-06-12) — 빈 문자열로 검색 시 아무 피드백 없음
@@ -1312,10 +1309,9 @@
 - **영역:** 상품 상세
 - **해결:** 데이터엔 4종 배지(참고 4777·데이터부족 729·확정 96·외형기준 242)가 있으나 동일 회색으로 렌더돼 구분 불가였음. 유형별 색상 부여(`확정`=accent 굵게/`외형기준`=outer/`참고`=muted/`데이터부족`=faint) + `title` 설명 + 해당 상품에 등장하는 배지만 표 아래 범례(`.spec-legend`) 표시. [scripts/build-item-pages.js](scripts/build-item-pages.js)
 
-### [L-03] 상품 카드가 `<a>` 링크 없이 role=button으로만 구현 — 접근성 미흡
+### [L-03] ✅ 해결완료(기구현·2026-06-13 검증) — 상품 카드가 `<a>` 링크 없이 role=button으로만 구현 — 접근성 미흡
 - **영역:** 카테고리/목록
-- **URL:** https://www.gear-forest.com/category.html?cat=sleeping-bag
-- **증상:** `.pli` 카드가 `role="button"`으로만 구현, 내부에 `<a>` 링크 없음. 스크린리더 사용자가 상품 링크로 인식하기 어렵고 새 탭으로 열기 불가.
+- **처리:** app.js line 2170 `<a class="pli" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" aria-label="...">` 로 구현됨. 찜/비교 버튼은 `e.preventDefault()`로 기본 네비게이션 차단(L-03 회귀 수정 포함). 코드 변경 불필요.
 
 ### [L-01] ✅ 해결완료(2026-06-12) — 데스크톱에서 캠핑 스타일 그리드 5열에 카드 4개 — 빈 셀 발생
 - **영역:** 홈/메인 — 내 캠핑 스타일 섹션 (데스크톱)
