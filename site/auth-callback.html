@@ -4,13 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>로그인 처리 중 — 장비의 숲</title>
+<script>
+  (function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.setAttribute('data-theme','dark')}catch(e){}})()
+</script>
 <style>
+  html[data-theme="dark"] body { background: #1a1a1a; }
   body { margin: 0; background: #fff; font-family: system-ui, sans-serif;
          display: flex; align-items: center; justify-content: center; height: 100vh; }
   .msg { text-align: center; color: #6c757d; font-size: 14px; }
+  html[data-theme="dark"] .msg { color: #aaa; }
   .spinner { width: 32px; height: 32px; border: 3px solid #e9ecef;
              border-top-color: #0070f3; border-radius: 50%;
              animation: spin .7s linear infinite; margin: 0 auto 16px; }
+  html[data-theme="dark"] .spinner { border-color: #333; border-top-color: #4ea8de; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -20,7 +26,7 @@
   <p>로그인 처리 중입니다…</p>
 </div>
 <script type="module">
-  import { supabase } from './supabaseClient.js?v=8ae38532'
+  import { supabase } from './supabaseClient.js?v=c10ddf43'
 
   const params = new URLSearchParams(location.search)
   // OAuth 오류 리다이렉트 처리 (?error=access_denied 등)
@@ -52,9 +58,9 @@
       if (session) { location.replace('./account.html'); }
       else         { location.replace('./account.html?auth_error=1'); }
     })
-    // 이미 세션이 있으면 바로 이동
+    // L-138: settled 가드 — onAuthStateChange가 먼저 발화한 경우 이중 replace 방지
     const { data: { session } } = await supabase.auth.getSession()
-    if (session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }
+    if (!settled && session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }
     // 15초 timeout — 세션 이벤트 미발화 시 auth_error 처리
     setTimeout(() => {
       if (!settled) { settled = true; subscription.unsubscribe(); location.replace('./account.html?auth_error=1'); }
