@@ -1292,19 +1292,31 @@ function buildFilters(d, star) {
     syncPresetOn();     // 초기 진입 시(URL 복원 등) 활성 프리셋 강조
   }
 
-  // 필터바 토글(모바일에서 노출). 기본은 펼침(default expanded) — 첫 화면에 필터가 바로 보이게.
-  if (!document.getElementById("filtoggle")) {
-    bar.insertAdjacentHTML("beforebegin",
-      `<button id="filtoggle" class="filtoggle" type="button" aria-controls="filters"></button>`);  // L-121
+  // FE-CAT-07: 모바일에선 필터를 하단 바텀시트로 노출(데스크톱은 사이드바 그대로).
+  // 열기 버튼은 본문 흐름(cat-body) 상단, 시트 크롬(헤더/푸터)·백드롭은 1회 구성. 기본 닫힘 → 첫 화면에 목록 바로 노출.
+  const aside = bar.parentNode;                          // #cat-aside (모바일=바텀시트)
+  const catBody = document.getElementById("cat-body");
+  if (catBody && aside && !document.getElementById("filtoggle")) {
+    catBody.insertAdjacentHTML("afterbegin",
+      `<button id="filtoggle" class="filtoggle" type="button" aria-controls="cat-aside" aria-expanded="false">🎛️ 필터</button>`);
+    aside.insertAdjacentHTML("afterbegin",
+      `<div class="fsheet-head"><span class="fsheet-title">필터</span><button type="button" class="fsheet-x" aria-label="필터 닫기">✕</button></div>`);
+    aside.insertAdjacentHTML("beforeend",
+      `<div class="fsheet-foot"><button type="button" class="fsheet-apply">결과 보기</button></div>`);
+    let backdrop = document.getElementById("filter-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "filter-backdrop"; backdrop.className = "filter-backdrop";
+      document.body.appendChild(backdrop);
+    }
     const tg = document.getElementById("filtoggle");
-    const syncLabel = () => {
-      const collapsed = bar.classList.contains("collapsed");
-      tg.textContent = collapsed ? "필터 펼치기 ▾" : "필터 접기 ▴";
-      tg.setAttribute("aria-expanded", String(!collapsed));   // L-121: 열림/닫힘 상태 고지
-    };
-    tg.onclick = () => { bar.classList.toggle("collapsed"); syncLabel(); };
-    bar.classList.remove("collapsed");   // 기본 펼침. 사용자가 토글로 접을 수 있음.
-    syncLabel();
+    const openSheet = () => { aside.classList.add("open"); backdrop.classList.add("on"); document.body.classList.add("filter-sheet-lock"); tg.setAttribute("aria-expanded", "true"); };
+    const closeSheet = () => { aside.classList.remove("open"); backdrop.classList.remove("on"); document.body.classList.remove("filter-sheet-lock"); tg.setAttribute("aria-expanded", "false"); };
+    tg.onclick = openSheet;
+    backdrop.onclick = closeSheet;
+    aside.querySelector(".fsheet-x").onclick = closeSheet;
+    aside.querySelector(".fsheet-apply").onclick = closeSheet;   // 필터는 실시간 적용(draw) — 닫기만
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && aside.classList.contains("open")) closeSheet(); });
   }
 
   // 인원
