@@ -1998,3 +1998,41 @@
 - **파일:** [pipeline/stamp_version.py](pipeline/stamp_version.py), `site/item/**/*.html`
 
 *다음 회차: 계정/로그인 (14순환)*
+
+---
+
+## R-73 계정/로그인 (14순환) — 2026-06-12
+
+### [M-129] `openSetModal()` — 외부·내부 이중 `role="dialog"` + ESC 닫기 핸들러 없음
+- **영역:** 계정/로그인 — 세트 담기 모달
+- **심각도:** 🟡 Medium
+- **증상:** `openSetModal()`(line ~309)에서 외부 컨테이너 `#set-modal`에 `modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true")` 설정 후(line ~312), `modal.innerHTML`로 삽입하는 내부 `.pmbox.sm-box`에도 `role="dialog" aria-modal="true"` 중복 부여(line ~321). M-128과 동일한 이중 dialog 패턴. 또한 `close()` 함수는 있으나 `document.addEventListener("keydown", onKey)` 미등록으로 ESC 닫기 불가 — M-127 패턴. `modal.querySelector(".pmx").focus()` 초기 포커스는 구현됨.
+- **원인:** `openSetModal()` 구현 시 M-127·M-128에서 확인된 두 패턴이 모두 적용되지 않음.
+- **수정:** 내부 `.pmbox.sm-box`의 `role="dialog" aria-modal="true"` 제거(외부 컨테이너에만 유지); ESC 핸들러(`document.addEventListener("keydown", onKey)`) 추가 및 `close()` 내 `removeEventListener` 호출.
+- **파일:** [site/app.js](site/app.js) line ~312, ~321, ~333
+
+### [L-124] `#acc-tabs` 탭 버튼 ARIA 탭 시멘틱 미적용 — 선택 상태 스크린리더 미전달
+- **영역:** 계정/로그인 — 찜목록·세트·로그 탭 바
+- **심각도:** 🟢 Low
+- **증상:** `account.html` `#acc-tabs` 컨테이너에 `role="tablist"` 없음. 내부 `.acc-tab` 버튼들에 `role="tab"` 및 `aria-selected` 없음. `_accSetTab()`(line ~2430)에서 `.active` CSS 클래스만 토글하며 `setAttribute("aria-selected", ...)` 호출 없음. 스크린리더가 어느 탭이 선택됐는지 파악 불가.
+- **원인:** `account.html:53-57` 탭 구조 마크업과 `_accSetTab()` 내 ARIA 상태 갱신 코드 모두 미구현.
+- **수정:** `#acc-tabs`에 `role="tablist"` 추가. 각 `.acc-tab` 버튼에 `role="tab" aria-selected="false"` 초기값 추가. `_accSetTab()` 내 `b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false")` 갱신 추가.
+- **파일:** [site/account.html](site/account.html) line ~53, [site/app.js](site/app.js) line ~2430 [lane:SOCIAL]
+
+### [L-125] `account.html` 로그 섹션 상단 정적 `+ 새 로그` 링크가 `COMMUNITY_ENABLED` 플래그 무시
+- **영역:** 계정/로그인 — 내 로그 섹션
+- **심각도:** 🟢 Low
+- **증상:** `account.html:78`에 `<a class="achip clear" href="community.html">+ 새 로그</a>` 정적 링크가 항상 노출. `renderAccount()`(app.js line ~2503)에서 동일 섹션 내 JS 생성 링크들은 `COMMUNITY_ENABLED ? ... : ""` 조건으로 숨겨지나, HTML에 하드코딩된 이 링크는 조건 없이 노출. 커뮤니티가 임시 숨김(`COMMUNITY_ENABLED=false`) 상태에서도 클릭 시 community.html로 이동.
+- **원인:** `account.html:78` 정적 HTML 링크에 `style="display:none"` 또는 JS 조건 제어 미적용.
+- **수정:** `account.html:78` 링크에 `id` 부여 후 `renderAccount()` 초기화 시 `COMMUNITY_ENABLED` 플래그에 따라 `display` 제어. 또는 `renderAccount()` 내 `#logs-section` 헤더 영역도 동적 렌더링으로 교체.
+- **파일:** [site/account.html](site/account.html) line ~78 [lane:SOCIAL]
+
+### [L-126] 무게 목표 설정 다이얼로그(line ~2738) `role="dialog"` · `aria-modal` · ESC 핸들러 모두 없음
+- **영역:** 계정/로그인 — 내 세트 무게 목표 설정
+- **심각도:** 🟢 Low
+- **증상:** `renderAccount()` 내 무게 목표 설정 다이얼로그(line ~2738) 생성 시 `dialog.className = "pmodal on"` 만 설정. `dialog.setAttribute("role","dialog")`·`aria-modal="true"`·`aria-labelledby` 모두 없음. 시각적으로는 동일한 `pmodal` 모달 오버레이로 나타나지만 스크린리더가 모달 진입을 감지 불가. ESC 닫기 핸들러도 없음(backdrop 클릭 또는 ✕ 버튼만 가능).
+- **원인:** 임시 팝업 다이얼로그 생성 시 ARIA 마크업 및 ESC 핸들러 미적용.
+- **수정:** `dialog.setAttribute("role","dialog"); dialog.setAttribute("aria-modal","true"); dialog.setAttribute("aria-labelledby","goal-title")` 추가; h2에 `id="goal-title"` 추가; ESC 키 핸들러 추가.
+- **파일:** [site/app.js](site/app.js) line ~2738
+
+*다음 회차: 홈/메인 (15순환)*
