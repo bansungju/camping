@@ -28,6 +28,11 @@
 <script type="module">
   import { supabase } from './supabaseClient.js?v=adfb0f1f'
 
+  // L-64: OAuth 전 저장된 hash 복원
+  const _retHash = sessionStorage.getItem('acc-return-hash') || ''
+  const _accUrl = (base) => _retHash ? base + _retHash : base
+  if (_retHash) sessionStorage.removeItem('acc-return-hash')
+
   const params = new URLSearchParams(location.search)
   // OAuth 오류 리다이렉트 처리 (?error=access_denied 등)
   const oauthError = params.get('error')
@@ -43,7 +48,7 @@
       const msg = encodeURIComponent(error.message || error.status || 'unknown')
       location.replace(`./account.html?auth_error=1&err=${msg}`)
     } else {
-      location.replace('./account.html')
+      location.replace(_accUrl('./account.html'))
     }
   } else if (!oauthError) {
     // Implicit flow / hash fragment — onAuthStateChange로 세션 대기
@@ -55,12 +60,12 @@
       if (settled) return
       settled = true
       subscription.unsubscribe()
-      if (session) { location.replace('./account.html'); }
+      if (session) { location.replace(_accUrl('./account.html')); }
       else         { location.replace('./account.html?auth_error=1'); }
     })
     // L-138: settled 가드 — onAuthStateChange가 먼저 발화한 경우 이중 replace 방지
     const { data: { session } } = await supabase.auth.getSession()
-    if (!settled && session) { settled = true; subscription.unsubscribe(); location.replace('./account.html'); }
+    if (!settled && session) { settled = true; subscription.unsubscribe(); location.replace(_accUrl('./account.html')); }
     // 15초 timeout — 세션 이벤트 미발화 시 auth_error 처리
     setTimeout(() => {
       if (!settled) { settled = true; subscription.unsubscribe(); location.replace('./account.html?auth_error=1'); }
