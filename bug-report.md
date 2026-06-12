@@ -1006,15 +1006,11 @@
 - **URL:** https://gear-forest.com/item/sleeping-bag/item-232.html
 - **증상:** 카테고리 목록 비교 모달에는 "오류 신고" 버튼(`mailto:bangsungju@gmail.com`)이 있으나, 상세 페이지 직접 접근 시에는 해당 버튼이 없음. 상세 페이지 전용 오류 신고 경로 부재.
 
-### [L-58] 비교 바(`#cmp-bar`) `aria-live` 없음 — 스크린리더 비교 추가 알림 불가
-- **영역:** 카테고리/목록 — 비교 바
-- **증상:** 상품 비교 선택 시 화면 하단에 비교 바가 나타나나 `aria-live="polite"` 속성 없어 스크린리더가 상태 변화를 고지하지 않음.
+### [L-58] ✅ 해결완료(2026-06-12) — 비교 바(`#cmp-bar`) `aria-live` 없음
+- **해결(2026-06-12):** `updateCmpBar()` 내 bar 생성 시 `aria-live="polite"` + `role="status"` 추가. [site/app.js](site/app.js)
 
-### [L-59] 카테고리 검색창 IME `isComposing` 가드 없음 — 한글 조합 중 즉시 필터링
-- **영역:** 검색 — 카테고리 내 검색
-- **URL:** https://gear-forest.com/category.html?cat=sleeping-bag
-- **증상:** `#q` oninput 핸들러에 `e.isComposing` 가드가 없어 한글 입력 중 "ㅎ"→"헤"→"헬" 각 조합 단계마다 필터가 즉시 실행되어 결과가 깜빡임. 홈 `#homeq`는 M-49 수정으로 가드가 이미 적용됨.
-- **재현:** 카테고리 검색창에 "헬리녹스" 천천히 타이핑 → 중간 조합 단계마다 카드 재필터링 확인
+### [L-59] ✅ 해결완료(2026-06-12) — 카테고리 검색창 IME `isComposing` 가드 없음
+- **해결(2026-06-12):** `qInp.oninput` 핸들러에 `if (e.isComposing) return` 가드 추가. [site/app.js](site/app.js)
 
 ### [L-60] 홈 검색 "결과 없음" div에 `role="option"` 없음 — listbox 내 메시지 스크린리더 미인식
 - **영역:** 검색 — 홈 전역 검색
@@ -1180,11 +1176,8 @@
 - **증상:** "헬리넉스"(헬리녹스 흔한 오타) 등 1글자 오타 입력 시 "검색 결과 없음"만 표시. "혹시 '헬리녹스'를 찾으셨나요?" 류의 단순 제안 안내도 없음.
 - **재현:** 홈 검색창 → "헬리넉스" 입력 → 결과 없음 확인
 
-### [L-43] 데스크톱에서 footer에 불필요한 `padding-bottom: 64px` 잔류
-- **영역:** 홈/메인 (전체 페이지 공통)
-- **URL:** https://gear-forest.com/
-- **증상:** `insertBottomNav()`가 화면 너비 조건 없이 항상 `<footer>`에 `style="padding-bottom:64px"` 인라인 주입. 데스크톱(≥768px)에서 `.bottom-nav`는 CSS로 `display:none`이나 footer padding은 그대로 남아 페이지 하단에 불필요한 64px 공백 발생.
-- **재현:** 1280px 뷰포트 → footer 요소 → `style.paddingBottom === "64px"` 확인
+### [L-43] ✅ 해결완료(2026-06-12) — 데스크톱 footer 불필요한 `padding-bottom: 64px` 잔류
+- **해결(2026-06-12):** `insertBottomNav()`에서 `matchMedia("(max-width:767px)")` 조건 추가 → 모바일에서만 padding 주입. [site/app.js](site/app.js)
 
 ### [L-19] ~~계정 삭제/탈퇴 기능 미존재~~ → [H-23]으로 승격
 - **영역:** 계정/로그인
@@ -1567,18 +1560,11 @@
 - **재현:** 카테고리 → 제품 2개 ⚖ 비교 추가 → 정렬을 '가격 낮은순'으로 변경 → '비교하기' → 처음 고른 제품과 다른 제품이 비교됨.
 - **해결(2026-06-11):** `_cmpSet`이 위치 인덱스가 아니라 **모델 객체 참조**를 저장하도록 변경(`toggleCmp(m, rows)`, `draw()` `includes(m)`, `openCmpModal` `items=_cmpSet.filter(Boolean)`). `rows`는 `d.models.filter()`라 객체 참조가 정렬·필터에도 동일 → 항상 같은 제품을 가리킴. `renderCategory` 진입 시 `_cmpSet=[]`+비교바 숨김(방어적). 프리뷰 검증 — 2개 선택 후 정렬을 '가격 낮은순'으로 바꿔 목록 상위가 전부 교체된 상태에서 '비교하기' 모달이 **처음 고른 두 제품 그대로** 표시(match=true), 콘솔 에러 0. [site/app.js](site/app.js)
 
-### [L-94] 브랜드 드롭다운으로 상위 브랜드 선택 시 해당 칩 `.on` 미반영
-- **영역:** 카테고리/목록 — 브랜드 필터
-- **URL:** https://gear-forest.com/category.html?cat=backpacking-tent
-- **증상:** 브랜드가 12개를 넘는 카테고리에서 상위 12개 브랜드는 칩으로도, '＋브랜드' 드롭다운에도 노출된다. 칩으로 노출되는 브랜드를 드롭다운에서 선택하면 필터는 적용되지만(활성 필터 칩·결과 반영) 해당 브랜드 **칩 버튼은 활성(.on) 표시가 되지 않아** 상태가 불일치한다.
-- **원인:** 드롭다운 onchange(app.js:1070)가 `STATE.brands` 추가 후 `draw()`만 호출. `draw()`는 `syncFilterUI()`를 부르지 않아 `[data-brand].on` 동기화가 누락된다. (칩 직접 클릭 경로 app.js:1062는 자체적으로 `.on`을 토글해 일관)
-- **재현:** 브랜드 12개 초과 카테고리 → '＋브랜드' 드롭다운에서 상위 브랜드 선택 → 같은 브랜드의 칩 버튼이 비활성 표시 유지
+### [L-94] ✅ 해결완료(2026-06-12) — 브랜드 드롭다운 상위 브랜드 선택 시 칩 `.on` 미반영
+- **해결(2026-06-12):** `bsel.onchange` 핸들러에 `syncFilterUI()` 추가 → `[data-brand]` 칩 활성 상태 동기화. [site/app.js](site/app.js)
 
-### [L-95] item 상세 페이지 app.js 캐시버스트 버전이 고착(stale) — 빌드 파이프라인 불일치
-- **영역:** 상품상세 (정적 `item/*.html` 2,277개)
-- **URL:** https://gear-forest.com/item/mat/item-24.html
-- **증상:** 모든 item 페이지가 `<script src="../../app.js?v=97a431c3">`로 **고정된 옛 app.js 버전**을 참조한다(현재 app.js 해시는 `8c7c7d75`). app.js를 고쳐도 item 페이지의 캐시버스트 쿼리는 갱신되지 않아, 이 페이지들에선 `?v=` 캐시버스팅이 사실상 무력화된다. (SW가 CACHE 빌드명 교체 시 옛 캐시를 통째 비우므로 실제 사용자 영향은 1로드 stale 수준으로 작지만, 빌드 일관성·캐시버스트 의도가 깨짐.)
-- **원인:** item 페이지는 `scripts/build-item-pages.js`가 **빌드 시점**의 app.js 내용 해시로 스탬프(`APP_V`, line 18·227). 이후 app.js를 수정하고 `pipeline/stamp_version.py`를 돌려도, 그 스크립트는 `os.listdir(SITE)`로 **site/ 최상위 HTML만** 순회하고 `item/` 하위는 제외하며, 정규식 `src="app\.js…"`도 item의 `src="../../app.js…"`(상대경로 접두사)를 매치하지 못한다. → app.js 변경 후 `build-item-pages.js`를 별도로 재실행하지 않으면 2,277개 item 페이지가 옛 버전에 고착. (style.css는 우연히 미변경이라 `a76e2907`로 일치 중)
+### [L-95] ✅ 해결완료(2026-06-12) — item 상세 페이지 app.js 캐시버스트 버전 고착
+- **해결(2026-06-12):** `stamp_version.py`에 `site/item/` 하위 재귀 순회 추가 — `../../app.js?v=` 및 `../../style.css?v=` 패턴도 동기화. [pipeline/stamp_version.py](pipeline/stamp_version.py)
 - **재현:** app.js 수정 → `stamp_version.py` 실행 → `grep -o 'app.js?v=[a-f0-9]*' site/item/mat/item-24.html` → 최상위 `category.html`의 버전과 불일치
 - **권장:** stamp 파이프라인에 `build-item-pages.js` 재실행 포함, 또는 stamp_version.py가 `item/**`도 순회하고 `(\.\./)*app\.js` 패턴을 매치하도록 확장.
 
@@ -1589,13 +1575,8 @@
 - **재현:** 상세 페이지 → `[...document.scripts].filter(s=>s.type==='application/ld+json').map(s=>s.textContent).join()` → `BreadcrumbList` 미포함
 - **권장:** `build-item-pages.js`에서 홈→카테고리→현재상품 3단계 `BreadcrumbList` JSON-LD 추가(시각 breadcrumb와 동일 구조).
 
-### [M-112] 🔴 내 세트 탭 → '이 세트로 커뮤니티 로그 작성' 클릭 시 앱 팅김(강제 종료/화면 멈춤)
-- **영역:** 계정/로그인 — 내 세트 탭
-- **URL:** https://gear-forest.com/account.html (세트 탭)
-- **증상:** 내 세트 탭에서 세트 카드의 '이 세트로 커뮤니티 로그 작성' 버튼 클릭 시 앱이 팅김(화면 멈춤 또는 강제 종료).
-- **제보:** 사용자 직접 제보
-- **원인(추정):** M-105 연관 — 세트 객체에서 `s.name`(undefined) 참조로 인한 TypeError, 또는 로그 작성 모달 초기화 중 null 참조 오류로 추정. `acc-nav`/`acc-tabs` HTML 미존재(L-87)와 복합 작용 가능.
-- **재현:** account.html → 세트 탭 → 저장된 세트의 '이 세트로 커뮤니티 로그 작성' 버튼 클릭 → 팅김
+### [M-112] ✅ 해결완료(2026-06-12) — '이 세트로 커뮤니티 로그 작성' 클릭 시 앱 팅김
+- **해결(2026-06-12):** `openLogModal()` 내 `body` null 가드 추가 — `#log-modal-body` 미존재 시 TypeError 방지. [site/app.js](site/app.js)
 
 ### [M-111] ✅ 해결완료(2026-06-11) — 홈 검색 Enter 무반응 (토큰 매칭 불일치)
 - **해결(2026-06-11):** Enter 핸들러 폴백을 통문자열 includes 대신 토큰 AND 매칭(`terms2.every(tok => t.includes(tok))`)으로 교체. `run()`과 동일한 로직으로 `백패킹 mier` 입력 시에도 정상 이동. [site/app.js](site/app.js)
@@ -1618,13 +1599,8 @@
 
 ---
 
-### [M-115] 데스크톱 — '탐색' 탭 클릭 시 좌측에 빈 공간 발생
-
-- **영역:** 탐색(탭바) — 데스크톱 레이아웃
-- **재현:** 데스크톱 브라우저에서 하단 탭바 '탐색' 탭 클릭
-- **현재:** 메인 콘텐츠 좌측에 빈 여백 발생
-- **기대:** 전체 너비 정상 사용, 빈 공간 없음
-- **보고자:** 사용자 직접 제보 (2026-06-11)
+### [M-115] ✅ 해결완료(2026-06-12) — 데스크톱 '탐색' 탭 클릭 시 좌측 빈 공간
+- **해결(2026-06-12):** `renderBrowse()`에 `#cat-aside` 숨김 추가 — 카테고리 사이드바(220px)가 탐색 랜딩에서도 노출돼 생기던 빈 공간 제거. [site/app.js](site/app.js)
 - **심각도:** 🟡 Medium
 
 ---

@@ -41,6 +41,21 @@ def main():
                 f.write(appjs2)
 
     hj, hc = _hash("app.js"), _hash("style.css")
+    # L-95: item 페이지(../../app.js?v=)도 동기화 — build-item-pages.js 재실행 없이도 일치 보장
+    item_dir = os.path.join(SITE, "item")
+    if os.path.isdir(item_dir):
+        for dirpath, _, fnames in os.walk(item_dir):
+            for fname in fnames:
+                if not fname.endswith(".html"):
+                    continue
+                fp = os.path.join(dirpath, fname)
+                with open(fp, encoding="utf-8") as f:
+                    html = f.read()
+                new = re.sub(r'src="\.\.\/\.\.\/app\.js(\?v=[^"]*)?"', f'src="../../app.js?v={hj}"', html)
+                new = re.sub(r'href="\.\.\/\.\.\/style\.css(\?v=[^"]*)?"', f'href="../../style.css?v={hc}"', new)
+                if new != html:
+                    with open(fp, "w", encoding="utf-8") as f:
+                        f.write(new)
     hs = _hash("supabaseClient.js")
     changed = []
     for name in os.listdir(SITE):
