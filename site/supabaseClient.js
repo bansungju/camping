@@ -302,7 +302,10 @@ export async function deleteRemoteGearSet(remoteId) {
   return supabase.from('gear_sets').update({ deleted_at: new Date().toISOString() }).eq('id', remoteId)
 }
 
-// ── 전역 에러 핸들러 (네트워크 실패 등) ───────────────────────────────────
-window.addEventListener('unhandledrejection', (e) => {
-  console.error('Unhandled rejection:', e.reason)
-})
+// ── 전역 에러 핸들러 (네트워크 실패 등) — 모듈 중복 로드 시 리스너 중복 방지 ──
+if (!window._supaErrorHandlerRegistered) {
+  window._supaErrorHandlerRegistered = true
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('Unhandled rejection:', e.reason)
+  })
+}

@@ -57,6 +57,16 @@ def main():
                     with open(fp, "w", encoding="utf-8") as f:
                         f.write(new)
     hs = _hash("supabaseClient.js")
+    # M-118: app.js 동적 import("./supabaseClient.js") 도 버전 스탬프 — HTML과 동일 모듈 인스턴스 보장
+    appjs_path = os.path.join(SITE, "app.js")
+    if os.path.exists(appjs_path):
+        with open(appjs_path, encoding="utf-8") as f:
+            appjs_src = f.read()
+        appjs_new = re.sub(r"(['\"])\./supabaseClient\.js(\?v=[^'\"]*)?\1",
+                           lambda mm: f"{mm.group(1)}./supabaseClient.js?v={hs}{mm.group(1)}", appjs_src)
+        if appjs_new != appjs_src:
+            with open(appjs_path, "w", encoding="utf-8") as f:
+                f.write(appjs_new)
     changed = []
     for name in os.listdir(SITE):
         if not name.endswith(".html"):

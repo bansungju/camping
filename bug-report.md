@@ -1690,7 +1690,7 @@
 
 ---
 
-### [M-118] app.js 동적 import가 버전 없는 `./supabaseClient.js` 사용 — GoTrueClient 이중 인스턴스화
+### [M-118] ✅ 해결완료(2026-06-13) — app.js 동적 import가 버전 없는 `./supabaseClient.js` 사용 — GoTrueClient 이중 인스턴스화
 - **영역:** 전체 (계정·커뮤니티·찜·세트 등 supabase 연동 기능)
 - **URL:** https://gear-forest.com/ (account.html·index.html·category.html 등 app.js 로드 페이지 전체)
 - **증상:** account.html·community.html 등은 `<script type="module">` 에서 `./supabaseClient.js?v=8ae38532` (버전 포함)으로 import. 그런데 app.js 내부의 17개 동적 import는 모두 `import("./supabaseClient.js")` (버전 없음). 브라우저가 두 개를 다른 모듈로 취급 → 두 번 모듈 평가 → `createClient()` 두 번 호출 → "Multiple GoTrueClient instances detected" 콘솔 경고 + auth 상태가 두 인스턴스 사이에서 분리될 수 있음.
@@ -2241,7 +2241,7 @@
 - **수정:** `btnSignout.onclick = null; btnSignout.addEventListener(...)` → `btnSignout.onclick = async () => { await signOut(); ... }` 로 단일 `.onclick` 방식으로 통일. `btnDelete`도 동일 패턴 적용.
 - **파일:** [site/account.html](site/account.html) line ~331 [lane:SOCIAL]
 
-### [L-141] `supabaseClient.js` — `unhandledrejection` 전역 리스너 라이브러리 모듈 최상위에 등록
+### [L-141] ✅ 해결완료(2026-06-13) — `supabaseClient.js` — `unhandledrejection` 전역 리스너 라이브러리 모듈 최상위에 등록
 - **영역:** 공통 — supabaseClient.js 사이드이펙트
 - **심각도:** 🟢 Low
 - **증상:** `supabaseClient.js` lines 305-307에 `window.addEventListener('unhandledrejection', e => console.error(...))` 등록. 라이브러리 모듈 최상위에서 전역 이벤트 핸들러를 등록하면 Supabase 외 모든 페이지 rejection을 가로챔. `e.preventDefault()` 없어 브라우저 콘솔 경고 억제도 안 되며 단순 duplicate `console.error` 추가 효과뿐. 앱 코드의 에러 처리 로직과 충돌 가능.
