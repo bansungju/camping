@@ -32,7 +32,7 @@
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"장비의 숲","url":"https://gear-forest.com","description":"감성 후기가 아닌 측정 데이터로 가성비 좋은 캠핑 장비를 추천합니다","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://gear-forest.com/category.html?q={search_term_string}"},"query-input":"required name=search_term_string"}}</script>
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=c998e5e2">
+<link rel="stylesheet" href="style.css?v=0cd157b2">
 </head>
 <body>
 <a class="skip-link" href="#main">메인 콘텐츠로 바로가기</a>
@@ -57,10 +57,10 @@
   <!-- 최근 본 상품(있을 때만 렌더) -->
   <div id="recent" class="recent"></div>
 
-  <!-- 이번 주 인기 (click_events 집계, fallback 하드코딩) -->
-  <div id="hot-section" style="display:none;margin-bottom:24px">
+  <!-- 이번 주 인기 (click_events 집계, fallback 하드코딩) — M-126: 공간 예약(스켈레톤)으로 CLS 방지 -->
+  <div id="hot-section" style="margin-bottom:24px">
     <h2 class="sec">🔥 이번 주 인기</h2>
-    <div id="hot-list" class="plist"></div>
+    <div id="hot-list" class="plist"><div class="hot-skel" aria-hidden="true"></div></div>
   </div>
 
   <h2 class="sec">내 캠핑 스타일</h2>
@@ -72,7 +72,7 @@
 
 <footer><div class="wrap" id="foot"></div></footer>
 
-<script src="app.js?v=56a273c2"></script>
+<script src="app.js?v=4399cd70"></script>
 <script>renderHub();</script>
 </body>
 </html>
