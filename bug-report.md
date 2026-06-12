@@ -675,10 +675,8 @@
 - **URL:** https://gear-forest.com/account.html?auth_error=1
 - **증상:** auth-callback.html 직접 접근 시 `account.html?auth_error=1`로 리다이렉트되지만 `#auth-error` 엘리먼트가 `display:none`이고 텍스트도 비어 있어 사용자에게 로그인 실패 원인이 전혀 표시되지 않음.
 
-### [M-30] 숨겨진 섹션 내 '+ 새 로그' 링크가 키보드/스크린리더로 포커스 가능 — 접근성 포커스 트랩
-- **영역:** 계정/로그인 (접근성)
-- **URL:** https://www.gear-forest.com/account.html
-- **증상:** `display:none` 부모 안의 `#logs-section` 내 '+ 새 로그' 링크가 `tabindex` 없이 DOM에 존재. 키보드 Tab 탐색 및 스크린리더로 접근 가능하며 클릭 시 community.html로 이동.
+### [M-30] ✅ 해결완료(2026-06-13, SOCIAL) — 숨겨진 섹션 내 '+ 새 로그' 링크가 키보드/스크린리더로 포커스 가능 — 접근성 포커스 트랩
+- **해결:** L-98 수정으로 `showLoggedInSections(false)` 호출 시 `logs-section`도 즉시 `display:none`으로 숨겨짐 → 내부 링크 포커스 불가. [site/account.html](site/account.html)
 
 ### [M-24] ✅ 해결완료(2026-06-11) — 자동완성 검색어 하이라이트 미적용
 - **해결(2026-06-11):** `hlText()` 함수로 매칭 키워드를 `.shl`(accent color+bold)로 강조. 브랜드·모델명 모두 적용. [site/app.js](site/app.js), [site/style.css](site/style.css)
@@ -828,11 +826,8 @@
 - **증상:** 찜/세트/로그/설정은 탭 구조로 설계됐으나 DOM에 `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls` 속성이 전혀 없음. 섹션이 탭으로 전환되지 않고 수직 나열. 스크린리더 사용자는 탭 구조를 인식하지 못함.
 - **재현:** `account.html` DOM 검사 → `[role="tab"]` 0개 확인
 
-### [M-85] 설정 탭에 PWA 설치 버튼 없음 — `beforeinstallprompt` 억제 후 진입점 부재
-- **영역:** 계정/로그인 — 설정 탭
-- **URL:** https://gear-forest.com/account.html
-- **증상:** 브라우저가 PWA 설치 프롬프트(`beforeinstallprompt`)를 발생시키지만 앱에서 억제(preventDefault)만 하고 설정 섹션에 설치 버튼이 없어 사용자가 직접 설치할 방법이 없음. 브라우저 기본 메뉴를 직접 찾아야 함.
-- **재현:** `account.html` 콘솔 → `beforeinstallprompt` 억제 로그 확인 → 설정 섹션에 설치 버튼 없음
+### [M-85] ✅ 해결완료(2026-06-13, SOCIAL) — 설정 탭에 PWA 설치 버튼 없음 — `beforeinstallprompt` 억제 후 진입점 부재
+- **해결:** settings-section에 `#pwa-install-row` 추가(`display:none` 기본). account.html에서 독립적으로 `beforeinstallprompt` 캡처 → 버튼 표시 → 클릭 시 `prompt()` 호출. `appinstalled` 이벤트 시 버튼 숨김. [site/account.html](site/account.html)
 
 ### [M-86] ✅ 아카이브(커뮤니티/GNB 비활성화) — `?open-log=1` 비로그인→로그인 경유 시 원클릭 흐름 단절 — H-35 엣지케이스
 - **영역:** 커뮤니티/소셜 — open-log 원클릭 연결
@@ -1071,11 +1066,8 @@
 - **재현:** 찜 카드 DOM 검사 → `aria-label` null 확인
 - **해결:** 찜 카드에 `aria-label="${brand} ${model} 상세 보기"`, 세트 카드에 `aria-label="${title} 세트 상세 보기"` 추가. [site/app.js](site/app.js)
 
-### [L-63] 계정 페이지 전체에 `aria-live` 영역 전무 — 찜 해제·삭제 후 결과 알림 없음
-- **영역:** 계정/로그인
-- **URL:** https://gear-forest.com/account.html
-- **증상:** `[aria-live]` 요소가 0개로 찜 해제·세트 삭제·링크 복사 등 액션 결과를 스크린리더에 알려주는 live region이 없음.
-- **재현:** `account.html` DOM에서 `[aria-live]` 검색 → 0개
+### [L-63] ✅ 해결완료(2026-06-13, SOCIAL) — 계정 페이지 전체에 `aria-live` 영역 전무 — 찜 해제·삭제 후 결과 알림 없음
+- **해결:** `account.html`에 `#acc-sr-live` (`role=status aria-live=polite`) 추가 + `window.accAnnounce(msg)` 노출. 찜·세트 삭제 등 CORE 액션에서 `window.accAnnounce?.()` 호출은 [lane:CORE] 요청 — app.js가 wish/set 삭제 시 호출 추가 필요. [site/account.html](site/account.html)
 
 ### [L-64] ✅ 해결완료(2026-06-13) — Google OAuth 로그인 후 진입 hash(`#logs` 등) 유실
 - **영역:** 계정/로그인
@@ -1652,12 +1644,8 @@
 - **수정 방향:** 388행 `renderAccount()` 제거(390행이 renderProfile 이후에 실행돼야 탭 상태가 정확하므로 390행만 유지). [site/account.html:388](site/account.html)
 - **심각도:** 🟢 Low
 
-### [L-98] showLoggedInSections()가 sets-section·logs-section·acc-tabs를 직접 관리하지 않음
-- **영역:** 계정/로그인 — account.html
-- **증상:** `showLoggedInSections(false)`(로그아웃 시) 호출로는 `sets-section`, `logs-section`, `acc-tabs`가 숨겨지지 않음. 현재는 뒤이어 호출되는 `renderAccount()`가 이를 처리하므로 정상 동작하나, 경로 의존성이 강해 향후 리팩터 시 노출 위험.
-- **원인:** account.html `showLoggedInSections`(265-272행)가 wish/settings/bottom-actions 3개만 처리, acc-tabs·sets/logs-section은 app.js `renderAccount()`에 위임.
-- **수정 방향:** `showLoggedInSections`에 `acc-tabs`, `sets-section`, `logs-section` hide 추가. [site/account.html:265](site/account.html)
-- **심각도:** 🟢 Low
+### [L-98] ✅ 해결완료(2026-06-13, SOCIAL) — showLoggedInSections()가 sets-section·logs-section을 직접 관리하지 않음
+- **해결:** `showLoggedInSections(false)` 분기에 `sets-section`·`logs-section` `display:none` 추가. show=true 시에는 renderAccount()가 담당하므로 show 방향은 변경 없음. `acc-tabs`는 FE-SOC-07에서 제거됨. [site/account.html](site/account.html)
 
 ### [L-99] ✅ 해결완료(2026-06-13) — syncGearSetsOnLogin — 원격 세트 로컬 ID를 r.id.toString(36)으로 생성
 - **영역:** 계정/로그인 — 기어 세트 동기화
@@ -2184,13 +2172,8 @@
 
 ## R-76 상품상세 (15순환·SOCIAL 레인) — 2026-06-12
 
-### [L-136] `loadRemoteGearSets()` — `getUser()` 가드·명시적 `user_id` 필터 없음 (RLS 단독 의존)
-- **영역:** 상품상세 — 기어세트 동기화 / supabaseClient.js
-- **심각도:** 🟢 Low
-- **증상:** `supabaseClient.js` `loadRemoteGearSets()`(line 274)는 `getUser()` 확인 없이 바로 쿼리. 다른 모든 데이터 접근 함수(`loadRemoteWishlist`, `saveRemoteWishlist`, `createPost`, `createComment` 등)는 `getUser()`로 인증 먼저 확인하며, `loadRemoteWishlist()`는 추가로 `.eq('user_id', user.id)`를 애플리케이션 레이어에서 직접 적용. `loadRemoteGearSets()`는 RLS(`auth.uid() = user_id`)에만 의존. RLS 오설정·비활성화 시 모든 사용자의 세트가 반환될 수 있음.
-- **원인:** 기어세트 기능 추가 시 위시리스트 패턴(getUser + 명시적 eq) 미적용.
-- **수정:** `loadRemoteGearSets()` 시작 시 `getUser()` 호출 → user 없으면 null 반환; `.select(...)` 뒤에 `.eq('user_id', user.id)` 추가(RLS와 이중 보호).
-- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line ~274
+### [L-136] ✅ 해결완료(기구현·2026-06-13 검증) — `loadRemoteGearSets()` — `getUser()` 가드·명시적 `user_id` 필터 없음 (RLS 단독 의존)
+- **처리:** supabaseClient.js line 281 `loadRemoteGearSets()`에 이미 `getUser()` 가드 + `.eq('user_id', user.id)` 적용됨. 코드 변경 불필요.
 
 ### [L-137] ✅ 해결완료(2026-06-13) — `auth-callback.html` — `background:#fff` 하드코딩, `data-theme` 초기화 스크립트 없음
 - **영역:** 인증 콜백 페이지

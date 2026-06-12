@@ -88,7 +88,17 @@
         <span class="switch-knob"></span>
       </button>
     </div>
+    <!-- M-85: PWA 설치 버튼 — beforeinstallprompt 가용 시 표시 -->
+    <div class="set-row" id="pwa-install-row" style="display:none">
+      <div class="set-row-label">
+        <span class="set-row-title">홈 화면에 추가</span>
+        <span class="set-row-desc">앱처럼 바로 열 수 있어요</span>
+      </div>
+      <button id="pwa-install-btn" type="button" class="achip" style="font-size:13px;padding:6px 14px">설치</button>
+    </div>
   </div>
+  <!-- L-63: 스크린리더 알림용 aria-live 영역 -->
+  <div id="acc-sr-live" role="status" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0"></div>
 
   <!-- 로그아웃·계정삭제 — 로그인 후 페이지 최하단에 작게 표시 -->
   <div id="bottom-actions" style="display:none;margin-top:56px;padding:18px 0 12px;border-top:1px solid var(--line);text-align:center">
@@ -103,6 +113,39 @@
 
 <script src="app.js?v=de6f4ede"></script>
 <script>
+  // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
+  window.accAnnounce = function(msg) {
+    const el = document.getElementById('acc-sr-live');
+    if (!el) return;
+    el.textContent = '';
+    setTimeout(() => { el.textContent = msg; }, 50);
+  };
+
+  // M-85: PWA 설치 버튼 — beforeinstallprompt 캡처 및 핸들러
+  (function initPwaInstall() {
+    let deferredPrompt = null;
+    const row = document.getElementById('pwa-install-row');
+    const btn = document.getElementById('pwa-install-btn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (row) row.style.display = '';
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      if (row) row.style.display = 'none';
+    });
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (row) row.style.display = 'none';
+      });
+    }
+  })();
+
   // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
   (function initThemeSwitch() {
     const sw = document.getElementById('theme-switch');
@@ -279,6 +322,13 @@ function showLoggedInSections(show) {
   if (ws) ws.style.display = show ? '' : 'none'
   if (ss) ss.style.display = show ? '' : 'none'
   if (ba) ba.style.display = show ? '' : 'none'
+  // L-98/M-30: 로그아웃 시 sets/logs 섹션도 즉시 숨김 (renderAccount 재호출 없이)
+  if (!show) {
+    const sets = document.getElementById('sets-section')
+    const logs = document.getElementById('logs-section')
+    if (sets) sets.style.display = 'none'
+    if (logs) logs.style.display = 'none'
+  }
 }
 
 function renderLogin() {
