@@ -93,6 +93,29 @@ def derive_floor(raw):
     return N.floor_area_m2(dims_cm=N.parse_dims_cm(raw))
 
 
+_CAT_CODE = {
+    3: "BT", 4: "AT", 5: "SB", 6: "MT", 8: "CH", 9: "LT",
+    10: "CL", 11: "BN", 12: "TP", 13: "TB", 14: "CT",
+    15: "CW", 16: "WG", 17: "FP", 18: "PB", 19: "SH", 20: "MS",
+}
+
+
+def _assign_gf_code(con, pid, cid):
+    """신규 상품에 gf_code 부여 (이미 있으면 skip)."""
+    if con.execute("SELECT gf_code FROM products WHERE id=?", (pid,)).fetchone()[0]:
+        return
+    code = _CAT_CODE.get(cid, "XX")
+    seq = con.execute(
+        "SELECT COUNT(*) FROM products WHERE category_id=? AND gf_code IS NOT NULL", (cid,)
+    ).fetchone()[0] + 1
+    gf = f"GF-{code}-{seq:05d}"
+    # 충돌 시 seq 증가
+    while con.execute("SELECT 1 FROM products WHERE gf_code=?", (gf,)).fetchone():
+        seq += 1
+        gf = f"GF-{code}-{seq:05d}"
+    con.execute("UPDATE products SET gf_code=? WHERE id=?", (gf, pid))
+
+
 def flag(con, pid, mid, ftype, note):
     con.execute("INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note) VALUES(?,?,?,?)",
                 (pid, mid, ftype, note))
@@ -112,6 +135,7 @@ def ingest_row(con, row):
     pid = con.execute("""SELECT id FROM products WHERE brand_id=? AND model_name=?
         AND IFNULL(model_year,-1)=IFNULL(?,-1) AND IFNULL(variant,'')=IFNULL(?,'')""",
         (bid, row["model_name"], yr, row["variant"])).fetchone()[0]
+    _assign_gf_code(con, pid, cid)
 
     try:
         html = D.fetch(row["danawa_pcode"])

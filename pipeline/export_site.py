@@ -70,12 +70,16 @@ def export(con, outdir):
         # 모델(canonical dedup) 행
         models = []
         reps = con.execute("""SELECT MIN(p.id) rep, b.name_ko brand, p.canonical_model,
-                   p.capacity, COUNT(*) variants
+                   p.capacity, COUNT(*) variants,
+                   (SELECT p2.gf_code FROM products p2
+                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
+                    AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1)
+                    AND p2.curation_status='verified' ORDER BY p2.id LIMIT 1) gf_code
             FROM products p JOIN brands b ON b.id=p.brand_id
             WHERE p.category_id=? AND p.curation_status='verified'
             GROUP BY p.brand_id, p.canonical_model, IFNULL(p.capacity,-1)
             ORDER BY b.name_ko, p.canonical_model""", (cid,)).fetchall()
-        for rep, brand, cm, cap, variants in reps:
+        for rep, brand, cm, cap, variants, gf_code in reps:
             specs = {}
             for m in star_metrics:
                 row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
@@ -106,6 +110,7 @@ def export(con, outdir):
                 ORDER BY p2.image_local IS NULL ASC
                 LIMIT 1""", (rep, cm, cap)).fetchone()
             mdict = {
+                "gf_code": gf_code,
                 "brand": brand, "model": cm, "capacity": cap, "variants": variants,
                 "price_min": pr[0] if pr else None, "price_max": pr[1] if pr else None,
                 "img": imgr[0] if imgr else None,
