@@ -83,6 +83,7 @@
 | 69 | initApp·모달상태·draw인덱스·auth게이트·툴팁·푸시 | 2026-06-13 | 6건 (M-257~M-259·L-224~L-226) |
 | 70 | (xcode) iOS 시뮬레이터 — 상품 상세·카테고리 탭·스펙 단위 | 2026-06-13 | 5건 (H-104·M-367·M-368·L-284·L-285) |
 | 71 | (xcode) iOS 시뮬레이터 — 홈·헤더·검색 | 2026-06-13 | 4건 (H-111·M-389·M-390·L-310) |
+| 72 | (xcode) iOS 시뮬레이터 — 필터 모달·침낭 카테고리 | 2026-06-13 | 2건 (L-311·L-312) |
 
 ---
 
@@ -5891,7 +5892,8 @@
 
 ---
 
-### [H-84] — `backfill_capacity.py` `main()` — 범위 외 파싱값 무음 폐기, 감사 불가
+### [H-84] ✅ 해결완료(2026-06-13, BACKEND) — `backfill_capacity.py` `main()` — 범위 외 파싱값 무음 폐기, 감사 불가
+> `elif c is not None:` 분기로 범위 밖 값을 NULL 유지하되 `out_of_range`에 모아 요검토 로그 출력. 실DB 검증: 15건 표면화 — 다수가 cap_from_name 오파싱('코펠 20p'=조각수, 'G1500P'=모델코드, '86P'=SKU를 인원으로 오인) 드러남 → 별도 후속(L-신규: cap_from_name 'Np=조각수' 오탐).
 
 - **영역:** 백엔드 — 용량 백필
 - **심각도:** 🔴 High
@@ -8500,5 +8502,41 @@
 - **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 181–190 — `assert` 구문으로 검증, `-O` 모드에서 제거됨.
 - **제안 수정:** `if actual != expected: raise AssertionError(...)` 명시적 체크 또는 unittest 이동.
 - **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 181 [lane:BACKEND]
+
+---
+
+### [M-399] — recommend `picks` 필터 — `m.specs.X` 미존재 시 `TypeError` 크래시
+
+- **영역:** 프론트엔드 — 추천
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `floor_area`·`capacity_mah` 스펙 없는 모델이 picks 필터에 포함되면 TypeError로 추천 섹션 전체 렌더 실패.
+- **원인:** [site/app.js](site/app.js) line 315, 321, 326 — `m.specs.floor_area.badge` 등 옵셔널 체이닝 없음.
+- **제안 수정:** `m.specs.floor_area?.badge !== "외형기준"`, `(m.specs.capacity_mah?.value ?? Infinity) <= 100000`
+- **파일:** [site/app.js](site/app.js) line 315 [lane:CORE]
+
+---
+
+### [L-321] — `buildFilters` 스펙 슬라이더 — `Math.min/max(...vals)` 대형 배열 스택 오버플로 위험
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 수천 개 모델 카테고리에서 `Math.min(...vals)` spread가 엔진 인수 한계 초과 시 RangeError.
+- **원인:** [site/app.js](site/app.js) line 1624 — `Math.min(...vals)` spread, line 1607·1652 동일 패턴.
+- **제안 수정:** `vals.reduce((a, b) => Math.min(a, b), Infinity)` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 1624 [lane:CORE]
+
+---
+
+### [L-322] — `buildFilters` — `fsheet-head`/`fsheet-foot` DOM 잔류 시 카테고리 재진입에서 중복 삽입
+
+- **영역:** 프론트엔드 — 필터 UI
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `catBody` 재렌더 후 `filtoggle` 사라지면 가드 통과 → `fsheet-head`/`fsheet-foot` 중복 생성.
+- **원인:** [site/app.js](site/app.js) line 1764 — 삽입 가드가 `filtoggle` 존재만 체크, `fsheet-head` 미체크.
+- **제안 수정:** `aside.querySelector('.fsheet-head')` 존재 확인 가드 추가.
+- **파일:** [site/app.js](site/app.js) line 1764 [lane:CORE]
 
 ---

@@ -38,6 +38,7 @@ def main():
     rows = con.execute("SELECT id, model_name FROM products WHERE capacity IS NULL").fetchall()
     filled = 0
     examples = []
+    out_of_range = []   # H-84: 범위 밖 파싱값 감사용
     for pid, name in rows:
         c = cap_from_name(name)
         if c and 1 <= c <= 12:
@@ -45,6 +46,10 @@ def main():
             filled += 1
             if len(examples) < 10:
                 examples.append((name, c))
+        elif c is not None:
+            # H-84: '0P'·'0인용'·13인 이상 등 범위 밖 값을 로그 없이 NULL 유지하면 어떤 상품이
+            #       왜 누락됐는지 감사할 수 없다 → NULL은 유지하되 요검토 항목으로 기록·출력.
+            out_of_range.append((pid, name, c))
     con.commit()
     before = len(rows)
     total = con.execute("SELECT COUNT(*) FROM products").fetchone()[0]
@@ -53,6 +58,12 @@ def main():
     print(f"적정인원 보유: {have}/{total} ({have*100//total}%)\n")
     for n, c in examples:
         print(f"   {c}인 ← {n[:44]}")
+    if out_of_range:
+        print(f"\n⚠ 범위 밖 인원 파싱 {len(out_of_range)}건 (NULL 유지·요검토):")
+        for pid, n, c in out_of_range[:20]:
+            print(f"   · pid={pid} {c}인?? ← {n[:40]}")
+        if len(out_of_range) > 20:
+            print(f"   … 외 {len(out_of_range) - 20}건")
     con.close()
 
 

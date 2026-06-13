@@ -43,7 +43,7 @@
 | **B11** | `promote_catalog.py` | H-77 | ✅ 2026-06-13 완료 (NEED_CAPACITY 명시화; capacity 게이트는 정규 정책상 유지) |
 | **B12** | `harvest_tents.py` | H-79 | ✅ 2026-06-13 완료 |
 | **B13** | `normalize_models.py` | H-83 (+M-329 함께 해소) | ✅ 2026-06-13 완료 |
-| **B14** | `backfill_capacity.py` | H-84 | ⬜ 단독 |
+| **B14** | `backfill_capacity.py` | H-84 | ✅ 2026-06-13 완료 (감사로그가 cap_from_name 'Np=조각수' 오탐 노출 → 후속과제) |
 
 > 이미 완료(별도 커밋): H-44·H-45(add_value_star/enrich)·H-47(fill_whitelist SQLi)·H-52(export JOIN)·H-53·H-54(crosssource)·H-55(scan_secrets)·H-57(danawa)·H-58(enrich fn).
 > **의존성:** B1의 `enrich_details(H-58)` 가드 패턴이 B1 H-91에 미러링됨. B11(promote_catalog)은 B1 source_id 수정 이후 검증 권장.
