@@ -149,8 +149,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmbuy.pmbuy-active{cursor:pointer;opacity:1}
 .pmbuynote{text-align:center;font-size:10.5px;color:var(--muted);margin-top:8px;opacity:.7}
 .spec-tip-btn{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1.5px solid var(--muted);background:none;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;vertical-align:middle;line-height:1;padding:0;position:relative}
-.spec-tip-btn::after{content:attr(title);display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:var(--txt);color:var(--bg);font-size:11px;font-weight:400;padding:6px 10px;border-radius:7px;white-space:normal;width:220px;text-align:left;z-index:999;line-height:1.45;pointer-events:none}
-.spec-tip-btn:hover::after,.spec-tip-btn:focus::after,.spec-tip-btn.open::after{display:block}
+.spec-tip-btn::after{content:none}
+.spec-tip-btn:hover::after,.spec-tip-btn:focus::after,.spec-tip-btn.open::after{content:none}
+#spec-tip-bubble{display:none;position:fixed;background:var(--txt);color:var(--bg);font-size:11px;font-weight:400;padding:6px 10px;border-radius:7px;white-space:normal;width:220px;max-width:calc(100vw - 24px);text-align:left;z-index:9999;line-height:1.45;pointer-events:none}
 /* 내 세트에 추가 — 보조 액션(아웃라인 accent) */
 .pmset{width:100%;margin-top:10px;padding:12px;border:1.5px solid var(--accent);border-radius:11px;
   background:var(--card);color:var(--accent);font-size:14.5px;font-weight:700;cursor:pointer;transition:.15s}
