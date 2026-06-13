@@ -2133,8 +2133,8 @@ function draw() {
     passRange(m));
 
   const k = STATE.sortKey, asc = STATE.sortAsc;
-  // 품질: '데이터부족 제외' → 정렬 기준 값이 없는 모델 숨김
-  if (STATE.qExclude) rows = rows.filter(m => cellVal(m, k) != null);
+  // 품질: '데이터부족 제외' or 가성비순 → 정렬 기준 값이 없는 모델 숨김
+  if (STATE.qExclude || k === "value") rows = rows.filter(m => cellVal(m, k) != null);
   rows.sort((a, b) => {
     let va = cellVal(a, k), vb = cellVal(b, k);
     if (typeof va === "string" || typeof vb === "string")
