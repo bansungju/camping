@@ -1321,10 +1321,11 @@
 - **영역:** 검색
 - **해결:** 결과 없음 상태 footer에 "📂 카테고리 탐색하기" 링크 추가 (`category.html`). L-61 Enter 핸들러 분기에서도 동일 메시지 표시. [site/app.js](site/app.js)
 
-### [L-04] Cloudflare beacon.min.js 503 오류
+### [L-04] ✅ 아카이브(Cloudflare 인프라 문제·코드 외부) — Cloudflare beacon.min.js 503 오류
 - **영역:** 상품 상세 (전체 페이지 공통으로 추정)
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** 페이지 로드 시 Cloudflare Web Analytics beacon 스크립트가 503 반환. 분석 데이터 수집 불가.
+- **처리:** Cloudflare 측 Analytics 서비스 문제로 코드 수정으로 해결 불가. Cloudflare 대시보드에서 Analytics 활성화 상태 확인 필요.
 
 ### [L-05] ✅ 해결완료(2026-06-12) — 스펙 배지가 모두 '참고'로 표시 — 공식/비공식 구분 없음
 - **영역:** 상품 상세
@@ -2811,7 +2812,7 @@
 
 ## 🟢 Low (회차 67)
 
-### [L-178] — `stamp_version.py` — `hj`(app.js 해시) 계산 후 app.js 재수정 → HTML 스탬프 해시 stale
+### [L-178] ✅ 해결완료(기구현·2026-06-13 검증) — `stamp_version.py` — `hj`(app.js 해시) 계산 후 app.js 재수정 → HTML 스탬프 해시 stale
 - **영역:** 백엔드 — 파이프라인 / 캐시 버스팅
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2861,7 +2862,7 @@
 - **제안 수정:** `inp.onblur = () => { setTimeout(() => closeBox(), 150); }` 로 교체.
 - **파일:** [site/app.js](site/app.js) line 910 [lane:CORE]
 
-### [L-181] — `harvest_tents.py` `ingest()` — `SELECT ... model_year IS NULL AND variant IS NULL` fetchone None → TypeError
+### [L-181] ✅ 해결완료(기구현·2026-06-13 검증) — `harvest_tents.py` `ingest()` — `SELECT ... model_year IS NULL AND variant IS NULL` fetchone None → TypeError
 - **영역:** 백엔드 — harvest_tents 크롤링 파이프라인
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2871,7 +2872,7 @@
 - **제안 수정:** `SELECT id FROM products WHERE brand_id=? AND model_name=? ORDER BY id LIMIT 1`로 완화하거나, fetchone 결과에 `if pid is None: return "dup_variant"` guard 추가.
 - **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 127–128 [lane:BACKEND]
 
-### [H-42] — `account.html` — 비로그인 상태에서 찜 목록·로그 목록 노출 — 로그인 후에만 표시해야 함
+### [H-42] ✅ 해결완료(기구현·2026-06-13 검증) — `account.html` — 비로그인 상태에서 찜 목록·로그 목록 노출 — 로그인 후에만 표시해야 함
 - **영역:** 프론트엔드 — account.html (찜/로그 섹션)
 - **심각도:** 🔴 High
 - **발견일시:** 2026-06-13
@@ -2881,7 +2882,7 @@
 - **제안 수정:** `account.html` line 204의 즉시 `renderAccount()` 호출 제거. `initAuth` 콜백에서 `user`가 확인된 후에만 `renderAccount()` 호출. 비로그인 시 찜/로그/세트 섹션 `display:none` 유지하고 로그인 CTA만 표시.
 - **파일:** [site/account.html](site/account.html) line 202–204, line 355–370 [lane:CORE]
 
-### [M-151] — `signOut()` — 로그아웃 후 localStorage `wish` 미삭제 → 비로그인 상태에서 이전 사용자 찜 목록 잔존
+### [M-151] ✅ 해결완료(기구현·2026-06-13 검증) — `signOut()` — 로그아웃 후 localStorage `wish` 미삭제 → 비로그인 상태에서 이전 사용자 찜 목록 잔존
 - **영역:** 프론트엔드 — 찜(wishlist) / 계정
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
@@ -2890,3 +2891,193 @@
 - **원인:** `site/supabaseClient.js:37–38` `signOut()`에 localStorage 정리 로직 없음.
 - **제안 수정:** `signOut()` 함수에 `localStorage.removeItem("wish"); localStorage.removeItem("sets");` 추가. 또는 `account.html`의 로그아웃 핸들러(line 284, 444, 458)에서 각각 `setWish([])` 호출.
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 37–38, [site/account.html](site/account.html) line 284 [lane:CORE]
+
+---
+
+## R-90 — 필터초기화·가격·공유URL·export 탐색 (2026-06-13)
+
+### [M-152] ✅ 해결완료(기구현·2026-06-13 검증) — `clearAllFilters()` — `serializeState()` 미호출 → URL에 이전 필터 파라미터 잔존
+- **영역:** 프론트엔드 — category.html 필터 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `clearAllFilters()`(line 1753)는 STATE를 초기화하고 `syncFilterUI(); draw();`만 호출한다. `serializeState()`를 호출하지 않아 URL에 이전 필터 파라미터(`cap=`, `brands=`, `__min/__max`, `sort=` 등)가 그대로 남는다. 필터를 초기화한 후 URL을 복사해 공유하면 수신자는 초기화 전 필터 상태로 페이지를 열게 된다. 또한 브라우저 뒤로가기 후 재진입 시 stale URL 파라미터로 필터가 복원된다.
+- **재현조건:** ① category.html에서 브랜드·가격 필터 적용 → URL에 `brands=XXX&price__min=YYY` 반영 확인 → ② "전체 해제" 버튼 클릭(`clearAllFilters`) → ③ URL 확인 — 파라미터가 그대로 남아있음.
+- **원인:** `clearAllFilters()` line 1753–1758에 `serializeState()` 호출 없음. 비교: 일반 필터 변경 시에는 `buildFilters()` 콜백(line 1206)과 `draw()` 호출부(line 2448)에서 `serializeState()`가 호출됨.
+- **제안 수정:** `clearAllFilters()` 함수 말미에 `serializeState();` 추가.
+- **파일:** [site/app.js](site/app.js) line 1753–1758 [lane:CORE]
+
+### [M-153] ✅ 해결완료(2026-06-13) — `priceRange` / `priceLabeled` — `price_min=0` 을 유효 가격으로 렌더링 → "0원" 노출
+- **영역:** 프론트엔드 — 상품 카드·모달 가격 표시 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `priceRange(a, b)`(line 223)와 `priceLabeled(n)`(line 227)은 `null` 체크만 하고 `0` 체크를 하지 않는다. `price_min=0`인 모델이 DB에 존재하면(M-147 배포게이트 우회 또는 수동 0원 입력) 카드·모달에 "0원" 또는 "0원 최저가 기준"이 표시된다. 또한 가성비 계산(line 1803 `if (!s || !m.price_min)`)은 `price_min=0`을 falsy로 처리해 계산을 건너뛰지만 렌더링은 "0원"으로 그대로 표시되어 불일치가 발생한다.
+- **재현조건:** `price_min=0`인 모델이 DB에 존재할 때 category.html 진입 → 카드 가격란에 "0원 최저가 기준" 표시.
+- **원인:** `priceRange`/`priceLabeled`가 `n == null`만 체크하고 `n === 0` falsy 케이스를 무처리.
+- **제안 수정:** `priceRange`/`priceLabeled`를 `n == null || n === 0 ? nullHtml : won(n)` 로 수정하거나, `won(n)`에서 `n === 0` 시 `"—"` 반환.
+- **파일:** [site/app.js](site/app.js) line 223, 227 [lane:CORE]
+
+### [L-182] ✅ 해결완료(기구현·2026-06-13 검증) — `view-set` 공유 URL — `btoa` 결과 URL-safe 처리 없음 → `+`, `/` 포함 시 파싱 실패
+- **영역:** 프론트엔드 — account.html 세트 공유 URL (app.js)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 세트 공유 URL 생성 시(line 3250–3251) `btoa(unescape(encodeURIComponent(JSON.stringify(payload))))` 결과를 URL-safe 인코딩 없이 `?view-set=${encoded}` 형태로 그대로 사용한다. Base64 표준 출력에는 `+`, `/`, `=` 문자가 포함될 수 있다. 이 URL이 SNS·메신저를 거치거나 `encodeURIComponent` 없이 복사되면 `+`가 스페이스로 변환되거나 `=` 패딩이 탈락해, 수신자 측 `atob(vsParam)` 또는 `JSON.parse` 단계에서 오류가 발생한다. `catch {}` 블록이 있어 silently 실패하지만 모달이 열리지 않는다.
+- **재현조건:** 세트 이름·아이템명에 한글이 포함되거나 payload 길이가 3의 배수가 아닐 때 `btoa` 결과에 `+` 또는 `=` 포함 가능 → 해당 URL을 카카오톡 등 메신저로 전송 후 수신자가 열면 세트 모달 미노출.
+- **원인:** line 3250에서 `btoa()` 결과를 `encodeURIComponent()`로 감싸지 않음. URL-safe Base64(`+→-`, `/→_`, `=` 제거) 변환 없음.
+- **제안 수정:** `const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');` 및 복호화 측에서도 역변환 적용.
+- **파일:** [site/app.js](site/app.js) line 3250–3251, 3872 [lane:CORE]
+
+---
+
+## R-91 — 프론트/백엔드 종합 버그 탐색 (2026-06-13)
+
+### [H-43] — `openLogDetail` — `p.content` null 직접 `.length` 접근 → TypeError
+
+- **영역:** 프론트엔드 — 커뮤니티/소셜 로그 상세 (app.js)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `openLogDetail()` 내부에서 `p.content.length > 80` 비교 시 `p.content`가 null/undefined이면 TypeError 발생. 바로 위 줄의 preview 추출은 `p.content || ""` 로 보호되어 있지만 length 비교는 raw 접근이다. 삭제된 글·body=null 데이터 진입 시 로그 상세 모달 전체가 크래시된다.
+- **재현조건:** `content`(또는 `body`)가 null인 게시글 → 로그 상세 클릭 → 모달 오픈 실패.
+- **원인:** `app.js` 로그 상세 렌더 부분에서 `p.content || ""`로 감싸지 않고 직접 `.length` 호출.
+- **제안 수정:** `p.content.length > 80` → `(p.content || "").length > 80`
+- **파일:** [site/app.js](site/app.js) (openLogDetail 내부) [lane:CORE]
+
+---
+
+### [M-154] — `posts` 테이블 컬럼 혼용 — `renderAccount`는 `body`, `renderLogFeed`는 `content` select → 한쪽 항상 null
+
+- **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 동일한 `posts` 테이블을 `renderAccount`는 `.select("id, title, body, created_at")`로, `renderLogFeed`는 `.select("id, title, content, tags, ...")`로 조회한다. 실제 스키마의 컬럼명이 `body`든 `content`든 한쪽은 항상 null을 반환하여 글 목록 또는 피드가 공백으로 표시된다. 또한 `renderLogFeed`에는 `deleted_at IS NULL` 필터가 없어 삭제된 글이 피드에 노출될 수 있다.
+- **재현조건:** account.html의 내 게시글 목록과 커뮤니티 피드 중 한 곳이 항상 공백.
+- **원인:** app.js 두 Supabase 쿼리에서 컬럼명 불일치. 개발 중 스키마 rename이 한쪽에만 반영된 것으로 추정.
+- **제안 수정:** 실제 Supabase posts 테이블 스키마 확인 후 두 쿼리를 동일 컬럼명으로 통일. `renderLogFeed` 쿼리에 `.is("deleted_at", null)` 필터 추가.
+- **파일:** [site/app.js](site/app.js) (renderAccount posts select, renderLogFeed posts select) [lane:CORE]
+
+---
+
+### [M-155] — `syncFilterUI` — `document.getElementById("filters")` null 체크 없이 `querySelectorAll` 직접 호출 → TypeError
+
+- **영역:** 프론트엔드 — category.html 필터 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `syncFilterUI()`에서 `const bar = document.getElementById("filters")`를 한 뒤 null 체크 없이 `bar.querySelectorAll(...)`을 호출한다. `clearAllFilters()`가 `syncFilterUI()`를 호출하므로, filters 엘리먼트가 없는 페이지(category.html 외)에서 `clearAllFilters()`가 실수로 호출되면 TypeError로 크래시된다.
+- **재현조건:** category.html이 아닌 페이지에서 `clearAllFilters()` 호출 시 `Cannot read properties of null (reading 'querySelectorAll')`.
+- **원인:** `syncFilterUI()` 최상단에 `if (!bar) return;` 가드 누락.
+- **제안 수정:** `const bar = document.getElementById("filters"); if (!bar) return;`
+- **파일:** [site/app.js](site/app.js) (syncFilterUI) [lane:CORE]
+
+---
+
+### [M-156] — `renderNicknameModal` / `initNickChange` — 닉네임 중복 확인 결과(`lastChecked`) 미검증으로 미완료 닉네임 저장 가능
+
+- **영역:** 프론트엔드 — account.html 닉네임
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 닉네임 저장 버튼 클릭 시 NICKNAME_RE 정규식 통과 여부만 확인하고 `lastChecked` 변수(비동기 중복확인 결과)를 검증하지 않는다. debounce 중 빠르게 저장을 클릭하면 중복 확인이 완료되지 않은 닉네임으로 `setNickname()` 요청이 나간다. 신규 가입 모달(`renderNicknameModal`)과 닉네임 변경 폼(`initNickChange`) 모두 동일한 결함.
+- **재현조건:** 닉네임 입력창에 타이핑 직후(debounce 대기 중) 즉시 저장 버튼 클릭 → 중복 확인 없이 저장 시도.
+- **원인:** `account.html` 저장 버튼 핸들러에서 `if (!lastChecked || !lastChecked.ok) return;` 가드 누락.
+- **제안 수정:** 저장 핸들러 시작부에 `if (!lastChecked?.ok) { err.textContent="중복 확인 중입니다"; return; }` 추가.
+- **파일:** [site/account.html](site/account.html) (renderNicknameModal save handler, initNickChange save handler) [lane:CORE]
+
+---
+
+### [L-183] — `showLoggedInSections` — `?view-set` URL 파라미터 존재 시 신규 로그인 유저 닉네임 모달 억제
+
+- **영역:** 프론트엔드 — account.html 닉네임 / 세트공유
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `?view-set=...` 파라미터가 있는 URL로 처음 로그인하는 신규 사용자는 `_isViewSet=true` 분기로 `showLoggedInSections()`가 조기 return 되어 닉네임 설정 모달이 표시되지 않는다. 닉네임 미설정 상태로 계정에 진입하게 된다.
+- **재현조건:** 공유 세트 URL(`?view-set=...`)을 처음 받은 신규 유저가 OAuth 로그인 → account.html 리다이렉트 → 닉네임 모달 미노출.
+- **원인:** `account.html` `showLoggedInSections()`의 `_isViewSet` 조기 return이 닉네임 체크보다 앞에 위치.
+- **제안 수정:** `_isViewSet` 분기 전에 닉네임 미설정 유저를 먼저 확인하거나, 닉네임 모달을 `_isViewSet`과 독립적으로 처리.
+- **파일:** [site/account.html](site/account.html) (showLoggedInSections) [lane:CORE]
+
+---
+
+### [L-184] — `openLogModal` — 이미지 교체·폼 닫기 시 Blob URL `revokeObjectURL` 미호출 → 메모리 누수
+
+- **영역:** 프론트엔드 — 커뮤니티/소셜 로그 작성 모달 (app.js)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `openLogModal()`의 이미지 선택 핸들러에서 `imgThumb.src = URL.createObjectURL(file)` 호출 후 폼 닫기·이미지 재선택 시 이전 Blob URL을 `URL.revokeObjectURL()`로 해제하지 않아 메모리 누수가 발생한다. 리뷰 폼(`wireReviews`)은 `renderThumbs`에서 명시적으로 revoke 처리하지만 로그 폼은 누락.
+- **재현조건:** 로그 작성 모달 열기 → 이미지 선택 → 다른 이미지로 교체 또는 모달 닫기 → 반복 시 메모리 점진적 증가.
+- **원인:** 로그 모달 이미지 핸들러에 revoke 로직 없음.
+- **제안 수정:** 새 파일 선택 전 `if (imgThumb.src?.startsWith('blob:')) URL.revokeObjectURL(imgThumb.src);` 추가. 모달 닫기 핸들러에서도 동일 처리.
+- **파일:** [site/app.js](site/app.js) (openLogModal 이미지 선택 핸들러) [lane:CORE]
+
+---
+
+### [M-157] — `sw.js` install handler — `SHELL` addAll 실패를 `.catch(()=>{})` 무음 처리 → 오프라인 셸 불완전 설치 후 SW activate
+
+- **영역:** 프론트엔드 — PWA / Service Worker
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `install` 이벤트 핸들러에서 `c.addAll(SHELL).catch(() => {})` 로 SHELL 목록 캐싱 실패를 무음 처리한다. SHELL 목록 중 하나라도 404이거나 네트워크 오류이면 `addAll` 전체가 실패하지만 catch에서 삼켜져 `skipWaiting()`으로 진행한다. 결과적으로 index.html·account.html 등 핵심 셸이 캐시되지 않은 채 SW가 activate되어 오프라인 시 빈 화면이 표시된다.
+- **재현조건:** SHELL 목록 중 하나의 URL이 일시적으로 오류 응답 시 → 오프라인 진입 → 셸 전체 미캐시로 빈 화면.
+- **원인:** `site/sw.js` line 17 `c.addAll(SHELL).catch(() => {})` — 에러를 무시하고 SW 설치를 강행.
+- **제안 수정:** 실패 시 `console.warn` 최소 로깅 추가. SHELL 목록을 개별 `cache.put()`으로 분리해 부분 실패를 허용하거나, 실패한 URL만 제외하고 설치 계속 진행.
+- **파일:** [site/sw.js](site/sw.js) line 17 [lane:CORE]
+
+---
+
+### [M-158] — `normalize_models.py` `normalize_db()` — `canonical_models` INSERT GROUP BY에 `p.capacity` 직접 사용 — NULL 그룹화 오류
+
+- **영역:** 백엔드 — 파이프라인 / 데이터 정규화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `canonical_models` INSERT 쿼리의 GROUP BY가 `IFNULL(p.capacity, -1)` 대신 `p.capacity`를 그대로 사용한다. SQLite는 NULL 값들을 각각 별개의 그룹으로 처리하므로 capacity=NULL인 여러 행이 하나의 canonical 모델로 묶이지 않고 개별 canonical로 생성된다. `export_site.py` 및 `flag_price_outliers`는 `IFNULL(p.capacity,-1)`로 그룹화하여 불일치 발생.
+- **재현조건:** capacity=NULL인 제품이 여러 variant로 존재할 때 `normalize_db()` 실행 → canonical 중복 생성.
+- **원인:** `pipeline/normalize_models.py` canonical INSERT GROUP BY 절에서 NULL-safe 처리 누락.
+- **제안 수정:** GROUP BY `p.capacity` → GROUP BY `IFNULL(p.capacity, -1)`.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) (normalize_db canonical INSERT) [lane:BACKEND]
+
+---
+
+### [M-159] — `normalize_models.py` `flag_price_outliers()` — 짝수 개 가격 목록 중앙값 인덱스 오류
+
+- **영역:** 백엔드 — 파이프라인 / 가격 이상치 탐지
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `med = prices[len(prices) // 2]` 공식은 리스트 길이가 짝수일 때(예: 4개) `prices[2]`(상위 절반 첫 값)를 중앙값으로 택한다. 보수적 기준을 원한다면 `prices[(n-1)//2]`(하위 중앙값)이 적절하다. 현재 공식은 이상치 판단 기준을 실제보다 높게 잡아 일부 저가 오기 데이터가 이상치 필터를 통과할 수 있다.
+- **재현조건:** 동일 canonical에 4개 가격이 있을 때 이상치 탐지 기준이 의도보다 높게 설정됨.
+- **원인:** `pipeline/normalize_models.py` `flag_price_outliers()` 중앙값 계산식.
+- **제안 수정:** `med = prices[len(prices) // 2]` → `med = prices[(len(prices) - 1) // 2]`
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) (flag_price_outliers) [lane:BACKEND]
+
+---
+
+### [M-160] — `validate_ranges.py` `HARD_RANGES` dict — `brightness`·`runtime` 키 중복 정의로 첫 번째 값 무음 덮어쓰기
+
+- **영역:** 백엔드 — 파이프라인 / 스펙 검증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `HARD_RANGES` dict 리터럴에서 `"brightness"`와 `"runtime"` 키가 두 번 정의된다. Python은 마지막 값을 사용하므로 첫 번째 정의가 무음 무시된다. 현재는 두 정의값이 우연히 동일해 기능 이상은 없지만, 향후 앞 정의만 수정하면 두 번째가 덮어 수정이 미반영되는 잠재 버그.
+- **원인:** `pipeline/validate_ranges.py` `HARD_RANGES` 딕셔너리 중복 키.
+- **제안 수정:** 중복 키 제거.
+- **파일:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) (HARD_RANGES) [lane:BACKEND]
+
+---
+
+### [L-185] — `ocr_specs.py` `parse_specs()` — `max(kgs) * 1000`을 `weight_min`으로 저장 — 의미적 역전
+
+- **영역:** 백엔드 — 파이프라인 / OCR 스펙 수집
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** OCR로 추출한 kg 값 중 최댓값(`max(kgs)`)을 1000 곱해 `weight_min`(최소 중량)으로 저장한다. 상품 상세 이미지에는 패키지 총중량(본체보다 큼)이 표기되는 경우가 많아, 최댓값이 배송 무게로 추정되므로 `min(kgs)`가 본체 무게로 더 적절하다. 현재 코드는 실제 최소 무게보다 높은 값을 `weight_min`으로 저장할 수 있다.
+- **원인:** `pipeline/ocr_specs.py` `parse_specs()` 내 `max(kgs) * 1000` 사용.
+- **제안 수정:** `max(kgs)` → `min(kgs)` (또는 별도 로직으로 패키지/본체 무게 구분).
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) (parse_specs) [lane:BACKEND]
+
+---
+
+### [L-186] — `ocr_specs.py` — `open()` without `with` → 예외 시 파일 핸들 누수
+
+- **영역:** 백엔드 — 파이프라인 / OCR 스펙 수집
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `json.load(open(path, encoding="utf-8"))` 패턴으로 파일을 열고 닫지 않는다. 정상 동작 시 GC가 처리하지만 예외 발생 시 파일 핸들이 누수된다. `run()` 함수에서도 동일 패턴 반복.
+- **원인:** `pipeline/ocr_specs.py` 여러 곳에서 `with open(...)` 대신 `open()` 직접 사용.
+- **제안 수정:** `with open(path, encoding="utf-8") as f: data = json.load(f)` 패턴으로 변경.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) [lane:BACKEND]
+
