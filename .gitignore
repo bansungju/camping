@@ -41,3 +41,7 @@ camping_backup/
 
 # 임시 루프 계획서 (세션 분할용, 진행 중 갱신)
 LOOP-PLAN-DATA.md
+
+# 버그루프 로컬 런타임 상태 (회차 카운터·일시정지 플래그) — 레포에 커밋 금지
+.bug-loop-iter
+.claude/LOOP-PAUSED

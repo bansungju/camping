@@ -2930,7 +2930,7 @@
 
 ## R-91 — 프론트/백엔드 종합 버그 탐색 (2026-06-13)
 
-### [H-43] — `openLogDetail` — `p.content` null 직접 `.length` 접근 → TypeError
+### [H-43] ✅ 해결완료(기구현·2026-06-13 검증) — `openLogDetail` — `p.content` null 직접 `.length` 접근 → TypeError
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 로그 상세 (app.js)
 - **심각도:** 🔴 High
@@ -3021,7 +3021,7 @@
 
 ---
 
-### [M-158] — `normalize_models.py` `normalize_db()` — `canonical_models` INSERT GROUP BY에 `p.capacity` 직접 사용 — NULL 그룹화 오류
+### [M-158] ✅ 해결완료(2026-06-13) — `normalize_models.py` `normalize_db()` — `canonical_models` INSERT GROUP BY에 `p.capacity` 직접 사용 — NULL 그룹화 오류
 
 - **영역:** 백엔드 — 파이프라인 / 데이터 정규화
 - **심각도:** 🟡 Medium
@@ -3034,7 +3034,7 @@
 
 ---
 
-### [M-159] — `normalize_models.py` `flag_price_outliers()` — 짝수 개 가격 목록 중앙값 인덱스 오류
+### [M-159] ✅ 해결완료(2026-06-13) — `normalize_models.py` `flag_price_outliers()` — 짝수 개 가격 목록 중앙값 인덱스 오류
 
 - **영역:** 백엔드 — 파이프라인 / 가격 이상치 탐지
 - **심각도:** 🟡 Medium
@@ -3047,7 +3047,7 @@
 
 ---
 
-### [M-160] — `validate_ranges.py` `HARD_RANGES` dict — `brightness`·`runtime` 키 중복 정의로 첫 번째 값 무음 덮어쓰기
+### [M-160] ✅ 해결완료(2026-06-13) — `validate_ranges.py` `HARD_RANGES` dict — `brightness`·`runtime` 키 중복 정의로 첫 번째 값 무음 덮어쓰기
 
 - **영역:** 백엔드 — 파이프라인 / 스펙 검증
 - **심각도:** 🟡 Medium
@@ -3059,7 +3059,7 @@
 
 ---
 
-### [L-185] — `ocr_specs.py` `parse_specs()` — `max(kgs) * 1000`을 `weight_min`으로 저장 — 의미적 역전
+### [L-185] ✅ 해결완료(2026-06-13) — `ocr_specs.py` `parse_specs()` — `max(kgs) * 1000`을 `weight_min`으로 저장 — 의미적 역전
 
 - **영역:** 백엔드 — 파이프라인 / OCR 스펙 수집
 - **심각도:** 🟢 Low
@@ -3071,7 +3071,7 @@
 
 ---
 
-### [L-186] — `ocr_specs.py` — `open()` without `with` → 예외 시 파일 핸들 누수
+### [L-186] ✅ 해결완료(2026-06-13) — `ocr_specs.py` — `open()` without `with` → 예외 시 파일 핸들 누수
 
 - **영역:** 백엔드 — 파이프라인 / OCR 스펙 수집
 - **심각도:** 🟢 Low
@@ -3080,4 +3080,117 @@
 - **원인:** `pipeline/ocr_specs.py` 여러 곳에서 `with open(...)` 대신 `open()` 직접 사용.
 - **제안 수정:** `with open(path, encoding="utf-8") as f: data = json.load(f)` 패턴으로 변경.
 - **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) [lane:BACKEND]
+
+
+---
+
+## R-92 — 프론트/백엔드 종합 버그 탐색 2차 (2026-06-13)
+
+### [H-44] — `add_value_star.py` — `capacity_l["value"]` ZeroDivisionError + KeyError → 가성비 계산 전체 크래시
+
+- **영역:** 백엔드 — 파이프라인 / 가성비 계산
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `m["price_min"] / m["specs"]["capacity_l"]["value"]` 에서 (1) `capacity_l` 키가 없는 모델에서 KeyError, (2) `value`가 0인 경우 ZeroDivisionError 발생. 어느 쪽이든 스크립트 전체가 traceback으로 종료되어 가성비 별점이 전체 모델에 반영되지 않는다.
+- **재현조건:** capacity_l 스펙이 없는 모델 또는 value=0인 모델이 DB에 존재할 때 `add_value_star.py` 실행 시.
+- **원인:** `pipeline/add_value_star.py` line 17에 `capacity_l` 존재 여부 및 0 체크 없음.
+- **제안 수정:** `cap = m.get("specs", {}).get("capacity_l", {}).get("value") or 0; if not cap: continue` 추가.
+- **파일:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 17 [lane:BACKEND]
+
+---
+
+### [H-45] — `enrich_details.py` — `danawa_pcode` 문자열 포맷팅 SQL 직접 삽입 → SQL Injection 위험
+
+- **영역:** 백엔드 — 파이프라인 / 상품 상세 수집
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `",".join("'%s'" % t[1] for t in targets)` 형태로 pcode를 SQL 쿼리에 직접 문자열 삽입한다. pcode에 `'` 또는 `--`가 포함되면 쿼리가 파괴된다. 현재 pcode는 주로 숫자이나 타입 보장이 없어 잠재적 SQL Injection.
+- **원인:** `pipeline/enrich_details.py` line 114–115, 파라미터 바인딩(`?`) 대신 `%s` 문자열 포맷팅 사용.
+- **제안 수정:** placeholders = ",".join("?" * len(targets)) → `cur.execute(f"... IN ({placeholders})", [t[1] for t in targets])`
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 114–115 [lane:BACKEND]
+
+---
+
+### [M-161] — `auth-callback.html` — top-level `await` in ES module → iOS 14 이하 Safari 인증 콜백 전체 실패
+
+- **영역:** 프론트엔드 — 인증 / OAuth 콜백
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `<script type="module">` 최상위에서 `await supabase.auth.exchangeCodeForSession(code)`를 직접 사용한다. iOS 14 이하 Safari는 ES module top-level await를 지원하지 않아 인증 콜백 스크립트 전체가 실행되지 않는다. 해당 기기에서 OAuth 로그인 시 무한 스피너 또는 에러 없는 콜백 실패가 발생한다.
+- **원인:** `site/auth-callback.html` top-level await — async IIFE로 감싸지 않음.
+- **제안 수정:** `(async () => { await supabase.auth.exchangeCodeForSession(code); ... })();` 형태로 변경.
+- **파일:** [site/auth-callback.html](site/auth-callback.html) line 60 [lane:CORE]
+
+---
+
+### [M-162] — `auth-callback.html` — code/hash 없이 직접 접근 시 15초 무한 스피너 (에러 메시지 없음)
+
+- **영역:** 프론트엔드 — 인증 / OAuth 콜백
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** URL에 `code`나 hash가 없는 직접 접근 시(URL 직접 입력, 잘못된 리다이렉트 등) `onAuthStateChange` 구독만 등록되고 15초가 지나야 에러 처리 경로에 진입한다. 사용자에게는 15초간 스피너만 보이며 아무 안내 없음.
+- **원인:** `site/auth-callback.html` — 즉시 fallback redirect 또는 짧은 timeout 없음.
+- **제안 수정:** code/hash 파라미터 없으면 즉시 `window.location.replace("account.html")` 또는 2~3초 후 리다이렉트.
+- **파일:** [site/auth-callback.html](site/auth-callback.html) line 67–87 [lane:CORE]
+
+---
+
+### [M-163] — `openSetModal` — 400ms 닫힘 딜레이 중 다른 세트 버튼 클릭 가능 → 동일 아이템 중복 담기
+
+- **영역:** 프론트엔드 — 세트 빌더 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `.sm-set-btn` 클릭 후 `addToSet()` 호출 시 클릭한 버튼만 disabled 처리하고 모달은 `setTimeout(..., 400)` 후 닫힌다. 이 400ms 사이에 다른 세트 버튼을 클릭하면 동일 아이템이 두 개의 세트에 각각 담긴다.
+- **재현조건:** 세트 담기 모달에서 버튼 클릭 직후 400ms 이내 다른 세트 버튼 클릭.
+- **원인:** `site/app.js` `openSetModal` — 첫 클릭 시 모달 내 모든 버튼을 disabled 처리하지 않음.
+- **제안 수정:** 첫 세트 버튼 클릭 즉시 `modal.querySelectorAll(".sm-set-btn").forEach(b => b.disabled = true)` 적용.
+- **파일:** [site/app.js](site/app.js) (openSetModal .sm-set-btn onclick) [lane:CORE]
+
+---
+
+### [M-164] — `renderBrand` — 브랜드명에 `&` 포함 시 `esc()` 이중 인코딩 → 칩 레이블 `&amp;amp;` 표시
+
+- **영역:** 프론트엔드 — 브랜드 페이지 (app.js)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `data-b="${esc(b)}"` 로 어트리뷰트에 HTML 인코딩 후 저장하고, 클릭 핸들러에서 `btn.dataset.b`로 꺼낼 때 브라우저가 자동 디코딩한다. 그런데 이후 `renderChips()` 등에서 다시 `esc(nb)`를 적용하면 이미 디코딩된 `&`가 `&amp;`로 재인코딩되어 화면에 `&amp;`가 그대로 표시된다. 브랜드명에 `&`가 포함된 경우(예: "Black & Decker") 칩·헤더 레이블이 깨진다.
+- **원인:** `site/app.js` `renderBrand` — `data-b` 저장 시와 표시 시 이중 인코딩.
+- **제안 수정:** `data-b`에 raw 값 저장 후 innerHTML 삽입 시에만 `esc()` 적용.
+- **파일:** [site/app.js](site/app.js) (renderBrand) [lane:CORE]
+
+---
+
+### [M-165] ✅ 해결완료(2026-06-13) — `promote_catalog.py` — `CORE` 리스트가 비어있을 때 `IN ()` SQL 문법 오류
+
+- **영역:** 백엔드 — 파이프라인 / 카탈로그 승격
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `CORE` 리스트 길이가 0이면 `WHERE ... IN ()` 형태의 SQL이 생성되어 SQLite에서 문법 오류 발생. `CORE`는 하드코딩 리스트지만 향후 외부 파일 또는 빈 쿼리 결과로 교체될 경우 파이프라인 전체 실패.
+- **원인:** `pipeline/promote_catalog.py` line 32–40 — `len(CORE) == 0` 가드 없음.
+- **제안 수정:** `if not CORE: return` early exit 추가.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 32–40 [lane:BACKEND]
+
+---
+
+### [L-187] — `login.html` — `<meta http-equiv="refresh" content="0;...">` — 일부 브라우저 히스토리 백버튼 루프 유발
+
+- **영역:** 프론트엔드 — 로그인 페이지
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `content="0;url=account.html"` 의 즉시(0초) redirect는 일부 브라우저(특히 모바일)에서 히스토리 스택에 login.html을 남겨 뒤로가기 시 login→account→login 무한 루프가 발생할 수 있다.
+- **원인:** `site/login.html` meta refresh delay=0.
+- **제안 수정:** JS `window.location.replace("account.html")`로 교체 (히스토리 미기록).
+- **파일:** [site/login.html](site/login.html) [lane:CORE]
+
+---
+
+### [L-188] — `affiliate_links.py` `sample()` — `naver_fallback` 키 없는 결과에서 KeyError
+
+- **영역:** 백엔드 — 파이프라인 / 제휴링크
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `resolve_buy_link()`가 `coupang_url` 있는 경우 `naver_fallback` 키를 포함하지 않고 반환하는데, `sample()` 함수에서 `link["naver_fallback"]`를 직접 접근해 KeyError가 발생한다.
+- **원인:** `pipeline/affiliate_links.py` line 74 — `.get("naver_fallback", "없음")` 형태 미사용.
+- **제안 수정:** `link.get("naver_fallback", "—")` 로 변경.
+- **파일:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 74 [lane:BACKEND]
 
