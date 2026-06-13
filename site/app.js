@@ -19,6 +19,19 @@ if (window.Capacitor?.isNativePlatform?.()) {
   })()
 }
 
+// B-3/G2: 외부 링크(쿠팡 등) 오픈 — 앱에선 시스템 브라우저(@capacitor/browser=SFSafariViewController),
+//  웹에선 새 탭. 인앱 WebView에 외부 결제페이지를 띄우지 않기 위함(Apple 심사 리스크 회피).
+async function openExternal(url) {
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js');
+      await Browser.open({ url });
+      return;
+    } catch (_) { /* 플러그인 미동기화 등 — 아래 폴백 */ }
+  }
+  window.open(url, "_blank", "noopener");
+}
+
 // 테마: 기본 라이트. 다크는 '내 정보 > 설정'에서 명시적으로 켤 때만 적용(prefers-dark 자동 추종 안 함).
 // 헤더 토글 버튼은 제거됨(.theme-toggle CSS도 display:none). 토글 UI는 account.html 설정 섹션이 담당.
 (function initTheme() {
@@ -2075,7 +2088,7 @@ function openProduct(m) {
   if (buyBtn) {
     buyBtn.onclick = async () => {
       const url = buyBtn.dataset.url;
-      window.open(url, "_blank", "noopener");
+      openExternal(url);
       try {
         const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
         let sessionId = localStorage.getItem("_sid");
@@ -3034,7 +3047,7 @@ function openSetDetail(si) {
     const item = getSets()[si]?.items[+btn.dataset.ii];
     const url = item?.coupang_url;
     if (!url) return;
-    window.open(url, "_blank", "noopener");
+    openExternal(url);
     try {
       const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
       let sessionId = localStorage.getItem("_sid");
