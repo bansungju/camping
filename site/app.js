@@ -238,6 +238,7 @@ function fmtVal(v, unit) {
 
 function stars(n) {
   if (n == null) return '<span class="nd">—</span>';
+  n = Math.min(5, n);
   let h = "", full = Math.floor(n), half = (n - full) >= 0.5;
   for (let i = 0; i < 5; i++) {
     if (i < full) h += "★";
@@ -329,7 +330,7 @@ function wishItem(m, slug) {
   return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
            pcode: wishKey(m.brand, m.model, m.capacity),
-           weight_g: m.specs?.weight?.value ?? null,
+           weight_g: m.specs?.weight_min?.value ?? null,
            coupang_url: m.coupang_url ?? null };   // M-146: setItem과 필드 일치
 }
 
@@ -377,7 +378,7 @@ function addToSet(setId, item) {
 function setItem(m, slug) {
   return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
-           weight_g: m.specs?.weight?.value ?? null,
+           weight_g: m.specs?.weight_min?.value ?? null,
            coupang_url: m.coupang_url ?? null };   // FE-WISH-07: 세트 표 항목별 구매 버튼용
 }
 
@@ -910,7 +911,7 @@ async function setupHomeSearch() {
   inp.oninput = e => { if (e.isComposing) return; run(); };
   inp.addEventListener("compositionend", run);
   inp.onfocus = () => { ensureIdx(); run(); };  // L-14: 포커스 시 인덱스 선로드(타이핑 전 준비)
-  inp.onblur = () => { setTimeout(() => { box.style.display = "none"; inp.setAttribute("aria-expanded", "false"); }, 150); }
+  inp.onblur = () => { setTimeout(() => closeBox(), 150); }
   inp.addEventListener("keydown", e => {
     // IME 조합 중 키(특히 조합완료 Enter)는 검색/탐색을 발동시키지 않는다 (M-50)
     if (e.isComposing || e.keyCode === 229) return;
@@ -1040,7 +1041,7 @@ async function setupSearchPage() {
         const arr = getWish();
         const already = arr.some(w => w.key === key);
         if (already) { setWish(arr.filter(w => w.key !== key)); }
-        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img }); setWish(arr); }
+        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: key, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null }); setWish(arr); }
         btn.classList.toggle("on", !already);
         btn.setAttribute("aria-pressed", String(!already));
       };
@@ -2036,7 +2037,7 @@ function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
   if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
-  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy" onerror="this.style.display='none'">`).join("");
+  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="eager" onerror="this.style.display='none'">`).join("");
   ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true" aria-label="${nick}님의 후기">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}

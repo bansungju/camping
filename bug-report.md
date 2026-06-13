@@ -2799,7 +2799,7 @@
 
 ## 🟠 Medium (회차 67)
 
-### [M-148] — `setItem()` — `weight_g: m.specs?.weight?.value` 잘못된 스펙 키 → 세트 무게 합계 항상 0
+### [M-148] ✅ 해결완료(2026-06-13, CORE) — `setItem()` — `weight_g: m.specs?.weight?.value` 잘못된 스펙 키 → 세트 무게 합계 항상 0
 - **영역:** 프론트엔드 — 세트 빌더 / 무게 계산
 - **심각도:** 🟠 Medium
 - **발견일시:** 2026-06-13
@@ -2821,7 +2821,7 @@
 - **제안 수정:** line 43의 `hj, hc` 계산을 supabaseClient stamp(line 62–69) 이후로 이동, 또는 supabaseClient stamp 후 `hj = _hash("app.js")`로 재계산 추가.
 - **파일:** [pipeline/stamp_version.py](pipeline/stamp_version.py) line 43, 62–69 [lane:BACKEND]
 
-### [L-179] — `stars(n)` — n > 5 입력 시 aria-label "별점 N / 5" 잘못된 접근성 텍스트
+### [L-179] ✅ 해결완료(2026-06-13, CORE) — `stars(n)` — n > 5 입력 시 aria-label "별점 N / 5" 잘못된 접근성 텍스트
 - **영역:** 프론트엔드 — 공통 유틸 / 접근성
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2831,7 +2831,7 @@
 - **제안 수정:** 함수 진입부에 `n = Math.min(5, n)` 또는 aria-label을 `Math.min(n, 5).toFixed(1)` 로 교체.
 - **파일:** [site/app.js](site/app.js) line 239–249 [lane:CORE]
 
-### [M-149] — `setupSearchPage` 찜 추가 시 `pcode`·`weight_g`·`coupang_url` 누락 → 세트 담기 시 구매 링크 소실
+### [M-149] ✅ 해결완료(2026-06-13, CORE) — `setupSearchPage` 찜 추가 시 `pcode`·`weight_g`·`coupang_url` 누락 → 세트 담기 시 구매 링크 소실
 - **영역:** 프론트엔드 — search 페이지 / 찜 직렬화
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
@@ -2841,7 +2841,7 @@
 - **제안 수정:** `arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img })` → `arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: x.pcode, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null })` 로 교체.
 - **파일:** [site/app.js](site/app.js) line 1040 [lane:CORE]
 
-### [M-150] — `openReviewDetail` 이미지 `loading="lazy"` — `display:none` 모달에서 주입 시 이미지 미로딩
+### [M-150] ✅ 해결완료(2026-06-13, CORE) — `openReviewDetail` 이미지 `loading="lazy"` — `display:none` 모달에서 주입 시 이미지 미로딩
 - **영역:** 프론트엔드 — 리뷰 상세 모달 / 이미지 로딩
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
@@ -2851,7 +2851,7 @@
 - **제안 수정:** `loading="lazy"` → `loading="eager"`로 교체. 리뷰 모달 이미지는 최대 5장이며 사용자가 명시적으로 열었으므로 eager 로딩이 적합하다.
 - **파일:** [site/app.js](site/app.js) line 2036 [lane:CORE]
 
-### [L-180] — `setupHomeSearch` `onblur` — `closeBox()` 미호출로 `opts`·`active` stale 상태 잔존
+### [L-180] ✅ 해결완료(2026-06-13, CORE) — `setupHomeSearch` `onblur` — `closeBox()` 미호출로 `opts`·`active` stale 상태 잔존
 - **영역:** 프론트엔드 — 홈 검색 자동완성 / 키보드 내비게이션
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2870,3 +2870,23 @@
 - **원인:** `AND model_year IS NULL AND variant IS NULL` 조건이 너무 구체적이어서 기존 row가 있어도 None을 반환.
 - **제안 수정:** `SELECT id FROM products WHERE brand_id=? AND model_name=? ORDER BY id LIMIT 1`로 완화하거나, fetchone 결과에 `if pid is None: return "dup_variant"` guard 추가.
 - **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 127–128 [lane:BACKEND]
+
+### [H-42] — `account.html` — 비로그인 상태에서 찜 목록·로그 목록 노출 — 로그인 후에만 표시해야 함
+- **영역:** 프론트엔드 — account.html (찜/로그 섹션)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `account.html` line 202 주석 `"찜 목록은 로그인 여부와 무관하게 즉시 표시(localStorage 기준)"`에 따라 비로그인 상태에서도 `renderAccount()`가 즉시 호출되어 찜 목록과 로그 목록이 노출된다. 로그인 없이 찜한 상품과 내 로그가 보여야 하지 않으며, 로그인을 하지 않은 상태에서는 해당 섹션이 아예 표시되지 않아야 한다.
+- **재현조건:** 로그아웃 상태(또는 최초 방문) → `account.html` 접속 → 찜 목록·로그 목록 섹션이 노출됨(빈 상태 또는 localStorage 데이터 표시).
+- **원인:** ① `account.html` line 204: `if (!_isViewSet && typeof renderAccount === 'function') renderAccount()` — `initAuth` 콜백 이전에 즉시 실행. ② `showLoggedInSections(show)` 함수가 있으나 비로그인 시 `renderAccount()` 자체를 막지 않음. ③ 의도적 설계(`L-22`: 비로그인 찜 CTA 노출)이나 정책 변경 필요.
+- **제안 수정:** `account.html` line 204의 즉시 `renderAccount()` 호출 제거. `initAuth` 콜백에서 `user`가 확인된 후에만 `renderAccount()` 호출. 비로그인 시 찜/로그/세트 섹션 `display:none` 유지하고 로그인 CTA만 표시.
+- **파일:** [site/account.html](site/account.html) line 202–204, line 355–370 [lane:CORE]
+
+### [M-151] — `signOut()` — 로그아웃 후 localStorage `wish` 미삭제 → 비로그인 상태에서 이전 사용자 찜 목록 잔존
+- **영역:** 프론트엔드 — 찜(wishlist) / 계정
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `supabaseClient.js:37` `signOut()`이 `supabase.auth.signOut()`만 호출하고 `localStorage.removeItem("wish")`를 호출하지 않는다. 로그아웃 후 다른 사람이 같은 기기를 사용하면 이전 사용자의 찜 목록이 그대로 노출된다. `account.html` 찜 섹션은 비로그인에도 `display:block`(L-22 의도)으로 표시하도록 설계되어 있어 로그아웃해도 찜이 사라지지 않는다.
+- **재현조건:** ① 로그인 후 찜 추가 → ② 로그아웃 → ③ account.html 접속 → 찜 목록 그대로 표시됨.
+- **원인:** `site/supabaseClient.js:37–38` `signOut()`에 localStorage 정리 로직 없음.
+- **제안 수정:** `signOut()` 함수에 `localStorage.removeItem("wish"); localStorage.removeItem("sets");` 추가. 또는 `account.html`의 로그아웃 핸들러(line 284, 444, 458)에서 각각 `setWish([])` 호출.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 37–38, [site/account.html](site/account.html) line 284 [lane:CORE]
