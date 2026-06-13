@@ -139,9 +139,12 @@ def check_duplicate_canonical(cur):
 
     flags = []
     for brand_id, canon_model, cap, cnt, ids_str in rows:
-        pid_list = [int(x) for x in ids_str.split(",")]
+        # M-271: GROUP_CONCAT(id)는 순서 미보장(SQLite<3.44는 ORDER BY in GROUP_CONCAT도 미지원)이므로
+        #   Python에서 정렬해 노트(ids:)를 결정적으로 — 재실행 시 동일 노트로 resolved 매칭 안정.
+        pid_list = sorted(int(x) for x in ids_str.split(","))
+        ids_sorted = ",".join(str(p) for p in pid_list)
         for pid in pid_list:
-            note = f"중복 canonical: brand_id={brand_id} model='{canon_model}' capacity={cap} — {cnt}개 verified 존재 (ids: {ids_str})"
+            note = f"중복 canonical: brand_id={brand_id} model='{canon_model}' capacity={cap} — {cnt}개 verified 존재 (ids: {ids_sorted})"
             flags.append((pid, None, "needs_review", note))
     return flags
 
@@ -220,7 +223,7 @@ def write_queue(all_flags_labeled, out_path):
         for product_id, metric_id, flag_type, note in flags:
             queue.append({
                 "check": check_key,
-                "priority": CHECK_PRIORITY[check_key],
+                "priority": CHECK_PRIORITY.get(check_key, 99),  # L-195/L-265: 미등록 키도 KeyError 없이 기본순위
                 "product_id": product_id,
                 "metric_id": metric_id,
                 "note": note,
@@ -255,9 +258,17 @@ def main():
         ("weight_unit",         check_weight_unit),
     ]
 
-    # 이미 false_positive로 resolved된 건은 큐/INSERT에서 제외(매 실행 재표시 방지).
+    # M-241/M-295: false_positive로 resolved된 건만 영구 억제하고, '수정완료(fixed)'로 resolved된 건은
+    #   재발 시 다시 탐지되게 한다. resolution_type 컬럼으로 구분(없으면 추가, 기본='false_positive'=하위호환:
+    #   기존 resolved 행은 그대로 억제돼 재스팸 없음). 향후 reviewer가 resolution_type='fixed'로 표시하면 재탐지.
+    try:
+        cur.execute("ALTER TABLE data_quality_flags ADD COLUMN resolution_type TEXT DEFAULT 'false_positive'")
+        con.commit()
+    except sqlite3.OperationalError:
+        pass  # 이미 존재
     # (product_id, note 앞 40자)로 매칭 — 검사 종류+상품을 충분히 식별한다.
-    cur.execute("SELECT product_id, substr(note, 1, 40) FROM data_quality_flags WHERE resolved = 1")
+    cur.execute("SELECT product_id, substr(note, 1, 40) FROM data_quality_flags "
+                "WHERE resolved = 1 AND IFNULL(resolution_type,'false_positive')='false_positive'")
     resolved_set = {(r[0], r[1]) for r in cur.fetchall()}
 
     all_flags_labeled = []
