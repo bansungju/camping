@@ -29,6 +29,10 @@ jobs:
       #   (2026-06-13 CF 터널 토큰 git 유출 사고 재발 방지. 로컬 pre-commit 훅이 1차)
       - name: Scan for leaked secrets
         run: python3 pipeline/scan_secrets.py
+      # 보안 게이트: SQL 문자열에 값을 직접 보간(인젝션)하면 배포 중단(우회불가 서버측 2차).
+      #   (2026-06-13 H-47 fill_whitelist_specs ACC_PAT f-string 삽입 사고 재발 방지. 로컬 pre-commit 훅이 1차)
+      - name: Scan for SQL injection
+        run: python3 pipeline/scan_sql_injection.py
       # 배포 게이트: 익스포트된 가격이 카테고리 대비 '말이 안 되는' 값이면 배포 중단.
       #   (쉘터 GHE 2,167원 사건 재발 방지 — 원인 무관하게 결과 JSON을 검증)
       - name: Validate exported prices
