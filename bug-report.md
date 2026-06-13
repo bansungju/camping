@@ -3115,7 +3115,7 @@
 
 ---
 
-### [M-161] — `auth-callback.html` — top-level `await` in ES module → iOS 14 이하 Safari 인증 콜백 전체 실패
+### [M-161] — `auth-callback.html` — top-level `await` in ES module → iOS 14 이하 Safari 인증 콜백 전체 실패 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 인증 / OAuth 콜백
 - **심각도:** 🟡 Medium
@@ -3127,7 +3127,7 @@
 
 ---
 
-### [M-162] — `auth-callback.html` — code/hash 없이 직접 접근 시 15초 무한 스피너 (에러 메시지 없음)
+### [M-162] — `auth-callback.html` — code/hash 없이 직접 접근 시 15초 무한 스피너 (에러 메시지 없음) — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 인증 / OAuth 콜백
 - **심각도:** 🟡 Medium
