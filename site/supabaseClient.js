@@ -384,7 +384,7 @@ export async function loadRemoteGearSets() {
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-  if (error) return null
+  if (error) { console.error('loadRemoteGearSets:', error); return null }  // M-190: 에러 로깅 추가
   return data || []
 }
 
