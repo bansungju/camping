@@ -168,7 +168,10 @@ def main():
                 print(f"[수확] {name} (텐트 전용)")
                 sh("harvest_tents.py", "--append", "--maxpages", "3", "--queries", q)
             else:
-                print(f"[수확] {name} — generic 수확기 미구현(향후): 쿼리={q}")
+                # M-229: generic 수확기 미구현 → 아무것도 수집하지 않는다. 기존엔 평범한 안내처럼 보여
+                #   운영자가 '--only 침낭 수확됨'으로 오해할 수 있었다 → 0건 수집을 명시적으로 경고.
+                print(f"  ⚠️  [수확] {name} — generic 수확기 미구현: **0건 수집**(데이터 안 늘어남). "
+                      f"수동 보강은 add_manual_models.py / multicat.py 사용. (쿼리={q})")
         print()
 
     con = sqlite3.connect(DB)
