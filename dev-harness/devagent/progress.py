@@ -81,9 +81,15 @@ def append_progress(entry_md: str) -> None:
             with open(paths.PROGRESS_MD, encoding="utf-8") as f:
                 existing = f.read()
             if existing.startswith("# PROGRESS"):
-                # 헤더 다음부터가 본문
+                # 헤더(제목\n\n안내\n\n) 다음부터가 본문
                 idx = existing.find("\n\n", existing.find("\n\n") + 1)
-                body = existing[idx + 2:] if idx != -1 else ""
+                if idx != -1:
+                    body = existing[idx + 2:]
+                else:
+                    # M-445: 두 번째 \n\n가 없으면(헤더만 있거나 형식 깨짐) body=""로 기존 이력을 통째로
+                    #   날리지 말고, 제목 줄만 떼고 나머지를 보존해 데이터 손실을 막는다.
+                    nl = existing.find("\n")
+                    body = existing[nl + 1:].lstrip("\n") if nl != -1 else ""
             else:
                 body = existing
         else:
