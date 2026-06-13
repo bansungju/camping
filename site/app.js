@@ -3498,7 +3498,7 @@ async function renderCommunity() {
 }
 
 // VAPID 공개키 — supabase db push 후 Edge Function 환경변수에 등록한 값과 쌍을 이룸
-const VAPID_PUBLIC_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjZJTuT2wEGKwRCCLjLJAo-gFPRlY";
+const VAPID_PUBLIC_KEY = "BDj43GvN0UZ1DzeEtjxl_rsj9c5m7BtzuSXgE39e-ixDGELVyU1hbfd-CFxr_cBtLwHI4j8oOi1HhAsUBBt8SOE";
 
 async function requestPushSubscription(userId) {
   if (localStorage.getItem("push-denied")) return;
