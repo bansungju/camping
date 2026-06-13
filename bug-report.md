@@ -6424,7 +6424,8 @@
 
 ## R-120 (백엔드) — 2026-06-13
 
-### [H-89] — `normalize.py` `floor_area_m2()` — 테이퍼 정규식 `\d+`가 소수점 치수 잘라내어 면적 오계산
+### [H-89] ✅ 해결완료(2026-06-13, BACKEND) — `normalize.py` `floor_area_m2()` — 테이퍼 정규식 `\d+`가 소수점 치수 잘라내어 면적 오계산
+> `(\d*\.?\d+)\s*\((\d*\.?\d+)\)` + float 캐스트. 검증: '210.5(185)x300'이 정수케이스 '210(185)x300'과 동일 5.94㎡로 교정(기존 width=95 오산).
 
 - **영역:** 백엔드 — 데이터 정규화
 - **심각도:** 🔴 High
@@ -6436,7 +6437,8 @@
 
 ---
 
-### [H-90] — `normalize.py` `parse_lumens()` — 단위 선택적 정규식으로 임의 숫자를 루멘으로 오파싱
+### [H-90] ✅ 해결완료(2026-06-13, BACKEND) — `normalize.py` `parse_lumens()` — 단위 선택적 정규식으로 임의 숫자를 루멘으로 오파싱
+> 단위 필수: `(\d*\.?\d+)\s*(?:lm|루멘|lumen)`. 검증: '사용시간 300시간'·'충전횟수 500회'→None, '1200lm'·'800 루멘'·'300lumen'→정상.
 
 - **영역:** 백엔드 — 데이터 정규화
 - **심각도:** 🔴 High
@@ -8086,5 +8088,41 @@
 - **원인:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63–64 — `GROUP BY b.name_ko`에서 `p.canonical_model` 비집계 컬럼 선택.
 - **제안 수정:** `MIN(p.canonical_model)` 또는 `ORDER BY RANDOM()` 서브쿼리 사용.
 - **파일:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63 [lane:BACKEND]
+
+---
+
+### [M-386] — `setupSearchPage` `openFromSearch` — 카테고리 JSON 캐시버스팅 `?v=` 미적용
+
+- **영역:** 프론트엔드 — 검색
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** CDN/브라우저 캐시가 구버전 카테고리 JSON 반환 시 모달 아이템 탐색 실패 → 전체 페이지 이동 fallback.
+- **원인:** [site/app.js](site/app.js) line 1180 — `getJSON("data/${x.s}.json")` — 다른 getJSON 호출과 달리 `?v=<hash>` 없음.
+- **제안 수정:** 빌드 시 카테고리 JSON URL에도 `?v=` 버전 해시 삽입.
+- **파일:** [site/app.js](site/app.js) line 1180 [lane:CORE]
+
+---
+
+### [L-305] — `showToast` — `isHtml=true` 경로 `innerHTML` XSS 잠재 취약점
+
+- **영역:** 프론트엔드 — UI
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 향후 사용자 콘텐츠가 `isHtml=true`로 토스트에 전달될 경우 임의 HTML 삽입 가능.
+- **원인:** [site/app.js](site/app.js) line 515 — `t.innerHTML = msg` 에 sanitisation 없음.
+- **제안 수정:** DOM API로 링크 구성 또는 `isHtml` 경로 제거, 필요 시 DOMPurify 적용.
+- **파일:** [site/app.js](site/app.js) line 515 [lane:CORE]
+
+---
+
+### [L-306] — `newSet` — `Date.now().toString(36)` ID 동일 밀리초 내 중복 가능
+
+- **영역:** 프론트엔드 — 세트 관리
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 모바일 더블탭 등으로 동일 ms 내 세트 생성 시 ID 충돌, `addToSet`이 첫 번째 세트에만 아이템 추가.
+- **원인:** [site/app.js](site/app.js) line 521 — `Date.now().toString(36)` 1ms 해상도, 유니크 보장 없음.
+- **제안 수정:** `` `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}` `` 랜덤 접미사 추가.
+- **파일:** [site/app.js](site/app.js) line 521 [lane:CORE]
 
 ---

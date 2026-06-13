@@ -82,8 +82,10 @@ def floor_area_m2(raw=None, dims_cm=None):
             n = _num(section)
             return round(n * SQFT_M2, 2) if n else None
         # 테이퍼 'A(B)' → 평균폭. 괄호가 1번째 치수에 붙어도 폭 누락 없이 처리.
-        section = re.sub(r"(\d+)\s*\((\d+)\)",
-                         lambda mm: str(round((int(mm.group(1)) + int(mm.group(2))) / 2)), section)
+        # H-89: `(\d+)`는 정수만 매칭해 '210.5(185)'에서 '5'만 잡아 평균폭을 95로 오산(면적 최대 6.7% 과대).
+        #       소수점 치수를 포함하도록 `\d*\.?\d+` + float 캐스트.
+        section = re.sub(r"(\d*\.?\d+)\s*\((\d*\.?\d+)\)",
+                         lambda mm: str(round((float(mm.group(1)) + float(mm.group(2))) / 2)), section)
         d = parse_dims_cm(section)
         if d and d[0] and d[1]:
             return round((d[0] / 100.0) * (d[1] / 100.0), 2)
@@ -114,8 +116,10 @@ def parse_lumens(raw):
     s = raw.lower().replace(",", "")   # 천단위 콤마 제거(20,000→20000)
     if any(x in s for x in ("단계", "모드", "레벨", "lux", "럭스", "cp", "촉광")):
         return None
-    m = re.search(r"(\d*\.?\d+)\s*(?:lm|루멘|lumen)?", s)
-    return float(m.group(1)) if m and m.group(1) else None
+    # H-90: 단위 그룹이 optional이면 '사용시간 300시간'·'충전횟수 500회' 같은 비루멘 숫자도
+    #       300lm/500lm으로 오파싱돼 랜턴 스펙을 오염시켰다 → 단위(lm/루멘/lumen) 필수 매칭.
+    m = re.search(r"(\d*\.?\d+)\s*(?:lm|루멘|lumen)", s)
+    return float(m.group(1)) if m else None
 
 
 def parse_temp(raw):
