@@ -65,7 +65,12 @@ def snapshot(con):
     cat_median = {}
     for cid, prices in _group_prices_by_cat(con):
         cat_median[cid] = _median(prices)
-    names = {r[0] for r in con.execute("SELECT model_name FROM products")}
+    # M-256/M-275/L-241: 중복판정 키 = (카테고리, 브랜드, 모델) 튜플. HT.ingest·M.ingest_one에
+    #   동일 seen_names를 공유하므로 빌더도 두 ingest가 쓰는 brand(=brands.name_ko)·cid와 키 형태가
+    #   일치해야 한다. 평면 model 문자열은 동명 모델의 크로스브랜드/크로스카테고리 오차단을 유발.
+    names = {(cid, brand, model) for cid, brand, model in con.execute(
+        "SELECT p.category_id, b.name_ko, p.model_name "
+        "FROM products p JOIN brands b ON b.id=p.brand_id")}
     return pcode2pid, latest, on_sale, rejected, cat_median, names
 
 
@@ -178,6 +183,20 @@ def main():
     # 단종 후보 = on_sale 인데 이번 검색에 한 번도 안 잡힌 pcode (참고용)
     missing = sorted(on_sale - seen_run)
 
+    # M-385: 직전 on_sale이었으나 이번 검색에 안 잡힌 제품 = 품절. 마지막 가격으로 in_stock=0 관측치를
+    #   남겨야 다음에 재등장 시 detect_price_drops가 0→1 재입고를 감지한다. 이미 품절 마킹된 건은 중복 제외.
+    for pc in missing:
+        pid = pcode2pid.get(pc)
+        if pid is None or pid in rejected:
+            continue
+        cur = con.execute("""SELECT in_stock FROM price_observations WHERE product_id=?
+            AND price_krw IS NOT NULL ORDER BY observed_at DESC, id DESC LIMIT 1""", (pid,)).fetchone()
+        if cur and cur[0] == 0:
+            continue   # 이미 품절(in_stock=0)로 마킹됨 → 매 run 중복 적재 방지
+        last = latest.get(pid)
+        if last and last[0] is not None:
+            _insert_price(con, pid, last[0], in_stock=0)
+
     if args.dry_run:
         con.rollback()
     else:
@@ -227,9 +246,11 @@ def refresh_price(con, c, pid, latest, now, stale_days, rejected, cat_median, pi
         latest[pid] = (price, now.strftime(DTFMT))   # run 내 재등장 시 이중기록 방지
 
 
-def _insert_price(con, pid, price, valid=1):
-    con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel,valid) VALUES(?,?,?,?,?)",
-                (pid, price, "다나와최저가", "danawa_search", valid))
+def _insert_price(con, pid, price, valid=1, in_stock=1):
+    # M-385: in_stock 기록 — 크롤에 잡힌 제품은 판매중(1). 품절(검색 미노출)은 main()이 0으로 마킹해
+    #   detect_price_drops가 재입고(0→1)를 감지할 수 있게 한다(전엔 in_stock 미기록→재입고 알림 불가).
+    con.execute("INSERT INTO price_observations(product_id,price_krw,seller,channel,valid,in_stock) VALUES(?,?,?,?,?,?)",
+                (pid, price, "다나와최저가", "danawa_search", valid, in_stock))
 
 
 def report(con, R, missing, args, now):
