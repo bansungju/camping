@@ -117,7 +117,8 @@
 
 ## 🔴 High (즉시 수정 필요)
 
-### [H-40] — `renderHub` — '내 캠핑 스타일' 백패커·미니멀리스트·오토/맥시멀 클릭 시 스타일 추천 페이지 미이동 — 4인가족만 정상
+### [H-41] ✅ 해결완료(2026-06-13, CORE) — `renderHub` — '내 캠핑 스타일' 백패커·미니멀리스트·오토/맥시멀 클릭 시 스타일 추천 페이지 미이동 — 4인가족만 정상
+- **해결:** `PERSONA_CAT` 객체를 빈 객체로 변경, 모든 스타일이 `recommend.html?p=KEY` fallback으로 연결됨.
 - **영역:** 프론트엔드 — 홈/메인 (내 캠핑 스타일 섹션)
 - **심각도:** 🔴 High
 - **발견일시:** 2026-06-13
@@ -2738,6 +2739,48 @@
 - **원인:** line 3428 `const close = () => modal.classList.remove("on");` — `prevFocus` 저장 및 복귀 로직 없음.
 - **제안 수정:** `const prevFocus = document.activeElement;` 를 모달 열기 직전에 저장하고, `close` 함수를 `const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus?.focus) prevFocus.focus(); };` 로 교체.
 - **파일:** [site/app.js](site/app.js) line 3428 [lane:CORE]
+
+## R-89 — 찜UI·가격게이트·닉네임·리뷰이미지 탐색 (2026-06-13)
+
+### [M-146] — `wishItem()` — `pcode`/`weight_g`/`coupang_url` 누락 → 찜 항목을 세트에 담을 때 구매 링크 소실
+- **영역:** 프론트엔드 — 찜(wishlist) / 세트 빌더
+- **심각도:** 🟠 High
+- **발견일시:** 2026-06-13
+- **증상:** `wishItem(m, slug)` (line 301)이 반환하는 객체에는 `pcode`, `weight_g`, `coupang_url` 필드가 없다. 상품 목록/모달에서 찜 추가 시 `toggleWishWithHint(wishItem(...))` 로 저장되므로, 해당 찜 항목을 나중에 세트에 담으면 `pcode`가 `undefined`·`coupang_url`이 없어 세트 모달의 구매 버튼이 비활성 상태가 된다(`openSetModal` 구매 셀 line 2693에서 `x.coupang_url` 참조). 반면 `setItem()` (line 347)은 동일 모델을 `pcode`·`weight_g`·`coupang_url` 포함으로 올바르게 구성한다.
+- **원인:** `wishItem`과 `setItem`이 중복 구현되어 있으며 `wishItem`만 필드가 부족.
+- **재현:** 상품 카드 찜 → account.html 찜 목록 → "세트에 담기" → 세트 모달 구매 버튼 비활성 확인.
+- **제안 수정:** `wishItem` 에 `pcode: wishKey(m.brand, m.model, m.capacity)`, `weight_g: m.specs?.weight?.value ?? null`, `coupang_url: m.coupang_url ?? null` 추가, 또는 `setItem`을 재사용하도록 리팩토링.
+- **파일:** [site/app.js](site/app.js) line 301 [lane:CORE]
+
+### [M-147] — `check_export.py` — `price_min=0` falsy 처리로 0원 모델이 배포 게이트 완전 우회
+- **영역:** 백엔드 — 파이프라인 / 가격 sanity check
+- **심각도:** 🟠 High
+- **발견일시:** 2026-06-13
+- **증상:** line 56 `[m["price_min"] for m in models if m.get("price_min")]` 에서 `price_min=0`인 모델은 falsy로 중앙값 계산 목록에서 제외된다. 이어서 line 67 `if pmin and pmin < med * FLOOR_RATIO` 에서도 `pmin=0`은 `and` 조건 실패로 위반 탐지 자체를 건너뛴다. 결과적으로 0원짜리 모델이 JSON에 있어도 CI 배포 게이트가 통과돼 라이브에 0원 가격이 노출된다. 음수 가격도 동일 패턴.
+- **원인:** `if m.get("price_min")` 이 0을 falsy로 처리하는 Python 특성 미반영.
+- **재현:** site/data 임의 카테고리 JSON에 `"price_min": 0` 모델 삽입 → `python3 pipeline/check_export.py` 실행 → 위반 미탐지 + 배포 허용 확인.
+- **제안 수정:** `if m.get("price_min")` → `if m.get("price_min") is not None and m["price_min"] > 0` / `if pmin and …` → `if pmin is not None and pmin > 0 and …` 로 교체. 0원·음수는 별도 `"0원/음수가격"` 위반 종류로 즉시 추가.
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 56, 67 [lane:BACKEND]
+
+### [L-176] ✅ 해결완료(2026-06-13, SOCIAL) — `account.html` — 닉네임 변경 후 헤더 갱신을 `[style*="font-weight:700"]` 취약 선택자로 수행
+- **영역:** 프론트엔드 — 계정 / 닉네임
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 인라인 닉네임 변경 성공 후 (line 514) `document.querySelector('#auth-section [style*="font-weight:700"]')` 로 프로필 헤더의 닉네임 요소를 찾아 `textContent`를 갱신한다. `renderProfile()`이 `section.innerHTML`을 전면 재작성하므로 헤더 DOM이 교체되거나 스타일 문자열이 조금이라도 달라지면 선택자가 null을 반환해 닉네임이 갱신되지 않고 구 닉네임이 잔류한다.
+- **원인:** 프로필 헤더 닉네임 요소에 전용 ID/클래스가 없어 스타일 속성으로 우회 탐색.
+- **재현:** 로그인 → 닉네임 변경 저장 → 프로필 헤더 닉네임 확인 (스타일 변경 환경에서 구 닉네임 잔류).
+- **제안 수정:** `renderProfile` 내 닉네임 `<div>`에 `id="profile-nickname"` 추가, line 514를 `document.getElementById('profile-nickname')` 로 교체.
+- **파일:** [site/account.html](site/account.html) line 424, 514 [lane:SOCIAL]
+
+### [L-177] — `app.js` — 리뷰 사진 `<img>`에 `onerror` fallback 없음 → 깨진 이미지 그대로 노출
+- **영역:** 프론트엔드 — 상품 상세 / 리뷰
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 리뷰 썸네일(`pmrv-photo`, line 1998)과 리뷰 상세 이미지(`pmrvd-img`, line 2010) 모두 `onerror` 핸들러가 없다. Supabase Storage URL 만료·삭제·네트워크 오류 시 브라우저 기본 깨진 이미지 아이콘이 그대로 노출된다. 상품 카드 썸네일은 `thumbFallback`으로 처리되어 있어 불일치.
+- **원인:** 리뷰 이미지 렌더링 시 `thumbCell` 유틸을 사용하지 않고 직접 `<img>` 태그 생성.
+- **재현:** 리뷰에 첨부된 이미지 URL을 Supabase Storage에서 삭제 → 상품 상세 리뷰 탭 확인 → 깨진 이미지 아이콘 노출.
+- **제안 수정:** line 1998·2010의 `<img>` 태그에 `onerror="this.style.display='none'"` 또는 공통 fallback 핸들러 추가. 또는 `thumbCell` 유틸을 리뷰 이미지까지 확장.
+- **파일:** [site/app.js](site/app.js) line 1998, 2010 [lane:CORE]
 
 ### [L-171] ✅ 해결완료(2026-06-13, CORE) — `app.js` — `openProduct()` 모달 하단 상세 링크 — `d.models.indexOf(m) === -1`일 때 `item--1.html` 링크 렌더링
 - **영역:** 프론트엔드 — 상품 상세
