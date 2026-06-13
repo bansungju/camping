@@ -1,47 +1,5 @@
 [
   {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 317,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 알토 TR1 플러스 UL 그레이"
-  },
-  {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 528,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 어메니티돔 M"
-  },
-  {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 733,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 GHE 탄"
-  },
-  {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 4242,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 컴팩트 폴딩 체어"
-  },
-  {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 5342,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 아웃도어 웨건 해외구매"
-  },
-  {
-    "check": "price_missing",
-    "priority": 1,
-    "product_id": 6029,
-    "metric_id": null,
-    "note": "가격 없음: canonical_models.min_price IS NULL — [글라스락] 멀티 아이스박스 베이지"
-  },
-  {
     "check": "logic_contradiction",
     "priority": 3,
     "product_id": 544,

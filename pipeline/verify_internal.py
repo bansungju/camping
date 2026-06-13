@@ -148,12 +148,19 @@ def check_duplicate_canonical(cur):
 
 # ── 검사 5: 가격 없음 ─────────────────────────────────────────────────────
 def check_price_missing(cur):
-    """verified 상품 중 min_price IS NULL"""
+    """verified 상품 중 소속 canonical 그룹의 min_price IS NULL.
+
+    canonical_models는 (brand_id, canonical_model, capacity) 그룹 단위라
+    rep_product_id가 아닌 그룹 키로 조인해야 변형 멤버 오탐을 막는다.
+    """
     cur.execute("""
         SELECT p.id, p.model_name, b.name_ko as brand
         FROM products p
         JOIN brands b ON b.id = p.brand_id
-        LEFT JOIN canonical_models cm ON cm.rep_product_id = p.id
+        LEFT JOIN canonical_models cm
+          ON cm.brand_id = p.brand_id
+         AND cm.canonical_model = p.canonical_model
+         AND IFNULL(cm.capacity, -1) = IFNULL(p.capacity, -1)
         WHERE p.curation_status = 'verified'
           AND (cm.min_price IS NULL OR cm.rep_product_id IS NULL)
     """)

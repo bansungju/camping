@@ -213,7 +213,8 @@ def normalize_db(con):
         variant_count INTEGER, variants TEXT, pcodes TEXT,
         min_price INTEGER, max_price INTEGER)""")
     con.execute("""INSERT INTO canonical_models
-        SELECT MIN(p.id), p.brand_id, p.category_id,
+        SELECT COALESCE(MIN(CASE WHEN p.curation_status='verified' THEN p.id END), MIN(p.id)),
+               p.brand_id, p.category_id,
                b.name_ko, p.canonical_model, p.capacity,
                COUNT(*),
                GROUP_CONCAT(DISTINCT p.variant_label),
