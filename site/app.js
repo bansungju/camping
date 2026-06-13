@@ -852,13 +852,14 @@ async function setupHomeSearch() {
 }
 
 /* ---------- 캠핑 스타일 칩 상수 ---------- */
+// cats: 표시할 카테고리 slug 화이트리스트. 없으면 전 카테고리.
 const STYLE_META = [
-  { key:"backpacking", label:"백패킹",  icon:"🏕" },
-  { key:"car-camping", label:"오토캠핑",icon:"🚗" },
-  { key:"glamping",    label:"글램핑",  icon:"✨" },
-  { key:"winter",      label:"겨울",    icon:"❄" },
-  { key:"beach",       label:"해변",    icon:"🏖" },
-  { key:"family",      label:"가족",    icon:"👨‍👩‍👧" },
+  { key:"backpacking", label:"백패킹",  icon:"🏕", cats:["backpacking-tent","backpacking-bag","sleeping-bag","mat","tarp"] },
+  { key:"car-camping", label:"오토캠핑",icon:"🚗", cats:["auto-tent","chair","table","cooler","cot","burner","cookware","lantern","firepit","wagon","shelter"] },
+  { key:"glamping",    label:"글램핑",  icon:"✨", cats:["auto-tent","shelter","chair","table","cot","lantern","cooler","firepit"] },
+  { key:"winter",      label:"겨울",    icon:"❄", cats:["backpacking-tent","auto-tent","sleeping-bag","mat"] },
+  { key:"beach",       label:"해변",    icon:"🏖", cats:["auto-tent","shelter","tarp","chair","table","cooler"] },
+  { key:"family",      label:"가족",    icon:"👨‍👩‍👧", cats:["auto-tent","shelter","chair","table","cooler","wagon","cot","burner","cookware"] },
 ];
 // 스타일별 "이 스펙이 중요해요" 설명 (재정렬보다 설명 레이어가 먼저)
 const STYLE_TIPS = {
@@ -956,10 +957,11 @@ function applyStyleSort(d) {
 function renderStyleChips(d) {
   const el = document.getElementById("stylechips");
   if (!el) return;
-  // 이 카테고리 데이터에 어떤 spec_key가 실제 있는지 확인
   const availKeys = new Set(d.models.flatMap(m => Object.keys(m.specs || {})));
-  // 각 스타일이 이 카테고리와 관련 있으면 표시 (tip의 keys 중 1개라도 있으면)
+  const slug = STATE.slug;
   const relevant = STYLE_META.filter(s => {
+    // cats 화이트리스트: 이 카테고리가 포함된 스타일만 표시
+    if (s.cats && !s.cats.includes(slug)) return false;
     const tip = STYLE_TIPS[s.key];
     return !tip || tip.keys.some(k => availKeys.has(k));
   });
@@ -975,7 +977,13 @@ function renderStyleChips(d) {
     STATE.campStyle = STATE.campStyle === sk ? "" : sk;
     el.querySelectorAll(".sc-chip").forEach(b => { const on = b.dataset.style === STATE.campStyle; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-120
     const tipEl = document.getElementById("sc-tip-text");
-    if (tipEl) tipEl.textContent = STATE.campStyle ? (STYLE_TIPS[STATE.campStyle]?.tip || "") : "";
+    if (tipEl) {
+      const tip = STYLE_TIPS[STATE.campStyle];
+      const ss = STYLE_SORT[STATE.campStyle];
+      const specLabel = ss && d.metrics.find(m => m.key === ss.key)?.label;
+      const sortHint = specLabel ? ` · ${specLabel} 기준 정렬` : "";
+      tipEl.textContent = STATE.campStyle ? ((tip?.tip || "") + sortHint) : "";
+    }
     applyStyleSort(d);
     syncFilterUI();                  // 정렬 드롭다운 UI 동기화 (M-102)
     updateLeadText(d);
