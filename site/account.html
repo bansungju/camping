@@ -518,7 +518,12 @@ if (authErrorParam) {
   authErrorTimer = setTimeout(() => renderLogin(), 2000)
 }
 
+let _authFired = false
+const _authTimeout = setTimeout(() => { if (!_authFired) renderLogin() }, 3000)
+
 await initAuth(async (user, event) => {
+  _authFired = true
+  clearTimeout(_authTimeout)
   window._accUser = user || null
   if (user && authErrorTimer) { clearTimeout(authErrorTimer); authErrorTimer = null }
   if (!user) {
