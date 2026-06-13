@@ -92,9 +92,11 @@ def fill_one(con, pid, pcode, cid, cat_name):
             continue
         conf = "medium" if "~" in raw else "high"
         mid = P.metric_id(con, cid, metric)
+        # M-332: raw_unit는 '단위 미상'이면 의미 없는 "norm" 플레이스홀더 대신 NULL로 둔다(다른 소비자가
+        #   단위 기반 포맷팅 시 잘못된 "norm"을 신뢰하지 않도록). 표시 단위는 metrics.unit이 단일 진실.
         con.execute("""INSERT INTO product_spec_values
             (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid,star_eligible)
-            VALUES(?,?,?,?,?,3,?,1,1,1)""", (pid, mid, val, raw, "norm", conf))
+            VALUES(?,?,?,?,?,3,?,1,1,1)""", (pid, mid, val, raw, None, conf))
         con.execute("""UPDATE data_quality_flags SET resolved=1
             WHERE product_id=? AND metric_id=? AND flag_type='missing'""", (pid, mid))
         filled += 1
@@ -147,46 +149,49 @@ def main():
     args = ap.parse_args()
 
     con = sqlite3.connect(args.db)
-    cands = candidates(con, args.category, args.limit)
-    print(f"대상 모델: {len(cands)}개" + (f" (카테고리={args.category})" if args.category else ""))
+    # M-216: promote_all/recompute_ratings 등에서 예외가 나도 커넥션이 닫히도록 전체를 try/finally로 감싼다
+    #   (기존엔 분기별 con.close()라 예외 경로에서 커넥션·WAL 잠금 파일이 잔류했다).
+    try:
+        cands = candidates(con, args.category, args.limit)
+        print(f"대상 모델: {len(cands)}개" + (f" (카테고리={args.category})" if args.category else ""))
 
-    if args.dry_run:
-        from collections import Counter
-        dist = Counter(c[3] for c in cands)
-        for cat, n in dist.most_common():
-            print(f"  {cat}: {n}")
-        return
+        if args.dry_run:
+            from collections import Counter
+            dist = Counter(c[3] for c in cands)
+            for cat, n in dist.most_common():
+                print(f"  {cat}: {n}")
+            return
 
-    total_filled = 0
-    done = 0
-    for pid, pcode, cid, cat_name, brand, model in cands:
-        try:
-            filled, cap_set = fill_one(con, pid, pcode, cid, cat_name)
-            con.commit()
-            total_filled += filled
-            done += 1
-            tag = f" +cap" if cap_set else ""
-            print(f"  [{done}/{len(cands)}] {brand} {model[:28]:28} +{filled}{tag}")
-        except Exception as e:
-            print(f"  [{done}/{len(cands)}] {brand} {model[:28]:28} 실패: {type(e).__name__}: {e}")
-        D.polite_sleep()
+        total_filled = 0
+        done = 0
+        for pid, pcode, cid, cat_name, brand, model in cands:
+            try:
+                filled, cap_set = fill_one(con, pid, pcode, cid, cat_name)
+                con.commit()
+                total_filled += filled
+                done += 1
+                tag = f" +cap" if cap_set else ""
+                print(f"  [{done}/{len(cands)}] {brand} {model[:28]:28} +{filled}{tag}")
+            except Exception as e:
+                print(f"  [{done}/{len(cands)}] {brand} {model[:28]:28} 실패: {type(e).__name__}: {e}")
+            D.polite_sleep()
 
-    print(f"\n총 {total_filled}개 스펙 보강 / {done}개 모델 처리")
+        print(f"\n총 {total_filled}개 스펙 보강 / {done}개 모델 처리")
 
-    if args.no_export:
+        if args.no_export:
+            return
+
+        # 승격 → 별점 재산정 → export → 게이트
+        print("\n승격(promote_all)…")
+        RA.promote_all(con)
+        con.commit()
+        print("별점 재산정(recompute_ratings)…")
+        P.recompute_ratings(con)
+        con.commit()
+        nv = con.execute("SELECT COUNT(*) FROM products WHERE curation_status='verified'").fetchone()[0]
+        print(f"  verified 총 {nv}개")
+    finally:
         con.close()
-        return
-
-    # 승격 → 별점 재산정 → export → 게이트
-    print("\n승격(promote_all)…")
-    RA.promote_all(con)
-    con.commit()
-    print("별점 재산정(recompute_ratings)…")
-    P.recompute_ratings(con)
-    con.commit()
-    nv = con.execute("SELECT COUNT(*) FROM products WHERE curation_status='verified'").fetchone()[0]
-    print(f"  verified 총 {nv}개")
-    con.close()
     print("\n다음: python3 pipeline/export_site.py && python3 pipeline/check_export.py")
 
 

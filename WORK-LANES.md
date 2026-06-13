@@ -63,7 +63,7 @@
 | **C6** | `resolve_duplicates.py` | M-308·L-189 수정 / M-230=H-46 기해결 / M-266·L-220 무효 | ✅ 2026-06-13 |
 | **C7** | `graph_full.py` | M-184·M-235·M-269·L-270 수정 / M-324 재보류(graph_pipeline._fill 연동·dirty) | ✅ 2026-06-13 |
 | **C8** | `verify_internal.py` | M-241·M-271·M-295·L-195·L-265 | ✅ 2026-06-13 |
-| **C9** | `fill_whitelist_specs.py` | M-177·M-216·M-332·L-223 | ⬜ |
+| **C9** | `fill_whitelist_specs.py` | M-216·M-332 수정 / M-177=H-96 기해결 / L-223 무효(격리값 보존 의도설계) | ✅ 2026-06-13 |
 | **C10** | `graph_pipeline.py` | M-185·M-255·M-268·L-258 | ⬜ |
 | **C11** | `crosssource.py` | M-201·M-282·M-348·L-253 | ⬜ |
 | **C12** | `promote_catalog.py` | M-210·M-277·M-311·M-335 | ⬜ |
