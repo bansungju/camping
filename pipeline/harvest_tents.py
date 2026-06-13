@@ -124,8 +124,11 @@ def ingest(con, cand, seen_names):
     con.execute("""INSERT OR IGNORE INTO products
         (brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
         VALUES(?,?,?,?,?, 'pending','on_sale')""", (bid, cid, model, cap, cand["pcode"]))
-    pid = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
-                      (bid, model)).fetchone()[0]
+    row = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
+                      (bid, model)).fetchone()
+    if row is None:
+        return "dup_variant"
+    pid = row[0]
 
     got = set()
     for spec in TENT_MAP:

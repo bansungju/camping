@@ -40,8 +40,21 @@ def main():
             with open(appjs_path, "w", encoding="utf-8") as f:
                 f.write(appjs2)
 
-    hj, hc = _hash("app.js"), _hash("style.css")
-    # L-95: item 페이지(../../app.js?v=)도 동기화 — build-item-pages.js 재실행 없이도 일치 보장
+    hc = _hash("style.css")
+    hs = _hash("supabaseClient.js")
+    # M-118: app.js 동적 import("./supabaseClient.js") 도 버전 스탬프 — HTML과 동일 모듈 인스턴스 보장
+    appjs_path = os.path.join(SITE, "app.js")
+    if os.path.exists(appjs_path):
+        with open(appjs_path, encoding="utf-8") as f:
+            appjs_src = f.read()
+        appjs_new = re.sub(r"(['\"])\./supabaseClient\.js(\?v=[^'\"]*)?\1",
+                           lambda mm: f"{mm.group(1)}./supabaseClient.js?v={hs}{mm.group(1)}", appjs_src)
+        if appjs_new != appjs_src:
+            with open(appjs_path, "w", encoding="utf-8") as f:
+                f.write(appjs_new)
+    # supabaseClient.js 스탬프 완료 후 app.js 최종 해시 계산(L-178)
+    hj = _hash("app.js")
+    # L-95: item 페이지(../../app.js?v=)도 동기화 — hj 확정 후 실행
     item_dir = os.path.join(SITE, "item")
     if os.path.isdir(item_dir):
         for dirpath, _, fnames in os.walk(item_dir):
@@ -56,17 +69,6 @@ def main():
                 if new != html:
                     with open(fp, "w", encoding="utf-8") as f:
                         f.write(new)
-    hs = _hash("supabaseClient.js")
-    # M-118: app.js 동적 import("./supabaseClient.js") 도 버전 스탬프 — HTML과 동일 모듈 인스턴스 보장
-    appjs_path = os.path.join(SITE, "app.js")
-    if os.path.exists(appjs_path):
-        with open(appjs_path, encoding="utf-8") as f:
-            appjs_src = f.read()
-        appjs_new = re.sub(r"(['\"])\./supabaseClient\.js(\?v=[^'\"]*)?\1",
-                           lambda mm: f"{mm.group(1)}./supabaseClient.js?v={hs}{mm.group(1)}", appjs_src)
-        if appjs_new != appjs_src:
-            with open(appjs_path, "w", encoding="utf-8") as f:
-                f.write(appjs_new)
     changed = []
     for name in os.listdir(SITE):
         if not name.endswith(".html"):
