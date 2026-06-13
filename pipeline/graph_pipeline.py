@@ -55,12 +55,18 @@ def assess(s: State) -> dict:
     con = sqlite3.connect(s["db"])
     cid = P.category_id(con, s["category"])
     have = {}
-    for key, val, conf in con.execute("""
-        SELECT mt.key, psv.value_normalized, psv.confidence
+    # H-93: 실제 source_id를 로드한다(항상 1로 하드코딩 금지). 안 그러면 source_id=3/4 이상값이
+    #       validate()의 "source_id==1 건너뜀"에 걸려 검증을 우회하고 영구 잔류한다.
+    # H-82/L-258: 기존 3/4 스펙을 실제 source_id로 specs에 적재해 두면, persist()의 DELETE→재INSERT
+    #       루프가 이번 런에서 새로 채우지 못한 기존 3/4 스펙도 그대로 보존한다(재실행 시 소실 방지).
+    # 같은 metric에 source_id가 여러 개면 ORDER BY로 높은 source_id가 마지막에 남아 우선한다.
+    for key, val, sid, conf in con.execute("""
+        SELECT mt.key, psv.value_normalized, psv.source_id, psv.confidence
         FROM product_spec_values psv JOIN metrics mt ON mt.id=psv.metric_id
-        WHERE psv.product_id=? AND mt.category_id=? AND psv.value_normalized IS NOT NULL""",
+        WHERE psv.product_id=? AND mt.category_id=? AND psv.value_normalized IS NOT NULL
+        ORDER BY psv.source_id""",
         (s["pid"], cid)):
-        have[key] = {"value": val, "source_id": 1, "confidence": conf, "valid": 1, "flag": None}
+        have[key] = {"value": val, "source_id": sid, "confidence": conf, "valid": 1, "flag": None}
     con.close()
     missing = [k for k in _fill(s) if k not in have]
     return {"specs": have, "missing": missing,
@@ -94,7 +100,15 @@ def fetch_detail(s: State) -> dict:
         raw = P.find_spec(dspec, spec["keys"], spec.get("exclude"))
         if not raw:
             continue   # ★ 출처에 없으면 안 채움
-        val = P.derive_floor(raw) if spec.get("derive") == "floor" else P.FN[spec["fn"]](raw)
+        # H-91: derive 전용 항목은 "fn" 키가 없다. spec["fn"] 직접접근 시 KeyError로 크래시하고
+        #       errors 딕셔너리가 이를 조용히 삼킨다 → enrich_details(H-58) 가드 패턴 동일 적용.
+        derive, fn = spec.get("derive"), spec.get("fn")
+        if derive == "floor":
+            val = P.derive_floor(raw)
+        elif fn:
+            val = P.FN[fn](raw)
+        else:
+            continue   # derive도 fn도 없는 항목은 변환 불가 → 건너뜀
         if val is None:
             continue
         specs[spec["metric"]] = {"value": val, "source_id": 3, "confidence": "high", "valid": 1, "flag": None}
@@ -171,11 +185,17 @@ def persist(s: State) -> dict:
             if d.get("flag"):
                 ft = "implausible" if d["flag"].startswith("implausible") else "category_mismatch"
                 P.flag(con, s["pid"], mid, ft, "[graph] " + d["flag"])
-    if s["capacity"] is not None and s["cap_source"]:
+    # H-94: 모델명에서 확정된 용량("name")만 products.capacity에 영구 기록한다.
+    #       floor_area→인원 같은 이중 추론값("inferred:*")은 신뢰도가 낮아 영구 저장 시
+    #       이후 수정이 불가하므로, 기록하지 않고 요검토 로그만 남긴다.
+    caplog = "persist: 기록 완료"
+    if s["capacity"] is not None and s["cap_source"] == "name":
         con.execute("UPDATE products SET capacity=? WHERE id=? AND capacity IS NULL",
                     (s["capacity"], s["pid"]))
+    elif s["capacity"] is not None and s["cap_source"]:
+        caplog = f"persist: 기록 완료 (용량 {s['capacity']}={s['cap_source']} 추론값→영구기록 보류·요검토)"
     con.commit(); con.close()
-    return {"log": s["log"] + ["persist: 기록 완료"]}
+    return {"log": s["log"] + [caplog]}
 
 
 def build_graph():

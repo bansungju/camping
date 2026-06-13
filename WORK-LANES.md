@@ -22,6 +22,32 @@
 
 > 기존 "제외 파일" 목록(account/community/sw/supabaseClient/privacy/terms/auth-callback)은 곧 SOCIAL 레인과 동일하다.
 
+## 백엔드 파이프라인 버그 — 파일별 세션 묶음 (DATA 레인 하위, `[lane:BACKEND]`)
+
+`pipeline/*.py` 백엔드 버그는 모두 DATA 레인이다. 단, **같은 `.py` 파일을 두 세션이 동시에 고치면 충돌**하므로,
+세션 경계는 **파일 단위**로 묶는다(성격은 분류 라벨, 세션 경계는 파일). **한 세션 = 한 묶음**으로 처리한다.
+파일이 서로 다른 묶음끼리는 병렬 진행 가능. 묶음 점유 시 `.claude/locks/<파일명>.lock` 관례 동일 적용.
+
+| 세션 | 파일 | 묶음 항목 | 상태 |
+|---|---|---|---|
+| **B1** | `graph_pipeline.py` | H-93·H-82·L-258(연동)·H-91·H-94 | ✅ 2026-06-13 완료 (commit) |
+| **B2** | `graph_full.py` | H-48·H-68·H-86 (+M-324 동일파일) | ⬜ 미착수 |
+| **B3** | `resolve_duplicates.py` | H-46·H-74 | ⬜ 미착수 |
+| **B4** | `run_all.py` | H-61·H-62 | ⬜ 미착수 |
+| **B5** | `normalize.py` | H-89·H-90 | ⬜ 미착수 |
+| **B6** | `fill_whitelist_specs.py` | H-96 (H-47은 완료) | ⬜ 미착수 |
+| **B7** | `crosssource.py` | H-76 (H-53·H-54는 완료) | ⬜ 미착수 |
+| **B8** | `detect_price_drops.py` | H-66 | ⬜ 단독 |
+| **B9** | `column_fixes.py` | H-71 | ⬜ 단독 |
+| **B10** | `.github/workflows/pages.yml` | H-73 | ⬜ 단독 |
+| **B11** | `promote_catalog.py` | H-77 | ⬜ 단독 |
+| **B12** | `harvest_tents.py` | H-79 | ⬜ 단독 |
+| **B13** | `normalize_models.py` | H-83 (+M-329 동일파일) | ⬜ 단독 |
+| **B14** | `backfill_capacity.py` | H-84 | ⬜ 단독 |
+
+> 이미 완료(별도 커밋): H-44·H-45(add_value_star/enrich)·H-47(fill_whitelist SQLi)·H-52(export JOIN)·H-53·H-54(crosssource)·H-55(scan_secrets)·H-57(danawa)·H-58(enrich fn).
+> **의존성:** B1의 `enrich_details(H-58)` 가드 패턴이 B1 H-91에 미러링됨. B11(promote_catalog)은 B1 source_id 수정 이후 검증 권장.
+
 ## 규칙
 1. 각 세션은 시작 시 자기 레인을 정한다 — cron `args.lane`, 없으면 작업 성격으로 판단(버그수정 기본 = `CORE`).
 2. **자기 레인 파일만 수정**한다. 다른 레인 파일이 필요한 버그는 손대지 말고, `bug-report.md`에 `[lane:대상]` 태그로 **요청만** 남긴다.
