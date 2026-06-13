@@ -207,7 +207,9 @@ export async function toggleLike(postId, liked) {
 export async function reportContent({ target_type, target_id, reason }) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: { message: 'unauthorized' } }
-  return supabase.from('reports').insert({ reporter_id: user.id, target_type, target_id, reason })
+  const { error } = await supabase.from('reports').insert({ reporter_id: user.id, target_type, target_id, reason })
+  if (error?.code === '23505') return { error: { message: 'already_reported' } }
+  return { error }
 }
 
 // FE-SOC-09: 내가 쓴 상품 후기(마이페이지 '내 로그'용). user_id로 필터.
