@@ -37,13 +37,15 @@ async def health_check() -> dict:
 
 
 async def wal_checkpoint_loop():
+    # H-125: 백엔드는 DB의 read-only 소비자다(다른 모든 연결이 file:...?mode=ro). 체크포인트는 main DB
+    #   파일에 쓰기가 필요해 read-only로는 수행 불가하고, 여기서만 read-write로 열면 파이프라인(유일한
+    #   writer)의 쓰기와 SHARED 락이 충돌해 WAL 손상 위험이 있다. 체크포인트는 WAL의 writer인 파이프라인이
+    #   담당(SQLite WAL auto-checkpoint 포함)하고, 백엔드는 WAL 크기 모니터링만 한다 — DB 연결 불필요.
     while True:
         await asyncio.sleep(300)
         try:
-            async with aiosqlite.connect(DB_PATH) as db:
-                await db.execute("PRAGMA wal_checkpoint(PASSIVE)")
             wal = DB_PATH + "-wal"
             if os.path.exists(wal) and os.path.getsize(wal) > 100 * 1024 * 1024:
-                print(f"[WARN] WAL {os.path.getsize(wal)//1024//1024}MB")
+                print(f"[WARN] WAL {os.path.getsize(wal)//1024//1024}MB — 파이프라인 체크포인트 확인 필요")
         except Exception as e:
             print(f"[WAL] {e}")
