@@ -255,11 +255,19 @@ def main():
         ("weight_unit",         check_weight_unit),
     ]
 
+    # 이미 false_positive로 resolved된 건은 큐/INSERT에서 제외(매 실행 재표시 방지).
+    # (product_id, note 앞 40자)로 매칭 — 검사 종류+상품을 충분히 식별한다.
+    cur.execute("SELECT product_id, substr(note, 1, 40) FROM data_quality_flags WHERE resolved = 1")
+    resolved_set = {(r[0], r[1]) for r in cur.fetchall()}
+
     all_flags_labeled = []
     total = 0
     for check_key, fn in checks:
-        flags = fn(cur)
-        print(f"  [{check_key}] {len(flags)}건 발견")
+        raw = fn(cur)
+        flags = [f for f in raw if (f[0], f[3][:40]) not in resolved_set]
+        dropped = len(raw) - len(flags)
+        drop_note = f" (resolved 제외 {dropped}건)" if dropped else ""
+        print(f"  [{check_key}] {len(flags)}건 발견{drop_note}")
         all_flags_labeled.append((check_key, flags))
         total += len(flags)
 
