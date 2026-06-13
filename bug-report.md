@@ -2549,7 +2549,7 @@
 - **제안 수정:** `d = json.load(open(path, encoding="utf-8"))` → `with open(path, encoding="utf-8") as f: d = json.load(f)`
 - **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 41 [lane:BACKEND]
 
-### [L-162] — `supabase/migrations/` — 마이그레이션 순번 006 중복 → 적용 순서 모호
+### [L-162] ✅ 해결완료(2026-06-13, CORE) — `supabase/migrations/` — 마이그레이션 순번 006 중복 → 적용 순서 모호
 - **영역:** 백엔드 — Supabase 마이그레이션
 - **심각도:** 🟢 Low
 - **증상:** `006_gear_sets.sql` 과 `006_post_likes.sql` 이 동일 순번 006 을 공유한다. Supabase CLI나 수동 적용 시 어느 파일을 먼저 실행해야 하는지 불명확하고, `post_likes` 가 `gear_sets` 테이블을 참조하지 않더라도 향후 의존 관계가 생기면 잘못된 순서로 적용될 수 있다. 현재도 파일 목록 정렬 시 OS에 따라 순서가 달라진다(`gear_sets` < `post_likes` 알파벳순이나 보장되지 않음).
@@ -2690,7 +2690,7 @@
 - **제안 수정:** `const pct = v => totalHi === totalLo ? 0 : ((v - totalLo) / (totalHi - totalLo)) * 100;` 으로 zero-division 방어 추가(line 1507, 1652 두 곳).
 - **파일:** [site/app.js](site/app.js) line 1507, 1652 [lane:CORE]
 
-### [L-172] — `canonical_models` 테이블 — 핵심 컬럼 타입 선언 없음 → SQLite untyped, 정수/실수 강제 없음
+### [L-172] ✅ 해결완료(2026-06-13, CORE) — `canonical_models` 테이블 — 핵심 컬럼 타입 선언 없음 → SQLite untyped, 정수/실수 강제 없음
 - **영역:** 백엔드 — DB 스키마 (`pipeline/reference.sql` 아닌 런타임 생성)
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13

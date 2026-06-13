@@ -207,27 +207,31 @@ def normalize_db(con):
     dedup_price_observations(con)  # 중복 관측 정리(최신1행) → 적재 비대/중앙값 점령 방지
     flag_price_outliers(con)   # 부속·오타 단가 격리(valid=0) → 아래 집계서 제외
     con.execute("DROP TABLE IF EXISTS canonical_models")
-    con.execute("""CREATE TABLE canonical_models AS
-        SELECT MIN(p.id) AS rep_product_id, p.brand_id, p.category_id,
-               b.name_ko AS brand, p.canonical_model, p.capacity,
-               COUNT(*) AS variant_count,
-               GROUP_CONCAT(DISTINCT p.variant_label) AS variants,
-               GROUP_CONCAT(p.danawa_pcode) AS pcodes,
-               -- 채널혼입 차단: 국내가 우선, 국내가 없을 때만 직구 fallback(직구 lowball 오염 방지)
+    con.execute("""CREATE TABLE canonical_models (
+        rep_product_id INTEGER, brand_id INTEGER, category_id INTEGER,
+        brand TEXT, canonical_model TEXT, capacity REAL,
+        variant_count INTEGER, variants TEXT, pcodes TEXT,
+        min_price INTEGER, max_price INTEGER)""")
+    con.execute("""INSERT INTO canonical_models
+        SELECT MIN(p.id), p.brand_id, p.category_id,
+               b.name_ko, p.canonical_model, p.capacity,
+               COUNT(*),
+               GROUP_CONCAT(DISTINCT p.variant_label),
+               GROUP_CONCAT(p.danawa_pcode),
                COALESCE(
                  (SELECT MIN(po.price_krw) FROM price_observations po JOIN products p2 ON p2.id=po.product_id
                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
                      AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1 AND po.channel='국내'),
                  (SELECT MIN(po.price_krw) FROM price_observations po JOIN products p2 ON p2.id=po.product_id
                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
-                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1)) AS min_price,
+                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1)),
                COALESCE(
                  (SELECT MAX(po.price_krw) FROM price_observations po JOIN products p2 ON p2.id=po.product_id
                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
                      AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1 AND po.channel='국내'),
                  (SELECT MAX(po.price_krw) FROM price_observations po JOIN products p2 ON p2.id=po.product_id
                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
-                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1)) AS max_price
+                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1))
         FROM products p JOIN brands b ON b.id=p.brand_id
         GROUP BY p.brand_id, p.canonical_model, p.capacity""")
     con.commit()
