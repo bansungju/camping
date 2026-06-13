@@ -45,8 +45,10 @@ window.addEventListener("beforeinstallprompt", e => {
   };
   showBanner();
   banner.querySelector(".pwa-install-btn").onclick = async () => {
-    _pwaPrompt.prompt();
-    const { outcome } = await _pwaPrompt.userChoice;
+    const prompt = _pwaPrompt;
+    _pwaPrompt = null;  // H-51: prompt()는 1회만 유효 — null 처리로 InvalidStateError 방지
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
     if (outcome === "accepted") localStorage.setItem("pwa-dismissed", "1");
     hideBanner();
   };
@@ -1126,12 +1128,21 @@ async function setupSearchPage() {
   const openFromSearch = async (x) => {
     try {
       const catData = await getJSON(`data/${x.s}.json`);
-      const prod = (catData.items || []).find(p => p.brand === x.b && p.model === x.m);
+      const prod = (catData.models || []).find(p => p.brand === x.b && p.model === x.m);
       if (prod) {
         const prev = { slug: STATE.slug, data: STATE.data };
         STATE.slug = x.s; STATE.data = catData;
         openProduct(prod);
-        STATE.slug = prev.slug; STATE.data = prev.data;
+        // H-49: STATE는 모달이 닫힐 때 복원(즉시 복원 시 비동기 핸들러가 잘못된 slug 참조)
+        // openProduct가 xbtn.onclick/modal.onclick을 설정한 뒤 래핑해서 복원을 주입
+        const _pm = document.getElementById("pmodal");
+        if (_pm) {
+          const restore = () => { STATE.slug = prev.slug; STATE.data = prev.data; };
+          const xb = _pm.querySelector(".pmx");
+          const origX = xb?.onclick, origM = _pm.onclick;
+          if (xb) xb.onclick = (e) => { restore(); if (origX) origX(e); };
+          _pm.onclick = (e) => { if (e.target === _pm) { restore(); } if (origM) origM(e); };
+        }
         return;
       }
     } catch (_) {}
@@ -3264,12 +3275,20 @@ function renderAccount() {
         if (!wx || !wx.s) { location.href = card.dataset.href; return; }
         try {
           const catJson = await fetch(`data/${wx.s}.json`).then(r => r.json());
-          const prod = (catJson.items || []).find(p => p.brand === wx.b && p.model === wx.m);
+          const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m);
           if (prod) {
             const prevSlug = STATE.slug, prevData = STATE.data;
             STATE.slug = wx.s; STATE.data = catJson;
             openProduct(prod);
-            STATE.slug = prevSlug; STATE.data = prevData;
+            // H-49: STATE 복원을 모달 close 시점으로 지연
+            const _pm = document.getElementById("pmodal");
+            if (_pm) {
+              const restore = () => { STATE.slug = prevSlug; STATE.data = prevData; };
+              const xb = _pm.querySelector(".pmx");
+              const origX = xb?.onclick, origM = _pm.onclick;
+              if (xb) xb.onclick = (e) => { restore(); if (origX) origX(e); };
+              _pm.onclick = (e) => { if (e.target === _pm) { restore(); } if (origM) origM(e); };
+            }
             return;
           }
         } catch (_) {}
