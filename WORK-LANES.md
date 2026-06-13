@@ -48,6 +48,53 @@
 > 이미 완료(별도 커밋): H-44·H-45(add_value_star/enrich)·H-47(fill_whitelist SQLi)·H-52(export JOIN)·H-53·H-54(crosssource)·H-55(scan_secrets)·H-57(danawa)·H-58(enrich fn).
 > **의존성:** B1의 `enrich_details(H-58)` 가드 패턴이 B1 H-91에 미러링됨. B11(promote_catalog)은 B1 source_id 수정 이후 검증 권장.
 
+### 백엔드 Medium/Low 139건 — 파일별 묶음 (C-시리즈, DATA 레인)
+
+요청된 백엔드 M/L 139건을 파일 단위로 묶음. **한 세션=한 파일.** 파일 다르면 병렬 가능.
+> ⚠ `site/app.js`·`site/supabaseClient.js` 항목은 실제 프론트 파일(CORE/SOCIAL 레인) — DATA 세션에서 직접 수정 금지, `[lane:CORE/SOCIAL]`로 큐잉. ('body vs content' M-145/154/172는 Supabase 마이그레이션+app.js 양쪽.)
+
+| 세션 | 파일 | 묶음 항목 | 상태 |
+|---|---|---|---|
+| **C1** | `validate_ranges.py` | M-236·M-265·M-323·M-328·M-330·M-341·M-343·L-256·L-257 | ⬜ |
+| **C2** | `value_metric.py` | M-166·M-167·M-168·M-270·M-289·M-350·L-205·L-266 | ⬜ |
+| **C3** | `export_site.py` | M-200·M-231·M-242·M-279·M-309·M-310·M-331·M-349 | ⬜ |
+| **C4** | `normalize.py` | M-192·M-276·M-288·M-319·M-339·L-238·L-263 | ⬜ |
+| **C5** | `build_backpacking_bag.py` | M-195·M-196·M-223·M-224·M-320·M-321 | ⬜ |
+| **C6** | `resolve_duplicates.py` | M-230·M-266·M-308·L-189·L-220 | ⬜ |
+| **C7** | `graph_full.py` | M-184·M-235·M-269·M-324·L-270 | ⬜ |
+| **C8** | `verify_internal.py` | M-241·M-271·M-295·L-195·L-265 | ⬜ |
+| **C9** | `fill_whitelist_specs.py` | M-177·M-216·M-332·L-223 | ⬜ |
+| **C10** | `graph_pipeline.py` | M-185·M-255·M-268·L-258 | ⬜ |
+| **C11** | `crosssource.py` | M-201·M-282·M-348·L-253 | ⬜ |
+| **C12** | `promote_catalog.py` | M-210·M-277·M-311·M-335 | ⬜ |
+| **C13** | `normalize_models.py` | M-249·M-263·M-264 | ⬜ |
+| **C14** | `affiliate_links.py` | M-287·M-315·L-188 | ⬜ |
+| **C15** | `star_catalog.py` | M-169·M-260·L-235 | ⬜ |
+| **C16** | `brand_filter.py` | M-178·M-333·L-232 | ⬜ |
+| **C17** | `multicat.py` | M-183·M-256·M-290 | ⬜ |
+| **C18** | `add_manual_models.py` | M-197·M-225·M-280 | ⬜ |
+| **C19** | `enrich_details.py` | M-215·M-250·M-322 | ⬜ |
+| **C20** | `check_export.py` | M-222·M-294·L-231 | ⬜ |
+| **C21** | `stamp_version.py` | M-248·M-296·L-213 | ⬜ |
+| **C22** | `harvest_tents.py` | M-254·M-275·L-241 | ⬜ |
+| **C23** | `seed_coupang.py` | L-193·L-215·L-239 | ⬜ |
+| **C24** | `limits_map.py` | L-212·L-251·L-252 | ⬜ |
+| **C25** | `backfill_capacity.py` | M-176·L-227 | ⬜ |
+| **C26** | `column_fixes.py` | M-179·M-281 | ⬜ |
+| **C27** | `collect_images.py` | M-217·L-192 | ⬜ |
+| **C28** | `reclassify_other_tent.py` | M-234·L-196 | ⬜ |
+| **C29** | `refresh.py` | M-206·M-207 | ⬜ |
+| **C30** | `danawa.py` | L-210·L-244 | ⬜ |
+| **C31** | `run_all.py` | M-229·L-219 | ⬜ |
+| **C32** | `detect_price_drops.py` | M-251·M-334 | ⬜ |
+| **C33** | `ocr_specs.py` | M-299·M-300 | ⬜ |
+| **C34** | `make_logo.py` | L-199·L-200 | ⬜ |
+| **C35** | `pipeline.py` | M-205 | ⬜ |
+| **C36** | `add_value_star.py` | M-252 | ⬜ |
+| **C37** | `scan_secrets.py` | M-314 | ⬜ |
+| **C38** | `download_images.py` | L-191 | ⬜ |
+| **C-FE** | `site/app.js`·`supabaseClient.js` | L-160·M-145·M-154·M-170·M-171·M-172·M-188·M-189·L-190 | ⬜ **CORE/SOCIAL 레인** (DATA 세션 제외, 큐잉) |
+
 ## 규칙
 1. 각 세션은 시작 시 자기 레인을 정한다 — cron `args.lane`, 없으면 작업 성격으로 판단(버그수정 기본 = `CORE`).
 2. **자기 레인 파일만 수정**한다. 다른 레인 파일이 필요한 버그는 손대지 말고, `bug-report.md`에 `[lane:대상]` 태그로 **요청만** 남긴다.
