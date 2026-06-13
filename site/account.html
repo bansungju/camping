@@ -126,7 +126,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=d2b304b7"></script>
+<script src="app.js?v=ab535774"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -342,6 +342,18 @@ function scrollToHashSection() {
 }
 window.addEventListener('hashchange', scrollToHashSection)
 
+// ?open-set=ID : 꾸러미 보기 등 외부에서 특정 세트 팝업 요청
+function maybeOpenSetFromParam() {
+  const openId = new URLSearchParams(location.search).get('open-set')
+  if (!openId) return
+  const sets = getSets()
+  const idx = sets.findIndex(s => s.id === openId)
+  if (idx >= 0) {
+    history.replaceState(null, '', location.pathname + '#sets')
+    setTimeout(() => openSetDetail(idx), 200)
+  }
+}
+
 function showLoggedInSections(show) {
   if (show && _isViewSet) return  // L-76: 공유 URL 열람 중 개인 섹션 억제
   const ws = document.getElementById('wish-section')
@@ -549,6 +561,7 @@ await initAuth(async (user, event) => {
   renderAccount()
   renderProfile(profile)
   scrollToHashSection()
+  maybeOpenSetFromParam()
   if (event === 'SIGNED_IN') {
     syncWishlistOnLogin()
     syncGearSetsOnLogin(user.id)

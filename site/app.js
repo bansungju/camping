@@ -396,7 +396,7 @@ function showSetConfirm(setId) {
   card.querySelector(".sac-close").onclick = dismiss;
   card.querySelector(".sac-view").onclick = () => {
     dismiss();
-    location.href = "/account.html#sets";
+    location.href = `/account.html?open-set=${encodeURIComponent(setId)}#sets`;
   };
   // 사용자가 카드 위에 머무는 동안엔 자동소멸 일시정지(버튼 누르려는 중 사라짐 방지). 무조작 시엔 그대로 소멸.
   card.onpointerenter = () => clearTimeout(card._tid);
