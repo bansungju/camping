@@ -4365,7 +4365,7 @@
 
 ---
 
-### [M-222] — `check_export.py` `check_file()` — `price_max=0` 이상치를 `or pmin` 치환으로 누락
+### [M-222] ✅ 해결완료(2026-06-13, C20) — `check_export.py` `check_file()` — `price_max=0` 이상치를 `or pmin` 치환으로 누락
 
 - **영역:** 백엔드 — 배포 게이트
 - **심각도:** 🟡 Medium
@@ -5422,7 +5422,7 @@
 
 ---
 
-### [L-231] — `check_export.py` `main()` — JSON 파싱 실패 시 무음 스킵으로 CI 게이트 0 반환
+### [L-231] ✅ 해결완료(2026-06-13, C20) — `check_export.py` `main()` — JSON 파싱 실패 시 무음 스킵으로 CI 게이트 0 반환
 
 - **영역:** 백엔드 — 배포 게이트
 - **심각도:** 🟢 Low
@@ -5905,7 +5905,7 @@
 
 ---
 
-### [M-294] — `check_export.py` `check_file()` — `price_max=0` falsy 처리로 상한 체크 우회
+### [M-294] ✅ 해결완료(2026-06-13, C20) — `check_export.py` `check_file()` — `price_max=0` falsy 처리로 상한 체크 우회
 
 - **영역:** 백엔드 — 배포 검증
 - **심각도:** 🟡 Medium
