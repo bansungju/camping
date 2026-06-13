@@ -97,6 +97,7 @@ export async function registerNativePush() {
 export async function signOut() {
   localStorage.removeItem("wish");
   localStorage.removeItem("sets");
+  localStorage.removeItem("gear_sets");  // M-430: gear_sets 키도 정리
   return supabase.auth.signOut()
 }
 

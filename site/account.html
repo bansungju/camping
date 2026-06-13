@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=eeda9476"></script>
+<script src="app.js?v=73be127d"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -202,7 +202,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=d33ddd9b'
+} from './supabaseClient.js?v=08466c5f'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -454,7 +454,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=d33ddd9b')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=08466c5f')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)
