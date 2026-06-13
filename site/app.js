@@ -439,6 +439,7 @@ function wishItem(m, slug) {
   return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
            pcode: wishKey(m.brand, m.model, m.capacity),
+           gf_code: m.gf_code ?? null,   // P0.5: 가격알림 서버매칭용 내부품번
            weight_g: m.specs?.weight_min?.value ?? null,
            coupang_url: m.coupang_url ?? null };   // M-146: setItem과 필드 일치
 }
@@ -487,6 +488,7 @@ function addToSet(setId, item) {
 function setItem(m, slug, idx) {
   return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
+           gf_code: m.gf_code ?? null,   // P0.5: 가격알림 서버매칭용 내부품번
            weight_g: m.specs?.weight_min?.value ?? null,
            coupang_url: m.coupang_url ?? null,
            item_idx: idx ?? null };   // 핫섹션 직접 링크(/item/${slug}/item-N.html)용
@@ -896,7 +898,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=7daf8eb2").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=f063da06").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1004,7 +1006,7 @@ async function setupHomeSearch() {
       btn.onclick = e => {
         e.preventDefault(); e.stopPropagation();
         const x = hits[+btn.dataset.hi];
-        const item = { key: wishKey(x.b, x.m, x.cap || null), b: x.b, m: x.m, cap: x.cap || null, s: x.s, p: x.p, img: x.img };
+        const item = { key: wishKey(x.b, x.m, x.cap || null), b: x.b, m: x.m, cap: x.cap || null, s: x.s, p: x.p, img: x.img, gf_code: x.g ?? null };
         btn.innerHTML = BOOKMARK_SVG;
         toggleWishWithHint(item, btn);
       };
@@ -1109,7 +1111,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=7daf8eb2").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=f063da06").catch(() => []);
     return idx;
   };
 
@@ -1159,7 +1161,7 @@ async function setupSearchPage() {
         const arr = getWish();
         const already = arr.some(w => w.key === key);
         if (already) { setWish(arr.filter(w => w.key !== key)); }
-        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: key, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null }); setWish(arr); }
+        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: key, gf_code: x.g ?? null, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null }); setWish(arr); }
         btn.classList.toggle("on", !already);
         btn.setAttribute("aria-pressed", String(!already));
       };
@@ -2633,7 +2635,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=7daf8eb2"); }
+  try { idx = await getJSON("data/search.json?v=f063da06"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -3074,7 +3076,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=7daf8eb2")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=f063da06")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
