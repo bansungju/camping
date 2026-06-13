@@ -1218,7 +1218,7 @@ async function setupSearchPage() {
         // H-49/H-92: STATE는 모달이 닫힐 때 복원(즉시 복원 시 비동기 핸들러가 잘못된 slug 참조).
         // 모든 close 경로(ESC·백드롭·X)에서 복원되도록 일회성 close 훅 사용(onclick 패치는 ESC 우회됨).
         const _pm = document.getElementById("pmodal");
-        if (_pm) _pm._onCloseOnce = () => { STATE.slug = prev.slug; STATE.data = prev.data; };
+        if (_pm) _pm._onCloseOnce = () => { STATE.slug = prev.slug ?? null; STATE.data = prev.data ?? null; };  // M-405: search.html 등 STATE 미초기화 페이지에서 undefined 복원 방지
         return;
       }
     } catch (_) {}
@@ -2091,6 +2091,7 @@ function diagnoseEmpty(sortK) {
 /* 상품 클릭 → 이미지·스펙 상세 모달 */
 function openProduct(m) {
   if (!m) return;
+  if (!STATE.data) return;  // M-267: STATE.data null 시 d.metrics TypeError 방지
   pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
@@ -2204,6 +2205,7 @@ function openProduct(m) {
   const close = () => {
     modal.classList.remove("on");
     document.removeEventListener("keydown", onKey);
+    const tb = document.getElementById("spec-tip-bubble"); if (tb) tb.style.display = "none";  // M-425: 모달 닫힌 후 툴팁 잔류 방지
     if (prevFocus && prevFocus.focus) prevFocus.focus();
     // H-92: ESC·백드롭·X 등 모든 닫기 경로에서 일회성 close 훅 실행(STATE 복원 등) — 호출부가 onclick만 패치하면 ESC가 우회됨
     if (typeof modal._onCloseOnce === "function") { const cb = modal._onCloseOnce; modal._onCloseOnce = null; cb(); }
@@ -4021,7 +4023,7 @@ function openLogDetail(p) {
         if (!error) { if (cmtInput) cmtInput.value = ""; await loadComments(); }
       };
     }
-  })();
+  })().catch(e => console.error("openLogDetail async:", e));  // M-211: UnhandledPromiseRejection 방지
 }
 
 function openLogModal(presetSetIndex) {
@@ -4284,7 +4286,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }).catch(() => {});
         }
         closeVs();
-        alert(window._accUser ? "세트가 추가됐어요! 내 세트에서 확인하세요." : "세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");
+        showToast(window._accUser ? "세트가 추가됐어요! 내 세트에서 확인하세요." : "세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");  // M-452: iOS Safari는 history.replaceState 후 alert() 차단 → showToast로 교체
       };
     } catch { /* 잘못된 파라미터 무시 */ }
   }

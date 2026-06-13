@@ -2497,7 +2497,7 @@
 
 ## R-85 — 코드 정밀 탐색 (2026-06-13)
 
-### [M-136] — `renderLogFeed` — `p.content` null 시 TypeError → 커뮤니티 피드 전체 렌더 실패
+### [M-136] ✅ 해결완료(2026-06-13) — `renderLogFeed` — `p.content` null 시 TypeError → 커뮤니티 피드 전체 렌더 실패
 - **영역:** 커뮤니티 — 로그 피드 렌더링
 - **심각도:** 🟡 Medium
 - **증상:** `renderLogFeed`(app.js line 3234)에서 `p.content.length > 80` 비교 시 `p.content`를 null 가드 없이 직접 참조한다. DB의 `content` 컬럼이 null인 게시글이 존재하면 `TypeError: Cannot read properties of null (reading 'length')` 예외가 발생하고, 그 게시글이 포함된 배치 전체 `posts.map(...)` 실행이 중단돼 피드가 빈 오류 상태(`el.innerHTML = ...로그를 불러오지 못했어요...`)로 떨어진다. 바로 위 `preview` 계산(line 3221)은 `(p.content || "")` 로 보호돼 있으나 length 체크만 누락됨.
@@ -2717,7 +2717,7 @@
 - **제안 수정:** `close` 함수에 `document.removeEventListener("keydown", onKey);` 추가. 또는 `modal.onclick` / `pmx.onclick` 핸들러에서 각각 `close()`를 부르는 대신 단일 `closeModal()` 함수로 통합.
 - **파일:** [site/app.js](site/app.js) line 3428, 3454 [lane:CORE]
 
-### [M-145] — `openLogDetail` — `comments` 조회·삽입에 `content` 컬럼 사용 — DB 스키마는 `body` → 댓글 항상 공백 + 작성 실패
+### [M-145] ✅ 해결완료(2026-06-13) — `openLogDetail` — `comments` 조회·삽입에 `content` 컬럼 사용 — DB 스키마는 `body` → 댓글 항상 공백 + 작성 실패
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (COMMUNITY_ENABLED=false이나 코드 잔존·복구 시 즉시 재발)
 - **심각도:** 🟠 Medium
 - **발견일시:** 2026-06-13
@@ -2947,7 +2947,7 @@
 
 ---
 
-### [M-154] — `posts` 테이블 컬럼 혼용 — `renderAccount`는 `body`, `renderLogFeed`는 `content` select → 한쪽 항상 null
+### [M-154] ✅ 해결완료(2026-06-13) — `posts` 테이블 컬럼 혼용 — `renderAccount`는 `body`, `renderLogFeed`는 `content` select → 한쪽 항상 null
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3090,7 +3090,7 @@
 
 ## R-92 — 프론트/백엔드 종합 버그 탐색 2차 (2026-06-13)
 
-### [H-44] — `add_value_star.py` — `capacity_l["value"]` ZeroDivisionError + KeyError → 가성비 계산 전체 크래시
+### ✅ 해결완료(2026-06-13) [H-44] — `add_value_star.py` — `capacity_l["value"]` ZeroDivisionError + KeyError → 가성비 계산 전체 크래시
 
 - **영역:** 백엔드 — 파이프라인 / 가성비 계산
 - **심각도:** 🔴 High
@@ -3103,7 +3103,7 @@
 
 ---
 
-### [H-45] — `enrich_details.py` — `danawa_pcode` 문자열 포맷팅 SQL 직접 삽입 → SQL Injection 위험
+### ✅ 해결완료(2026-06-13) [H-45] — `enrich_details.py` — `danawa_pcode` 문자열 포맷팅 SQL 직접 삽입 → SQL Injection 위험
 
 - **영역:** 백엔드 — 파이프라인 / 상품 상세 수집
 - **심각도:** 🔴 High
@@ -3287,7 +3287,7 @@
 
 ---
 
-### [M-172] — `openLogModal` — posts INSERT 컬럼명 `content` 사용 — 실제 스키마가 `body`이면 로그 등록 전체 실패
+### [M-172] ✅ 해결완료(2026-06-13) — `openLogModal` — posts INSERT 컬럼명 `content` 사용 — 실제 스키마가 `body`이면 로그 등록 전체 실패
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3325,7 +3325,7 @@
 
 ## R-94 — 프론트/백엔드 종합 버그 탐색 4차 (2026-06-13)
 
-### [H-47] — `fill_whitelist_specs.py` `candidates()` — ACC_PAT 단어 SQL 직접 삽입 → SQL Injection 위험
+### ✅ 해결완료(2026-06-13) [H-47] — `fill_whitelist_specs.py` `candidates()` — ACC_PAT 단어 SQL 직접 삽입 → SQL Injection 위험
 
 - **영역:** 백엔드 — 파이프라인 / 스펙 수집
 - **심각도:** 🔴 High
@@ -3484,7 +3484,7 @@
 
 ---
 
-### [M-180] — `coupang_url` 프로토콜 미검증 — `window.open(url)` XSS 위험 (buyBtn + 세트 구매 버튼)
+### [M-180] ✅ 해결완료(2026-06-13) — `coupang_url` 프로토콜 미검증 — `window.open(url)` XSS 위험 (buyBtn + 세트 구매 버튼)
 
 - **영역:** 프론트엔드 — 상품 상세 / 세트 빌더 (app.js)
 - **심각도:** 🟡 Medium
@@ -3815,7 +3815,7 @@
 
 ## R-98 — 프론트/백엔드 종합 버그 탐색 8차 (2026-06-13)
 
-### [H-52] — `export_site.py` `export()` — canonical_models JOIN 버그로 price_min/max 잘못된 행 반환 가능
+### ✅ 해결완료(2026-06-13) [H-52] — `export_site.py` `export()` — canonical_models JOIN 버그로 price_min/max 잘못된 행 반환 가능
 
 - **영역:** 백엔드 — 파이프라인 / 사이트 빌드
 - **심각도:** 🔴 High
@@ -3826,7 +3826,7 @@
 
 ---
 
-### [H-53] — `crosssource.py` `upsert()` — `overwrite=False` 경로에서도 `valid=0` 구 데이터 무조건 삭제
+### ✅ 해결완료(2026-06-13) [H-53] — `crosssource.py` `upsert()` — `overwrite=False` 경로에서도 `valid=0` 구 데이터 무조건 삭제
 
 - **영역:** 백엔드 — 파이프라인 / 크로스소스
 - **심각도:** 🔴 High
@@ -3837,7 +3837,7 @@
 
 ---
 
-### [H-54] — `crosssource.py` `main()` — 트랜잭션 롤백 없음 → 부분 적재 후 오염된 상태 커밋
+### ✅ 해결완료(2026-06-13) [H-54] — `crosssource.py` `main()` — 트랜잭션 롤백 없음 → 부분 적재 후 오염된 상태 커밋
 
 - **영역:** 백엔드 — 파이프라인 / 크로스소스
 - **심각도:** 🔴 High
@@ -3931,7 +3931,7 @@
 
 ## R-99 — 프론트/백엔드 종합 버그 탐색 9차 (2026-06-13)
 
-### [H-55] — `scan_secrets.py` — `git ls-files` subprocess 실패 시 `CalledProcessError` 미처리 → CI 게이트 비정상 종료
+### ✅ 해결완료(2026-06-13) [H-55] — `scan_secrets.py` — `git ls-files` subprocess 실패 시 `CalledProcessError` 미처리 → CI 게이트 비정상 종료
 
 - **영역:** 백엔드 — 파이프라인 / 시크릿 스캔
 - **심각도:** 🔴 High
@@ -3955,7 +3955,7 @@
 
 ---
 
-### [M-203] — `openLogModal` — ESC 키 닫기 없음 → 접근성 불일치
+### [M-203] ✅ 해결완료(2026-06-13) — `openLogModal` — ESC 키 닫기 없음 → 접근성 불일치
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 로그 작성 (app.js)
 - **심각도:** 🟡 Medium
@@ -4133,7 +4133,7 @@
 
 ## R-101 — 프론트/백엔드 종합 버그 탐색 11차 (2026-06-13)
 
-### [H-57] — `danawa.py` `parse_spec_string()` — `/` 포함 스펙값 잘못 분리 → 핵심 스펙 파싱 손상
+### ✅ 해결완료(2026-06-13) [H-57] — `danawa.py` `parse_spec_string()` — `/` 포함 스펙값 잘못 분리 → 핵심 스펙 파싱 손상
 
 - **영역:** 백엔드 — 파이프라인 / 다나와 크롤링
 - **심각도:** 🔴 High
@@ -4145,7 +4145,7 @@
 
 ---
 
-### [H-58] — `enrich_details.py` `enrich()` — `spec["fn"]` KeyError → `derive` 전용 항목 진입 시 크래시
+### ✅ 해결완료(2026-06-13) [H-58] — `enrich_details.py` `enrich()` — `spec["fn"]` KeyError → `derive` 전용 항목 진입 시 크래시
 
 - **영역:** 백엔드 — 파이프라인 / 상품 상세 수집
 - **심각도:** 🔴 High
@@ -4604,7 +4604,7 @@
 
 ---
 
-### [M-233] — `openLogDetail` — `p.image_url` scheme 검증 없어 `data:` SVG XSS 가능
+### [M-233] ✅ 해결완료(2026-06-13) — `openLogDetail` — `p.image_url` scheme 검증 없어 `data:` SVG XSS 가능
 
 - **영역:** 프론트엔드 — 커뮤니티
 - **심각도:** 🟡 Medium
@@ -4725,7 +4725,7 @@
 
 ---
 
-### [M-238] — `showToast` `isHtml=true` — 미래 호출자 사용자 데이터 직접 전달 시 XSS 위험
+### [M-238] ✅ 해결완료(2026-06-13) — `showToast` `isHtml=true` — 미래 호출자 사용자 데이터 직접 전달 시 XSS 위험
 
 - **영역:** 프론트엔드 — UI
 - **심각도:** 🟡 Medium
@@ -7179,7 +7179,7 @@
 
 ---
 
-### [H-100] — `normalize_models.py` `flag_price_outliers` — 매 실행마다 `valid=1` 전체 초기화로 수동 무효화 덮어쓰기
+### ✅ 해결완료(2026-06-13) [H-100] — `normalize_models.py` `flag_price_outliers` — 매 실행마다 `valid=1` 전체 초기화로 수동 무효화 덮어쓰기
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -8139,7 +8139,7 @@
 
 ---
 
-### [H-110] — `normalize_models.py` `normalize_db` — `canonical_models` DROP+재생성 트랜잭션 없음 → 크래시 시 테이블 소실
+### ✅ 해결완료(2026-06-13) [H-110] — `normalize_models.py` `normalize_db` — `canonical_models` DROP+재생성 트랜잭션 없음 → 크래시 시 테이블 소실
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -10311,5 +10311,305 @@
 - **원인:** [site/app.js](site/app.js) line 1638–1650 — `prices.length === 0`만 스킵, `lo === hi` 퇴화 케이스 미처리.
 - **제안 수정:** `if (lo >= hi) { /* skip */ }` 또는 조건을 `prices.length && lo < hi`로 변경.
 - **파일:** [site/app.js](site/app.js) line 1640 [lane:CORE]
+
+---
+
+### [H-130] — `refresh.py` `ingest`/`ingest_one` — 예외 발생 시 refresh 중단 + 부분 커밋 불일치
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `HT.ingest()` / `M.ingest_one()` 예외(IntegrityError, KeyError 등) 시 전체 refresh 루프 중단, 이전 페이지 커밋은 남고 현재 페이지는 롤백 없어 DB 불일치.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 160–165 — ingest 호출 주위 try/except 없음. line 166의 `con.commit()`은 이미 완료.
+- **제안 수정:** `try/except Exception as e: print(f"! ingest 실패: {e}"); R["skipped"] += 1` 래핑.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 160 [lane:BACKEND]
+
+---
+
+### [M-469] — `refresh.py` `_group_prices_by_cat` — `category_id IS NULL` 첫 그룹 silent 누락
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `category_id`가 NULL인 상품이 존재하면 `cur_cid=None` 첫 그룹이 가드 조건(`cur_cid is not None`)에 의해 건너뛰어 cat_median에서 제외 → 해당 상품 이상치 검사 무력화.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 73–81 — 쿼리에 `WHERE category_id IS NOT NULL` 없음.
+- **제안 수정:** 쿼리에 `AND p.category_id IS NOT NULL` 조건 추가.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 73 [lane:BACKEND]
+
+---
+
+### [M-470] — `refresh.py` `--dry-run` — 페이지별 `con.commit()` 으로 롤백 무력화
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `--dry-run` 실행 시 페이지마다 `con.commit()`이 먼저 실행되어 최종 `con.rollback()`이 no-op → dry-run임에도 DB에 실제 데이터 기록됨.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 166 — `args.dry_run` 여부 무관하게 commit 호출.
+- **제안 수정:** `if not args.dry_run: con.commit()` 조건 추가, 또는 SAVEPOINT 방식으로 단일 트랜잭션 관리.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 166 [lane:BACKEND]
+
+---
+
+### [M-471] — `validate_ranges.py` — implausible flag DELETE가 SAVEPOINT 외부 → 예외 시 플래그 테이블 빈 상태 잔존
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `DELETE FROM data_quality_flags WHERE flag_type='implausible'` 실행 후 INSERT 루프 예외 발생 시 테이블에 implausible 플래그가 0건, 롤백 불가.
+- **원인:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 449–450 — DELETE가 SAVEPOINT 블록(line 426–448) 외부.
+- **제안 수정:** DELETE를 SAVEPOINT 내부로 이동하거나 전체를 단일 트랜잭션으로 묶음.
+- **파일:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 449 [lane:BACKEND]
+
+---
+
+### [M-472] — `detect_price_drops.py` — `in_stock` 미기록으로 재입고 이벤트 항상 미트리거
+
+- **영역:** 백엔드 — 가격 알림
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `refresh.py._insert_price`가 `in_stock` 컬럼을 저장하지 않아 항상 NULL → `MAX(NULL)=NULL`, `prev_stock==0` 조건 항상 False → 재입고 알림 무음 비작동.
+- **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 74, 85–109 — `price_observations.in_stock`이 populate되지 않음.
+- **제안 수정:** `_insert_price`에 `in_stock` 컬럼 저장 추가하거나 재입고 조건을 `if prev_stock is not None and prev_stock == 0`.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 74 [lane:BACKEND]
+
+---
+
+### [M-473] — `detect_price_drops.py` `send()` — `urlopen` 예외 미처리 → traceback 크래시
+
+- **영역:** 백엔드 — 가격 알림
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 네트워크 오류나 HTTP 비-2xx 응답 시 `URLError`/`HTTPException`이 uncaught → CI/cron 환경에서 traceback 출력 후 비정상 종료.
+- **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 124–135 — `urlopen` try/except 없음.
+- **제안 수정:** `try/except (urllib.error.URLError, Exception) as e: sys.exit(f"전송 실패: {e}")` 추가.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 124 [lane:BACKEND]
+
+---
+
+### [L-386] — `promote_catalog.py` — `fa`(floor_area) float 포맷 미지정 → 부동소수점 노이즈 출력
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `fa=3.2500001` 등 SQLite REAL 아티팩트가 그대로 출력 → 운영자 혼란.
+- **원인:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 91 — `f"{fa}㎡"` 포맷 없음.
+- **제안 수정:** `f"{fa:.2f}㎡"` 적용.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 91 [lane:BACKEND]
+
+---
+
+### [L-387] — `promote_catalog.py` `covpct()` — 검증 상품 0건 시 `None%` 출력
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `v_verified_catalog` 뷰가 비어 있으면 SQL `ROUND(.../0...)` → NULL → `covpct()=None` → `"None%"` 출력.
+- **원인:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 74 — NULL 가드 없음.
+- **제안 수정:** `MAX(COUNT(*),1)` 분모 또는 Python `pct or 0` 처리.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 74 [lane:BACKEND]
+
+---
+
+### [L-388] — `validate_ranges.py` — `capacity=0` 데이터 오염 시 모든 텐트 면적 outlier 오탐
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `capacity=0` 상품 존재 시 `val > cap*6` → `val > 0`이 되어 유효한 floor_area 전체가 outlier 처리됨.
+- **원인:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 518 — `AND p.capacity > 0` 가드 없음.
+- **제안 수정:** WHERE 절에 `AND p.capacity > 0` 추가.
+- **파일:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 518 [lane:BACKEND]
+
+---
+
+### [L-389] — `backend/routers/search.py` — 검색 인덱스 미로드 시 0건 응답이 정상과 구분 불가
+
+- **영역:** 백엔드 — API
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `search.json` 없으면 모든 검색 쿼리가 `[]` 반환 — 결과 없음과 인덱스 미로드를 구분할 수 없음.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 15–20 및 [backend/store.py](backend/store.py) — 파일 없으면 경고 없이 빈 리스트 사용.
+- **제안 수정:** `store.load()`에서 경고 로그 추가, 또는 헤더 `X-Index-Missing: true` 반환.
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 15 [lane:BACKEND]
+
+---
+
+### [L-390] — `backend/routers/categories.py` `manifest()` — manifest 비어있어도 HTTP 200 `{}` 반환
+
+- **영역:** 백엔드 — API
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `manifest.json`이 빈 파일이면 `{}` + HTTP 200 반환 → 클라이언트가 정상 응답으로 오인.
+- **원인:** [backend/routers/categories.py](backend/routers/categories.py) line 9–11 — 빈 manifest 체크 없음.
+- **제안 수정:** `if not data_store.manifest: raise HTTPException(503, "manifest 미로드")` 추가.
+- **파일:** [backend/routers/categories.py](backend/routers/categories.py) line 9 [lane:BACKEND]
+
+---
+
+### [M-474] — `openSetModal` — keydown ESC 핸들러 중복 누적 (modal._onKey 가드 없음)
+
+- **영역:** 프론트엔드 — 세트 모달
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `openSetModal` 반복 호출 시 `document`에 keydown 핸들러 누적 → ESC 시 이전 클로저들 모두 실행, stale 핸들러 잔존.
+- **원인:** [site/app.js](site/app.js) line 620 — `modal._onKey` 패턴 미적용. `openReplaceModal`(line 675), `openProduct`(line 2256)은 적용됨.
+- **제안 수정:** 등록 전 `if (modal._onKey) document.removeEventListener('keydown', modal._onKey);` 추가, `modal._onKey = onKey` 저장.
+- **파일:** [site/app.js](site/app.js) line 620 [lane:CORE]
+
+---
+
+### [L-391] — `supabaseClient.js` `_wishWriteChain` `.catch()` — `undefined` 반환으로 호출자 오류 감지 불가
+
+- **영역:** 프론트엔드 — 찜 동기화
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `.catch()` 블록이 예외를 삼키고 암묵적으로 `undefined` 반환 → `await saveRemoteWishlist()` 호출자가 `{ error }` 대신 `undefined` 수신, 오류 감지 불가.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 174 — `.catch(e => { console.error(...) })` 반환값 없음.
+- **제안 수정:** `.catch(e => { console.error('saveRemoteWishlist', e); return { error: e }; })` 로 변경.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 174 [lane:CORE]
+
+---
+
+### [L-392] — `sw.js` 비-navigate 요청 오프라인 폴백 — 빈 본문 504 → `r.json()` 파싱 오류
+
+- **영역:** 프론트엔드 — 서비스 워커
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 캐시 미스 + 네트워크 실패 시 빈 본문 504 응답 → JSON 데이터 파일 요청에서 `r.json()` throw → 카테고리 페이지 로딩 실패, 의미 없는 에러 메시지 표시.
+- **원인:** [site/sw.js](site/sw.js) line 84 — `new Response("", { status: 504 })` 빈 본문 반환. navigate 핸들러(line 62)는 텍스트 응답 사용.
+- **제안 수정:** `new Response('{"error":"오프라인"}', { status: 503, headers: { "Content-Type": "application/json" } })` 또는 콘텐츠 타입별 분기.
+- **파일:** [site/sw.js](site/sw.js) line 84 [lane:CORE]
+
+---
+
+### [H-131] — `star_catalog.py` — `price_observations`에 `price_krw=0` 미필터 → 가격-star 정규화 왜곡
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `price_krw=0` 데이터가 MIN()에 포함되면 min-max 정규화에서 모든 정상 가격이 최악(high) 방향으로 압축 → 전 상품 가격-star 왜곡.
+- **원인:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 61 — `WHERE price_krw > 0` 조건 없음.
+- **제안 수정:** `WHERE price_krw > 0 GROUP BY product_id` 추가.
+- **파일:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 61 [lane:BACKEND]
+
+---
+
+### [M-475] — `ocr_specs.py` — `--verify`/`--fill` 미입력 시 묵시적 verify 모드 실행
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 플래그 없이 실행 시 `mode="verify"`로 기본 설정 → 의도치 않은 전체 verify 실행, conflict 플래그 삽입 가능.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 239 — 인수 유효성 검사 없음.
+- **제안 수정:** `if not args.verify and not args.fill: ap.error("--verify 또는 --fill 중 하나를 지정해주세요.")` 추가.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 239 [lane:BACKEND]
+
+---
+
+### [M-476] — `fill_whitelist_specs.py` — `FN[fn]` KeyError 포함 모든 예외 silent 무시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 미등록 `fn` 키 또는 파싱 실패 시 `except Exception: val = None`으로 무음 처리 → 잘못된 multicat 설정이 프로덕션에서 감지되지 않음.
+- **원인:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 89 — 예외 범위 너무 광범위.
+- **제안 수정:** `KeyError`는 재발생, `ValueError`/`TypeError`만 무음 처리.
+- **파일:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 89 [lane:BACKEND]
+
+---
+
+### [M-477] — `crosssource.py` — 단일 레코드 파싱 예외 시 전체 RECORDS 롤백
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** RECORDS 루프 중 `packed_volume_cm3()` 등 예외 발생 시 전체 이전 레코드 롤백 → 정상 데이터도 손실.
+- **원인:** [pipeline/crosssource.py](pipeline/crosssource.py) line 181–190 — 레코드별 try/except 없음.
+- **제안 수정:** 개별 레코드 처리를 try/except로 감싸고 경고 로그 후 계속 진행.
+- **파일:** [pipeline/crosssource.py](pipeline/crosssource.py) line 181 [lane:BACKEND]
+
+---
+
+### [M-478] — `star_catalog.py` — `DROP TABLE` + `CREATE TABLE` 트랜잭션 미보호 → 크래시 시 테이블 소실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `con.commit()` 실패(디스크 풀 등) 시 `catalog_scores` 테이블이 DROP 후 빈 상태로 남아 복구 불가.
+- **원인:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 72–73 — DDL+DML이 단일 트랜잭션으로 묶이지 않음.
+- **제안 수정:** `DROP` 대신 `DELETE FROM catalog_scores` + `CREATE TABLE IF NOT EXISTS`, 전체를 transaction으로 보호.
+- **파일:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 72 [lane:BACKEND]
+
+---
+
+### [M-479] — `value_metric.py` `compute_value_score` — `metric_keys` 빈 리스트 시 ZeroDivisionError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `config["metrics"]`가 빈 리스트이면 `sum([]) / 0` ZeroDivisionError 크래시.
+- **원인:** [pipeline/value_metric.py](pipeline/value_metric.py) line 177 — `len(qs) == 0` 미가드.
+- **제안 수정:** 함수 초반 `if not metric_keys: return [{"id": m["id"], "value_display": None, "stars": None} for m in models]` 추가.
+- **파일:** [pipeline/value_metric.py](pipeline/value_metric.py) line 177 [lane:BACKEND]
+
+---
+
+### [L-393] — `backend/store.py` `load()` — JSON 파일 오류 시 예외 전파로 FastAPI 시작 실패
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `manifest.json` 등이 손상되거나 없으면 `lifespan()` 예외 전파 → FastAPI 서버 시작 불가. `search.json`은 존재 확인 있으나 manifest는 없음.
+- **원인:** [backend/store.py](backend/store.py) line 13–30 — 파일 로드 try/except 없음, manifest 존재 확인 없음.
+- **제안 수정:** 각 `json.load()` try/except로 개별 감싸기, 실패 시 경고 로그 후 빈값 유지.
+- **파일:** [backend/store.py](backend/store.py) line 13 [lane:BACKEND]
+
+---
+
+### [L-394] — `backend/main.py` `get_real_ip` — 내부 프로브 공유 rate-limit 키 → 모니터링 429 위험
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 로컬루프백 클라이언트 전체가 `"__internal__"` 단일 키로 rate-limit 버킷 공유 → 잦은 health 프로브가 내부 도구 429 유발 가능.
+- **원인:** [backend/main.py](backend/main.py) line 18 — 내부 트래픽 rate-limit 면제 없음.
+- **제안 수정:** `/health` 엔드포인트에 `@limiter.exempt` 적용.
+- **파일:** [backend/main.py](backend/main.py) line 18 [lane:BACKEND]
+
+---
+
+### [L-395] — `backend/routers/search.py` — 검색 인덱스 미정규화로 요청마다 O(n) lower() 호출
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 동시 요청 부하 시 2000+ 항목×필드 `.lower()` 매 요청마다 실행 → 응답 지연.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 15–20 — 로드 시 소문자 정규화 없음.
+- **제안 수정:** `store.py`에서 로드 시 인덱스 소문자 정규화 또는 역인덱스 구축.
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 15 [lane:BACKEND]
+
+---
+
+### [L-396] — `ocr_specs.py` — PIL 미설치 시 이미지별 내부 체크로 불필요한 네트워크 다운로드 낭비
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `Image is None` 체크가 루프 내부에 있어 PIL 없어도 모든 이미지 다운로드 후 버림 → 대역폭 낭비.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 68–69 — 루프 진입 전 PIL 유효성 검사 없음.
+- **제안 수정:** `detail_images()` 또는 `ocr_text()` 첫 줄에 `if Image is None: return []` 추가.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 68 [lane:BACKEND]
+
+---
+
+### [L-397] — `fill_whitelist_specs.py` — `fetchone()[0]` — 상품 삭제 경합 시 TypeError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `candidates()` 조회 후 `pid` 삭제 경합 시 `fetchone()=None` → `[0]` TypeError, 진단 메시지 없음.
+- **원인:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 107 — `fetchone()` None 미처리.
+- **제안 수정:** `row = ..fetchone(); cur_cap = row[0] if row else None` 패턴 적용.
+- **파일:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 107 [lane:BACKEND]
 
 ---
