@@ -44,7 +44,10 @@ def parse_dims_cm(raw):
     """'220x130x107cm', '210×130×105' -> (w,d,h) in cm (inch면 환산)"""
     if not raw:
         return None
-    s = raw.lower().replace("×", "x").replace("*", "x").replace(",", "")  # 천단위 콤마 제거(1,800→1800)
+    # M-362: 한/중 페이지의 곡선 따옴표(U+201C/U+201D)·더블프라임(U+2033)을 ASCII "로 정규화해야
+    #   아래 인치 감지('"' in s)가 동작한다. 미정규화 시 인치가 cm로 오인돼 2.54× 작게 저장됐다.
+    s = raw.lower().replace("“", '"').replace("”", '"').replace("″", '"')
+    s = s.replace("×", "x").replace("*", "x").replace(",", "")  # 천단위 콤마 제거(1,800→1800)
     nums = re.findall(r"\d*\.?\d+", s)
     if len(nums) < 2:
         return None
