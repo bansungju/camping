@@ -553,9 +553,10 @@ async function openSetModal(item) {
     if (typeCap) typeCap.textContent = setTypeCaption(btn.dataset.val);
   });
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
+    modal.querySelectorAll(".sm-set-btn").forEach(b => b.disabled = true);
     const res = addToSet(btn.dataset.sid, item);
     if (res.status === "cap") { close(); openReplaceModal(btn.dataset.sid, item, res.slot); return; }
-    btn.textContent = "✓ 추가됨"; btn.disabled = true;
+    btn.textContent = "✓ 추가됨";
     setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);
   });
   const inp = modal.querySelector(".sm-input");
