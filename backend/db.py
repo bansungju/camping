@@ -33,7 +33,10 @@ async def health_check() -> dict:
         count = await asyncio.wait_for(_check(), timeout=0.5)
         return {"status": "ok", "products": count, "ts": int(time.time())}
     except Exception as e:
-        return {"status": "error", "detail": str(e)}
+        # M-437: 에러를 dict로 반환하면 HTTP 200이 되어 헬스체커가 정상으로 오인한다(DB 손상·누락
+        #   알림 누락). 503으로 발신해 모니터링이 실패를 감지하게 한다.
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail=f"DB 헬스체크 실패: {e}")
 
 
 async def wal_checkpoint_loop():
