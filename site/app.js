@@ -338,7 +338,7 @@ const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}<
 const won = n => { const x = Number(n); return (n == null || !Number.isFinite(x)) ? "—" : x.toLocaleString("ko-KR") + "원"; };  // L-250: NaN/비숫자 가드
 // R2-2(M-180/M-233): https URL만 허용. coupang_url·이미지 src는 localStorage/DB 유래라 javascript:·data: 스킴 주입 가능 → 차단.
 const safeHttps = u => (typeof u === "string" && /^https:\/\//i.test(u)) ? u : "";
-const priceRange = (a, b) => (a == null || a === 0) ? '<span class="nd">가격없음</span>' : won(a);
+const priceRange = (a, b) => (a == null || a === 0) ? ((b == null || b === 0) ? '<span class="nd">가격없음</span>' : won(b)) : won(a);  // M-480: price_min null시 price_max 폴백
 // FE-ITEM-05: 표시가는 price_min(최저가) 기준 — 실제 쿠팡가와 다를 수 있어 가격 옆 '최저가 기준' 캡션을 일관 부착.
 const PRICE_BASIS_CAP = '<span class="price-basis">최저가 기준</span>';
 // 가격 + 캡션. 값 없으면 캡션 없이 nullHtml(곳마다 '가격없음'/'—' 등) 반환(AC4).
@@ -3725,6 +3725,7 @@ async function requestPushSubscription(userId) {
 
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
+  if (!j || !j.keys) { console.warn("_savePushSub: keys 없음"); return; }  // M-466: keys null 가드
   const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
   const { error } = await supabase.from("push_subscriptions").upsert({
     user_id: userId,
