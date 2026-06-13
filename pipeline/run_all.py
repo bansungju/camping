@@ -81,12 +81,15 @@ def promote_all(con):
     for cfg in CATEGORIES.values():
         for sub in cfg["subcats"]:
             core = cfg["core"]
-            capclause = "AND p.capacity IS NOT NULL" if cfg["need_capacity"] else ""
+            # H-61: outer UPDATE는 `products`(p alias 없음) 컨텍스트라 capclause에 `p.`를 쓰면 안 된다.
+            #       기존엔 `p.capacity`로 정의 후 `.replace('p.','')`로 떼는 fragile 설계였다 — 미래에
+            #       capclause에 다른 `p.` 참조가 생기면 의도치 않게 함께 치환된다. 처음부터 alias 없이 정의.
+            capclause = "AND capacity IS NOT NULL" if cfg["need_capacity"] else ""
             placeholders = ",".join("?" * len(core))
             con.execute(f"""
                 UPDATE products SET curation_status='verified'
                 WHERE curation_status='pending'   -- rejected(노네임)는 절대 승격 안 함
-                  AND category_id=(SELECT id FROM categories WHERE name_ko=?) {capclause.replace('p.','')}
+                  AND category_id=(SELECT id FROM categories WHERE name_ko=?) {capclause}
                   -- 모델 불명(카테고리단어#pcode 폴백) 제외: 모델 식별 불가 → 카탈로그 부적격
                   AND canonical_model NOT LIKE ('%#' || danawa_pcode)
                   AND EXISTS(SELECT 1 FROM price_observations po WHERE po.product_id=products.id AND po.valid=1)  -- 유효가격 필수(이상치 격리분 제외)
@@ -149,7 +152,13 @@ def main():
         for name, cfg in CATEGORIES.items():
             if args.only and name != args.only:
                 continue
-            q = ",".join(cfg["queries"])
+            # H-62: multicat 기반 카테고리(의자/랜턴/아이스박스 등)는 'queries' 키가 없다.
+            #       cfg["queries"] 직접 접근 시 KeyError로 --harvest 전체가 죽으므로 get+스킵.
+            queries = cfg.get("queries")
+            if not queries:
+                print(f"[수확] {name} — queries 미정의 → 스킵")
+                continue
+            q = ",".join(queries)
             if cfg["harvester"] == "harvest_tents.py":
                 print(f"[수확] {name} (텐트 전용)")
                 sh("harvest_tents.py", "--append", "--maxpages", "3", "--queries", q)

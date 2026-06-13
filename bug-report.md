@@ -4337,7 +4337,8 @@
 
 ## R-103 — 2026-06-13
 
-### [H-61] — `run_all.py` `promote_all()` — `capclause` alias fragile string replace
+### [H-61] ✅ 해결완료(2026-06-13, BACKEND) — `run_all.py` `promote_all()` — `capclause` alias fragile string replace
+> `capclause = "AND capacity IS NOT NULL"`(처음부터 alias 없이) + `{capclause}`(`.replace('p.','')` 제거). DB복사본 promote_all 실행 SQL 에러 없음(verified 2326→2480).
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🔴 High
@@ -4349,7 +4350,8 @@
 
 ---
 
-### [H-62] — `run_all.py` `main()` — `--harvest` 시 `queries` 키 없는 카테고리 KeyError
+### [H-62] ✅ 해결완료(2026-06-13, BACKEND) — `run_all.py` `main()` — `--harvest` 시 `queries` 키 없는 카테고리 KeyError
+> `cfg.get("queries")` + 빈 값이면 스킵. 검증: queries 없는 11개 카테고리(의자·랜턴·아이스박스·버너·타프·테이블·야전침대·코펠·웨건·화로대·파워뱅크) 확인.
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🔴 High
@@ -7499,7 +7501,7 @@
 
 ---
 
-### (xcode) [H-104] — `.pmodal` safe area 미반영 — 상품 상세 모달 닫기·찜 버튼 iOS 상태바에 가려져 탭 불가
+### ✅(xcode) [H-104] — `.pmodal` safe area 미반영 — 상품 상세 모달 닫기·찜 버튼 iOS 상태바에 가려져 탭 불가
 
 - **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
 - **심각도:** 🔴 High
@@ -7511,7 +7513,7 @@
 
 ---
 
-### (xcode) [M-367] — `.pmodal` safe area 미반영 — 상품 상세 모달 이미지 상단 상태바에 가려짐
+### ✅(xcode) [M-367] — `.pmodal` safe area 미반영 — 상품 상세 모달 이미지 상단 상태바에 가려짐
 
 - **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
 - **심각도:** 🟡 Medium
@@ -7523,7 +7525,7 @@
 
 ---
 
-### (xcode) [M-368] — `.pmbox` 내부 스크롤 불가 — 상품 상세 모달 하단 구매·세트 버튼 접근 불가
+### ✅(xcode) [M-368] — `.pmbox` 내부 스크롤 불가 — 상품 상세 모달 하단 구매·세트 버튼 접근 불가
 
 - **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
 - **심각도:** 🟡 Medium
@@ -7535,7 +7537,7 @@
 
 ---
 
-### (xcode) [L-284] — `최소무게 (g)` 레이블인데 값은 `kg` 단위로 표시 — 단위 불일치
+### ✅(xcode) [L-284] — `최소무게 (g)` 레이블인데 값은 `kg` 단위로 표시 — 단위 불일치
 
 - **영역:** 프론트엔드 — 상품 상세 모달
 - **심각도:** 🟢 Low
@@ -7547,7 +7549,7 @@
 
 ---
 
-### (xcode) [L-285] — 카테고리 탭 우측 페이드 그라디언트로 마지막 탭 레이블이 잘린 것처럼 보임
+### ✅(xcode) [L-285] — 카테고리 탭 우측 페이드 그라디언트로 마지막 탭 레이블이 잘린 것처럼 보임
 
 - **영역:** 프론트엔드 — 카테고리 네비게이션 탭
 - **심각도:** 🟢 Low
@@ -8036,5 +8038,53 @@
 - **원인:** [site/app.js](site/app.js) line 2868 — `{ data }` 만 구조분해, `error` 필드 폐기.
 - **제안 수정:** `const { data, error } = ...; if (error) throw error;`
 - **파일:** [site/app.js](site/app.js) line 2868 [lane:CORE]
+
+---
+
+### [M-383] — `refresh.py` `_group_prices_by_cat` — category_id 비연속 정렬 시 동일 카테고리 가격 분할 집계
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** rowid 정렬 불안정으로 동일 category_id 행이 비인접 시 부분 집합만으로 중앙값 계산 → 이상치 판정 오류.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 78 — 스트리밍 방식으로 그룹 변경 감지, 비연속 행 처리 불가.
+- **제안 수정:** SQL `GROUP BY category_id` 집계 또는 dict 누산기로 변경.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 78 [lane:BACKEND]
+
+---
+
+### [M-384] — `refresh.py` `main` — `datetime('now')` UTC vs `observed_at` 로컬타임 불일치로 staleness 판정 오류
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** KST 환경에서 `age_days`가 9시간 과소 계산 → 신선하지 않은 상품이 재수집 대상에서 누락.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 127 — `datetime('now')` (UTC)와 Python `datetime.now()` (로컬) 혼용.
+- **제안 수정:** `SELECT datetime('now','localtime')` 또는 `datetime.utcnow()` 일관 사용.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 127 [lane:BACKEND]
+
+---
+
+### [M-385] — `detect_price_drops.py` `detect` — `in_stock` 컬럼 미기록으로 재입고 알림 불가
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `refresh.py`의 `_insert_price`가 `in_stock` 미설정 → 항상 NULL/0 → `prev_stock==0 and cur_stock==1` 불가 → 재입고 알림 전혀 발송 안 됨.
+- **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 97–98 — in_stock 의존 로직인데 [pipeline/refresh.py](pipeline/refresh.py) line 223 에서 in_stock 컬럼 INSERT 없음.
+- **제안 수정:** `_insert_price`에 `in_stock` 컬럼 추가 또는 재입고 분기 비활성화.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 97 [lane:BACKEND]
+
+---
+
+### [L-304] — `affiliate_links.py` `sample` — `GROUP BY b.name_ko` 비집계 컬럼 비결정적 선택
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 같은 브랜드 내 어느 모델이 샘플로 선택될지 SQLite 스캔 순서에 따라 비결정적.
+- **원인:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63–64 — `GROUP BY b.name_ko`에서 `p.canonical_model` 비집계 컬럼 선택.
+- **제안 수정:** `MIN(p.canonical_model)` 또는 `ORDER BY RANDOM()` 서브쿼리 사용.
+- **파일:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63 [lane:BACKEND]
 
 ---
