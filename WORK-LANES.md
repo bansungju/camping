@@ -59,8 +59,8 @@
 | **B17** | `promote_catalog.py` + `run_all.py` | H-98·H-109·H-112 | 기준 일관성(텐트 CORE·None float·DB 전역) | ✅ 2026-06-13 (H-112 레지스트리 import·H-109 DB기본값 / H-98=M-210 기해결) |
 | **B18** | `export_site.py` | H-117·H-122 | 정확성(뱃지 NULL·ORDER BY 비결정성) | ✅ 2026-06-13 (H-117 NULL→1 정규화·H-122 타이브레이커 추가) |
 | **B19** | `refresh.py` | H-103·H-104 | 이상치 가드(pid2cat 반전·strptime) | ✅ 2026-06-13 (H-104 fromisoformat / H-103 현재코드 올바름·실증) |
-| **B20** | `add_value_star.py` | H-106 | 견고성(파일핸들·JSON 절단) | ⬜ |
-| **B21** | `add_manual_models.py` | H-102 | 크래시(빈 prices min/max) | ⬜ |
+| **B20** | `add_value_star.py` | H-106 | 견고성(파일핸들·JSON 절단) | ✅ 2026-06-13 (atomic write+with, M-376동반) |
+| **B21** | `add_manual_models.py` | H-102 | 크래시(빈 prices min/max) | ✅ 2026-06-13 (빈 prices 조기 ValueError) |
 | **B22** | `pipeline.py` | H-123 | 동시성(gf_code COUNT 중복) | ⬜ |
 | **B23** | `backend/db.py` | H-125 | 동시성(WAL read-write 손상) | ⬜ |
 | **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ⬜ |
@@ -92,8 +92,8 @@
 | **C12** | `promote_catalog.py` | M-210·M-277·M-311 수정 / M-335 이미 원자적(중간 commit 없음) | ✅ 2026-06-13 |
 | **C13** | `normalize_models.py` | M-249·M-263·M-264 | ✅ 2026-06-13 |
 | **C14** | `affiliate_links.py` | M-287·L-188(naver_fallback .get) / M-315(channel= 비추적 명시) | ✅ 2026-06-13 |
-| **C15** | `star_catalog.py` | M-169·M-260·L-235 | ⬜ |
-| **C16** | `brand_filter.py` | M-178·M-333·L-232 | ⬜ |
+| **C15** | `star_catalog.py` | M-169·M-260 수정(valid=1+양수가드) / L-235 by-design(종합점수 저장됨·지표별은 ratings) | ✅ 2026-06-13 |
+| **C16** | `brand_filter.py` | M-333(플레이스홀더 가드)·L-232(rowcount) 수정 / M-178 비이슈(sub가 카테고리 스코프) | ✅ 2026-06-13 |
 | **C17** | `multicat.py` | M-183·M-256·M-290 | ⬜ |
 | **C18** | `add_manual_models.py` | M-197·M-225·M-280 | ⬜ |
 | **C19** | `enrich_details.py` | M-215·M-250·M-322 | ⬜ |

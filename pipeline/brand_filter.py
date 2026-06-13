@@ -88,18 +88,25 @@ def main():
     print(f"\n  제외될 브랜드 예시: {', '.join(n+'('+str(c)+')' for n,c in drop_b[:20])}")
 
     if args.apply:
+        # M-333: NOT IN (?,?,…)는 SQLite 변수 한도(구버전 999)에 걸린다. BRANDS가 커지면 임시테이블로
+        #   전환해야 하므로 한도 근처에서 명시적으로 막는다(현재 215개라 여유, 미래 회귀 가드).
+        if len(BRANDS) >= 990:
+            raise SystemExit(f"BRANDS {len(BRANDS)}개 — NOT IN 플레이스홀더 한도 초과 위험. 임시테이블 방식 필요.")
         filter_args = [f"%{args.cat}%"] + list(BRANDS)
         not_in = ','.join('?'*len(BRANDS))
         sub = f"""SELECT p.id FROM products p JOIN brands b ON b.id=p.brand_id
               JOIN categories c ON c.id=p.category_id
               WHERE c.name_ko LIKE ? AND b.name_ko NOT IN ({not_in})"""
-        con.execute(f"UPDATE products SET curation_status='rejected' WHERE id IN ({sub})", filter_args)
+        # L-232: 실제 영향 행수(rowcount)를 쓴다 — 사전 SELECT 카운트(drop_n)는 이미 rejected인 행을
+        #   포함해 과대 표시될 수 있다. (price_observations는 sub가 c.name_ko LIKE로 카테고리 스코프 — M-178 비이슈)
+        rejected_n = con.execute(
+            f"UPDATE products SET curation_status='rejected' WHERE id IN ({sub})", filter_args).rowcount
         # 거부된 제품의 가격 관측치도 무효화 — 중앙값/이상치 계산 오염 방지
         invalidated = con.execute(
             f"UPDATE price_observations SET valid=0 WHERE valid=1 AND product_id IN ({sub})",
             filter_args).rowcount
         con.commit()
-        print(f"\n→ {drop_n}개 제품 rejected 처리 완료 (가격관측치 {invalidated}건 무효화)")
+        print(f"\n→ {rejected_n}개 제품 rejected 처리 완료 (가격관측치 {invalidated}건 무효화)")
     else:
         print("\n(미리보기. 실제 적용은 --apply)")
     con.close()
