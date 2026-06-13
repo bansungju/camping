@@ -211,7 +211,9 @@ def run(con, mode):
 
             if dn:  # 다나와값 존재 → verify
                 dv, dsrc = dn
-                diff = abs(val - dv) / dv if dv else 1
+                # H-116: dv가 0(예: comfort_temp=0°C)일 때 `if dv`는 falsy라 무조건 diff=1(불일치)로
+                #   매 실행 conflict 플래그가 쌓인다. dv==0이면 OCR값도 0일 때만 일치(diff=0)로 본다.
+                diff = abs(val - dv) / dv if dv != 0 else (0 if val == 0 else 1)
                 status = "일치" if diff <= 0.15 else "불일치"
                 print(f"  [verify] {key}: 기존={dv} OCR={val} 차이={diff*100:.0f}% → {status}")
                 if status == "불일치" and mode in ("verify", "fill"):
