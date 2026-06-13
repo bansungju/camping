@@ -394,10 +394,9 @@ function showSetConfirm(setId) {
   const startTimer = () => { clearTimeout(card._tid); card._tid = setTimeout(dismiss, DUR); };
 
   card.querySelector(".sac-close").onclick = dismiss;
-  card.querySelector(".sac-view").onclick = () => {     // AC2: 한 번의 액션으로 방금 담은 꾸러미 내용 열람
+  card.querySelector(".sac-view").onclick = () => {
     dismiss();
-    const idx = getSets().findIndex(x => x.id === setId);
-    if (idx >= 0) openSetDetail(idx);
+    location.href = "/account.html#sets";
   };
   // 사용자가 카드 위에 머무는 동안엔 자동소멸 일시정지(버튼 누르려는 중 사라짐 방지). 무조작 시엔 그대로 소멸.
   card.onpointerenter = () => clearTimeout(card._tid);
