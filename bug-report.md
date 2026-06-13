@@ -3583,7 +3583,7 @@
 
 ## R-96 — 프론트/백엔드 종합 버그 탐색 6차 (2026-06-13)
 
-### [M-186] — `style.css` — `#spec-tip-bubble` z-index:9999가 `.pmodal`(z-index:50) 위에 떠 모달 오버레이 관통
+### [M-186] ✅ 해결완료(2026-06-13) — `style.css` — `#spec-tip-bubble` z-index:9999가 `.pmodal`(z-index:50) 위에 떠 모달 오버레이 관통
 
 - **영역:** 프론트엔드 — CSS / 모달
 - **심각도:** 🟡 Medium
@@ -3595,7 +3595,7 @@
 
 ---
 
-### [M-187] — `style.css` — 포커스 시 `outline:none`만 지정, 고대비 모드에서 포커스 표시 완전 소실 (WCAG 2.4.7 위반)
+### [M-187] ✅ 해결완료(2026-06-13) — `style.css` — 포커스 시 `outline:none`만 지정, 고대비 모드에서 포커스 표시 완전 소실 (WCAG 2.4.7 위반)
 
 - **영역:** 프론트엔드 — CSS / 접근성
 - **심각도:** 🟡 Medium
@@ -3631,7 +3631,7 @@
 
 ---
 
-### [M-190] — `loadRemoteGearSets` — 에러 시 `console.error` 없이 `null` 반환 → 에러 원인 추적 불가
+### [M-190] ✅ 해결완료(2026-06-13) — `loadRemoteGearSets` — 에러 시 `console.error` 없이 `null` 반환 → 에러 원인 추적 불가
 
 - **영역:** 프론트엔드 — 인증/세트 (supabaseClient.js)
 - **심각도:** 🟡 Medium
@@ -4157,7 +4157,7 @@
 
 ---
 
-### [M-212] — `syncGearSetsOnLogin` — `toUpsert` 필터 복사본에 `remoteId` mutate → 원본 미반영, 매 로그인마다 세트 중복 upsert
+### [M-212] ✅ 분석완료(무효, 정상동작) — `syncGearSetsOnLogin` — `toUpsert` 필터 복사본에 `remoteId` mutate → 원본 미반영, 매 로그인마다 세트 중복 upsert
 
 - **영역:** 프론트엔드 — account.html 세트 동기화
 - **심각도:** 🟡 Medium
@@ -4169,7 +4169,7 @@
 
 ---
 
-### [M-213] — `wish-clear-all` 핸들러 — `setWish([])` 후 `window.onWishChange` 트리거 미보장 → Supabase 원격 찜 미삭제
+### [M-213] ✅ 해결완료(2026-06-13) — `wish-clear-all` 핸들러 — `setWish([])` 후 `window.onWishChange` 트리거 미보장 → Supabase 원격 찜 미삭제
 
 - **영역:** 프론트엔드 — account.html 찜 초기화
 - **심각도:** 🟡 Medium
@@ -4592,7 +4592,7 @@
 
 ---
 
-### [M-232] — `fmtVal` — 스펙 값이 string 타입일 때 `.toFixed()` TypeError 크래시
+### [M-232] ✅ 해결완료(2026-06-13) — `fmtVal` — 스펙 값이 string 타입일 때 `.toFixed()` TypeError 크래시
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -5827,7 +5827,7 @@
 
 ---
 
-### [M-292] — `fmtVal` — 비숫자 값 입력 시 `v.toFixed is not a function` TypeError 크래시
+### [M-292] ✅ 해결완료(2026-06-13) — `fmtVal` — 비숫자 값 입력 시 `v.toFixed is not a function` TypeError 크래시
 
 - **영역:** 프론트엔드 — 데이터 포맷팅
 - **심각도:** 🟡 Medium
@@ -7479,7 +7479,7 @@
 
 ---
 
-### [M-366] — `multicat.py` `ingest_one` — `danawa_pcode` 중복 시 동명 타 브랜드 제품의 pid 오취득
+### ✅ 해결완료(2026-06-13) [M-366] — `multicat.py` `ingest_one` — `danawa_pcode` 중복 시 동명 타 브랜드 제품의 pid 오취득
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8103,7 +8103,7 @@
 
 ---
 
-### [M-386] — `setupSearchPage` `openFromSearch` — 카테고리 JSON 캐시버스팅 `?v=` 미적용
+### [M-386] ✅ 아카이브(빌드단계 필요, 우선순위 낮음) — `setupSearchPage` `openFromSearch` — 카테고리 JSON 캐시버스팅 `?v=` 미적용
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟡 Medium
@@ -8326,7 +8326,7 @@
 
 ---
 
-### [M-392] — `promote_catalog.py` `main` — `UPDATE products SET curation_status='pending'` WHERE 절 없어 트랜잭션 미보호
+### ✅ 해결완료(2026-06-13) [M-392] — `promote_catalog.py` `main` — `UPDATE products SET curation_status='pending'` WHERE 절 없어 트랜잭션 미보호
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8610,7 +8610,7 @@
 
 ---
 
-### [M-401] — `pipeline.py` `build_db` — `executescript` 인자 `open()` 파일 핸들 누출
+### ✅ 해결완료(2026-06-13) [M-401] — `pipeline.py` `build_db` — `executescript` 인자 `open()` 파일 핸들 누출
 
 - **영역:** 백엔드 — DB 초기화
 - **심각도:** 🟡 Medium
@@ -8646,7 +8646,7 @@
 
 ---
 
-### [M-404] — account.html 찜 카드 — 동시 클릭 시 `STATE.slug`/`STATE.data` 경합으로 잘못된 스펙 표시
+### [M-404] ✅ 해결완료(2026-06-13) — account.html 찜 카드 — 동시 클릭 시 `STATE.slug`/`STATE.data` 경합으로 잘못된 스펙 표시
 
 - **영역:** 프론트엔드 — 계정/찜
 - **심각도:** 🟡 Medium
@@ -8778,7 +8778,7 @@
 
 ---
 
-### [M-408] — account.html 찜 카드 fetch — `r.ok` 체크 없어 오류 페이지 JSON 파싱 실패 무음 처리
+### [M-408] ✅ 해결완료(M-357 포함, 2026-06-13) — account.html 찜 카드 fetch — `r.ok` 체크 없어 오류 페이지 JSON 파싱 실패 무음 처리
 
 - **영역:** 프론트엔드 — 계정/찜
 - **심각도:** 🟡 Medium
@@ -9258,7 +9258,7 @@
 
 ---
 
-### [M-423] — `multicat.py` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 제품 중복 스킵
+### ✅ 해결완료(2026-06-13) [M-423] — `multicat.py` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 제품 중복 스킵
 
 - **영역:** 백엔드 — 멀티 카테고리
 - **심각도:** 🟡 Medium
@@ -9642,7 +9642,7 @@
 
 ---
 
-### [M-436] — `renderActiveFilters` — `EXTRA_SPECS` 슬라이더 활성 필터 칩에 단위 미표시
+### [M-436] ✅ 분석완료(M-336 포함, 기구현) — `renderActiveFilters` — `EXTRA_SPECS` 슬라이더 활성 필터 칩에 단위 미표시
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -10038,7 +10038,7 @@
 
 ---
 
-### [M-454] — `syncWishlistOnLogin` — null 반환 후 `onWishChange` 잔존 → 다음 토글 시 원격 찜 목록 훼손
+### [M-454] ✅ 해결완료(2026-06-13) — `syncWishlistOnLogin` — null 반환 후 `onWishChange` 잔존 → 다음 토글 시 원격 찜 목록 훼손
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟡 Medium
@@ -10062,7 +10062,7 @@
 
 ---
 
-### [M-456] — `openProduct` — 재진입 시 keydown 리스너 중복 등록
+### [M-456] ✅ 분석완료(M-181 포함, 기구현) — `openProduct` — 재진입 시 keydown 리스너 중복 등록
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -10266,7 +10266,7 @@
 
 ---
 
-### [M-466] — `_savePushSub` — `j.keys` null 접근 → TypeError 미처리
+### [M-466] ✅ 해결완료(2026-06-13) — `_savePushSub` — `j.keys` null 접근 → TypeError 미처리
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟡 Medium
@@ -10278,7 +10278,7 @@
 
 ---
 
-### [M-467] — `saveSets` — localStorage QuotaExceededError 미처리 → 세트 조작 시 크래시
+### [M-467] ✅ 분석완료(H-115 기구현) — `saveSets` — localStorage QuotaExceededError 미처리 → 세트 조작 시 크래시
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟡 Medium
@@ -10290,7 +10290,7 @@
 
 ---
 
-### [M-468] — `account.html` `localSets.set` — localStorage QuotaExceededError 미처리
+### [M-468] ✅ 해결완료(2026-06-13) — `account.html` `localSets.set` — localStorage QuotaExceededError 미처리
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -10638,7 +10638,7 @@
 
 ---
 
-### [M-480] — `priceRange` — `price_min=null`이지만 `price_max` 유효 시 "가격없음" 오표시
+### [M-480] ✅ 해결완료(2026-06-13) — `priceRange` — `price_min=null`이지만 `price_max` 유효 시 "가격없음" 오표시
 
 - **영역:** 프론트엔드 — 가격 표시
 - **심각도:** 🟡 Medium
@@ -10662,7 +10662,7 @@
 
 ---
 
-### [M-482] — `account.html` `initAuth` + `app.js` `_setupGlobalAuth` — 이중 `onAuthStateChange` 구독으로 이중 동기화
+### [M-482] ✅ 해결완료(2026-06-13) — `account.html` `initAuth` + `app.js` `_setupGlobalAuth` — 이중 `onAuthStateChange` 구독으로 이중 동기화
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟡 Medium
@@ -10962,7 +10962,7 @@
 
 ---
 
-### [M-494] — `renderActiveFilters` — EXTRA_SPECS 범위 필터 unit `STATE.unit`에 없어 단위 빈 문자열
+### [M-494] ✅ 분석완료(M-336 포함, 기구현) — `renderActiveFilters` — EXTRA_SPECS 범위 필터 unit `STATE.unit`에 없어 단위 빈 문자열
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -11250,7 +11250,7 @@
 
 ---
 
-### [M-507] — `syncWishlistOnLogin` 재진입 시 `window.onWishChange` 비행 중 덮어씀
+### [M-507] ✅ 분석완료(M-482 포함, 기해결) — `syncWishlistOnLogin` 재진입 시 `window.onWishChange` 비행 중 덮어씀
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟡 Medium
@@ -12243,5 +12243,173 @@
 - **원인:** [site/app.js](site/app.js) line 163 — `onKey`에서 Escape만 처리, Tab trap 없음.
 - **제안 수정:** `openSetModal`의 Tab trap 패턴(line 611–620)을 authGate onKey 핸들러에도 동일 적용.
 - **파일:** [site/app.js](site/app.js) line 163 [lane:CORE]
+
+---
+
+### [M-545] — `ocr_specs.py` — `--verify`/`--fill` 미지정 시 `mode="verify"` 기본 동작, `--verify` 플래그는 dead code
+
+- **영역:** 백엔드 — 파이프라인/OCR
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `--verify`를 주거나 주지 않거나 동일하게 verify 모드 실행. 사용자가 fill 의도로 플래그 없이 실행해도 verify만 동작.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 251 — `mode = "fill" if args.fill else "verify"` — `args.verify`를 분기에 반영하지 않음. `--verify` 플래그는 argparse에만 존재하고 실제 분기 없음.
+- **제안 수정:** `add_mutually_exclusive_group` 사용하거나 양쪽 다 미지정 시 에러 출력. `--verify`가 dead 파라미터임을 docstring에 명시.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 248 [lane:BACKEND]
+
+---
+
+### [M-546] — `ocr_specs.py` `detail_images()` — PIL 미설치 시 `Image is None` 체크가 루프 안에 있어 불필요한 전체 이미지 다운로드
+
+- **영역:** 백엔드 — 파이프라인/OCR
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** PIL 미설치 환경에서 모든 이미지 URL을 HTTP 다운로드 후 전부 skip하여 불필요한 네트워크 비용 발생.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 51, 69 — `Image is None` 체크가 데이터 다운로드 루프 안에 위치.
+- **제안 수정:** `detail_images()` 함수 첫 줄에 `if Image is None: return []` 조기 반환 추가.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 51 [lane:BACKEND]
+
+---
+
+### [M-547] — `normalize_models.py` `flag_price_outliers` — C 패스 중앙값이 B 패스와 다른 계산식 사용 → 동일 데이터에 격리 결과 불일치
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** B 패스는 `statistics.median()`, C 패스(라인 161)는 `prices[(len(prices)-1)//2]` 하위 중앙값 사용. 짝수 개 가격에서 두 시스템이 다른 기준점으로 격리 결과가 달라짐.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 161 — `med = prices[(len(prices) - 1) // 2]`.
+- **제안 수정:** `med = statistics.median(prices)` 로 B 패스와 동일하게 통일.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 161 [lane:BACKEND]
+
+---
+
+### [M-548] — `add_manual_models.py` — `canonical_models` DELETE+INSERT 후 `normalize_db()` 실행 시 수동 값 덮어씌워짐
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `add_manual_models.py`가 canonical_models를 직접 수정해도 이후 `normalize_db()` 실행 시 `DROP TABLE` → 재생성으로 수동 데이터 소실 가능.
+- **원인:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 77–82 vs [pipeline/normalize_models.py](pipeline/normalize_models.py) line 228–256 — 두 경로가 canonical_models를 각자 관리, 실행 순서에 따라 결과 달라짐.
+- **제안 수정:** 수동 canonical을 별도 플래그(`manual=1`)로 보호하거나 `add_manual_models` 실행 순서를 `run_all.py`에 명문화.
+- **파일:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 77 [lane:BACKEND]
+
+---
+
+### [M-549] — `account.html` — `decodeURIComponent(errDetail)` 예외 미처리 → URI malformed 시 페이지 로딩 중단
+
+- **영역:** 프론트엔드 — 계정/인증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `?err=` 파라미터가 잘못 인코딩된 경우 `URIError: URI malformed`로 스크립트 중단 → `initAuth` 미실행 → 페이지 로딩 중 상태로 멈춤.
+- **원인:** [site/account.html](site/account.html) line 593 — `try/catch` 없이 `decodeURIComponent(errDetail)` 직접 호출.
+- **제안 수정:** `try { decodeURIComponent(errDetail) } catch(_) { errDetail }` 래핑 또는 `new URL(location.href).searchParams.get('err')` 사용.
+- **파일:** [site/account.html](site/account.html) line 593 [lane:CORE]
+
+---
+
+### [M-550] — `diagnoseEmpty` — `STATE.brands` 값이 `esc()` 없이 label 문자열에 삽입 → XSS 잠재 경로
+
+- **영역:** 프론트엔드 — 필터/URL 직렬화 (보안)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** URL `?brands=<img src=x onerror=alert(1)>` 형태로 접근 시 `STATE.brands` 값이 `esc()` 없이 brands label로 구성. 최종 출력이 `esc(sug[0][0])`를 거치긴 하나 다른 경로로 raw 값이 `innerHTML`에 흘러들 가능성.
+- **원인:** [site/app.js](site/app.js) line 2096 — `[...STATE.brands].join("·")` 를 `esc()` 없이 label 문자열 구성.
+- **제안 수정:** `esc([...STATE.brands].join("·"))` 로 명시 처리.
+- **파일:** [site/app.js](site/app.js) line 2096 [lane:CORE]
+
+---
+
+### [M-551] — `openReviewDetail` ESC와 `_vsEsc` — capture 단계 불일치로 두 모달 동시 닫힘
+
+- **영역:** 프론트엔드 — 리뷰/공유세트 모달 ESC 처리
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 리뷰 상세 모달(capture 단계)과 공유 세트 모달(non-capture)이 동시 열린 상태에서 ESC 시 둘 다 닫힘.
+- **원인:** [site/app.js](site/app.js) line 4316 — `_vsEsc`가 non-capture로 등록. 리뷰 모달의 `stopImmediatePropagation`(캡처 단계)을 우회.
+- **제안 수정:** `_vsEsc`도 `{ capture: true }` 로 등록하거나 ESC 우선순위를 zIndex 기준으로 통일.
+- **파일:** [site/app.js](site/app.js) line 4316 [lane:CORE]
+
+---
+
+### [M-552] — `getJSON` — JSON 파일에 버전 쿼리 없이 `fetch()` → 배포 후 stale 데이터 노출
+
+- **영역:** 프론트엔드 — 데이터 로딩
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `data/${slug}.json` URL에 버전 쿼리가 없어 브라우저 강 캐시 시 배포 후에도 구버전 데이터 노출. `app.js`는 `?v=` 캐시버스팅되지만 JSON 파일은 미적용.
+- **원인:** [site/app.js](site/app.js) line 389 — `fetch(p)` — `cache` 옵션 또는 버전 쿼리 없음.
+- **제안 수정:** `stamp_version.py`에서 JSON URL에 빌드타임 해시 주입하거나 `fetch(p, { cache: 'no-cache' })` 설정.
+- **파일:** [site/app.js](site/app.js) line 389 [lane:CORE]
+
+---
+
+### [L-456] — `gate_tests.py` — `kind != "feature"` 시 T.2a 결과 항목 누락 → 묵시적 pass 처리
+
+- **영역:** 백엔드 — dev-harness
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** refactor/fix/chore 등에서 T.2a가 `gate_results`에 없어 `_auto_status()`가 묵시적으로 "pass" 반환.
+- **원인:** [dev-harness/devagent/nodes/gate_tests.py](dev-harness/devagent/nodes/gate_tests.py) line 26 — `if kind == "feature":` 블록에서만 T.2a 추가, else 브랜치 없음.
+- **제안 수정:** REGISTRY에 T.2a를 feature-only applicable로 명시하거나, non-feature 시 `status: "skip"` 명시 항목 추가.
+- **파일:** [dev-harness/devagent/nodes/gate_tests.py](dev-harness/devagent/nodes/gate_tests.py) line 26 [lane:BACKEND]
+
+---
+
+### [L-457] — `fill_whitelist_specs.py` — `canonical_model IS NULL` 행에서 `NOT LIKE` 필터가 NULL→UNKNOWN 반환으로 액세서리 미필터링
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `canonical_model=NULL`인 pending 제품의 `NOT LIKE`가 UNKNOWN이 되어 액세서리가 후보에 포함됨 → 불필요한 크롤링 발생.
+- **원인:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 118 — `p.canonical_model NOT LIKE ?` — NULL 처리 없음.
+- **제안 수정:** `COALESCE(p.canonical_model, p.model_name) NOT LIKE ?` 로 변경.
+- **파일:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 118 [lane:BACKEND]
+
+---
+
+### [L-458] — `verify_internal.py` `check_price_outlier` — canonical 대표 제품만 검사, 변형 멤버 개별 가격 이상치 미탐지
+
+- **영역:** 백엔드 — 파이프라인/데이터 품질
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** canonical 그룹의 비-대표 제품 변형 멤버가 이상 가격을 가져도 탐지되지 않음.
+- **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 28–36 — `FROM canonical_models cm JOIN products p ON p.id = cm.rep_product_id` 대표 제품 1개만 검사.
+- **제안 수정:** 개별 관측 이상치는 `flag_price_outliers`에 위임한다고 명시. 또는 변형 멤버도 포함하는 쿼리로 확장.
+- **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 28 [lane:BACKEND]
+
+---
+
+### [L-459] — `renderThumbs` — 삭제 버튼 더블탭 시 stale `data-i`로 두 번 `splice` → 다른 사진 삭제
+
+- **영역:** 프론트엔드 — 리뷰 폼
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 삭제 버튼 빠른 더블탭 시 재렌더 전에 같은 인덱스로 두 번 `splice` 실행되어 다른 사진이 삭제됨.
+- **원인:** [site/app.js](site/app.js) line 2475–2476 — 더블탭 방어(버튼 비활성화, debounce) 없음.
+- **제안 수정:** 클릭 직후 `btn.disabled = true` 설정.
+- **파일:** [site/app.js](site/app.js) line 2475 [lane:CORE]
+
+---
+
+### [L-460] — `serializeState` — `pathname.includes("category.html")` 가드가 미래 경로에서 오발동 위험
+
+- **영역:** 프론트엔드 — URL 직렬화
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `pathname = /category.html/items` 같은 미래 경로에서 가드를 통과해 URL 덮어쓰기 발생 가능.
+- **원인:** [site/app.js](site/app.js) line 1319 — `location.pathname.includes("category.html")` 부분 문자열 검사.
+- **제안 수정:** `location.pathname === '/category.html' || location.pathname.endsWith('/category.html')` 로 정확히 비교.
+- **파일:** [site/app.js](site/app.js) line 1319 [lane:CORE]
+
+---
+
+### [L-461] — `pushRecent` — `localStorage` QuotaExceededError 무음 처리 → 최근 본 상품 미업데이트 안내 없음
+
+- **영역:** 프론트엔드 — 최근 본 상품
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `localStorage.setItem` 실패 시 오류 무음 처리. 사용자에게 최근 본 상품이 업데이트되지 않는 이유 안내 없음. `saveSets`는 QuotaExceededError 시 Toast 표시하는 것과 불일치.
+- **원인:** [site/app.js](site/app.js) line 764 — `catch (e) { /* 무시 */ }`.
+- **제안 수정:** `saveSets`와 동일하게 QuotaExceededError 시 `showToast("저장 공간이 부족해요…")` 안내 추가.
+- **파일:** [site/app.js](site/app.js) line 764 [lane:CORE]
 
 ---
