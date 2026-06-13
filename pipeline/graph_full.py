@@ -84,6 +84,7 @@ def harvest_node(s: FullState) -> dict:
 def normalize_node(s: FullState) -> dict:
     con = sqlite3.connect(s["db"])
     raw, uniq, collapsed = NM.normalize_db(con)
+    con.commit()   # M-184: normalize_db가 내부 commit하더라도 close 전 명시 commit으로 변경 보존 보장.
     con.close()
     return {"log": s["log"] + [f"normalize: {raw}종 → 고유 {uniq}종(변형 {collapsed}그룹 통합)"]}
 
@@ -102,18 +103,24 @@ def enrich_node(s: FullState) -> dict:
         return {"log": s["log"] + ["enrich_batch: 생략(--enrich-limit 0)"]}
     sub = GP.build_graph()
     con = sqlite3.connect(s["db"])
-    q = """SELECT p.id, p.danawa_pcode, b.name_ko||' '||p.model_name, c.name_ko, p.capacity
-           FROM products p JOIN brands b ON b.id=p.brand_id JOIN categories c ON c.id=p.category_id
-           WHERE p.danawa_pcode IS NOT NULL
-             AND ( NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id
-                               AND m.key='water_head' WHERE v.product_id=p.id)
-                OR NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id
-                               AND m.key='floor_area' WHERE v.product_id=p.id) )
-           ORDER BY p.id"""
-    if s["enrich_limit"] > 0:
-        q += f" LIMIT {s['enrich_limit']}"
-    targets = con.execute(q).fetchall()
-    con.close()
+    try:
+        # M-269: 병렬 enrich(ENRICH_WORKERS 스레드)가 각자 커넥션으로 동시 쓰기 → journal_mode=delete면
+        #   쓰기 락 경합이 심하다. WAL로 전환(다중 reader + 단일 writer 직렬화, 영속 설정)해 경합 완화.
+        #   (persist의 timeout=30 + run_one의 예외 캡처가 잔여 경합을 흡수.)
+        con.execute("PRAGMA journal_mode=WAL")
+        q = """SELECT p.id, p.danawa_pcode, b.name_ko||' '||p.model_name, c.name_ko, p.capacity
+               FROM products p JOIN brands b ON b.id=p.brand_id JOIN categories c ON c.id=p.category_id
+               WHERE p.danawa_pcode IS NOT NULL
+                 AND ( NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id
+                                   AND m.key='water_head' WHERE v.product_id=p.id)
+                    OR NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id
+                                   AND m.key='floor_area' WHERE v.product_id=p.id) )
+               ORDER BY p.id"""
+        if s["enrich_limit"] > 0:
+            q += f" LIMIT {s['enrich_limit']}"
+        targets = con.execute(q).fetchall()
+    finally:
+        con.close()   # M-235: 쿼리 중 예외가 나도 커넥션 누수 없이 닫는다.
 
     def run_one(row):
         pid, pcode, name, cat, cap = row
@@ -146,6 +153,7 @@ def enrich_node(s: FullState) -> dict:
 def validate_node(s: FullState) -> dict:
     con = sqlite3.connect(s["db"])
     hard, soft = VR.validate_db(con)
+    con.commit()   # M-184: validate_db 내부 commit이 있어도 close 전 명시 commit으로 변경 보존 보장.
     con.close()
     return {"log": s["log"] + [f"validate: 파싱오류 격리 {len(hard)} / 재분류 검토 {len(soft)}"]}
 
@@ -204,8 +212,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=os.path.join(P.ROOT, "camping_tents500.db"))
     ap.add_argument("--queries", default=None)
-    ap.add_argument("--enrich-limit", type=int, default=-1, help="-1=전체, 0=생략, N=상위N")
+    ap.add_argument("--enrich-limit", type=int, default=-1, help="-1=전체, 0=생략, N(>0)=상위N")
     args = ap.parse_args()
+    # L-270: enrich_limit 유효값은 -1(전체)/0(생략)/양수(상위N)뿐. -2 이하는 우연히 '전체'로
+    #   동작하던 함정이라 명시적으로 거부한다.
+    if args.enrich_limit < -1:
+        ap.error("--enrich-limit must be -1(전체), 0(생략), or a positive integer")
     graph = build_full_graph()
     st = graph.invoke({"db": args.db, "queries": args.queries, "enrich_limit": args.enrich_limit,
                        "stats": {}, "errors": [], "log": []})
