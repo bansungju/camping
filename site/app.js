@@ -472,7 +472,7 @@ window.addEventListener("DOMContentLoaded", () => {
     a.setAttribute("aria-label", "내 계정");
     a.title = "내 계정";
     if (here === "account.html") a.setAttribute("aria-current", "page");
-    a.textContent = "👤";
+    a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`;
     hwrap.appendChild(a);
   }
 
@@ -2623,31 +2623,53 @@ function renderAccount() {
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-        import("./supabaseClient.js?v=3f90c643").then(async ({ supabase }) => {
-          const { data: posts } = await supabase
-            .from("posts")
-            .select("id, title, body, created_at")
-            .eq("user_id", userId)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false })
-            .limit(10);
-          const logsCnt = document.getElementById("logscount");
+        import("./supabaseClient.js?v=3f90c643").then(async ({ supabase, getMyReviews }) => {
           myLogsList.dataset.loaded = "1";
-          if (!posts || posts.length === 0) {
-            if (logsCnt) logsCnt.textContent = "";
+          const logsCnt = document.getElementById("logscount");
+
+          // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
+          let prodMap = new Map();
+          try { (await getJSON("data/search.json?v=2cd7b927")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+
+          // FE-SOC-09: 내가 쓴 상품 후기
+          const reviews = await getMyReviews();
+
+          // FE-SOC-10: 커뮤니티 글(posts)은 COMMUNITY_LOG_ENABLED일 때만 '내 로그'에 노출(복구 가능)
+          let posts = [];
+          if (COMMUNITY_LOG_ENABLED) {
+            const { data } = await supabase
+              .from("posts").select("id, title, body, created_at")
+              .eq("user_id", userId).is("deleted_at", null)
+              .order("created_at", { ascending: false }).limit(10);
+            posts = data || [];
+          }
+          const reviewCount = reviews.length;
+          const setCount = (postN) => { if (logsCnt) { const t = reviewCount + postN; logsCnt.textContent = t ? `${t}개` : ""; } };
+
+          if (!reviewCount && !posts.length) {
+            setCount(0);
             myLogsList.innerHTML = `
               <div style="text-align:center;padding:32px 0 16px">
                 <div style="font-size:36px;margin-bottom:10px">📝</div>
-                <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
-                <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
-                ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>` : ""}
+                <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 남긴 후기가 없어요</div>
+                <div style="font-size:13px;color:var(--muted);margin-bottom:16px">상품 상세에서 별점과 후기를 남기면 여기에 모여요</div>
               </div>`;
             return;
           }
-          if (logsCnt) logsCnt.textContent = `${posts.length}개`;
+          setCount(posts.length);
+
+          // 후기 목록 + (복구 시) 커뮤니티 글 컨테이너
+          myLogsList.innerHTML =
+            `<div id="my-reviews">${reviews.map(r => _myReviewCard(r, prodMap)).join("")}</div>` +
+            `<div id="my-community-logs"></div>`;
+
+          if (!(COMMUNITY_LOG_ENABLED && posts.length)) return;
+
+          // ── 커뮤니티 글(복구 시): 편집/삭제 포함. #my-community-logs에 렌더(후기 영역 보존). ──
+          const postsBox = document.getElementById("my-community-logs");
           const renderMyLogs = (list) => {
-            myLogsList.innerHTML = `
-              <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+            postsBox.innerHTML = `
+              <div style="display:flex;justify-content:flex-end;margin:6px 0 10px">
                 ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html" style="font-size:12px;padding:5px 12px">+ 새 로그</a>` : ""}
               </div>` +
               list.map((p, pi) => {
@@ -2664,7 +2686,7 @@ function renderAccount() {
                 </div>`;
               }).join("");
 
-            myLogsList.querySelectorAll(".my-log-edit").forEach(btn => {
+            postsBox.querySelectorAll(".my-log-edit").forEach(btn => {
               btn.onclick = () => {
                 const pi = +btn.dataset.pi;
                 const p = list[pi];
@@ -2699,7 +2721,7 @@ function renderAccount() {
               };
             });
 
-            myLogsList.querySelectorAll(".my-log-del").forEach(btn => {
+            postsBox.querySelectorAll(".my-log-del").forEach(btn => {
               btn.onclick = async () => {
                 const p = list[+btn.dataset.pi];
                 if (!confirm(`"${p.title}" 로그를 삭제할까요?`)) return;
@@ -2710,19 +2732,8 @@ function renderAccount() {
                   .eq("id", p.id).eq("user_id", userId);
                 if (error) { alert("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }
                 const remaining = list.filter((_, i) => i !== +btn.dataset.pi);
-                if (remaining.length === 0) {
-                  if (logsCnt) logsCnt.textContent = "";
-                  myLogsList.innerHTML = `
-                    <div style="text-align:center;padding:32px 0 16px">
-                      <div style="font-size:36px;margin-bottom:10px">📝</div>
-                      <div style="font-size:14px;font-weight:600;margin-bottom:6px">아직 작성한 로그가 없어요</div>
-                      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">캠핑 경험을 기록하고 장비를 태그해보세요</div>
-                      ${COMMUNITY_ENABLED ? `<a class="achip clear" href="community.html">커뮤니티에서 로그 쓰기 ›</a>` : ""}
-                    </div>`;
-                } else {
-                  if (logsCnt) logsCnt.textContent = `${remaining.length}개`;
-                  renderMyLogs(remaining);
-                }
+                setCount(remaining.length);   // 후기 수 + 남은 글 수
+                renderMyLogs(remaining);
               };
             });
           };
