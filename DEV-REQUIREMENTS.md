@@ -130,6 +130,7 @@
 ### 1-4. 소셜 / 계정 UI (`account.html`, `community.html`, `auth-callback.html`)
 | ID | 요건 | 상태 | 비고 / ↔ |
 |----|------|------|----------|
+| FE-AUTH-01 | **로그인 게이트 일원화** — 전역 auth 부트스트랩(`authReady`/`isLoggedIn`/`currentUser`/`onAuthChange`) + 공용 노드 `requireLogin()` + 표준 인터셉트 모달. 찜·세트·후기에 적용. 로그인 후 찜·세트 자동 재개. | DONE | [AUTH-GATING-PLAN.md](AUTH-GATING-PLAN.md) §8 AC 참조. `app.js`, `auth-callback.html`, `style.css` |
 | FE-SOC-01 | 로그인/콜백/계정 화면 | DONE | ↔ BE-SOC-AUTH, `supabaseClient.js` |
 | FE-SOC-02 | 커뮤니티 피드/글쓰기/이미지 첨부 | DONE | ↔ BE-SOC-POST |
 | FE-SOC-03 | 댓글·좋아요 | DONE | ↔ BE-SOC migrations 006/009 |
