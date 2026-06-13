@@ -522,7 +522,7 @@ function wishItem(m, slug) {
 /* ── 장비 세트 빌더 — localStorage 저장 (로그인 없이도 동작) ──
    세트 구조: {id, title, style, items:[{pcode,b,m,cap,s,p,img,weight_g,qty}], created_at} */
 function getSets() { try { return JSON.parse(localStorage.getItem("gear_sets") || "[]"); } catch (e) { return []; } }
-function saveSets(a) { localStorage.setItem("gear_sets", JSON.stringify(a)); }
+function saveSets(a) { try { localStorage.setItem("gear_sets", JSON.stringify(a)); } catch (e) { console.error("saveSets:", e); showToast("저장 공간이 부족해요. 일부 세트가 저장되지 않았을 수 있어요."); } }  // H-115: QuotaExceededError 전파 방지
 function showToast(msg, duration) {
   // M-238: isHtml=true(innerHTML 직접삽입) 경로는 호출자가 전무했고 XSS 표면만 남겨 제거 — 항상 textContent.
   let t = document.getElementById("app-toast");
@@ -1197,9 +1197,11 @@ async function setupSearchPage() {
   if (!inp || !resultsEl) return;
 
   let idx = null;
-  const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=92bd9d85").catch(() => []);
-    return idx;
+  let _idxLoading;
+  const ensureIdx = () => {
+    if (idx) return Promise.resolve(idx);
+    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(() => (idx = []));
+    return _idxLoading;  // H-75: in-flight 가드로 동시 호출 시 중복 fetch 방지
   };
 
   const openFromSearch = async (x) => {
@@ -1303,7 +1305,7 @@ let STATE = {};
 
 /* 필터 상태 → URL (공유·뒤로가기·새로고침에 필터 보존). 69R 사용성감사 [상]1 */
 function defaultSortKey() {
-  const s0 = STATE.data.metrics.filter(m => m.is_star)[0];
+  const s0 = (STATE.data?.metrics || []).filter(m => m.is_star)[0];
   return "spec:" + (s0 && s0.key);
 }
 function serializeState() {
@@ -1369,7 +1371,8 @@ function applyStyleSort(d) {
   if (!STATE.campStyle) {
     // 스타일 해제 → 기본 정렬로 복귀
     const star = d.metrics.filter(m => m.is_star);
-    STATE.sortKey = "spec:" + (star[0] && star[0].key);
+    if (!star[0]) return;  // H-107: star 메트릭 없는 카테고리에서 "spec:undefined" 방지
+    STATE.sortKey = "spec:" + star[0].key;
     STATE.sortAsc = defaultAsc(STATE.sortKey);
     return;
   }
@@ -2635,7 +2638,9 @@ function openCmpModal(rows) {
 }
 
 function draw() {
-  const d = STATE.data, star = d.metrics.filter(m => m.is_star);
+  const d = STATE.data;
+  if (!d) return;  // H-127: STATE.data stale 시 metrics.filter() TypeError 방지
+  const star = d.metrics.filter(m => m.is_star);
   renderActiveFilters();
   let rows = d.models.filter(m =>
     (!STATE.cap || String(m.capacity) === STATE.cap) &&
@@ -3566,7 +3571,7 @@ function renderAccount() {
         const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
         // H-78: deprecated escape/unescape 대신 TextEncoder로 UTF-8 바이트→base64(한글·이모지 안전). 출력은 기존 idiom과 동일.
         const _utf8 = new TextEncoder().encode(JSON.stringify(payload));
-        const encoded = btoa(String.fromCharCode(...new Uint8Array(_utf8))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        const encoded = btoa(Array.from(new Uint8Array(_utf8), c => String.fromCharCode(c)).join("")).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');  // H-108: spread 대신 Array.from → 대형 세트 스택 오버플로 방지
         const url = `${location.origin}/account.html?view-set=${encoded}`;
         // M-274: URL 2000자 초과 시 경고(일부 환경에서 링크 단축기 파손)
         if (url.length > 2000) showToast("세트 크기가 커 일부 환경에서 링크가 깨질 수 있어요");
@@ -3592,6 +3597,7 @@ function renderAccount() {
     // 세트 카드 클릭 → 상세 모달 (수량 ± 편집 포함)
     setsEl.querySelectorAll(".acc-set").forEach(card => {
       card.onclick = () => openSetDetail(card.dataset.sid);
+      card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSetDetail(card.dataset.sid); } };  // H-126
     });
   }
 
@@ -4190,7 +4196,10 @@ function openLogModal(presetSetIndex) {
   const close = () => {
     if (imgThumb.src.startsWith("blob:")) URL.revokeObjectURL(imgThumb.src);
     modal.classList.remove("on");
+    document.removeEventListener("keydown", onEsc);
   };
+  const onEsc = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onEsc);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
 }
@@ -4248,20 +4257,23 @@ document.addEventListener("DOMContentLoaded", () => {
       // L-76: 공유 세트 열람 시 배경 개인 데이터 섹션 숨김
       const hiddenSections = ["wish-section","sets-section","logs-section","settings-section","profile-section"].map(id => document.getElementById(id)).filter(Boolean);
       hiddenSections.forEach(el => { el._vsDisplay = el.style.display; el.style.display = "none"; });
-      const close = () => {
+      const _vsEsc = e => { if (e.key === "Escape") closeVs(); };
+      const closeVs = () => {
+        document.removeEventListener("keydown", _vsEsc);
         modal.remove();
         hiddenSections.forEach(el => { el.style.display = el._vsDisplay ?? ""; });
         history.replaceState(null, "", location.pathname);
       };
-      modal.onclick = e => { if (e.target === modal) close(); };
-      modal.querySelector(".pmx").onclick = close;
+      document.addEventListener("keydown", _vsEsc);
+      modal.onclick = e => { if (e.target === modal) closeVs(); };
+      modal.querySelector(".pmx").onclick = closeVs;
       modal.querySelector("#vs-import-btn").onclick = function() {
         // M-346/L-247: 중복 import 방지 — 버튼 즉시 비활성화 + 제목+아이템 수 지문 비교
         this.disabled = true;
         const arr = getSets();
         const fingerprint = `${s.name || ""}|${(s.items || []).length}|${(s.items || []).map(x => `${x.b}${x.m}`).join(",")}`;
         const isDup = arr.some(x => `${x.title || x.name || ""}|${(x.items || []).length}|${(x.items || []).map(i => `${i.b}${i.m}`).join(",")}` === fingerprint);
-        if (isDup) { alert("이미 동일한 세트가 있어요."); close(); return; }
+        if (isDup) { alert("이미 동일한 세트가 있어요."); closeVs(); return; }
         const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: x.coupang_url || "" })) };
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
@@ -4271,7 +4283,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
           }).catch(() => {});
         }
-        close();
+        closeVs();
         alert(window._accUser ? "세트가 추가됐어요! 내 세트에서 확인하세요." : "세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");
       };
     } catch { /* 잘못된 파라미터 무시 */ }
