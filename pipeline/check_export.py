@@ -42,35 +42,42 @@ def load_models(path):
             d = json.load(fh)
     except Exception as e:
         print(f"  ⚠️  {os.path.basename(path)} 읽기 실패: {e}")
-        return None, []
+        return None, [], False     # L-231: 파싱 실패는 ok=False로 신호(게이트 통과 금지)
     if not isinstance(d, dict):
-        return None, []
-    return d.get("name", os.path.basename(path)), d.get("models") or []
+        print(f"  ⚠️  {os.path.basename(path)} 형식 오류(dict 아님)")
+        return None, [], False
+    return d.get("name", os.path.basename(path)), d.get("models") or [], True
 
 
 def check_file(path):
     """반환: (위반 리스트). 각 위반=(종류, 카테고리, 브랜드, 모델, 가격, 중앙값, 비율)."""
-    cat, models = load_models(path)
+    cat, models, ok = load_models(path)
+    if not ok:
+        return [], False        # L-231: 파싱 실패 → 게이트 차단 신호
     if not models:
-        return []
+        return [], True
     mins = [m["price_min"] for m in models if m.get("price_min") is not None and m["price_min"] > 0]
     if len(mins) < MIN_MODELS:
-        return []
+        return [], True
     med = statistics.median(mins)
     if med <= 0:
-        return []
+        return [], True
     violations = []
     for m in models:
         pmin = m.get("price_min")
-        pmax = m.get("price_max") or pmin
+        raw_pmax = m.get("price_max")
+        # M-222: None일 때만 pmin으로 폴백(0/음수는 보존해 별도 탐지). `or`는 0을 None처럼 삼킨다.
+        pmax = raw_pmax if raw_pmax is not None else pmin
         b, mo = m.get("brand", "?"), m.get("model", "?")
         if pmin is not None and pmin <= 0:
             violations.append(("영/음수가격", cat, b, mo, pmin, int(med), 0.0))
         if pmin is not None and pmin > 0 and pmin < med * FLOOR_RATIO:
             violations.append(("저가이상", cat, b, mo, pmin, int(med), pmin / med))
-        if pmax and pmax > med * CEIL_RATIO:
+        if raw_pmax is not None and raw_pmax <= 0:   # M-294: price_max=0/음수 자체가 이상
+            violations.append(("영/음수상한가", cat, b, mo, raw_pmax, int(med), 0.0))
+        elif pmax is not None and pmax > med * CEIL_RATIO:
             violations.append(("고가이상", cat, b, mo, pmax, int(med), pmax / med))
-    return violations
+    return violations, True
 
 
 def main():
@@ -82,18 +89,26 @@ def main():
     files = sorted(f for f in glob.glob(os.path.join(args.data, "*.json"))
                    if os.path.basename(f) not in SKIP_FILES)
     all_violations = []
+    parse_failures = []           # L-231: 파싱 실패 파일을 추적해 게이트에서 차단
     for f in files:
-        all_violations.extend(check_file(f))
+        v, ok = check_file(f)
+        if not ok:
+            parse_failures.append(os.path.basename(f))
+        all_violations.extend(v)
 
     print("=" * 70)
     print("배포 게이트 — 익스포트 가격 타당성 검사")
     print("=" * 70)
     print(f"  검사 카테고리 파일 {len(files)}개 / 임계 [중앙값×{FLOOR_RATIO} ~ ×{CEIL_RATIO}]\n")
 
-    if not all_violations:
+    if not all_violations and not parse_failures:
         print("  ✅ 이상 가격 없음 — 배포 허용")
         return 0
 
+    if parse_failures:   # L-231: 파싱 실패는 빈 데이터 배포 위험 → exit 1
+        print(f"  ❌ 파싱 실패 {len(parse_failures)}건 — 배포 차단: {', '.join(parse_failures)}\n")
+    if not all_violations:
+        return 1
     print(f"  ❌ 이상 가격 {len(all_violations)}건 — 배포 차단\n")
     for kind, cat, b, mo, price, med, ratio in all_violations:
         print(f"   [{kind}] {cat} · {b} {mo}: {price:,}원 "

@@ -65,7 +65,7 @@
 | **B23** | `backend/db.py` | H-125 | 동시성(WAL read-write 손상) | ✅ 2026-06-13 (체크포인트 제거→모니터링 전용) |
 | **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ✅ 2026-06-13 (후보루프+페이지후 target break) |
 | **B25** | `ocr_specs.py` | H-116 | dv=0 오분류 | ✅ 2026-06-13 (dv=0·val=0 일치 판정) |
-| **B26** | `stamp_version.py` | H-119 | FileNotFoundError 가드 | ⬜ |
+| **B26** | `stamp_version.py` | H-119 | FileNotFoundError 가드 | ✅ 2026-06-13 (진입 fail-fast 검증) |
 | **B27** | `download_images.py` | H-120 | 재다운로드 누락 | ⬜ |
 | **B28** | `detect_price_drops.py` | H-124 | 색상변형 중복푸시 | ⬜ |
 
@@ -97,7 +97,7 @@
 | **C17** | `multicat.py` | M-183·M-290 수정(lastrowid·충돌스킵) / M-256 보류(seen_names가 HT.ingest·refresh와 string-set 공유계약 → 크로스파일 조율 필요) | ✅ 2026-06-13 |
 | **C18** | `add_manual_models.py` | M-225 수정(with+예외) / M-197=H-102(B21) 기해결 / M-280 by-design(수동=권위 canonical 소유) | ✅ 2026-06-13 |
 | **C19** | `enrich_details.py` | M-215(빈targets 가드)·M-250(try/finally) 수정 / M-322 비이슈(",".join("?"*n)=정상 콤마) | ✅ 2026-06-13 |
-| **C20** | `check_export.py` | M-222·M-294·L-231 | ⬜ |
+| **C20** | `check_export.py` | M-222·M-294(price_max None/0 구분)·L-231(파싱실패 exit1) 수정 | ✅ 2026-06-13 |
 | **C21** | `stamp_version.py` | M-248·M-296·L-213 | ⬜ |
 | **C22** | `harvest_tents.py` | M-254·M-275·L-241 | ⬜ |
 | **C23** | `seed_coupang.py` | L-193·L-215·L-239 | ⬜ |
