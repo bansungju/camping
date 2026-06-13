@@ -100,7 +100,7 @@ def parse_specs(text):
     # 무게: N.Nkg (가장 큰 값 = 본체/패키지 추정). OCR 신뢰 높음.
     kgs = [float(x) for x in re.findall(r'(\d+\.?\d*)\s*kg', text) if 0.3 < float(x) < 50]
     if kgs:
-        out["weight_min"] = (round(max(kgs) * 1000), f"{max(kgs)}kg", "medium")
+        out["weight_min"] = (round(min(kgs) * 1000), f"{min(kgs)}kg", "medium")
 
     # 크기: NxN(xN) 후보 추출, '이너'에 가장 가까운 것 = 바닥면적 근거
     sizes = []  # (시작위치, 가로, 세로)
@@ -168,13 +168,18 @@ def get_target_url(con, pid):
     path = os.path.join(ROOT, "ocr_targets.json")
     if not os.path.exists(path):
         return None
-    targets = json.load(open(path, encoding="utf-8"))
+    with open(path, encoding="utf-8") as f:
+        targets = json.load(f)
     return targets.get(str(pid))
 
 
 def run(con, mode):
     path = os.path.join(ROOT, "ocr_targets.json")
-    targets = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
+    if not os.path.exists(path):
+        targets = {}
+    else:
+        with open(path, encoding="utf-8") as f:
+            targets = json.load(f)
     if not targets:
         print("ocr_targets.json 없음/비어있음 — {product_id: 쇼핑몰URL} 매핑 필요")
         return

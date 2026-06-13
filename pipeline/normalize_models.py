@@ -124,7 +124,7 @@ def flag_price_outliers(con):
         prices = sorted(r[0] for r in reps)
         if len(prices) < 2:        # 제품 2종 미만이면 중앙값 신뢰불가 → skip(과격리 방지)
             continue
-        med = prices[len(prices) // 2]
+        med = prices[(len(prices) - 1) // 2]
         if med <= 0:
             continue
         for (oid, pr) in con.execute("""SELECT po.id, po.price_krw FROM price_observations po
@@ -147,7 +147,7 @@ def flag_price_outliers(con):
         if len(rows) < 3:
             continue
         prices = [r[1] for r in rows]
-        med = prices[len(prices) // 2]
+        med = prices[(len(prices) - 1) // 2]
         if med <= 0:
             continue
         for oid, pr, pid in rows:
@@ -234,7 +234,7 @@ def normalize_db(con):
                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
                      AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1) AND po.valid=1))
         FROM products p JOIN brands b ON b.id=p.brand_id
-        GROUP BY p.brand_id, p.canonical_model, p.capacity""")
+        GROUP BY p.brand_id, p.canonical_model, IFNULL(p.capacity, -1)""")
     con.commit()
     raw = con.execute("SELECT COUNT(*) FROM products").fetchone()[0]
     uniq = con.execute("SELECT COUNT(*) FROM canonical_models").fetchone()[0]
