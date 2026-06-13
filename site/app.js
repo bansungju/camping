@@ -1670,10 +1670,10 @@ function openProduct(m) {
          ${specRows}
        </div>
        ${m.coupang_url
-         ? `<button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>
-       <div class="pmbuynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</div>`
-         : `<button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>
-       <div class="pmbuynote">구매 링크를 준비 중입니다.</div>`
+         ? `<div class="pmbuynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</div>
+       <button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>`
+         : `<div class="pmbuynote">구매 링크를 준비 중입니다.</div>
+       <button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>`
        }
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
