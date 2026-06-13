@@ -3201,7 +3201,8 @@
 
 ## R-93 — 프론트/백엔드 종합 버그 탐색 3차 (2026-06-13)
 
-### [H-46] — `resolve_duplicates.py` — loser가 `rep_product_id`가 아닐 때 `min_price=None` 오평가 → winner 선정 오류
+### [H-46] ✅ 해결완료(2026-06-13, BACKEND) — `resolve_duplicates.py` — loser가 `rep_product_id`가 아닐 때 `min_price=None` 오평가 → winner 선정 오류
+> min_price를 그룹키(brand_id+canonical_model+capacity)로 1회 조회 → 그룹 내 후보가 가격보유여부 공유, 차별화는 spec_count·id로. capacity INT/REAL·NULL은 SQLite `IS`로 매칭(4 IS 4.0=1 검증). 합성DB E2E: 현 rep(pid10,스펙1)이 아닌 스펙많은 pid20이 winner로 정상 선정.
 
 - **영역:** 백엔드 — 파이프라인 / 중복 해소
 - **심각도:** 🔴 High
@@ -4895,7 +4896,8 @@
 
 ---
 
-### [H-74] — `resolve_duplicates.py` `resolve()` — `GROUP_CONCAT ORDER BY` SQLite <3.44 미지원으로 CI 크래시
+### [H-74] ✅ 해결완료(2026-06-13, BACKEND) — `resolve_duplicates.py` `resolve()` — `GROUP_CONCAT ORDER BY` SQLite <3.44 미지원으로 CI 크래시
+> `GROUP_CONCAT(id)`(ORDER BY 제거) 후 `sorted(int(x) for x in ids_str.split(","))`로 Python 정렬. CI ubuntu 3.37.x 호환.
 
 - **영역:** 백엔드 — 중복 해소
 - **심각도:** 🔴 High
@@ -7818,5 +7820,221 @@
 - **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 12–13 — `QUEUE_OUT = "verify_queue.json"` 절대 경로 없음.
 - **제안 수정:** `os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "verify_queue.json")` 사용.
 - **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 13 [lane:BACKEND]
+
+---
+
+### [H-106] — `add_value_star.py` `main` — 파일 핸들 미닫힘 + 쓰기 실패 시 JSON 파일 절단
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `json.dump(d, open(PATH, "w"), ...)` 중 예외 시 파일이 부분 쓰기 상태로 절단, 파일 핸들 누수.
+- **원인:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 30, 45, 48, 52 — `with` 문 없이 `open()` 직접 사용.
+- **제안 수정:** 모든 파일 I/O를 `with open(...) as f:` 로 변경.
+- **파일:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 30 [lane:BACKEND]
+
+---
+
+### [M-376] — `add_value_star.py` `main` — `encoding` 미지정 `open()` → 비UTF 로케일에서 한국어 파싱 오류
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** Windows/비UTF 로케일 환경에서 한국어 포함 JSON 읽기 시 UnicodeDecodeError.
+- **원인:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 30 — `open(PATH)` encoding 파라미터 없음.
+- **제안 수정:** `open(PATH, encoding="utf-8")` 명시.
+- **파일:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 30 [lane:BACKEND]
+
+---
+
+### [M-377] — `export_site.py` `export` — `canonical_models` 누락 모델 `price=null` 무경고 출력
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `canonical_models` 동기화 누락 모델이 `search.json`에서 `"p": null`로 출력, 검색 결과 가격 미표시.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 139–142 — `pr is None` 시 경고/스킵 없음.
+- **제안 수정:** `if pr is None: logging.warning(f"가격 없음: {model}")` 추가.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 140 [lane:BACKEND]
+
+---
+
+### [M-378] — `babysit.py` `main` — `promote_all` 중 예외 후 `con.commit()` → 검증 목록 전체 소실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `promote_all` 예외 발생 후 line 38의 `con.commit()`이 마스 pending 리셋 상태를 커밋, 전체 verified 상품이 pending으로 남음.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 35–38 — `promote_all(con)` + `con.commit()` 쌍에 try/except 없음.
+- **제안 수정:** `try/except` 래핑 후 실패 시 `con.rollback()` 또는 SAVEPOINT 사용.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 37 [lane:BACKEND]
+
+---
+
+### [L-295] — `normalize.py` `parse_lumens` — 단위 없는 임의 숫자를 루멘으로 반환
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `"20 단계 조명"` 같은 비루멘 문자열에서 `20.0lm` 반환 가능.
+- **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 117 — 루멘 단위 토큰이 optional `?`, 숫자만 있어도 매칭.
+- **제안 수정:** `re.search(r"(\d[\d,.]*)\s*(?:lm|루멘|lumen)", s)` — 단위 필수화.
+- **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 117 [lane:BACKEND]
+
+---
+
+### [H-107] — `applyStyleSort` — star 메트릭 없는 카테고리에서 `"spec:undefined"` sort key 설정
+
+- **영역:** 프론트엔드 — 정렬
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** is_star 메트릭 없는 카테고리에서 스타일 칩 토글 시 `STATE.sortKey = "spec:undefined"` → 전체 목록 blank.
+- **원인:** [site/app.js](site/app.js) line 1340 — `star[0] && star[0].key` 에서 `star` 빈 배열 시 undefined 생성.
+- **제안 수정:** `STATE.sortKey = star.length ? "spec:" + star[0].key : "price_min";`
+- **파일:** [site/app.js](site/app.js) line 1340 [lane:CORE]
+
+---
+
+### [H-108] — `shareSet` 인코딩 — 대형 세트 `String.fromCharCode(...Uint8Array)` 스택 오버플로
+
+- **영역:** 프론트엔드 — 세트 공유
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 10개 이상 아이템 세트 공유 시 `RangeError: Maximum call stack size exceeded` → "링크 생성에 실패했어요." 알림.
+- **원인:** [site/app.js](site/app.js) line 3515 — `String.fromCharCode(...new Uint8Array(_utf8))` spread가 엔진 인수 개수 한계 초과.
+- **제안 수정:** `let s = ''; for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);` 청크 루프로 교체.
+- **파일:** [site/app.js](site/app.js) line 3515 [lane:CORE]
+
+---
+
+### [M-380] — `view-set` 핸들러 — JSON 파싱 실패 시 `hiddenSections` 복원 누락 → 섹션 영구 숨김
+
+- **영역:** 프론트엔드 — 세트 공유
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 잘못된 `?view-set=` 파라미터 처리 중 예외 시 wish/sets/logs/settings 섹션이 세션 동안 숨김 상태 유지.
+- **원인:** [site/app.js](site/app.js) line 4189–4190 — `hiddenSections.forEach(el => el.style.display="none")` 이후 예외 발생 시 catch 블록에서 `close()` 미호출.
+- **제안 수정:** catch 블록에서 `hiddenSections.forEach(el => el.style.display = "")` 복원 추가.
+- **파일:** [site/app.js](site/app.js) line 4189 [lane:CORE]
+
+---
+
+### [L-297] — `renderBrand` `renderChips` — 필터 입력 후 URL 기반 브랜드 active 칩 미표시
+
+- **영역:** 프론트엔드 — 브랜드 페이지
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 브랜드 칩 필터 입력 시 URL에서 pre-selected된 브랜드가 현재 표시 슬라이스에 없으면 active 칩 없음.
+- **원인:** [site/app.js](site/app.js) line 2765 — `params.get("b")` 기준 active 비교, 필터 후 보이지 않는 브랜드는 매칭 실패.
+- **제안 수정:** 선택된 브랜드를 클로저 변수 `currentBrand`에 저장, 항상 active 칩으로 표시.
+- **파일:** [site/app.js](site/app.js) line 2765 [lane:CORE]
+
+---
+
+### [H-109] — `run_all.py` `sh()` — `DB` 전역 변수 `main()` 호출 전 미설정 시 NameError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 테스트 import 또는 `main()` 미호출 경로에서 `sh()` 실행 시 `NameError: name 'DB' is not defined`.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 74 — `DB`가 `global` 선언으로만 존재, `main()` 호출 전 미초기화.
+- **제안 수정:** `sh()`에 `db` 파라미터를 명시적으로 전달하거나 기본값 설정.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 74 [lane:BACKEND]
+
+---
+
+### [M-381] — `run_all.py` `promote_all` — `capclause` f-string 직접 삽입으로 향후 SQL 인젝션 벡터
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `capclause`에 동적 값이 포함될 경우 SQL 인젝션 가능, 현재는 하드코딩이나 확장 시 취약점.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 89 — `capclause`가 f-string에 직접 삽입, 파라미터 바인딩 미사용.
+- **제안 수정:** `capclause`를 정적 상수로 유지하거나 Python 분기로 처리.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 89 [lane:BACKEND]
+
+---
+
+### [M-382] — `export_site.py` `export` — 이미지 서브쿼리 brand_id가 삭제된 rep 기준 → 다른 브랜드 이미지 오연결
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** canonical rep가 변경된 경우 이미지 서브쿼리가 잘못된 brand_id로 타 브랜드 이미지를 반환.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 112–116 — `SELECT brand_id FROM products WHERE id=?` 가 export rep 기준, canonical_models rep와 불일치 가능.
+- **제안 수정:** outer `reps` 행에서 직접 `brand_id` 사용.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 112 [lane:BACKEND]
+
+---
+
+### [L-298] — `add_manual_models.py` `main` — 파일 핸들 미닫힘
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `json.load(open(args.json, encoding="utf-8"))` 파일 핸들 누수.
+- **원인:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 105 — `with` 문 없음.
+- **제안 수정:** `with open(args.json, encoding="utf-8") as fh: models = json.load(fh)`
+- **파일:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 105 [lane:BACKEND]
+
+---
+
+### [L-299] — `pipeline.py` `build_db` — 기존 DB 백업 없이 삭제
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 잘못된 경로로 실행 시 라이브 DB가 백업 없이 영구 삭제.
+- **원인:** [pipeline/pipeline.py](pipeline/pipeline.py) line 55 — `os.remove(db_path)` 에 확인·백업 없음.
+- **제안 수정:** 삭제 전 `<db_path>.bak.<timestamp>` 로 rename 또는 `--rebuild` 플래그 필수화.
+- **파일:** [pipeline/pipeline.py](pipeline/pipeline.py) line 55 [lane:BACKEND]
+
+---
+
+### [L-300] — `ocr_specs.py` `ocr_text` — tesseract 실패 시 stderr 무시로 데이터 손실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** tesseract 바이너리 미설치 또는 언어팩 오류 시 빈 텍스트 반환, 에러 로그 없음.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 88 — `r.returncode`·`r.stderr` 미검사.
+- **제안 수정:** `if r.returncode != 0: logging.warning(r.stderr.decode())` 추가.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 88 [lane:BACKEND]
+
+---
+
+### [L-301] — `draw` 카드 렌더링 — `d.models.indexOf(m)` O(n²) 반복
+
+- **영역:** 프론트엔드 — 성능
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 300개 모델 카테고리에서 필터/정렬 변경마다 90,000회 비교로 렌더 지연.
+- **원인:** [site/app.js](site/app.js) line 2641, 2697 — `indexOf(m)` `.map()` 내부 반복 호출.
+- **제안 수정:** `const modelIdx = new Map(d.models.map((m,i) => [m,i]))` 사전 계산 후 재사용.
+- **파일:** [site/app.js](site/app.js) line 2641 [lane:CORE]
+
+---
+
+### [L-302] — `serializeState` — `brands` `|` 구분자 미인코딩으로 파이프 포함 브랜드명 파싱 오류
+
+- **영역:** 프론트엔드 — URL 상태
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 브랜드명에 `|` 포함 시 `restoreState`에서 잘못 분할.
+- **원인:** [site/app.js](site/app.js) line 1283 — `[...STATE.brands].join("|")` 인코딩 없음.
+- **제안 수정:** 각 브랜드 `encodeURIComponent` 후 join, 복원 시 `decodeURIComponent`.
+- **파일:** [site/app.js](site/app.js) line 1283 [lane:CORE]
+
+---
+
+### [L-303] — `renderHotSection` — Supabase RPC `error` 미체크로 백엔드 오류 묵살
+
+- **영역:** 프론트엔드 — 홈
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** Supabase RPC 오류 시 빈 데이터로 fallback 표시, 백엔드 스키마 오류 등 숨김.
+- **원인:** [site/app.js](site/app.js) line 2868 — `{ data }` 만 구조분해, `error` 필드 폐기.
+- **제안 수정:** `const { data, error } = ...; if (error) throw error;`
+- **파일:** [site/app.js](site/app.js) line 2868 [lane:CORE]
 
 ---

@@ -23,8 +23,10 @@ def resolve(db_path: str, dry_run: bool):
     cur = con.cursor()
 
     # 중복 그룹 전체
+    # H-74: GROUP_CONCAT(... ORDER BY ...) 는 SQLite ≥3.44 전용. CI(ubuntu-latest)의 3.37.x에서
+    #       OperationalError로 중복해소 단계가 통째로 죽는다. 정렬은 Python에서 한다(line 41).
     cur.execute("""
-        SELECT brand_id, canonical_model, capacity, GROUP_CONCAT(id ORDER BY id) as ids
+        SELECT brand_id, canonical_model, capacity, GROUP_CONCAT(id) as ids
         FROM products
         WHERE curation_status = 'verified'
           AND canonical_model IS NOT NULL
@@ -38,24 +40,32 @@ def resolve(db_path: str, dry_run: bool):
     total_cm_updated = 0
 
     for brand_id, canon_model, capacity, ids_str in groups:
-        pids = [int(x) for x in ids_str.split(",")]
+        pids = sorted(int(x) for x in ids_str.split(","))  # H-74: ORDER BY 대신 Python 정렬
+
+        # H-46: min_price 는 canonical_models 의 그룹(brand_id+canonical_model+capacity) 단위 속성이다.
+        #       기존엔 pid별로 rep_product_id=? 조회해 "현 rep인 pid만 가격 보유, 나머지는 None"이 됐고,
+        #       None이 sort_key에서 가장 낮게(우선순위 밖) 취급돼 엉뚱한 제품이 winner로 뽑혔다.
+        #       그룹키로 1회 조회하면 그룹 내 모든 후보가 동일 가격 보유여부를 공유 → 실제 차별화는
+        #       spec_count·id로 결정(의도된 기준). capacity 는 INT(products)/REAL(canonical) 혼재이나
+        #       SQLite `IS` 가 4 ↔ 4.0 및 NULL 을 모두 올바로 매칭한다(검증 완료).
+        cur.execute(
+            "SELECT min_price FROM canonical_models "
+            "WHERE brand_id=? AND canonical_model=? AND capacity IS ?",
+            (brand_id, canon_model, capacity),
+        )
+        row = cur.fetchone()
+        group_min_price = row[0] if row else None
 
         # 각 pid의 (min_price, spec_count, id) 수집
         candidates = []
         for pid in pids:
-            cur.execute(
-                "SELECT min_price FROM canonical_models WHERE rep_product_id=?", (pid,)
-            )
-            row = cur.fetchone()
-            min_price = row[0] if row else None
-
             cur.execute(
                 "SELECT COUNT(*) FROM product_spec_values WHERE product_id=? AND valid=1",
                 (pid,),
             )
             spec_count = cur.fetchone()[0]
 
-            candidates.append((pid, min_price, spec_count))
+            candidates.append((pid, group_min_price, spec_count))
 
         # Winner: 1) min_price 있음 2) spec_count 많음 3) id 낮음
         def sort_key(c):

@@ -32,7 +32,7 @@
 |---|---|---|---|
 | **B1** | `graph_pipeline.py` | H-93·H-82·L-258(연동)·H-91·H-94 | ✅ 2026-06-13 완료 (commit) |
 | **B2** | `graph_full.py` | H-48·H-68·H-86 | ✅ 2026-06-13 완료. M-324는 보류(대상 5111→6037 확대+`_fill`의 `or FILL` 폴백 상호작용으로 비텐트 부적절 fetch 위험 → 별도 처리) |
-| **B3** | `resolve_duplicates.py` | H-46·H-74 | ⬜ 미착수 |
+| **B3** | `resolve_duplicates.py` | H-46·H-74 | ✅ 2026-06-13 완료 (현재 중복그룹 0건이라 합성DB로 검증) |
 | **B4** | `run_all.py` | H-61·H-62 | ⬜ 미착수 |
 | **B5** | `normalize.py` | H-89·H-90 | ⬜ 미착수 |
 | **B6** | `fill_whitelist_specs.py` | H-96 (H-47은 완료) | ⬜ 미착수 |
