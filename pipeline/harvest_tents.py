@@ -151,9 +151,11 @@ def ingest(con, cand, seen_names):
         conf = spec["conf"]
         if conf == "auto":
             conf = "medium" if "~" in raw else "high"
+        # M-254: valid=1 명시(multicat/crosssource와 동일). 생략 시 DB DEFAULT 미설정 환경에서 valid=NULL→
+        #   WHERE valid=1 필터 미통과로 수확 스펙이 통째로 무효화될 수 있다.
         con.execute("""INSERT INTO product_spec_values
-            (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary)
-            VALUES(?,?,?,?,?,1,?,1)""", (pid, P.metric_id(con, cid, spec["metric"]), val, raw, "norm", conf))
+            (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
+            VALUES(?,?,?,?,?,1,?,1,1)""", (pid, P.metric_id(con, cid, spec["metric"]), val, raw, "norm", conf))
         got.add(spec["metric"])
 
     for key in REQ:
