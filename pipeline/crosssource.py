@@ -143,6 +143,11 @@ def upsert(con, pid, cid, key, val, raw, conf, src, overwrite=False):
     mid = P.metric_id(con, cid, key)
     if mid is None:
         return False
+    # M-201: raw_unit를 placeholder "norm"으로 박으면 단위 정보가 소실(m dict 지표는 raw도 단위 없는
+    # 숫자라 단위가 완전 증발). metrics.unit(value_normalized의 기준 단위, NOT NULL)을 기록해 보존.
+    # power_output처럼 카테고리별 단위(kcal/W)가 다르므로 key가 아니라 metric_id로 조회.
+    urow = con.execute("SELECT unit FROM metrics WHERE id=?", (mid,)).fetchone()
+    raw_unit = urow[0] if urow else "norm"
     has = con.execute("SELECT 1 FROM product_spec_values WHERE product_id=? AND metric_id=? AND valid=1",
                       (pid, mid)).fetchone()
     if has and not overwrite:
@@ -153,7 +158,7 @@ def upsert(con, pid, cid, key, val, raw, conf, src, overwrite=False):
     con.execute("DELETE FROM product_spec_values WHERE product_id=? AND metric_id=? AND valid=0 AND source_id=4", (pid, mid))
     con.execute("""INSERT INTO product_spec_values
         (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
-        VALUES(?,?,?,?,?,4,?,1,1)""", (pid, mid, val, f"{raw} [{src}]", "norm", conf))
+        VALUES(?,?,?,?,?,4,?,1,1)""", (pid, mid, val, f"{raw} [{src}]", raw_unit, conf))
     con.execute("UPDATE data_quality_flags SET resolved=1 WHERE product_id=? AND metric_id=? AND flag_type='missing'",
                 (pid, mid))
     return True

@@ -63,8 +63,11 @@ def export(con, outdir):
                 """SELECT id,key,label_ko,unit,direction,is_star_metric FROM metrics
                    WHERE category_id=? ORDER BY is_star_metric DESC, id""", (cid,)):
             pct, _, _ = LM.fill_rate(con, mid)
+            # M-200: is_star_metric은 INTEGER NOT NULL DEFAULT 1 → 0만 비★, None/누락은 기본값(★).
+            # bool(None)=False는 None을 비★로 떨어뜨려 DEFAULT 의도와 정반대 오분류(★지표 평점 누락).
+            is_star = star != 0
             metrics.append({"key": key, "label": lab, "unit": unit or "", "direction": direction,
-                            "is_star": bool(star), "fill": pct, "limit": star and pct < LM.GOOD})
+                            "is_star": is_star, "fill": pct, "limit": is_star and pct < LM.GOOD})
         star_metrics = [m for m in metrics if m["is_star"]]
 
         # 모델(canonical dedup) 행
