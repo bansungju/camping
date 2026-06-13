@@ -220,6 +220,11 @@ def normalize_db(con):
     con.commit()
     dedup_price_observations(con)  # 중복 관측 정리(최신1행) → 적재 비대/중앙값 점령 방지
     flag_price_outliers(con)   # 부속·오타 단가 격리(valid=0) → 아래 집계서 제외
+    # H-110: DROP+CREATE+INSERT를 단일 명시 트랜잭션으로 감싼다. 레거시 isolation_level("")에선
+    #   직전 flag_price_outliers의 commit(L171)으로 열린 트랜잭션이 없어 DROP(DDL)이 autocommit으로
+    #   즉시 영구화 → DROP 직후 크래시 시 canonical_models가 영구 소실(export/verify 전부 실패).
+    #   BEGIN으로 묶으면 252의 commit 전 크래시 시 미커밋 트랜잭션이 롤백돼 테이블이 보존된다.
+    con.execute("BEGIN")
     con.execute("DROP TABLE IF EXISTS canonical_models")
     con.execute("""CREATE TABLE canonical_models (
         rep_product_id INTEGER, brand_id INTEGER, category_id INTEGER,
