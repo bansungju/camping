@@ -30,12 +30,15 @@ SLUG = {
 }
 
 
-def metric_badge(key, source_id, star_eligible, has_value):
+def metric_badge(key, source_id, star_eligible, has_value, confidence=None):
     if not has_value:
         return "데이터부족"
     if key == "floor_area" and star_eligible == 0:
         return "외형기준"           # footprint(이너 미상) — 별점 제외분
-    return "확정" if source_id == 4 else "참고"
+    # source_id 1-3(다나와 계열)은 확정; source_id 4+(외부/OCR)는 confidence로 판단
+    if source_id is not None and source_id >= 4 and confidence in ("medium", "low"):
+        return "참고"
+    return "확정"
 
 
 def export(con, outdir):
@@ -75,19 +78,20 @@ def export(con, outdir):
         for rep, brand, cm, cap, variants in reps:
             specs = {}
             for m in star_metrics:
-                row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible
+                row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
                     FROM product_spec_values v JOIN metrics mt ON mt.id=v.metric_id
                     WHERE v.product_id=? AND mt.key=? AND v.valid=1 LIMIT 1""",
                     (rep, m["key"])).fetchone()
                 val = row[0] if row else None
                 src = row[1] if row else None
                 se = row[2] if row else 1
+                conf = row[3] if row else None
                 stars = con.execute("""SELECT r.stars FROM ratings r JOIN metrics mt ON mt.id=r.metric_id
                     WHERE r.product_id=? AND mt.key=?""", (rep, m["key"])).fetchone()
                 specs[m["key"]] = {
                     "value": round(val, 2) if val is not None else None,
                     "stars": stars[0] if stars else None,
-                    "badge": metric_badge(m["key"], src, se, val is not None),
+                    "badge": metric_badge(m["key"], src, se, val is not None, conf),
                 }
             pr = con.execute("""SELECT cm.min_price, cm.max_price FROM canonical_models cm
                 JOIN products p ON p.id=? WHERE cm.brand_id=p.brand_id
