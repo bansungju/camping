@@ -3711,12 +3711,14 @@ async function requestPushSubscription(userId) {
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
   const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
-  await supabase.from("push_subscriptions").upsert({
+  const { error } = await supabase.from("push_subscriptions").upsert({
     user_id: userId,
     endpoint: j.endpoint,
     p256dh: j.keys.p256dh,
     auth_key: j.keys.auth,
   }, { onConflict: "user_id,endpoint" });
+  // M-170/M-440: upsert 오류 무음 방지
+  if (error) { console.error("_savePushSub:", error); showToast("알림 구독 저장에 실패했어요. 다시 시도해 주세요."); }
 }
 
 function _urlBase64ToUint8Array(base64String) {
@@ -4030,7 +4032,8 @@ function openLogDetail(p) {
         cmtList.querySelectorAll(".cmt-del-btn").forEach(btn => {
           btn.onclick = async () => {
             const cid = btn.dataset.cid;
-            await supabase.from("comments").update({ deleted_at: new Date().toISOString() }).eq("id", cid).eq("user_id", window._commUser.id);
+            const { error } = await supabase.from("comments").update({ deleted_at: new Date().toISOString() }).eq("id", cid).eq("user_id", window._commUser.id);
+            if (error) { console.error("cmt delete:", error); showToast("댓글 삭제에 실패했어요."); return; }  // M-171
             await loadComments();
           };
         });
