@@ -259,7 +259,6 @@ async function syncWishlistOnLogin() {
 
 // 최초 로그인(또는 닉네임 미설정) 시 강제 닉네임 설정 모달. 소셜 실명 노출 차단.
 function renderNicknameModal() {
-  window.onWishChange = null
   showLoggedInSections(true)
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
