@@ -383,18 +383,25 @@ const GRADE_LEGEND = `
     <span><span class="b 데이터부족">데이터부족</span> 미공개</span>
   </div>`;
 
+const _getJSONCache = new Map();  // M-455: 동시 호출 dedup — 동일 URL in-flight 요청 공유
 async function getJSON(p) {
-  const r = await fetch(p);
-  if (!r.ok) throw new Error(`${p} ${r.status}`);
-  // H-60: GitHub Pages가 누락 경로에 200+HTML(커스텀 404/SPA fallback)을 주면 .json() 파싱오류가
-  // caller의 .catch(()=>[])에 무음으로 삼켜져 빈 목록이 정상처럼 표시됨 → JSON이 아니면 명시적으로 throw+경고
-  const ct = r.headers.get("content-type") || "";
-  if (!ct.includes("json")) {
-    const head = (await r.text()).slice(0, 80).replace(/\s+/g, " ");
-    console.warn(`[getJSON] non-JSON response for ${p} (content-type: ${ct || "none"}): ${head}`);
-    throw new Error(`${p}: non-JSON (${ct || "none"})`);
-  }
-  return r.json();
+  if (_getJSONCache.has(p)) return _getJSONCache.get(p);
+  const promise = (async () => {
+    const r = await fetch(p);
+    if (!r.ok) throw new Error(`${p} ${r.status}`);
+    // H-60: GitHub Pages가 누락 경로에 200+HTML(커스텀 404/SPA fallback)을 주면 .json() 파싱오류가
+    // caller의 .catch(()=>[])에 무음으로 삼켜져 빈 목록이 정상처럼 표시됨 → JSON이 아니면 명시적으로 throw+경고
+    const ct = r.headers.get("content-type") || "";
+    if (!ct.includes("json")) {
+      const head = (await r.text()).slice(0, 80).replace(/\s+/g, " ");
+      console.warn(`[getJSON] non-JSON response for ${p} (content-type: ${ct || "none"}): ${head}`);
+      throw new Error(`${p}: non-JSON (${ct || "none"})`);
+    }
+    return r.json();
+  })();
+  _getJSONCache.set(p, promise);
+  promise.finally(() => _getJSONCache.delete(p));
+  return promise;
 }
 
 /* HTML 이스케이프 (모델명에 < > & " ' 들어가도 안전) */
@@ -2075,7 +2082,7 @@ function defaultAsc(key) {
 function passExcept(m, skip, sortK) {
   if (skip !== "cap" && STATE.cap && String(m.capacity) !== STATE.cap) return false;
   if (skip !== "brands" && STATE.brands.size && !STATE.brands.has(m.brand)) return false;
-  if (skip !== "q" && STATE.q) { const t = (m.brand + " " + m.model).toLowerCase(); if (!STATE.q.toLowerCase().split(/\s+/).every(tok => t.includes(tok))) return false; }  // M-326+M-483
+  if (skip !== "q" && STATE.q) { const t = (m.brand + " " + m.model + " " + _brandAlias(m.brand)).toLowerCase(); if (!STATE.q.toLowerCase().split(/\s+/).every(tok => t.includes(tok))) return false; }  // M-326+M-483+M-390: 영문 브랜드명 매칭
   for (const [key, r] of Object.entries(STATE.range)) {
     if (skip === "range:" + key) continue;
     const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
