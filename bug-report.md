@@ -7851,7 +7851,7 @@
 
 ---
 
-### [M-376] — `add_value_star.py` `main` — `encoding` 미지정 `open()` → 비UTF 로케일에서 한국어 파싱 오류
+### ✅ 해결완료(2026-06-13) [M-376] — `add_value_star.py` `main` — `encoding` 미지정 `open()` → 비UTF 로케일에서 한국어 파싱 오류
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -9246,7 +9246,7 @@
 
 ---
 
-### [M-422] — `collect_images.py` — `polite_sleep(sleep, sleep)` 고정 간격으로 봇 탐지 위험
+### ✅ 해결완료(2026-06-13) [M-422] — `collect_images.py` — `polite_sleep(sleep, sleep)` 고정 간격으로 봇 탐지 위험
 
 - **영역:** 백엔드 — 이미지 수집
 - **심각도:** 🟡 Medium
@@ -10074,7 +10074,7 @@
 
 ---
 
-### [M-457] — `renderNicknameModal` — auth 상태 갱신 중 이중 동기화 위험
+### [M-457] ✅ 분석완료(moot: M-482 _wishSyncedUser 가드가 재진입 차단) — `renderNicknameModal` — auth 상태 갱신 중 이중 동기화 위험
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -11226,7 +11226,7 @@
 
 ---
 
-### [M-505] — `syncWishlistOnLogin` 최초 로그인+닉네임 설정 플로 — 이중 원격 쓰기 경합
+### [M-505] ✅ 분석완료(moot: M-482 _wishSyncedUser 가드가 이중 실행 차단) — `syncWishlistOnLogin` 최초 로그인+닉네임 설정 플로 — 이중 원격 쓰기 경합
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟡 Medium
@@ -11466,7 +11466,7 @@
 
 ---
 
-### [M-517] — `syncGearSetsOnLogin` — `remoteId` 기반만 dedup, 콘텐츠 동일 세트 신규 기기에서 중복 생성
+### [M-517] ✅ 해결완료(2026-06-14) — `syncGearSetsOnLogin` — `remoteId` 기반만 dedup, 콘텐츠 동일 세트 신규 기기에서 중복 생성
 
 - **영역:** 프론트엔드 — 세트 동기화
 - **심각도:** 🟡 Medium
@@ -12798,7 +12798,7 @@
 
 ---
 
-### [M-571] — `account.html` — 로그아웃 후 `_wishSyncedUser` 리셋 누락 → 재로그인 시 찜 동기화 스킵
+### [M-571] ✅ 해결완료(2026-06-14) — `account.html` — 로그아웃 후 `_wishSyncedUser` 리셋 누락 → 재로그인 시 찜 동기화 스킵
 
 - **영역:** 프론트엔드 — 계정/인증
 - **심각도:** 🟡 Medium
@@ -12810,7 +12810,7 @@
 
 ---
 
-### [M-572] — `account.html` 계정 삭제 — `push-denied`·`_sid`·`post_likes` 등 개인화 키 미정리 → 공유 기기 데이터 잔류
+### [M-572] ✅ 해결완료(2026-06-14) — `account.html` 계정 삭제 — `push-denied`·`_sid`·`post_likes` 등 개인화 키 미정리 → 공유 기기 데이터 잔류
 
 - **영역:** 프론트엔드 — 계정/인증
 - **심각도:** 🟡 Medium
