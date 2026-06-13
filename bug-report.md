@@ -3508,7 +3508,7 @@
 
 ---
 
-### [M-182] — `wireReviews` 폼 submit — `removeUploadedImages()` `await` 누락 → Storage 롤백 미보장, orphan 파일 누적
+### [M-182] ✅ 해결완료(2026-06-14) — `wireReviews` 폼 submit — `removeUploadedImages()` `await` 누락 → Storage 롤백 미보장, orphan 파일 누적
 
 - **영역:** 프론트엔드 — 리뷰 (app.js)
 - **심각도:** 🟡 Medium
@@ -7467,7 +7467,7 @@
 
 ---
 
-### [M-365] — `babysit.py` `main` — `near` 제품 목록이 todos 루프 외부 출력으로 리포트 구조 깨짐
+### ✅ 해결완료(2026-06-13) [M-365] — `babysit.py` `main` — `near` 제품 목록이 todos 루프 외부 출력으로 리포트 구조 깨짐
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7875,7 +7875,7 @@
 
 ---
 
-### [M-378] — `babysit.py` `main` — `promote_all` 중 예외 후 `con.commit()` → 검증 목록 전체 소실
+### ✅ 해결완료(2026-06-13) [M-378] — `babysit.py` `main` — `promote_all` 중 예외 후 `con.commit()` → 검증 목록 전체 소실
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8151,7 +8151,7 @@
 
 ---
 
-### [M-387] — `validate_ranges.py` `validate_db` — `rederive_thickness`로 `value_normalized=NULL`된 행이 `valid=1` 재설정
+### ✅ 해결완료(2026-06-13) [M-387] — `validate_ranges.py` `validate_db` — `rederive_thickness`로 `value_normalized=NULL`된 행이 `valid=1` 재설정
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8766,7 +8766,7 @@
 
 ---
 
-### [M-407] — `openLogModal` — 이전 Blob URL 미해제로 메모리 누출
+### [M-407] ✅ 해결완료(2026-06-14) — `openLogModal` — 이전 Blob URL 미해제로 메모리 누출
 
 - **영역:** 프론트엔드 — 로그 작성
 - **심각도:** 🟡 Medium
@@ -8874,7 +8874,7 @@
 
 ---
 
-### [M-412] — `fill_whitelist_specs.py` — `valid=0` 스펙도 "있음"으로 처리해 무효화 스펙 재수집 불가
+### ✅ 해결완료(2026-06-13·by-design) [M-412] — `fill_whitelist_specs.py` — `valid=0` 스펙도 "있음"으로 처리해 무효화 스펙 재수집 불가
 
 - **영역:** 백엔드 — 스펙 수집
 - **심각도:** 🟡 Medium
@@ -9234,7 +9234,7 @@
 
 ---
 
-### [M-421] — `babysit.py` — `near` 목록 출력에 헤더 없어 보고서 구조 혼란
+### ✅ 해결완료(2026-06-13) [M-421] — `babysit.py` — `near` 목록 출력에 헤더 없어 보고서 구조 혼란
 
 - **영역:** 백엔드 — 모니터링
 - **심각도:** 🟡 Medium
@@ -12150,7 +12150,7 @@
 
 ---
 
-### [M-544] — 후기 신고 사유 입력에 `prompt()` 사용 → iOS Safari PWA에서 차단
+### [M-544] ✅ 해결완료(2026-06-14) — 후기 신고 사유 입력에 `prompt()` 사용 → iOS Safari PWA에서 차단
 
 - **영역:** 프론트엔드 — 상품 상세 모달 / 후기 신고
 - **심각도:** 🟡 Medium
