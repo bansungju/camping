@@ -108,7 +108,7 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
   (async () => {
     try {
-      const { supabase } = await import('./supabaseClient.js?v=08466c5f');
+      const { supabase } = await import('./supabaseClient.js?v=2fbbf301');
       const { data: { session } } = await supabase.auth.getSession();
       _user = session?.user ?? null;
       window._accUser = _user;   // account.html 등 하위호환
@@ -449,7 +449,7 @@ function _execToggleWish(item) {
     const u = window.currentUser && window.currentUser();
     if (u && u.id) {
       if (window.Capacitor?.isNativePlatform?.()) {
-        import("./supabaseClient.js?v=08466c5f").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
+        import("./supabaseClient.js?v=2fbbf301").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
       } else if ("serviceWorker" in navigator && "PushManager" in window) {
         requestPushSubscription(u.id);
       }
@@ -2112,6 +2112,7 @@ function diagnoseEmpty(sortK) {
 function openProduct(m) {
   if (!m) return;
   if (!STATE.data) return;  // M-267: STATE.data null 시 d.metrics TypeError 방지
+  const _tb = document.getElementById("spec-tip-bubble"); if (_tb) _tb.style.display = "none";  // M-186: 모달 오픈 시 버블 숨김
   pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
@@ -2177,7 +2178,7 @@ function openProduct(m) {
       const url = buyBtn.dataset.url;
       openExternal(url);
       try {
-        const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+        const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
         let sessionId = localStorage.getItem("_sid");
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
         await supabase.from("click_events").insert({
@@ -2352,7 +2353,7 @@ function openReviewDetail(r) {
     if (!reason || reason.trim().length < 5) return;
     rbtn.disabled = true; rbtn.textContent = "신고 중…";
     try {
-      const { reportContent } = await import("./supabaseClient.js?v=08466c5f");
+      const { reportContent } = await import("./supabaseClient.js?v=2fbbf301");
       const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
       if (error) {
         const msg = error.message || "";
@@ -2386,7 +2387,7 @@ async function loadReviews(modal, pcode) {
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
-    const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+    const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
     const rv = await _fetchReviews(supabase, pcode);
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
@@ -2494,7 +2495,7 @@ function wireReviews(modal, m, pcode) {
       const submitBtn = form.querySelector(".pmrv-submit");
       submitBtn.disabled = true;
       try {
-        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=08466c5f");
+        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=2fbbf301");
         const { data: { user: u } } = await supabase.auth.getUser();
         if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
         // 사진 업로드(순차)
@@ -2943,7 +2944,7 @@ async function renderHotSection(categories) {
 
   // RPC로 최근 7일 클릭 상위 30개 집계 (카테고리별 분류용으로 여유있게)
   try {
-    const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+    const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
     const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });
     if (data && data.length >= 1) {
       // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
@@ -3167,7 +3168,7 @@ function openSetDetail(sid) {
     if (!url) return;
     openExternal(url);
     try {
-      const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+      const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
       let sessionId = localStorage.getItem("_sid");
       if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
       await supabase.from("click_events").insert({
@@ -3243,7 +3244,7 @@ function renderAccount() {
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-        import("./supabaseClient.js?v=08466c5f").then(async ({ supabase, getMyReviews }) => {
+        import("./supabaseClient.js?v=2fbbf301").then(async ({ supabase, getMyReviews }) => {
           myLogsList.dataset.loaded = "1";
           const logsCnt = document.getElementById("logscount");
 
@@ -3330,7 +3331,7 @@ function renderAccount() {
                   if (newBody.length < 20) { errEl2.textContent = "내용을 20자 이상 작성해주세요."; errEl2.style.display = ""; return; }
                   const saveBtn = document.getElementById(`le-save-${pi}`);
                   saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
-                  const { supabase: sb } = await import("./supabaseClient.js?v=08466c5f");
+                  const { supabase: sb } = await import("./supabaseClient.js?v=2fbbf301");
                   const { error } = await sb.from("posts")
                     .update({ title: newTitle, body: newBody })
                     .eq("id", p.id).eq("user_id", userId);
@@ -3346,7 +3347,7 @@ function renderAccount() {
                 const p = list[+btn.dataset.pi];
                 if (!confirm(`"${p.title}" 로그를 삭제할까요?`)) return;
                 btn.disabled = true;
-                const { supabase: sb } = await import("./supabaseClient.js?v=08466c5f");
+                const { supabase: sb } = await import("./supabaseClient.js?v=2fbbf301");
                 const { error } = await sb.from("posts")
                   .update({ deleted_at: new Date().toISOString() })
                   .eq("id", p.id).eq("user_id", userId);
@@ -3426,9 +3427,11 @@ function renderAccount() {
     wishEl.querySelectorAll(".pli").forEach((card, ci) => {
       const wx = wishes[ci];
       const go = async () => {
+        if (card.dataset.loading) return;  // M-404: 중복 클릭 가드
         if (!wx || !wx.s) { location.href = card.dataset.href; return; }
+        card.dataset.loading = "1";
         try {
-          const catJson = await fetch(`data/${wx.s}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });  // M-357: response.ok 체크
+          const catJson = await fetch(`data/${wx.s}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });  // M-357/M-408: response.ok 체크
           const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m);
           if (prod) {
             const prevSlug = STATE.slug, prevData = STATE.data;
@@ -3440,6 +3443,7 @@ function renderAccount() {
             return;
           }
         } catch (_) {}
+        delete card.dataset.loading;
         location.href = card.dataset.href;
       };
       card.onclick = go;
@@ -3721,7 +3725,7 @@ async function requestPushSubscription(userId) {
 
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
-  const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+  const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
   const { error } = await supabase.from("push_subscriptions").upsert({
     user_id: userId,
     endpoint: j.endpoint,
@@ -3757,7 +3761,7 @@ async function renderBestGear() {
 
   // 커뮤니티 태그 집계 TOP-10 (RPC)
   try {
-    const { supabase: sb } = await import("./supabaseClient.js?v=08466c5f");
+    const { supabase: sb } = await import("./supabaseClient.js?v=2fbbf301");
     const { data: topTags } = await sb.rpc("get_top_gear_tags", { limit_n: 10 });
     if (topTags && topTags.length) {
       const sec = document.createElement("div");
@@ -3853,7 +3857,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
 
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
-    const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+    const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     let query = supabase
       .from("posts")
@@ -3922,14 +3926,14 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
           btn.dataset.liked = "0";
           btn.classList.remove("on");
           btn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+          const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
           await supabase.rpc("decrement_post_likes", { post_id: pid });
         } else {
           _setPostLiked(pid, true);
           btn.dataset.liked = "1";
           btn.classList.add("on");
           btn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+          const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
           await supabase.rpc("increment_post_likes", { post_id: pid });
         }
       };
@@ -3994,13 +3998,13 @@ function openLogDetail(p) {
         _setPostLiked(pid, false);
         likeBtn.dataset.liked = "0"; likeBtn.classList.remove("on");
         likeBtn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+        const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
         await supabase.rpc("decrement_post_likes", { post_id: pid });
       } else {
         _setPostLiked(pid, true);
         likeBtn.dataset.liked = "1"; likeBtn.classList.add("on");
         likeBtn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+        const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
         await supabase.rpc("increment_post_likes", { post_id: pid });
       }
     };
@@ -4012,7 +4016,7 @@ function openLogDetail(p) {
 
   // 댓글 로드 및 제출
   (async () => {
-    const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+    const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
     const cmtList = document.getElementById("detail-cmt-list");
     const cmtCnt = document.getElementById("detail-cmt-cnt");
     const cmtForm = document.getElementById("detail-cmt-form");
@@ -4202,7 +4206,7 @@ function openLogModal(presetSetIndex) {
     errEl.style.display = "none";
     submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
     try {
-      const { supabase } = await import("./supabaseClient.js?v=08466c5f");
+      const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
       let image_url = null;
       const imgFile = imgInput.files[0];
       if (imgFile) {
@@ -4324,7 +4328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
         if (window._accUser?.id) {
-          import("./supabaseClient.js?v=08466c5f").then(async ({ upsertGearSet }) => {
+          import("./supabaseClient.js?v=2fbbf301").then(async ({ upsertGearSet }) => {
             const id = await upsertGearSet(newSet, window._accUser.id);
             if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
           }).catch(() => {});

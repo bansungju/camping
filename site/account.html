@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=526d844c"></script>
+<script src="app.js?v=ceacabd9"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -149,7 +149,7 @@
     const count = typeof getWish === 'function' ? getWish().length : 0;
     if (!count) return;
     if (!confirm(`찜한 상품 ${count}개를 모두 해제할까요?`)) return;
-    if (typeof setWish === 'function') setWish([]);
+    if (typeof setWish === 'function') { setWish([]); if (window.onWishChange) window.onWishChange([]); }  // M-213: 원격 찜도 초기화
     if (typeof renderAccount === 'function') renderAccount();
     window.accAnnounce?.('찜한 상품 전체 해제됐어요');
   });
@@ -202,7 +202,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=08466c5f'
+} from './supabaseClient.js?v=2fbbf301'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -226,7 +226,7 @@ const localWish = {
 // 로컬 기어세트 헬퍼
 const localSets = {
   get() { try { return JSON.parse(localStorage.getItem('gear_sets') || '[]') } catch { return [] } },
-  set(a) { localStorage.setItem('gear_sets', JSON.stringify(a)) }
+  set(a) { try { localStorage.setItem('gear_sets', JSON.stringify(a)) } catch (e) { console.warn('gear_sets 저장 실패:', e) } }  // M-468: QuotaExceededError 처리
 }
 
 // 로그인 직후 1회: 로컬↔원격 기어세트 병합
@@ -273,11 +273,15 @@ async function backfillGfCodes(items) {
   })
 }
 
+let _wishSyncedUser = null  // M-482: 동일 사용자 이중 동기 방지
 // 로그인 직후 1회: 로컬↔원격 찜 병합 → 양쪽 저장 → 이후 변경은 onWishChange로 원격 반영
 async function syncWishlistOnLogin() {
+  const { data: { user: _su } } = await supabase.auth.getUser()
+  if (!_su || _wishSyncedUser === _su.id) return
+  _wishSyncedUser = _su.id
   window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   const remote = await loadRemoteWishlist()
-  if (remote === null) return                 // 네트워크/권한 실패 시 로컬 유지(비파괴)
+  if (remote === null) { window.onWishChange = null; return }   // M-454: 실패 시 onWishChange 해제(비파괴)
   const merged = await backfillGfCodes(mergeWishlists(localWish.get(), remote))   // P0.5 gf_code 주입
   localWish.set(merged)
   if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
@@ -454,7 +458,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=08466c5f')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=2fbbf301')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)
