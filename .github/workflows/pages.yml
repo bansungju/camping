@@ -22,6 +22,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       # 배포 게이트: 익스포트된 가격이 카테고리 대비 '말이 안 되는' 값이면 배포 중단.
       #   (쉘터 GHE 2,167원 사건 재발 방지 — 원인 무관하게 결과 JSON을 검증)
       - name: Validate exported prices

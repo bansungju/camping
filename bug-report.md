@@ -75,6 +75,7 @@
 | 61 | 홈/메인 (11순환) | 2026-06-12 | 2건 (M-118 GoTrueClient 이중화·L-102 search.json 버전 하드코딩) |
 | 62 | 코드 정밀 탐색 | 2026-06-13 | 4건 (M-136~M-137·L-160~L-161) |
 | 63 | 찜동기화·카테고리정렬·export·아이템페이지·CI | 2026-06-13 | 4건 (M-140·L-165~L-167) |
+| 64 | recently-viewed·flag_price_outliers·account·view-set | 2026-06-13 | 2건 (M-141·L-168) |
 
 ---
 
@@ -375,7 +376,7 @@
 - **재현:** 카드에 Tab 포커스 → Enter → 모달 미열림
 - **해결(2026-06-11):** 리포트 시점 이후 `draw()`의 카드 키보드 핸들러가 이미 구현된 상태(`el.onkeydown`에서 `Enter`/`Space` → `e.preventDefault()` + `openProduct()`). 라이브 코드 재검증 — 카드 포커스 후 Enter·Space 모두 상품 상세 모달 정상 오픈(큐물러스 매직 100), 콘솔 에러 0. (별도 코드 추가 불필요, 동작 확인으로 해결 표기) [site/app.js](site/app.js)
 
-### [M-69] www 서브도메인 직접 접근 시 이미지 403 + JS ReferenceError — 자산 로드 실패
+### [M-69] ✅ 해결완료(2026-06-12, Cloudflare) — www 서브도메인 직접 접근 시 이미지 403 + JS ReferenceError — 자산 로드 실패
 - **영역:** 상품상세 / 전체
 - **URL:** https://www.gear-forest.com/item/backpacking-tent/item-52.html
 - **증상:** www.gear-forest.com으로 직접 접근 시 HTML은 301 리다이렉트 없이 서빙되나 이미지(`/images/*.jpg`)가 403, JS가 `ReferenceError: renderHub is not defined`로 실패해 페이지 렌더링 불가. H-21 해결 이후에도 www 직접 접근 경로에서 자산 서빙이 차단됨.
@@ -391,7 +392,7 @@
   - 오토/맥시멀(auto-tent, floor_area desc): floor_area는 기본 정렬이 **아니므로** URL에 **명시 유지**됨(`...&sort=spec:floor_area&sa=0`, sortSelect="spec:floor_area").
   - 즉 sort가 생략되는 경우는 "그 값이 곧 기본값"일 때뿐이라 공유 시 동일 결과로 복원되고, 비기본 sort는 URL에 보존됨 → 정렬 미복원 증상은 발생하지 않음. 리포트는 "파라미터가 URL에 없다"는 점만 보고 기본값이 복원한다는 사실을 누락한 false positive. (코드 변경 불필요)
 
-### [M-67] www. 서브도메인 DNS 미해석 — cdn-cgi/rum·이미지 요청 ERR_NAME_NOT_RESOLVED
+### [M-67] ✅ 해결완료(2026-06-12, Cloudflare) — www. 서브도메인 DNS 미해석 — cdn-cgi/rum·이미지 요청 ERR_NAME_NOT_RESOLVED
 - **영역:** 홈/메인 (네트워크/런타임)
 - **URL:** https://gear-forest.com/
 - **증상:** 페이지 로드 시 `https://www.gear-forest.com/cdn-cgi/rum?` 및 `www.gear-forest.com/images/*.jpg` 요청이 `net::ERR_NAME_NOT_RESOLVED`로 반복 실패. 현재 정식 도메인은 apex(gear-forest.com)이며 www는 301 리다이렉트인데, 어떤 JS 또는 잔류 SW가 www. URL로 요청을 생성 중. Cloudflare Analytics 데이터 수집 불가, 이미지 로드 실패.
@@ -1246,7 +1247,7 @@
 - **URL:** https://gear-forest.com/community.html
 - **증상:** `DiscussionForumPosting`, `BreadcrumbList` 등 schema.org JSON-LD 전무. 검색 결과 리치 스니펫 노출 기회 손실. ([L-13] 홈과 동일 패턴)
 
-### [L-25] www·non-www 리다이렉트 동작이 경로마다 불일치
+### [L-25] ✅ 해결완료(2026-06-12, Cloudflare) — www·non-www 리다이렉트 동작이 경로마다 불일치
 - **영역:** 커뮤니티/소셜 (SEO)
 - **URL:** https://gear-forest.com/community.html
 - **증상:** 일부 경로는 www→non-www, 일부는 non-www→www로 리다이렉트 방향이 혼재. canonical은 non-www로 통일되어 있으나 실제 리다이렉트 동작 불일치로 크롤링 일관성 저하. ([H-12] 근본 원인과 연관)
@@ -2542,7 +2543,7 @@
 - **제안 수정:** `autofocus` 제거 후 인라인 스크립트에서 `initQ` 없을 때만 `inp.focus()` 호출; `initQ` 있으면 focus 생략하고 드롭다운만 표시.
 - **파일:** [site/search.html](site/search.html) line 38 [lane:CORE]
 
-### [L-164] — `gear-list-appscript.gs` — `markApplied` — H열에 `''` 기록이 기존 수동 입력값을 덮어씀
+### [L-164] ✅ 해결완료(2026-06-13, BACKEND 기구현) — `gear-list-appscript.gs` — `markApplied` — H열에 `''` 기록이 기존 수동 입력값을 덮어씀
 - **영역:** 백엔드(Google Apps Script) — 완료 표기 유틸리티
 - **심각도:** 🟢 Low
 - **증상:** `markApplied()`(line 116–132)는 D열에 쿠팡 링크가 없는 모든 행의 H열을 `''`(빈 문자열)로 덮어쓴다. 운영자가 H열에 "작업중", "확인필요" 등 수동 메모를 적어두면 `markApplied` 재실행 시 모두 삭제된다. `doGet()` webhook으로 자동 호출될 경우 사이드이펙트가 더 커진다.
@@ -2582,7 +2583,7 @@
 - **제안 수정:** `renderNicknameModal` 진입 시 기존 `onWishChange` 핸들러를 보존하거나, 닉네임 저장 완료 후 `syncWishlistOnLogin()`에서 핸들러를 재설정하는 현재 로직(line 325)으로 충분하므로 `window.onWishChange = null` 라인 제거 검토.
 - **파일:** [site/account.html](site/account.html) line 262 [lane:SOCIAL]
 
-### [L-167] — `pages.yml` — CI에서 `python3` 버전 명시 없음 → ubuntu-latest Python 버전 변경 시 스크립트 호환성 미보장
+### [L-167] ✅ 해결완료(2026-06-13, CORE) — `pages.yml` — CI에서 `python3` 버전 명시 없음 → ubuntu-latest Python 버전 변경 시 스크립트 호환성 미보장
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🟢 Low
 - **증상:** `.github/workflows/pages.yml`에서 `python3 pipeline/check_export.py`를 실행하지만 `actions/setup-python` 없이 `ubuntu-latest`의 기본 Python을 사용한다. `ubuntu-latest` 이미지가 `ubuntu-24.04`로 업그레이드되거나 Python 버전이 변경될 경우(현재 3.12) `check_export.py` 또는 그 의존 모듈(`limits_map.py`, `value_metric.py`)이 버전별 문법 차이로 실패할 수 있다. 특히 `match-case`, `typing` 변경 사항 등이 영향을 줄 수 있다.
@@ -2590,3 +2591,23 @@
 - **재현:** 현재는 재현 안 됨. `ubuntu-latest` 이미지 변경 시 잠재 실패.
 - **제안 수정:** `pages.yml`에 `- uses: actions/setup-python@v5` + `with: python-version: "3.11"` (또는 `"3.x"`) 단계 추가.
 - **파일:** [.github/workflows/pages.yml](.github/workflows/pages.yml) [lane:BACKEND]
+
+### [M-141] — `app.js` — `?view-set=` 공유 URL import 시 아이템에 `pcode`·`s`·`coupang_url` 누락 → 구매 버튼 항상 비활성
+- **영역:** 프론트엔드 — 계정/세트
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `?view-set=BASE64`로 공유된 세트를 "내 세트에 추가" 버튼으로 import하면, 저장되는 아이템 구조가 `{ b, m, qty, weight_g }` 만 포함한다. 이후 `openSetDetail`에서 `x.coupang_url`을 참조하면 항상 `undefined` → 모든 아이템의 🛒 구매 버튼이 "준비 중"(disabled) 으로 표시된다. 또한 `qtyMax(x.s)` 호출 시 `x.s`가 undefined → `qtyMax`가 기본값 반환해 수량 상한이 항상 1로 고정된다.
+- **원인:** `vs-import-btn` onclick(line 3630)에서 `setItem()` 헬퍼를 거치지 않고 직접 객체를 생성하며 `pcode`(= `wishKey`), `s`(카테고리 슬러그), `coupang_url`을 포함하지 않음. M-130·M-131과 동일 패턴이나 view-set import 경로는 수정 누락.
+- **재현:** 세트를 공유 링크로 복사 → 다른 브라우저/비로그인 상태에서 URL 열기 → "내 세트에 추가" → 추가된 세트에서 🛒 버튼 확인 → "준비 중" 표시.
+- **제안 수정:** line 3630의 `items` 매핑에서 `setItem(x, x.s || "")` 헬퍼 사용 또는 `pcode: wishKey(x.b, x.m, x.cap ?? null), s: x.s || "", coupang_url: x.coupang_url || ""` 필드 추가.
+- **파일:** [site/app.js](site/app.js) line 3630 [lane:CORE]
+
+### [L-168] — `account.html` — 프로필 카드 로그인 방식 "Google 로그인" 하드코딩 — OAuth 프로바이더 동적 조회 없음
+- **영역:** 프론트엔드 — 계정
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `renderProfile()`(account.html line 424)에서 로그인 방식을 항상 "Google 로그인"으로 출력한다. 현재는 Google OAuth만 지원하므로 실질 오표시는 없지만, 향후 GitHub·카카오 등 추가 프로바이더를 지원할 경우 오표시된다. 또한 `profile` 객체에서 실제 프로바이더 정보를 읽을 수 있음에도 하드코딩됨.
+- **원인:** `renderProfile` 구현 시 프로바이더 동적 조회 로직 미구현. `supabase.auth.getUser()`의 `user.app_metadata.provider` 또는 `user.identities[0].provider`로 동적 처리 가능.
+- **재현:** 현재 Google 외 프로바이더 추가 시 재현. 코드 리뷰 수준 이슈.
+- **제안 수정:** `renderProfile`에 `window._accUser?.app_metadata?.provider` 참조하여 "Google 로그인", "GitHub 로그인" 등 동적 표시. 또는 현재 단계에서는 "소셜 로그인"으로 중립 표현 변경.
+- **파일:** [site/account.html](site/account.html) line 424 [lane:SOCIAL]
