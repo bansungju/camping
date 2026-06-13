@@ -894,7 +894,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=bbe00284").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=d7364f3e").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1107,7 +1107,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=bbe00284").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=d7364f3e").catch(() => []);
     return idx;
   };
 
@@ -1875,6 +1875,7 @@ function clearAllFilters() {
 // 칩/입력 UI를 STATE에 동기화(활성칩에서 해제 시 컨트롤도 반영)
 function syncFilterUI() {
   const bar = document.getElementById("filters");
+  if (!bar) return;
   bar.querySelectorAll("[data-cap]").forEach(b => { const on = b.dataset.cap === STATE.cap; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-119
   bar.querySelectorAll("[data-brand]").forEach(b => { const on = STATE.brands.has(b.dataset.brand); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });  // L-119
   bar.querySelectorAll(".dslider").forEach(sl => {
@@ -2582,7 +2583,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=bbe00284"); }
+  try { idx = await getJSON("data/search.json?v=d7364f3e"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -3018,7 +3019,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=bbe00284")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=d7364f3e")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3600,7 +3601,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     let query = supabase
       .from("posts")
-      .select("id, title, content, tags, created_at, user_id, image_url, likes, comment_count, gear_set_snapshot, profiles(nickname)")
+      .select("id, title, body, tags, created_at, user_id, image_url, likes, comment_count, gear_set_snapshot, profiles(nickname)")
       .eq("is_public", true)
       .order(orderCol, { ascending: false })
       .limit(50);
@@ -3620,7 +3621,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
       const nick = p.profiles?.nickname || "익명";
       const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<button type="button" class="log-tag log-tag-btn" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
-      const preview = (p.content || "").slice(0, 80).replace(/\n/g, " ");
+      const preview = (p.body || "").slice(0, 80).replace(/\n/g, " ");
       const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
       const gs = p.gear_set_snapshot;
       const gsBadge = gs ? (() => { const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const cnt = (gs.items||[]).length; return `<div class="log-set-badge">🎒 ${esc(gs.name)}${cnt ? ` · ${cnt}개` : ""}${wTxt ? ` · ${wTxt}` : ""}</div>`; })() : "";
@@ -3633,7 +3634,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
           <span class="log-date">${dt}</span>
         </div>
         <div class="log-title">${esc(p.title)}</div>
-        <div class="log-preview">${esc(preview)}${(p.content || "").length > 80 ? "…" : ""}</div>
+        <div class="log-preview">${esc(preview)}${(p.body || "").length > 80 ? "…" : ""}</div>
         ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
         ${gsBadge}
         <div class="log-card-foot">
@@ -3693,7 +3694,7 @@ function openLogDetail(p) {
   const nick = p.profiles?.nickname || "익명";
   const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
   const tagHtml = (p.tags || []).map(t => `<span class="log-tag" style="font-size:12px;padding:3px 10px">${esc(t)}</span>`).join("");
-  const body = esc(p.content || "").replace(/\n/g, "<br>");
+  const body = esc(p.body || "").replace(/\n/g, "<br>");
   modal.innerHTML = `<div class="pmbox log-detail-box" role="dialog" aria-modal="true">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -3920,6 +3921,7 @@ function openLogModal(presetSetIndex) {
 
   imgInput.addEventListener("change", () => {
     const file = imgInput.files[0];
+    if (imgThumb.src.startsWith("blob:")) URL.revokeObjectURL(imgThumb.src);
     if (!file) { imgPreview.style.display = "none"; return; }
     if (file.size > 5 * 1024 * 1024) {
       errEl.textContent = "사진은 5MB 이하만 가능해요."; errEl.style.display = "";
@@ -3976,7 +3978,10 @@ function openLogModal(presetSetIndex) {
   };
 
   modal.classList.add("on");
-  const close = () => modal.classList.remove("on");
+  const close = () => {
+    if (imgThumb.src.startsWith("blob:")) URL.revokeObjectURL(imgThumb.src);
+    modal.classList.remove("on");
+  };
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
 }
