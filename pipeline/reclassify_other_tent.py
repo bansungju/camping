@@ -41,7 +41,9 @@ def bucket(name, cap, w):
         return "auto"
     # M-234: `.get(cap or 0)`은 cap=None과 cap=0을 모두 key 0으로 합쳐 구분을 잃는다 → `.get(cap)`로 명시
     #   (None/0/미등록 cap 모두 band=None → auto, 동작 동일하나 의도 명확).
-    band = {1: 2500, 2: 3000, 3: 3600}.get(cap)
+    # M-431: cap=4 누락 시 4인 경량텐트가 무조건 auto(오토캠핑)로 오배정 → column_fixes WEIGHT_CAP_BP와
+    #   일치하게 4:5500(4인 백패킹 상한) 추가.
+    band = {1: 2500, 2: 3000, 3: 3600, 4: 5500}.get(cap)
     return "back" if (band and w <= band) else "auto"
 
 
