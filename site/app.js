@@ -1653,7 +1653,11 @@ function openProduct(m) {
     const val = has ? fmtVal(s.value, mt.unit) : (OPS ? '<span class="b 데이터부족">데이터부족</span>' : "—");
     const st = (has && s.stars != null) ? " " + stars(s.stars) : "";
     const badge = (OPS && has && s.badge) ? ` <span class="b ${s.badge}">${s.badge}</span>` : "";
-    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? ` (${mt.unit})` : ""}</span>` +
+    const isValue = mt.key === "value_score" || mt.key === "value_per_g" || mt.key === "value_per_l";
+    const tooltip = isValue
+      ? `<button type="button" class="spec-tip-btn" aria-label="가성비 기준 설명" title="가성비 = 같은 그룹 내 주요 스펙 별점을 가격(만원)으로 나눈 점수. 100점에 가까울수록 가격 대비 스펙이 우수해요.">?</button>`
+      : "";
+    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? ` (${mt.unit})` : ""}${tooltip}</span>` +
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
@@ -1755,6 +1759,13 @@ function openProduct(m) {
   const xbtn = modal.querySelector(".pmx");
   xbtn.onclick = close;
   xbtn.focus();
+  // 가성비 ? 툴팁 — 모바일 클릭 토글
+  modal.querySelectorAll(".spec-tip-btn").forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); btn.classList.toggle("open"); };
+  });
+  modal.querySelector(".pmbox").addEventListener("click", () => {
+    modal.querySelectorAll(".spec-tip-btn.open").forEach(b => b.classList.remove("open"));
+  });
   // 포커스 트랩 (H-29, WCAG 2.1.2) — Tab/Shift+Tab이 모달 밖으로 탈출하지 않고 순환.
   const onKey = e => {
     if (e.key === "Escape") { close(); return; }
