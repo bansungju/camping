@@ -981,7 +981,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=f9395775").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1198,7 +1198,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=f9395775").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=92bd9d85").catch(() => []);
     return idx;
   };
 
@@ -2756,7 +2756,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=f9395775"); }
+  try { idx = await getJSON("data/search.json?v=92bd9d85"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -3211,7 +3211,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=f9395775")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=92bd9d85")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
