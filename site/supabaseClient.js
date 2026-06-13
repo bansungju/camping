@@ -168,6 +168,9 @@ export async function saveRemoteWishlist(items) {
     if (_wishPending === undefined) return            // 더 최신 호출이 이미 flush함
     const payload = _wishPending
     _wishPending = undefined
+    // M-569: 체인 실행 시점에 사용자 재확인 — 사용자 전환 시 이전 사용자 데이터 혼입 방지
+    const { data: { user: cu } } = await supabase.auth.getUser()
+    if (!cu || cu.id !== user.id) return
     const res = await supabase.from('wishlists')
       .upsert({ user_id: user.id, items: payload }, { onConflict: 'user_id' })
     if (res?.error) console.error('saveRemoteWishlist', res.error)
@@ -397,7 +400,7 @@ export async function upsertGearSet(set, userId) {
     completeness: set.items?.length || 0,
   }
   if (set.remoteId) {
-    const { error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId)
+    const { error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId).eq('user_id', userId)  // M-566: user_id 필터 추가 — RLS 오류 시 타인 세트 덮어쓰기 방지
     return error ? null : set.remoteId
   }
   const { data, error } = await supabase.from('gear_sets').insert(payload).select('id').single()
