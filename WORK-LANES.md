@@ -61,9 +61,9 @@
 | **B19** | `refresh.py` | H-103·H-104 | 이상치 가드(pid2cat 반전·strptime) | ✅ 2026-06-13 (H-104 fromisoformat / H-103 현재코드 올바름·실증) |
 | **B20** | `add_value_star.py` | H-106 | 견고성(파일핸들·JSON 절단) | ✅ 2026-06-13 (atomic write+with, M-376동반) |
 | **B21** | `add_manual_models.py` | H-102 | 크래시(빈 prices min/max) | ✅ 2026-06-13 (빈 prices 조기 ValueError) |
-| **B22** | `pipeline.py` | H-123 | 동시성(gf_code COUNT 중복) | ⬜ |
-| **B23** | `backend/db.py` | H-125 | 동시성(WAL read-write 손상) | ⬜ |
-| **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ⬜ |
+| **B22** | `pipeline.py` | H-123 | 동시성(gf_code COUNT 중복) | ✅ 2026-06-13 (UNIQUE 인덱스+재시도) |
+| **B23** | `backend/db.py` | H-125 | 동시성(WAL read-write 손상) | ✅ 2026-06-13 (체크포인트 제거→모니터링 전용) |
+| **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ✅ 2026-06-13 (후보루프+페이지후 target break) |
 | **B25** | `ocr_specs.py` | H-116 | dv=0 오분류 | ⬜ |
 | **B26** | `stamp_version.py` | H-119 | FileNotFoundError 가드 | ⬜ |
 | **B27** | `download_images.py` | H-120 | 재다운로드 누락 | ⬜ |
@@ -95,7 +95,7 @@
 | **C15** | `star_catalog.py` | M-169·M-260 수정(valid=1+양수가드) / L-235 by-design(종합점수 저장됨·지표별은 ratings) | ✅ 2026-06-13 |
 | **C16** | `brand_filter.py` | M-333(플레이스홀더 가드)·L-232(rowcount) 수정 / M-178 비이슈(sub가 카테고리 스코프) | ✅ 2026-06-13 |
 | **C17** | `multicat.py` | M-183·M-290 수정(lastrowid·충돌스킵) / M-256 보류(seen_names가 HT.ingest·refresh와 string-set 공유계약 → 크로스파일 조율 필요) | ✅ 2026-06-13 |
-| **C18** | `add_manual_models.py` | M-197·M-225·M-280 | ⬜ |
+| **C18** | `add_manual_models.py` | M-225 수정(with+예외) / M-197=H-102(B21) 기해결 / M-280 by-design(수동=권위 canonical 소유) | ✅ 2026-06-13 |
 | **C19** | `enrich_details.py` | M-215·M-250·M-322 | ⬜ |
 | **C20** | `check_export.py` | M-222·M-294·L-231 | ⬜ |
 | **C21** | `stamp_version.py` | M-248·M-296·L-213 | ⬜ |

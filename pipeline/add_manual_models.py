@@ -106,7 +106,14 @@ def main():
     ap.add_argument("--json", default=os.path.join(ROOT, "manual_models.json"))
     args = ap.parse_args()
 
-    models = json.load(open(args.json, encoding="utf-8"))
+    # M-225: with로 핸들 닫고, 미존재/파싱오류를 명확한 메시지로 조기 종료(스택트레이스 노출·핸들 누수 방지).
+    try:
+        with open(args.json, encoding="utf-8") as f:
+            models = json.load(f)
+    except FileNotFoundError:
+        raise SystemExit(f"manual_models.json 없음: {args.json}")
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"manual_models.json 파싱 오류: {e}")
     con = sqlite3.connect(args.db)
     for m in models:
         pid, filled, pmin, pmax = upsert_model(con, m)
