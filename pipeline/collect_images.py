@@ -70,7 +70,7 @@ def collect(con, cat, limit, sleep):
             # M-217: 무음 무시하면 어떤 pid가 왜 실패했는지 추적 불가 → 경고 출력 후 카운트(NULL 유지=다음 회차 재시도).
             print(f"  ⚠ 이미지 수집 실패 pid={pid}: {type(e).__name__}: {e}", flush=True)
             err += 1
-        danawa.polite_sleep(sleep, sleep)   # sleep ~ 2*sleep 지터(고정 간격 = 봇 지문)
+        danawa.polite_sleep(sleep, 2 * sleep)   # M-422: sleep~2*sleep 지터(고정 간격=봇 지문, 주석↔코드 일치)
     print(f"[{cat}] 완료: 이미지 {ok} · 없음 {none} · 오류(재시도) {err}")
     return ok, none, err
 
