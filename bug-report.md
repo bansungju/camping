@@ -3012,7 +3012,7 @@
 
 ---
 
-### [M-157] — `sw.js` install handler — `SHELL` addAll 실패를 `.catch(()=>{})` 무음 처리 → 오프라인 셸 불완전 설치 후 SW activate
+### [M-157] ✅ 분석완료(moot: L-268으로 SHELL 실패 시 shellOk=false·skipWaiting 차단, DATA 실패는 설계상 무음) — `sw.js` install handler — `SHELL` addAll 실패를 `.catch(()=>{})` 무음 처리 → 오프라인 셸 불완전 설치 후 SW activate
 
 - **영역:** 프론트엔드 — PWA / Service Worker
 - **심각도:** 🟡 Medium
@@ -7347,7 +7347,7 @@
 
 ---
 
-### [M-361] — `verify_internal.py` `main` — 40자 note 접두사 resolved 중복 제거 오탐
+### ✅ 해결완료(2026-06-13) [M-361] — `verify_internal.py` `main` — 40자 note 접두사 resolved 중복 제거 오탐
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8458,7 +8458,7 @@
 
 ---
 
-### [M-398] — `verify_internal.py` `flag_issue` — `data_quality_flags` 인덱스 없어 플래그 쓰기마다 풀 스캔
+### ✅ 해결완료(2026-06-13) [M-398] — `verify_internal.py` `flag_issue` — `data_quality_flags` 인덱스 없어 플래그 쓰기마다 풀 스캔
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -9558,7 +9558,7 @@
 
 ---
 
-### [M-431] — `reclassify_other_tent.py` `bucket()` — `cap=4` 백패킹 텐트 항상 오토캠핑 오분류
+### ✅ 해결완료(2026-06-13) [M-431] — `reclassify_other_tent.py` `bucket()` — `cap=4` 백패킹 텐트 항상 오토캠핑 오분류
 
 - **영역:** 백엔드 — 텐트 재분류
 - **심각도:** 🟡 Medium
@@ -10254,7 +10254,7 @@
 
 ---
 
-### [M-465] — `supabaseClient.js` `saveRemoteWishlist` — 체인 지연 중 세션 변경 시 구 user.id로 upsert
+### [M-465] ✅ 분석완료(M-569 수정으로 체인 내 user 재확인 추가됨) — `supabaseClient.js` `saveRemoteWishlist` — 체인 지연 중 세션 변경 시 구 user.id로 upsert
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟡 Medium
@@ -10974,7 +10974,7 @@
 
 ---
 
-### [M-495] — `saveRemoteWishlist` 병합 경로 — 코얼리싱으로 첫 번째 호출자가 `undefined` 수신
+### [M-495] ✅ 분석완료(moot: 호출자가 반환값 미사용, 코얼리싱은 설계상 의도) — `saveRemoteWishlist` 병합 경로 — 코얼리싱으로 첫 번째 호출자가 `undefined` 수신
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟡 Medium
@@ -11994,7 +11994,7 @@
 
 ---
 
-### [M-538] — `openReviewDetail` — `close()` 내 `ov._onKey` 참조 불일치 → keydown 리스너 누수
+### [M-538] ✅ 분석완료(moot: close() 클로저가 onKey 정확히 캡처, ov._onKey 참조 불일치 없음) — `openReviewDetail` — `close()` 내 `ov._onKey` 참조 불일치 → keydown 리스너 누수
 
 - **영역:** 프론트엔드 — 상품 상세 모달 / 리뷰
 - **심각도:** 🟡 Medium
@@ -12330,7 +12330,7 @@
 
 ---
 
-### [M-552] — `getJSON` — JSON 파일에 버전 쿼리 없이 `fetch()` → 배포 후 stale 데이터 노출
+### [M-552] ✅ 분석완료(moot: SW 버전 캐시로 관리됨, CACHE키 변경 시 이전 데이터 폐기) — `getJSON` — JSON 파일에 버전 쿼리 없이 `fetch()` → 배포 후 stale 데이터 노출
 
 - **영역:** 프론트엔드 — 데이터 로딩
 - **심각도:** 🟡 Medium
@@ -12783,5 +12783,89 @@
 - **원인:** [site/account.html](site/account.html) line 524 — `localStorage.removeItem('sets')` 누락.
 - **제안 수정:** `localStorage.removeItem('sets')` 추가 또는 `signOut()` 단일 호출로 일원화.
 - **파일:** [site/account.html](site/account.html) line 524 [lane:CORE]
+
+---
+
+### [H-147] — `account.html` `syncWishlistOnLogin` — `supabase` 미임포트 → ReferenceError로 찜 동기화 항상 실패
+
+- **영역:** 프론트엔드 — 계정/인증
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-14
+- **증상:** 로그인 직후 찜 동기화가 `ReferenceError: supabase is not defined`로 항상 실패. 원격 찜이 로컬에 병합되지 않아 찜 데이터 유실 가능.
+- **원인:** [site/account.html](site/account.html) line 279 — `supabase.auth.getUser()`를 직접 호출하지만 `supabase` 객체가 임포트 목록(라인 200~205)에 없음.
+- **제안 수정:** 임포트 목록에 `getUser`를 추가하고 `await getUser()`로 교체. 또는 `supabase`를 임포트 목록에 추가.
+- **파일:** [site/account.html](site/account.html) line 279 [lane:AUTH]
+
+---
+
+### [M-571] — `account.html` — 로그아웃 후 `_wishSyncedUser` 리셋 누락 → 재로그인 시 찜 동기화 스킵
+
+- **영역:** 프론트엔드 — 계정/인증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-14
+- **증상:** 로그아웃 후 동일 계정 재로그인 시 `_wishSyncedUser === _su.id` 조건이 참이 되어 찜 동기화 스킵 → 원격 찜이 로컬에 반영되지 않음.
+- **원인:** [site/account.html](site/account.html) line 276–281 — `_wishSyncedUser`가 모듈 스코프 변수인데 `signOut()`·`renderLogin()` 경로에서 `null` 리셋 없음.
+- **제안 수정:** `initAuth` 콜백의 비로그인 분기에서 `_wishSyncedUser = null` 추가.
+- **파일:** [site/account.html](site/account.html) line 412 [lane:AUTH]
+
+---
+
+### [M-572] — `account.html` 계정 삭제 — `push-denied`·`_sid`·`post_likes` 등 개인화 키 미정리 → 공유 기기 데이터 잔류
+
+- **영역:** 프론트엔드 — 계정/인증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-14
+- **증상:** 계정 삭제 후 `push-denied`, `_sid`, `post_likes`, `seenIntro`, `ops` 등 개인화 localStorage 키가 잔류. 공유 기기에서 다음 사용자가 이전 사용자의 세션 관련 데이터를 볼 수 있음.
+- **원인:** [site/account.html](site/account.html) line 524–525 — 계정 삭제 후 `wish`·`gear_sets`만 제거. 나머지 개인화 키 미정리.
+- **제안 수정:** 계정 삭제 성공 후 `localStorage.clear()` 또는 개인화 키 목록 일괄 제거.
+- **파일:** [site/account.html](site/account.html) line 524 [lane:CORE]
+
+---
+
+### [L-473] — `backend/routers/search.py` — 검색 시마다 전체 인덱스 `.lower()` 재계산 → 대량 데이터 성능 저하
+
+- **영역:** 백엔드 — 검색 성능
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-14
+- **증상:** 수천 건의 검색 인덱스에서 매 요청마다 3중 `.lower()` 호출로 성능 저하.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 15–19 — `data_store.search_index`에 원본 문자열 저장, 검색 시마다 `.lower()` 재계산.
+- **제안 수정:** `store.py`의 `load()` 시점에 소문자 정규화된 별도 필드로 사전 변환해 캐싱.
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 15 [lane:BACKEND]
+
+---
+
+### [L-474] — `devagent/nodes/apply.py` — `is_binary` 체크가 `status==deleted` 이전에 오면 바이너리 파일 삭제 묵살 위험
+
+- **영역:** 백엔드 — devagent apply 노드
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-14
+- **증상:** 현재 코드 순서(삭제 먼저, is_binary 나중)는 정상이지만 리팩토링 시 순서가 뒤바뀌면 바이너리 파일 삭제가 묵살됨.
+- **원인:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 65–70 — `status==deleted` 체크 → `is_binary` 체크 순서. 취약한 코드 구조.
+- **제안 수정:** 삭제는 바이너리 여부와 무관하게 항상 처리되도록 `elif` 구조 명시화.
+- **파일:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 65 [lane:BACKEND]
+
+---
+
+### [L-475] — `evidence_collector.py` — data 축 스크립트 실패가 `gate_results`에 미반영 → 계약 체크 누락
+
+- **영역:** 백엔드 — devagent evidence 노드
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-14
+- **증상:** `validate_ranges.py`/`audit.py` 실패가 `evidence` 리스트에만 기록되고 `gate_results`에는 반영되지 않아 `contract_checker`가 데이터 검증 실패를 인식하지 못함.
+- **원인:** [dev-harness/devagent/nodes/evidence_collector.py](dev-harness/devagent/nodes/evidence_collector.py) line 28–36 — 결과가 `evidence` 리스트에만 들어가고 `gate_results`로 연결 안 됨.
+- **제안 수정:** data 축 스크립트 fail 시 `gate_results`에도 `D.1` 등 contract_id로 fail 항목 추가.
+- **파일:** [dev-harness/devagent/nodes/evidence_collector.py](dev-harness/devagent/nodes/evidence_collector.py) line 28 [lane:BACKEND]
+
+---
+
+### [L-476] — `_paintWishBtn` — `data-key` 없는 `#item-wish` 버튼이 모든 찜 토글 시 오갱신
+
+- **영역:** 프론트엔드 — 찜/위시리스트
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-14
+- **증상:** A 상품 찜 중에 B 상품 모달이 열려 있으면 B 모달의 찜 버튼이 잘못 토글될 수 있음.
+- **원인:** [site/app.js](site/app.js) line 486 — `|| !b.dataset.key` 조건이 key 미매칭 버튼도 갱신 대상에 포함.
+- **제안 수정:** `!b.dataset.key` 분기 제거 또는 `openProduct` 내 `#item-wish` 버튼에 항상 `data-key` 설정.
+- **파일:** [site/app.js](site/app.js) line 486 [lane:CORE]
 
 ---
