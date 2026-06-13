@@ -89,12 +89,18 @@ def export(con, outdir):
                 # M-242/M-331: 같은 metric에 valid 행이 여럿(crosssource 보정·source 1/4 공존)일 때
                 #   ORDER BY 없는 LIMIT 1은 임의 행을 줘 낮은 신뢰도 값이 대표가 될 수 있다.
                 #   is_primary 우선 → 높은 source_id(외부확정 4) 우선으로 결정화.
+                # M-388: rep(MIN id) 한 제품만 조회하면 비-rep 변형에만 있는 스펙이 "데이터부족"으로
+                #   누락된다 → canonical 그룹(brand_id+canonical_model+capacity) 전체에서 조회하고
+                #   기존 우선순위(is_primary→source_id→confidence→id)로 대표값을 결정화한다.
                 row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
-                    FROM product_spec_values v JOIN metrics mt ON mt.id=v.metric_id
-                    WHERE v.product_id=? AND mt.key=? AND v.valid=1
+                    FROM product_spec_values v
+                    JOIN products p ON p.id=v.product_id
+                    JOIN metrics mt ON mt.id=v.metric_id
+                    WHERE p.brand_id=? AND p.canonical_model IS ? AND IFNULL(p.capacity,-1)=IFNULL(?,-1)
+                      AND mt.key=? AND v.valid=1
                     ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC,
                              IFNULL(v.confidence,0) DESC, v.id DESC LIMIT 1""",
-                    (rep, m["key"])).fetchone()
+                    (brand_id, cm, cap, m["key"])).fetchone()
                 val = row[0] if row else None
                 src = row[1] if row else None
                 # H-117: star_eligible 컬럼 추가 이전 구 행은 NULL → None==0이 False라 외형기준 값이
@@ -113,17 +119,25 @@ def export(con, outdir):
                 }
             # H-52: JOIN 제거 → brand_id/canonical_model/capacity 직접 조회.
             # 기존 JOIN은 canonical_models 중복 시 엉뚱한 행 리턴 위험 + NULL canonical_model 비교 오류.
+            # M-413: canonical_model=NULL 제품이 한 브랜드에 여럿이면 ORDER BY 없는 LIMIT 1이 비결정적
+            #   가격을 줬다 → rep_product_id로 결정화.
             pr = con.execute("""SELECT min_price, max_price FROM canonical_models
                 WHERE brand_id=? AND canonical_model IS ? AND IFNULL(capacity,-1)=IFNULL(?,-1)
-                LIMIT 1""", (brand_id, cm, cap)).fetchone()
-            # 대표 이미지 — image_local(로컬파일) 우선, 없으면 image_url(CDN) fallback
+                ORDER BY rep_product_id LIMIT 1""", (brand_id, cm, cap)).fetchone()
+            # M-377: verified 모델인데 canonical_models 동기화 누락으로 가격이 없으면 search.json에
+            #   "p": null로 무경고 출력된다 → 진단 경고(원인: normalize_db 미선행 등).
+            if pr is None:
+                print(f"  ⚠️  가격 없음(canonical_models 누락): {brand} {cm} cap={cap} — normalize_db 선행 확인")
+            # 대표 이미지 — image_local(로컬파일) 우선, 없으면 image_url(CDN) fallback.
+            # M-382: brand_id를 rep 재조회 서브쿼리 대신 outer reps 행 값 직접 사용 + canonical_model IS
+            #   (NULL-safe)로 교정(전엔 `=`라 NULL 모델 이미지 누락, 서브쿼리 rep 불일치 시 타브랜드 위험).
             imgr = con.execute("""SELECT COALESCE(p2.image_local, p2.image_url)
                 FROM products p2
-                WHERE p2.brand_id=(SELECT brand_id FROM products WHERE id=?)
-                  AND p2.canonical_model=? AND IFNULL(p2.capacity,-1)=IFNULL(?,-1)
+                WHERE p2.brand_id=?
+                  AND p2.canonical_model IS ? AND IFNULL(p2.capacity,-1)=IFNULL(?,-1)
                   AND p2.image_url IS NOT NULL AND p2.image_url<>'none'
-                ORDER BY p2.image_local IS NULL ASC
-                LIMIT 1""", (rep, cm, cap)).fetchone()
+                ORDER BY p2.image_local IS NULL ASC, p2.id
+                LIMIT 1""", (brand_id, cm, cap)).fetchone()
             mdict = {
                 "gf_code": gf_code,
                 "brand": brand, "model": cm, "capacity": cap, "variants": variants,
