@@ -3207,7 +3207,13 @@ function renderAccount() {
   const myLogsList = document.getElementById("my-logs-list");
   if (logsSec && myLogsList) {
     const userId = window._accUser?.id;
+    // M-317/M-403/M-246: 사용자 변경 또는 로그아웃 시 loaded 플래그 초기화 → 재로그인·사용자 교체 시 이전 데이터 노출 방지
+    if (myLogsList.dataset.loadedUser && myLogsList.dataset.loadedUser !== (userId || "")) {
+      delete myLogsList.dataset.loaded;
+      delete myLogsList.dataset.logLoginShown;
+    }
     if (userId) {
+      myLogsList.dataset.loadedUser = userId;
       logsSec._accHasContent = true;
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
@@ -3460,6 +3466,14 @@ function renderAccount() {
   if (setsSec) {
     setsSec._accHasContent = true;
     setsSec.style.display = "block";
+    // M-240/M-409: 사용자 변경 또는 로그인 시 loginShown 초기화 → 재로그인 후 CTA가 잔류하는 문제 방지
+    if (setsEl) {
+      const setsUserId = window._accUser?.id || "";
+      if (setsEl.dataset.loginShownUser !== undefined && setsEl.dataset.loginShownUser !== setsUserId) {
+        delete setsEl.dataset.loginShown;
+      }
+      setsEl.dataset.loginShownUser = setsUserId;
+    }
     if (!isLoggedIn && setsEl && !setsEl.dataset.loginShown) {
       setsEl.dataset.loginShown = "1";
       setsEl.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--muted);font-size:14px">
