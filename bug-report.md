@@ -82,6 +82,7 @@
 | 68 | 자동완성키보드·필터URL직렬화·크롤링파싱·세트localStorage·리뷰모달 | 2026-06-13 | 4건 (M-149·M-150·L-180·L-181) |
 | 69 | initApp·모달상태·draw인덱스·auth게이트·툴팁·푸시 | 2026-06-13 | 6건 (M-257~M-259·L-224~L-226) |
 | 70 | (xcode) iOS 시뮬레이터 — 상품 상세·카테고리 탭·스펙 단위 | 2026-06-13 | 5건 (H-104·M-367·M-368·L-284·L-285) |
+| 71 | (xcode) iOS 시뮬레이터 — 홈·헤더·검색 | 2026-06-13 | 4건 (H-111·M-389·M-390·L-310) |
 
 ---
 
@@ -5564,7 +5565,8 @@
 
 ## R-114 (백엔드) — 2026-06-13
 
-### [H-79] — `harvest_tents.py` `ingest()` — INSERT OR IGNORE 후 SELECT 불일치로 pid 미회수 → 고아 행
+### [H-79] ✅ 해결완료(2026-06-13, BACKEND) — `harvest_tents.py` `ingest()` — INSERT OR IGNORE 후 SELECT 불일치로 pid 미회수 → 고아 행
+> 신규 삽입 시 `cur.rowcount`로 판정 후 `cur.lastrowid`로 pid 직접 회수(IS NULL SELECT 의존 제거), IGNORE(중복)된 경우에만 SELECT 폴백. 검증: 신규삽입 lastrowid 유효, year세팅 기존행 옆 신규NULL행도 정상 회수.
 
 - **영역:** 백엔드 — 크롤링
 - **심각도:** 🔴 High
@@ -8205,6 +8207,48 @@
 
 ---
 
+### [H-111] (xcode) — `header.top` — iOS 상태바 영역 겹침으로 헤더 계정 아이콘 탭 불가
+
+- **영역:** 프론트엔드 — iOS Capacitor
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** iOS(iPhone 17, Dynamic Island)에서 헤더 우상단 계정 아이콘(👤)을 여러 번 탭해도 account.html로 이동하지 않음. iOS 상태바(약 54pt)가 웹 콘텐츠 위에 오버레이되는 Capacitor 구성에서 `header.top`에 `env(safe-area-inset-top)` 패딩이 없어 아이콘이 상태바 터치 인터셉트 영역 안에 위치함. 결과적으로 마이페이지 접근 경로가 완전히 막힘.
+- **원인:** [site/style.css](site/style.css) `header.top{padding:18px 0}` — safe area 미적용. `.pmodal`은 수정됐으나 헤더는 누락.
+- **제안 수정:** `header.top{padding-top:max(18px, env(safe-area-inset-top))}` 추가.
+- **파일:** [site/style.css](site/style.css) line 33 [lane:FRONTEND]
+
+### [M-389] (xcode) — `showTooltip` — 카테고리→홈 페이지 이동 후 별점 설명 툴팁 잔류
+
+- **영역:** 프론트엔드 — UI 상태 관리
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 목록에서 가성비 `(?)` 툴팁을 열고 홈(브레드크럼 "홈" 클릭)으로 이동하면 홈 화면 상단에 툴팁("별점은 같은 그룹 안에서의 순위를 환산한 값이에요.")이 계속 표시됨. 수동으로 × 버튼을 눌러야 사라짐.
+- **원인:** 툴팁 상태가 페이지 전환 시 자동 정리되지 않음. `renderCatList` 또는 라우팅 진입 시 `closeTooltip()` 미호출.
+- **제안 수정:** 페이지 전환(popstate·navigate) 이벤트에서 활성 툴팁 닫기 처리 추가.
+- **파일:** [site/app.js](site/app.js) tooltip 관련 함수 [lane:FRONTEND]
+
+### [M-390] (xcode) — `.header-acct` — 검색 포커스 후 헤더 계정 아이콘 사라짐
+
+- **영역:** 프론트엔드 — UI 레이아웃
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 홈 화면 검색창을 탭해 포커스를 주면 헤더 우상단 계정 아이콘(👤)이 사라짐. 검색 닫기 후에도 복구되지 않음.
+- **원인:** 검색 포커스 시 헤더 레이아웃이 변경되거나 `.header-acct` 요소가 `display:none`/`visibility:hidden` 처리될 가능성. iOS 키보드 표시 시 뷰포트 축소로 flex 아이템이 밀려날 수도 있음.
+- **제안 수정:** 검색 활성/비활성 토글 시 `.header-acct` 표시 상태 보존 확인.
+- **파일:** [site/app.js](site/app.js) 검색 초기화 로직, [site/style.css](site/style.css) [lane:FRONTEND]
+
+### [L-310] (xcode) — `homeSearch` — 검색 닫기 후 검색창에 미완성 입력 텍스트 잔류
+
+- **영역:** 프론트엔드 — 검색 UX
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 홈 화면 검색창에서 텍스트를 입력하다 키보드를 닫으면(완료/외부 탭) 입력 중이던 미완성 한글 자모(예: `ㄷ`)가 검색창에 남아있음. 검색 결과는 사라지지만 입력값은 초기화되지 않음.
+- **원인:** 검색 blur 이벤트 시 검색 input 값 clear 미처리.
+- **제안 수정:** 검색 `blur` 또는 `focusout` 시 결과가 없으면 input.value 초기화.
+- **파일:** [site/app.js](site/app.js) home search 로직 [lane:FRONTEND]
+
+---
+
 ### [M-389] — `setupSearchPage` — 한글 IME 조합 중 `isComposing` 가드 없어 미완성 음절로 검색
 
 - **영역:** 프론트엔드 — 검색
@@ -8274,5 +8318,137 @@
 - **원인:** [site/app.js](site/app.js) line 3040 — `modal._onKey`가 ESC만 처리, Tab 순환 없음 (`openProduct`는 완전 구현됨).
 - **제안 수정:** `openProduct`의 Tab 순환 로직을 `openSetDetail`에도 동일 적용.
 - **파일:** [site/app.js](site/app.js) line 3040 [lane:CORE]
+
+---
+
+### [M-392] — `promote_catalog.py` `main` — `UPDATE products SET curation_status='pending'` WHERE 절 없어 트랜잭션 미보호
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 전체 demote 후 re-promote 쿼리 크래시 시 모든 상품이 pending으로 남음.
+- **원인:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 31 — 두 UPDATE 쌍에 savepoint/rollback 없음.
+- **제안 수정:** SAVEPOINT로 demote→promote 블록 래핑, 예외 시 ROLLBACK.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 31 [lane:BACKEND]
+
+---
+
+### [M-393] — `seed_coupang.py` `load` — `rep_product_id` 비정수 CSV 행에서 ValueError 크래시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 빈 행·공백 포함 시 `int(r["rep_product_id"])` ValueError로 전체 로드 중단, 이전 적용 행도 커밋 안 됨.
+- **원인:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 87 — strip/검증 없이 직접 `int()` 캐스팅.
+- **제안 수정:** `if not r.get("rep_product_id","").strip(): continue` 및 try/except ValueError 추가.
+- **파일:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 87 [lane:BACKEND]
+
+---
+
+### [M-394] — `refresh.py` `main` — 크롤 루프 내 `con.commit()` → 중단 시 dedup 상태 불일치
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** SIGINT/네트워크 오류로 중단 시 일부 candidate만 커밋, 다음 실행에서 `pcode2pid` dedup이 미커밋 상품을 건너뛰거나 중복 삽입.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 166 — candidate 루프 내부 `con.commit()`, 트랜잭션 범위가 너무 좁음.
+- **제안 수정:** `con.commit()`을 루프 외부(페이지 단위 또는 태스크 단위)로 이동.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 166 [lane:BACKEND]
+
+---
+
+### [M-395] — `check_export.py` `load_models` — JSON 파싱 실패 silent 스왈로우로 배포 게이트 무력화
+
+- **영역:** 백엔드 — 빌드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 손상된 데이터 파일이 `except Exception` 로 빈 리스트 반환 → 위반 없음으로 처리, 잘못된 배포 통과.
+- **원인:** [pipeline/check_export.py](pipeline/check_export.py) line 44–45 — 광범위 except로 게이트가 항상 통과.
+- **제안 수정:** 예외 재raise 또는 main()에서 파일 파싱 실패 시 exit code 1 반환.
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 44 [lane:BACKEND]
+
+---
+
+### [L-313] — `pipeline.py` `build_db` — schema 파일 핸들 미닫힘
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `open(...).read()` 패턴으로 schema.sql/reference.sql 핸들 누수, 반복 호출 시 FD 소진.
+- **원인:** [pipeline/pipeline.py](pipeline/pipeline.py) line 58–59 — `with` 문 없음.
+- **제안 수정:** `with open(...) as f: con.executescript(f.read())`
+- **파일:** [pipeline/pipeline.py](pipeline/pipeline.py) line 58 [lane:BACKEND]
+
+---
+
+### [L-314] — `pipeline.py` `main` — `whitelist.csv` 파일 핸들 미닫힘
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `csv.DictReader(open(...))` 핸들이 GC까지 미닫힘, 반복 실행 시 FD 소진.
+- **원인:** [pipeline/pipeline.py](pipeline/pipeline.py) line 319 — context manager 없음.
+- **제안 수정:** `with open(...) as f: rows = list(csv.DictReader(f))`
+- **파일:** [pipeline/pipeline.py](pipeline/pipeline.py) line 319 [lane:BACKEND]
+
+---
+
+### [M-396] — `buildFilters` cap 클릭 핸들러 — 이미 활성화된 인원 버튼 재클릭 시 해제 불가
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 인원 필터 칩 재클릭 시 동일 값으로 재설정, 해제 불가 — 브랜드 칩은 동일 패턴 없음(re-click on delete).
+- **원인:** [site/app.js](site/app.js) line 1791–1793 — `STATE.cap = btn.dataset.cap` 무조건 설정, toggle 없음.
+- **제안 수정:** `if (STATE.cap === btn.dataset.cap) { STATE.cap = ""; ... } else { STATE.cap = ...; }` 토글 추가.
+- **파일:** [site/app.js](site/app.js) line 1791 [lane:CORE]
+
+---
+
+### [M-397] — `restoreState` — `STATE.brands` 재호출 시 누산 (clear 없음)
+
+- **영역:** 프론트엔드 — URL 상태
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `restoreState` 두 번째 호출(popstate 등) 시 브랜드 Set이 누적, 잘못된 필터 복원.
+- **원인:** [site/app.js](site/app.js) line 1302 — `STATE.brands.add(b)` 전 `STATE.brands.clear()` 없음.
+- **제안 수정:** `if (br)` 블록 전에 `STATE.brands.clear()` 추가.
+- **파일:** [site/app.js](site/app.js) line 1302 [lane:CORE]
+
+---
+
+### [L-315] — `passRange` — null 스펙 값 가진 모델이 슬라이더 기본 범위에서도 제외
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 부동소수점 오차로 `{min: undefined}` 객체가 STATE.range에 잔류 시 해당 스펙 없는 모델 전체 제외.
+- **원인:** [site/app.js](site/app.js) line 2001 — `if (v == null) return false` 범위 미확인 무조건 제외.
+- **제안 수정:** `if (v == null) return !(r.min != null || r.max != null)` — 범위가 실제 제한될 때만 제외.
+- **파일:** [site/app.js](site/app.js) line 2001 [lane:CORE]
+
+---
+
+### [L-316] — `renderActiveFilters` — 범위 필터 칩에 최솟값 미설정 시 `undefined` 텍스트 노출
+
+- **영역:** 프론트엔드 — 필터 UI
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** max-only 필터 활성 시 "가격 undefined~150000원" 형태로 표시.
+- **원인:** [site/app.js](site/app.js) line 1910–1921 — `fmt(r.min)` 이 undefined 반환 시 템플릿 리터럴에 그대로 삽입.
+- **제안 수정:** `fmt(r.min ?? "")` 또는 `r.min != null ? fmt(r.min) : ""` 처리.
+- **파일:** [site/app.js](site/app.js) line 1910 [lane:CORE]
+
+---
+
+### [L-317] — `openProduct` wish 버튼 — 클릭 즉시 `innerHTML` 리셋으로 로그인 게이트 시 라벨 소실
+
+- **영역:** 프론트엔드 — 상품 모달
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 비로그인 상태에서 찜 버튼 클릭 시 토글 미실행에도 버튼 내 라벨 텍스트 사라짐.
+- **원인:** [site/app.js](site/app.js) line 2126 — `wbtn.innerHTML = BOOKMARK_SVG` 가 toggle 결과 확인 전 실행.
+- **제안 수정:** innerHTML 리셋을 toggle 콜백 내 confirmed 이후로 이동.
+- **파일:** [site/app.js](site/app.js) line 2126 [lane:CORE]
 
 ---

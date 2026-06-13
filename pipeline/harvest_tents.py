@@ -121,14 +121,21 @@ def ingest(con, cand, seen_names):
 
     con.execute("INSERT OR IGNORE INTO brands(name_ko) VALUES(?)", (brand,))
     bid = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()[0]
-    con.execute("""INSERT OR IGNORE INTO products
+    # H-79: 신규 INSERT된 행의 pid를 IS NULL SELECT 매칭에만 의존하면, INSERT가 model_year/variant를
+    #       세팅하지 않는 것과 WHERE의 `model_year IS NULL AND variant IS NULL` 사이의 취약한 결합으로
+    #       pid 회수에 실패할 수 있다(이후 specs/price 연결 INSERT가 통째로 누락 → 고아 행).
+    #       실제로 삽입됐으면 lastrowid로 직접 회수(항상 유효), IGNORE(이미 존재)된 경우에만 SELECT 폴백.
+    cur = con.execute("""INSERT OR IGNORE INTO products
         (brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
         VALUES(?,?,?,?,?, 'pending','on_sale')""", (bid, cid, model, cap, cand["pcode"]))
-    row = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
-                      (bid, model)).fetchone()
-    if row is None:
-        return "dup_variant"
-    pid = row[0]
+    if cur.rowcount:
+        pid = cur.lastrowid
+    else:
+        row = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? "
+                          "AND model_year IS NULL AND variant IS NULL", (bid, model)).fetchone()
+        if row is None:
+            return "dup_variant"
+        pid = row[0]
 
     got = set()
     for spec in TENT_MAP:
