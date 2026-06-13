@@ -3420,7 +3420,7 @@
 
 ---
 
-### [L-191] — `download_images.py` — WHERE 절 `OR NOT EXISTS (SELECT 1 FROM (SELECT 1) ...)` 항상 참 → 이미지 있는 행도 재다운로드
+### [L-191] ✅ 해결완료(기존확인, C38) — `download_images.py` — WHERE 절 `OR NOT EXISTS (SELECT 1 FROM (SELECT 1) ...)` 항상 참 → 이미지 있는 행도 재다운로드
 
 - **영역:** 백엔드 — 파이프라인 / 이미지 수집
 - **심각도:** 🟢 Low
@@ -3432,7 +3432,7 @@
 
 ---
 
-### [L-192] — `collect_images.py` `collect()` — `tot=0` 시 `100*done/tot` ZeroDivisionError
+### [L-192] ✅ 해결완료(2026-06-13, C27) — `collect_images.py` `collect()` — `tot=0` 시 `100*done/tot` ZeroDivisionError
 
 - **영역:** 백엔드 — 파이프라인 / 이미지 수집
 - **심각도:** 🟢 Low
@@ -3568,7 +3568,7 @@
 
 ---
 
-### [L-196] — `reclassify_other_tent.py` `bucket()` — 무게 None 시 경고 없이 `"auto"` 반환 → 백패킹 텐트 오분류
+### [L-196] ✅ 해결완료(2026-06-13, C28) — `reclassify_other_tent.py` `bucket()` — 무게 None 시 경고 없이 `"auto"` 반환 → 백패킹 텐트 오분류
 
 - **영역:** 백엔드 — 파이프라인 / 텐트 재분류
 - **심각도:** 🟢 Low
@@ -3978,7 +3978,7 @@
 
 ---
 
-### [M-205] — `pipeline.py` `build_db()` — DB 삭제 후 `schema.sql`/`whitelist.csv` 부재 시 복구 불가 크래시
+### [M-205] ✅ 해결완료(2026-06-13, C35) — `pipeline.py` `build_db()` — DB 삭제 후 `schema.sql`/`whitelist.csv` 부재 시 복구 불가 크래시
 
 - **영역:** 백엔드 — 파이프라인 / DB 빌드
 - **심각도:** 🟡 Medium
@@ -4216,7 +4216,7 @@
 
 ---
 
-### [M-217] — `collect_images.py` `collect()` — 이미지 수집 예외를 `err += 1`로만 처리, 로그 없음 → 원인 추적 불가
+### [M-217] ✅ 해결완료(2026-06-13, C27) — `collect_images.py` `collect()` — 이미지 수집 예외를 `err += 1`로만 처리, 로그 없음 → 원인 추적 불가
 
 - **영역:** 백엔드 — 파이프라인 / 이미지 수집
 - **심각도:** 🟡 Medium
@@ -4655,7 +4655,7 @@
 
 ---
 
-### [M-234] — `reclassify_other_tent.py` `bucket()` — `cap or 0` 로 `None`과 `0` 구분 불가
+### [M-234] ✅ 해결완료(2026-06-13, C28) — `reclassify_other_tent.py` `bucket()` — `cap or 0` 로 `None`과 `0` 구분 불가
 
 - **영역:** 백엔드 — 텐트 분류
 - **심각도:** 🟡 Medium
@@ -4966,7 +4966,7 @@
 
 ---
 
-### [M-251] — `detect_price_drops.py` `detect()` — 재입고+가격하락 동시 발생 시 가격하락 이벤트 누락
+### ✅ 해결완료(2026-06-13) [M-251] — `detect_price_drops.py` `detect()` — 재입고+가격하락 동시 발생 시 가격하락 이벤트 누락
 
 - **영역:** 백엔드 — 가격 추적
 - **심각도:** 🟡 Medium
@@ -4978,7 +4978,7 @@
 
 ---
 
-### [M-252] — `add_value_star.py` `value_stars()` — 단일 모델 비교 시 항상 ★5 배정
+### [M-252] ✅ 해결완료(2026-06-13, C36) — `add_value_star.py` `value_stars()` — 단일 모델 비교 시 항상 ★5 배정
 
 - **영역:** 백엔드 — 가치 평가
 - **심각도:** 🟡 Medium
@@ -5104,15 +5104,15 @@
 
 ---
 
-### [M-256] ⏸ 보류(C17) — `multicat.py` `main()` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 모델 오탐 차단
+### [M-256] ✅ 해결완료(2026-06-13, C39) — `multicat.py` `ingest_one()` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 모델 오탐 차단
 
 - **영역:** 백엔드 — 멀티카테고리
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
 - **증상:** "Solo" 등 흔한 모델명이 의자 카테고리에 등록되면 랜턴/버너의 전혀 다른 "Solo" 제품이 `dup_name`으로 거부됨.
-- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 222 — `seen_names`를 글로벌로 관리, 카테고리별 분리 없음.
-- **제안 수정:** `seen_names`를 카테고리 루프 내 초기화 또는 key를 `(cid, model_name)`으로 변경.
-- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 222 [lane:BACKEND]
+- **원인:** `seen_names`가 평면 `{model_name}` 문자열 집합. `harvest_tents.ingest`·`multicat.ingest_one`·`refresh.snapshot`가 **동일 set 객체를 공유**(refresh가 양쪽 ingest에 같은 set 전달)해 한 파일만 튜플 키로 못 바꿈.
+- **해결(M-275/L-241과 동시):** 3파일 동시변경 — 키를 `(category_id, brand=brands.name_ko, model)` 튜플로. `ingest_one` 체크/add + 빌더 SQL 3곳을 `SELECT p.category_id, b.name_ko, p.model_name FROM products p JOIN brands b ON b.id=p.brand_id`로 통일. 합성테스트로 (a)크로스카테고리 동명 각각 수집 (b)동일(cat,brand,model) dedup 유지 확인.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py), [pipeline/harvest_tents.py](pipeline/harvest_tents.py), [pipeline/refresh.py](pipeline/refresh.py) [lane:C39]
 
 ---
 
@@ -5476,15 +5476,15 @@
 
 ## R-113 (백엔드) — 2026-06-13
 
-### [M-275] ⏸ 보류(C22) — `harvest_tents.py` `ingest()` — `seen_names` 모델명만으로 중복 체크해 다른 브랜드 동명 모델 오탐 차단
+### [M-275] ✅ 해결완료(2026-06-13, C39) — `harvest_tents.py` `ingest()` — `seen_names` 모델명만으로 중복 체크해 다른 브랜드 동명 모델 오탐 차단
 
 - **영역:** 백엔드 — 텐트 수확
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
 - **증상:** "코베아 텐트X"와 "힐레베르그 텐트X"처럼 서로 다른 브랜드의 동명 모델이 있을 때 두 번째 제품이 `dup_name`으로 잘못 차단됨.
-- **원인:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118–120 — `seen_names.add(model)` 으로 브랜드 미포함 키 사용.
-- **제안 수정:** `seen_names.add((brand, model))` 및 `if (brand, model) in seen_names` 로 변경.
-- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118 [lane:BACKEND]
+- **원인:** `seen_names`가 평면 `{model}` 키. `harvest_tents.ingest`·`multicat.ingest_one`·`refresh.snapshot`가 **동일 set 공유**라 한 파일만 못 바꿈(M-256과 동일 근본원인).
+- **해결(M-256/L-241과 동시):** 3파일 동시변경 — 키를 `(category_id, brand, model)` 튜플로. `ingest` 체크/add를 `(cid, brand, model)`로, 빌더 SQL 3곳을 `brands.name_ko` 조인으로 통일. 합성테스트로 (c)크로스브랜드 동명 각각 수집 + 동일 브랜드 동명 재수확 dedup 유지 확인.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py), [pipeline/multicat.py](pipeline/multicat.py), [pipeline/refresh.py](pipeline/refresh.py) [lane:C39]
 
 ---
 
@@ -5941,15 +5941,15 @@
 
 ---
 
-### [L-241] ⏸ 보류(C22) — `harvest_tents.py` `ingest()` — `seen_names` 브랜드 미분리로 타 브랜드 동명 모델 중복 오판
+### [L-241] ✅ 해결완료(2026-06-13, C39) — `harvest_tents.py` `ingest()` — `seen_names` 브랜드 미분리로 타 브랜드 동명 모델 중복 오판
 
 - **영역:** 백엔드 — 크롤링
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
 - **증상:** 서로 다른 브랜드의 동일 모델명(예: "돔텐트 3P") 중 두 번째 브랜드 상품이 중복으로 오인식돼 수집 제외.
-- **원인:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118 — `seen_names`가 `{model}` 단순 집합, `(brand, model)` 튜플 미사용.
-- **제안 수정:** `seen_names`를 `(brand, model)` 튜플 집합으로 변경.
-- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118 [lane:BACKEND]
+- **원인:** `seen_names`가 `{model}` 단순 집합, `(brand, model)` 미사용 (M-275와 동일 사안).
+- **해결:** M-275/M-256과 함께 C39에서 일괄 해결 — `(category_id, brand, model)` 튜플 키로 3파일 동시변경.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py), [pipeline/multicat.py](pipeline/multicat.py), [pipeline/refresh.py](pipeline/refresh.py) [lane:C39]
 
 
 ---
@@ -6007,7 +6007,7 @@
 
 ## R-117 (백엔드) — 2026-06-13
 
-### [M-299] — `ocr_specs.py` `run()` — `dv==0` falsy 처리로 스펙 0값이 항상 충돌 플래그
+### ✅ 해결완료(2026-06-13) [M-299] — `ocr_specs.py` `run()` — `dv==0` falsy 처리로 스펙 0값이 항상 충돌 플래그
 
 - **영역:** 백엔드 — OCR 검증
 - **심각도:** 🟡 Medium
@@ -6019,7 +6019,7 @@
 
 ---
 
-### [M-300] — `ocr_specs.py` `verify_price()` — INSERT + UPDATE 비원자적, 예외 시 부분 쓰기
+### ✅ 해결완료(2026-06-13) [M-300] — `ocr_specs.py` `verify_price()` — INSERT + UPDATE 비원자적, 예외 시 부분 쓰기
 
 - **영역:** 백엔드 — OCR 검증
 - **심각도:** 🟡 Medium
@@ -6284,7 +6284,7 @@
 
 ## R-119 (백엔드) — 2026-06-13
 
-### [M-314] — `scan_secrets.py` — OpenAI 신형 키 패턴(`sk-proj-*`, `sk-svcacct-*`) 미탐지
+### [M-314] ✅ 해결완료(2026-06-13, C37) — `scan_secrets.py` — OpenAI 신형 키 패턴(`sk-proj-*`, `sk-svcacct-*`) 미탐지
 
 - **영역:** 백엔드 — 시크릿 스캐너
 - **심각도:** 🟡 Medium
@@ -6793,7 +6793,7 @@
 
 ---
 
-### [M-334] — `detect_price_drops.py` `detect()` — `cur_min=None` 시 비교 연산 `TypeError` 크래시
+### ✅ 해결완료(2026-06-13) [M-334] — `detect_price_drops.py` `detect()` — `cur_min=None` 시 비교 연산 `TypeError` 크래시
 
 - **영역:** 백엔드 — 가격 하락 감지
 - **심각도:** 🟡 Medium
@@ -7191,7 +7191,7 @@
 
 ---
 
-### [M-353] — `ocr_specs.py` `run` — OCR·다나와 단위 불일치로 가격 검증 false positive/negative
+### ✅ 해결완료(2026-06-13) [M-353] — `ocr_specs.py` `run` — OCR·다나와 단위 불일치로 가격 검증 false positive/negative
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7227,7 +7227,7 @@
 
 ---
 
-### [M-356] — `ocr_specs.py` `parse_specs` — `weight_min` `min(kgs)` vs `max(kgs)` 주석·코드 불일치
+### ✅ 해결완료(2026-06-13) [M-356] — `ocr_specs.py` `parse_specs` — `weight_min` `min(kgs)` vs `max(kgs)` 주석·코드 불일치
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7791,7 +7791,7 @@
 
 ---
 
-### [M-374] — `detect_price_drops.py` `send` — `urlopen` HTTPError/URLError 미처리 → 푸시 알림 크래시
+### ✅ 해결완료(2026-06-13) [M-374] — `detect_price_drops.py` `send` — `urlopen` HTTPError/URLError 미처리 → 푸시 알림 크래시
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8622,7 +8622,7 @@
 
 ---
 
-### [M-402] — `detect_price_drops.py` 재입고 이벤트 — `old_price=None` 시 Supabase 타입 오류
+### ✅ 해결완료(2026-06-13) [M-402] — `detect_price_drops.py` 재입고 이벤트 — `old_price=None` 시 Supabase 타입 오류
 
 - **영역:** 백엔드 — 가격 감지
 - **심각도:** 🟡 Medium
@@ -9042,7 +9042,7 @@
 
 ---
 
-### [M-417] — `ocr_specs.py` `parse_specs` — `weight_min` OCR 추출 시 `min()` 사용으로 서브 부품 중량 반환
+### ✅ 해결완료(2026-06-13) [M-417] — `ocr_specs.py` `parse_specs` — `weight_min` OCR 추출 시 `min()` 사용으로 서브 부품 중량 반환
 
 - **영역:** 백엔드 — OCR 스펙 파싱
 - **심각도:** 🟡 Medium
@@ -9054,7 +9054,7 @@
 
 ---
 
-### [M-418] — `detect_price_drops.py` — 같은 날 파이프라인 2회 실행 시 동일 날짜 관측치 비교로 오경보 가능
+### ✅ 해결완료(2026-06-13) [M-418] — `detect_price_drops.py` — 같은 날 파이프라인 2회 실행 시 동일 날짜 관측치 비교로 오경보 가능
 
 - **영역:** 백엔드 — 가격 감지
 - **심각도:** 🟡 Medium
@@ -12111,5 +12111,137 @@
 - **원인:** [site/app.js](site/app.js) line 3349 — 일관성 없는 `alert()` 사용.
 - **제안 수정:** `alert(...)` → `showToast(...)` 로 교체.
 - **파일:** [site/app.js](site/app.js) line 3349 [lane:CORE]
+
+---
+
+### [M-541] — `danawa.py` `_meta_description` — 속성 순서 고정 정규식으로 Description 추출 실패
+
+- **영역:** 백엔드 — 데이터 수집 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** HTML에서 `content` 속성이 `name` 앞에 오거나 사이에 다른 속성이 끼면 Description 추출 실패.
+- **원인:** [pipeline/danawa.py](pipeline/danawa.py) line 142 — `r'<meta\s+name="Description"\s+content="(.*?)"'` 속성 순서 고정 패턴.
+- **제안 수정:** `re.search(r'<meta\b[^>]*\bname="Description"[^>]*\bcontent="(.*?)"', html, re.I | re.S)` 또는 html.parser 사용.
+- **파일:** [pipeline/danawa.py](pipeline/danawa.py) line 142 [lane:BACKEND]
+
+---
+
+### [M-542] — `reclassify_other_tent.py` `bucket()` — `weight=None` 시 무조건 "auto" 분류 → 백패킹 텐트 오분류
+
+- **영역:** 백엔드 — 데이터 분류 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 무게 정보 미입력 백패킹 텐트가 오토캠핑 카테고리로 분류되어 검색/별점 왜곡.
+- **원인:** [pipeline/reclassify_other_tent.py](pipeline/reclassify_other_tent.py) line 38–39 — `if w is None: return "auto"` — `cap`(적정인원) 기반 보조 판별 없음.
+- **제안 수정:** `w is None`이면 `cap` 기준 보조 판별 추가 (1~2인 → "back" 후보) 또는 별도 감사 카테고리 분리.
+- **파일:** [pipeline/reclassify_other_tent.py](pipeline/reclassify_other_tent.py) line 38 [lane:BACKEND]
+
+---
+
+### [M-543] — `openReplaceModal` — 교체 성공 후 `close()`만 호출, `openSetDetail()` 미재호출 → 세트 상세 UI stale
+
+- **영역:** 프론트엔드 — 세트 슬롯 교체 모달
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 세트 상세 모달에서 장비 교체 후 세트 테이블 내용(미니 도장판, 항목 수)이 갱신되지 않아 stale 상태로 남음.
+- **원인:** [site/app.js](site/app.js) line 695–698 — 교체 성공 시 `close()` 후 `renderAccount()`만 호출, `openSetDetail(setId)` 재호출 없음.
+- **제안 수정:** 교체 성공 핸들러에서 `renderAccount(); openSetDetail(setId);` 순서로 호출.
+- **파일:** [site/app.js](site/app.js) line 695 [lane:CORE]
+
+---
+
+### [M-544] — 후기 신고 사유 입력에 `prompt()` 사용 → iOS Safari PWA에서 차단
+
+- **영역:** 프론트엔드 — 상품 상세 모달 / 후기 신고
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 후기 신고 사유 입력에 native `prompt()`를 사용. iOS Safari PWA/fullscreen 모드 또는 `history.replaceState` 직후 `prompt()` 차단으로 신고 불가. UI 디자인 일관성도 없음.
+- **원인:** [site/app.js](site/app.js) line 2351 — `const reason = prompt("신고 사유를 적어주세요 (5자 이상)");`
+- **제안 수정:** 커스텀 인라인 textarea 신고 사유 모달로 교체.
+- **파일:** [site/app.js](site/app.js) line 2351 [lane:CORE]
+
+---
+
+### [L-449] — `ledger.py` `_acquire_lock()` — 만료 락 삭제와 재생성 사이 TOCTOU 레이스 컨디션
+
+- **영역:** 백엔드 — devagent 원장
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 만료 락 `os.unlink()` 직전에 다른 프로세스가 먼저 unlink+create를 완료한 경우 유효한 락을 삭제하는 미세한 레이스 윈도우 존재.
+- **원인:** [dev-harness/devagent/ledger.py](dev-harness/devagent/ledger.py) line 31–36 — `age > LOCK_TTL` 체크 → `os.unlink()` 사이 원자성 없음.
+- **제안 수정:** unlink 후 `FileNotFoundError` 포착하거나 rename 기반 원자적 교체 사용.
+- **파일:** [dev-harness/devagent/ledger.py](dev-harness/devagent/ledger.py) line 33 [lane:BACKEND]
+
+---
+
+### [L-450] — `progress.py` `append_progress()` — 첫 번째 `find("\n\n")`가 -1이면 두 번째 find가 0부터 탐색 → 헤더 경계 오계산
+
+- **영역:** 백엔드 — devagent 진행상황 기록
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 첫 번째 `find("\n\n")`가 -1 반환 시 두 번째 find는 `find("\n\n", 0)`이 되어 헤더-본문 경계를 잘못 계산, 기존 헤더 일부가 body에 포함되어 중복 삽입.
+- **원인:** [dev-harness/devagent/progress.py](dev-harness/devagent/progress.py) line 85 — `existing.find("\n\n", existing.find("\n\n") + 1)` — 첫 번째 find 결과 -1 미체크.
+- **제안 수정:** 첫 번째 find 결과를 변수로 캐싱하고 -1 체크 후 조건부로 두 번째 find 수행.
+- **파일:** [dev-harness/devagent/progress.py](dev-harness/devagent/progress.py) line 84 [lane:BACKEND]
+
+---
+
+### [L-451] — `scan_sql_injection.py` — 큰따옴표 SQL 보간 미탐지 → SQL 인젝션 게이트 우회 가능
+
+- **영역:** 백엔드 — 배포 게이트 / 보안
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `QUOTED_BRACE` 패턴이 작은따옴표 안의 보간만 탐지. `f"SELECT * FROM t WHERE col = \"{var}\""` 형태의 큰따옴표 보간은 동일한 SQL 인젝션 취약점임에도 게이트를 통과.
+- **원인:** [pipeline/scan_sql_injection.py](pipeline/scan_sql_injection.py) line 22 — `QUOTED_BRACE = re.compile(r"'[^']*\{[^}]*\}[^']*'")` 작은따옴표만 커버.
+- **제안 수정:** 큰따옴표 패턴 별도 추가: `re.compile(r'"[^"]*\{[^}]*\}[^"]*"')`.
+- **파일:** [pipeline/scan_sql_injection.py](pipeline/scan_sql_injection.py) line 22 [lane:BACKEND]
+
+---
+
+### [L-452] — `backfill_capacity.py` — `total=0` 시 `have*100//total` ZeroDivisionError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 빈 DB 또는 새 DB 초기화 후 실행 시 ZeroDivisionError 크래시.
+- **원인:** [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py) line 78 — `have*100//total` — `total=0` 가드 없음.
+- **제안 수정:** `f"{have*100//total if total else 0}%"` 로 변경.
+- **파일:** [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py) line 78 [lane:BACKEND]
+
+---
+
+### [L-453] — `sw.js` — stale-while-revalidate fetch 실패 시 `null` 반환 → 오프라인 504 빈 응답
+
+- **영역:** 프론트엔드 — 서비스 워커 캐싱
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 오프라인 상태에서 캐시에 없는 자산/데이터 URL 접근 시 빈 504 응답 반환. 사용자에게 오프라인 메시지 없음.
+- **원인:** [site/sw.js](site/sw.js) line 79–84 — 자산 fetch catch가 `null` 반환, 최종 fallback이 빈 504.
+- **제안 수정:** 오프라인 fallback 페이지를 SHELL에 캐시하고, 네트워크 실패+캐시 miss 시 fallback 반환.
+- **파일:** [site/sw.js](site/sw.js) line 79 [lane:SW]
+
+---
+
+### [L-454] — `showSetConfirm` — `weight_g` 비숫자 문자열 시 NaN 전파 → `"NaNg"` 표시
+
+- **영역:** 프론트엔드 — 세트 확인 카드
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `weight_g`가 비숫자 문자열이면 `x.weight_g * (x.qty || 1)` 에서 NaN이 되어 합산 무게가 `"NaNg"`로 표시됨.
+- **원인:** [site/app.js](site/app.js) line 709, 3031 — `weight_g` 타입 검증 없이 곱셈.
+- **제안 수정:** `const wg = Number(x.weight_g); wg > 0 ? sum + wg * (x.qty || 1) : sum` 으로 `Number()` 래핑 추가.
+- **파일:** [site/app.js](site/app.js) line 709 [lane:CORE]
+
+---
+
+### [L-455] — `_showAuthGateModal` — Tab 키 focus trap 미구현 → 모달 열린 상태에서 포커스 배경 요소로 이탈
+
+- **영역:** 프론트엔드 — 인증 게이트 모달 / 접근성
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 인증 게이트 모달 열린 상태에서 Tab 키 반복 시 포커스가 배경 페이지 요소로 빠져나감. `openSetModal`에는 Tab trap이 구현돼 있으나 authGate 모달 누락.
+- **원인:** [site/app.js](site/app.js) line 163 — `onKey`에서 Escape만 처리, Tab trap 없음.
+- **제안 수정:** `openSetModal`의 Tab trap 패턴(line 611–620)을 authGate onKey 핸들러에도 동일 적용.
+- **파일:** [site/app.js](site/app.js) line 163 [lane:CORE]
 
 ---
