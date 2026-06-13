@@ -7863,7 +7863,7 @@
 
 ---
 
-### [M-377] — `export_site.py` `export` — `canonical_models` 누락 모델 `price=null` 무경고 출력
+### ✅ 해결완료(2026-06-13) [M-377] — `export_site.py` `export` — `canonical_models` 누락 모델 `price=null` 무경고 출력
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7971,7 +7971,7 @@
 
 ---
 
-### [M-382] — `export_site.py` `export` — 이미지 서브쿼리 brand_id가 삭제된 rep 기준 → 다른 브랜드 이미지 오연결
+### ✅ 해결완료(2026-06-13) [M-382] — `export_site.py` `export` — 이미지 서브쿼리 brand_id가 삭제된 rep 기준 → 다른 브랜드 이미지 오연결
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8055,7 +8055,7 @@
 
 ---
 
-### [M-383] — `refresh.py` `_group_prices_by_cat` — category_id 비연속 정렬 시 동일 카테고리 가격 분할 집계
+### ✅ 해결완료(2026-06-13) [M-383] — `refresh.py` `_group_prices_by_cat` — category_id 비연속 정렬 시 동일 카테고리 가격 분할 집계
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8067,7 +8067,7 @@
 
 ---
 
-### [M-384] — `refresh.py` `main` — `datetime('now')` UTC vs `observed_at` 로컬타임 불일치로 staleness 판정 오류
+### ✅ 해결완료(2026-06-13) [M-384] — `refresh.py` `main` — `datetime('now')` UTC vs `observed_at` 로컬타임 불일치로 staleness 판정 오류
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8079,7 +8079,7 @@
 
 ---
 
-### [M-385] — `detect_price_drops.py` `detect` — `in_stock` 컬럼 미기록으로 재입고 알림 불가
+### ✅ 해결완료(2026-06-13) [M-385] — `detect_price_drops.py` `detect` — `in_stock` 컬럼 미기록으로 재입고 알림 불가
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8163,7 +8163,7 @@
 
 ---
 
-### [M-388] — `export_site.py` `export` — rep 제품만 스펙 조회 → 비-rep variant에만 있는 스펙 누락
+### ✅ 해결완료(2026-06-13) [M-388] — `export_site.py` `export` — rep 제품만 스펙 조회 → 비-rep variant에만 있는 스펙 누락
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8350,7 +8350,7 @@
 
 ---
 
-### [M-394] — `refresh.py` `main` — 크롤 루프 내 `con.commit()` → 중단 시 dedup 상태 불일치
+### ✅ 해결완료(2026-06-13) [M-394] — `refresh.py` `main` — 크롤 루프 내 `con.commit()` → 중단 시 dedup 상태 불일치
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8862,7 +8862,7 @@
 
 ---
 
-### [M-411] — `star_catalog.py` — `valid=0` 가격 관측치 포함으로 부정확한 별점 부여
+### ✅ 해결완료(2026-06-13) [M-411] — `star_catalog.py` — `valid=0` 가격 관측치 포함으로 부정확한 별점 부여
 
 - **영역:** 백엔드 — 별점 산출
 - **심각도:** 🟡 Medium
@@ -8922,7 +8922,7 @@
 
 ---
 
-### [M-413] — `export_site.py` `canonical_models` — `canonical_model=NULL` 시 `LIMIT 1` 비결정적 행 반환
+### ✅ 해결완료(2026-06-13) [M-413] — `export_site.py` `canonical_models` — `canonical_model=NULL` 시 `LIMIT 1` 비결정적 행 반환
 
 - **영역:** 백엔드 — 사이트 내보내기
 - **심각도:** 🟡 Medium
@@ -8934,7 +8934,7 @@
 
 ---
 
-### [M-414] — `value_metric.py` — `price_min=0` 또는 None 시 ZeroDivisionError / TypeError 크래시
+### ✅ 해결완료(2026-06-13) [M-414] — `value_metric.py` — `price_min=0` 또는 None 시 ZeroDivisionError / TypeError 크래시
 
 - **영역:** 백엔드 — 가치 지표 산출
 - **심각도:** 🟡 Medium
@@ -9030,7 +9030,7 @@
 
 ---
 
-### [M-416] — `value_metric.py` `rank_normalize` — 단일 모델 카테고리에 자동으로 별점 5.0 부여
+### ✅ 해결완료(2026-06-13) [M-416] — `value_metric.py` `rank_normalize` — 단일 모델 카테고리에 자동으로 별점 5.0 부여
 
 - **영역:** 백엔드 — 가치 지표 산출
 - **심각도:** 🟡 Medium
@@ -9486,7 +9486,7 @@
 
 ---
 
-### [M-429] — `refresh.py` `_group_prices_by_cat` — 카테고리 경계 첫 항목 무음 유실
+### ✅ 해결완료(2026-06-13) [M-429] — `refresh.py` `_group_prices_by_cat` — 카테고리 경계 첫 항목 무음 유실
 
 - **영역:** 백엔드 — 가격 갱신
 - **심각도:** 🟡 Medium
@@ -11730,7 +11730,7 @@
 
 ---
 
-### [M-526] — `renderAccount` — 비로그인+로컬세트 있음 조건에서 CTA와 세트 카드 이중 렌더링 → 레이아웃 시프트
+### [M-526] ✅ 해결완료(2026-06-13) — `renderAccount` — 비로그인+로컬세트 있음 조건에서 CTA와 세트 카드 이중 렌더링 → 레이아웃 시프트
 
 - **영역:** 프론트엔드 — 계정 렌더링
 - **심각도:** 🟡 Medium
@@ -12006,7 +12006,7 @@
 
 ---
 
-### [M-539] — `공유 세트 임포트` — `requireLogin` 게이트 없고 중복 확인에 `alert()` 사용 → iOS Safari 차단
+### [M-539] ✅ 해결완료(2026-06-13) — `공유 세트 임포트` — `requireLogin` 게이트 없고 중복 확인에 `alert()` 사용 → iOS Safari 차단
 
 - **영역:** 프론트엔드 — account.html 공유세트
 - **심각도:** 🟡 Medium
@@ -12018,7 +12018,7 @@
 
 ---
 
-### [M-540] — `stars()` — 음수 별점 하한 미적용 → `aria-label="별점 -1 / 5"` 출력 + 빈 별 5개 렌더링
+### [M-540] ✅ 해결완료(2026-06-13) — `stars()` — 음수 별점 하한 미적용 → `aria-label="별점 -1 / 5"` 출력 + 빈 별 5개 렌더링
 
 - **영역:** 프론트엔드 — 공통 유틸 / 접근성
 - **심각도:** 🟡 Medium
@@ -12138,7 +12138,7 @@
 
 ---
 
-### [M-543] — `openReplaceModal` — 교체 성공 후 `close()`만 호출, `openSetDetail()` 미재호출 → 세트 상세 UI stale
+### [M-543] ✅ 해결완료(2026-06-13) — `openReplaceModal` — 교체 성공 후 `close()`만 호출, `openSetDetail()` 미재호출 → 세트 상세 UI stale
 
 - **영역:** 프론트엔드 — 세트 슬롯 교체 모달
 - **심각도:** 🟡 Medium
@@ -12294,7 +12294,7 @@
 
 ---
 
-### [M-549] — `account.html` — `decodeURIComponent(errDetail)` 예외 미처리 → URI malformed 시 페이지 로딩 중단
+### [M-549] ✅ 해결완료(2026-06-13) — `account.html` — `decodeURIComponent(errDetail)` 예외 미처리 → URI malformed 시 페이지 로딩 중단
 
 - **영역:** 프론트엔드 — 계정/인증
 - **심각도:** 🟡 Medium
@@ -12306,7 +12306,7 @@
 
 ---
 
-### [M-550] — `diagnoseEmpty` — `STATE.brands` 값이 `esc()` 없이 label 문자열에 삽입 → XSS 잠재 경로
+### [M-550] ✅ 분석완료(moot: esc() 적용됨) — `diagnoseEmpty` — `STATE.brands` 값이 `esc()` 없이 label 문자열에 삽입 → XSS 잠재 경로
 
 - **영역:** 프론트엔드 — 필터/URL 직렬화 (보안)
 - **심각도:** 🟡 Medium
@@ -12318,7 +12318,7 @@
 
 ---
 
-### [M-551] — `openReviewDetail` ESC와 `_vsEsc` — capture 단계 불일치로 두 모달 동시 닫힘
+### [M-551] ✅ 분석완료(moot: stopImmediatePropagation이 버블도 차단) — `openReviewDetail` ESC와 `_vsEsc` — capture 단계 불일치로 두 모달 동시 닫힘
 
 - **영역:** 프론트엔드 — 리뷰/공유세트 모달 ESC 처리
 - **심각도:** 🟡 Medium
@@ -12411,5 +12411,281 @@
 - **원인:** [site/app.js](site/app.js) line 764 — `catch (e) { /* 무시 */ }`.
 - **제안 수정:** `saveSets`와 동일하게 QuotaExceededError 시 `showToast("저장 공간이 부족해요…")` 안내 추가.
 - **파일:** [site/app.js](site/app.js) line 764 [lane:CORE]
+
+---
+
+### [H-145] — `buildFilters` — `filtoggle` 핸들러 최초 1회만 등록 → 카테고리 전환 시 새 aside/backdrop 클로저 갱신 안 됨
+
+- **영역:** 프론트엔드 — 필터 바텀시트
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 빠른 카테고리 전환 시 filtoggle 버튼이 최초 카테고리의 `aside`/`backdrop` 클로저를 참조해 새 카테고리의 필터 시트를 열지 못함.
+- **원인:** [site/app.js](site/app.js) line 1810 — `if (!document.getElementById("filtoggle"))` 가드로 핸들러를 1회만 등록. `buildFilters`가 카테고리 전환마다 새 aside를 기반으로 호출되어도 핸들러가 갱신되지 않음.
+- **제안 수정:** filtoggle 존재 여부 가드를 제거하고 `buildFilters` 호출마다 핸들러 재등록. 또는 클로저 대신 `document.getElementById`로 동적 조회.
+- **파일:** [site/app.js](site/app.js) line 1810 [lane:CORE]
+
+---
+
+### [H-146] — `upsertGearSet` — `completeness: set.items?.length` 로 저장 → 필수 슬롯 완성도와 불일치
+
+- **영역:** 프론트엔드 — 기어 세트 원격 동기화
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 의자 4개만 담으면 `completeness=4`이지만 실제 필수 슬롯 완성도는 25%. DB 기반 통계/쿼리에서 완성도가 왜곡됨.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 397 — `completeness: set.items?.length || 0` — 총 아이템 수로 저장.
+- **제안 수정:** `setCompletion(set).pct` 또는 `setCompletion(set).filled` 기반으로 교체. 호출부에서 계산값을 인자로 전달.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 397 [lane:SYNC]
+
+---
+
+### [M-553] — `backend/store.py` `load()` — 재로드 시 `self.categories` 초기화 없어 삭제된 슬러그 메모리 잔류
+
+- **영역:** 백엔드 — store 레이어
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `load()` 재호출 시 `self.categories`가 초기화되지 않아 슬러그 삭제/이름 변경 후에도 구 슬러그가 메모리에 영구 잔류.
+- **원인:** [backend/store.py](backend/store.py) line 13 — `load()` 진입 시 `self.categories = {}` 초기화 없음.
+- **제안 수정:** `load()` 첫 줄에 `self.manifest = {}; self.categories = {}; self.search_index = []` 초기화 추가.
+- **파일:** [backend/store.py](backend/store.py) line 13 [lane:BACKEND]
+
+---
+
+### [M-554] — `download_images.py` — `ThreadPoolExecutor` 내 `sqlite3` 연결 `check_same_thread=False` 미설정 → ProgrammingError 위험
+
+- **영역:** 백엔드 — 파이프라인/이미지 다운로드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 파이썬 버전·SQLite 빌드에 따라 `ProgrammingError: SQLite objects created in a thread can only be used in that same thread` 발생.
+- **원인:** [pipeline/download_images.py](pipeline/download_images.py) line 84 — `sqlite3.connect(db_path)` 시 `check_same_thread=False` 미설정.
+- **제안 수정:** `sqlite3.connect(db_path, check_same_thread=False)` 또는 `update_db` 호출을 큐로 직렬화.
+- **파일:** [pipeline/download_images.py](pipeline/download_images.py) line 84 [lane:BACKEND]
+
+---
+
+### [M-555] — `evidence_collector.py` — `git diff --cached --stat base` → staged 없으면 항상 빈 결과
+
+- **영역:** 백엔드 — devagent 증거 수집
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** worktree 기반 환경에서 아무것도 staged 되어 있지 않으므로 `--cached` diff가 항상 빈 결과 반환 → diffstat evidence 누락.
+- **원인:** [dev-harness/devagent/nodes/evidence_collector.py](dev-harness/devagent/nodes/evidence_collector.py) line 22 — `["git", "diff", "--cached", "--stat", base]` — `--cached` 대신 `base` vs `HEAD` diff가 의도.
+- **제안 수정:** `["git", "diff", "--stat", base, "HEAD"]` 로 변경.
+- **파일:** [dev-harness/devagent/nodes/evidence_collector.py](dev-harness/devagent/nodes/evidence_collector.py) line 22 [lane:BACKEND]
+
+---
+
+### [M-556] — `promote_catalog.py` — SAVEPOINT 예외 경로에서 `con.close()` 미도달 → DB 연결 누수
+
+- **영역:** 백엔드 — 파이프라인/카탈로그 승격
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** SAVEPOINT 블록 예외 시 `raise` 후 `con.close()`(말단)까지 도달하지 않아 DB 연결 누수. 연속 파이프라인(run_all)에서 반복 시 파일 핸들 누적 가능.
+- **원인:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 61–64 — `except` 블록 `raise` 후 `con.close()` 미도달.
+- **제안 수정:** `try/except/finally`로 변경해 `con.close()`를 `finally`에 이동.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 37 [lane:BACKEND]
+
+---
+
+### [M-557] ✅ 해결완료(2026-06-13) — `renderAccount` 찜 카드 클릭 — `_onCloseOnce` 복원 시 `STATE.data = undefined` → 이후 openProduct TypeError
+
+- **영역:** 프론트엔드 — account.html 찜 목록
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 모달 닫힘 후 즉시 다른 찜 카드를 클릭하면 `STATE.data=undefined` 상태에서 `openProduct` 내부 `d.metrics.filter(...)` TypeError 발생 가능.
+- **원인:** [site/app.js](site/app.js) line 1437 — `prevSlug`/`prevData`가 초기 `STATE({})` 기준이라 `undefined`. `_onCloseOnce` 복원 후 `STATE.data=undefined`.
+- **제안 수정:** `prevSlug = STATE.slug ?? null`, `prevData = STATE.data ?? null`로 명시 null 폴백. 복원 시 `STATE.slug = prevSlug ?? null`.
+- **파일:** [site/app.js](site/app.js) line 1437 [lane:CORE]
+
+---
+
+### [M-558] ✅ 해결완료(2026-06-13) — `renderHotSection` — `supabase.rpc()` `error` 변수 미구조분해 → RPC 실패 추적 불가
+
+- **영역:** 프론트엔드 — 홈 인기 섹션
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** RPC 실패 시 `data=null`로 조용히 처리되어 fallback으로 전환되지만 `error` 정보가 전혀 기록되지 않아 RPC 장애 추적 불가.
+- **원인:** [site/app.js](site/app.js) line 2948 — `const { data } = await supabase.rpc(...)` — `error` 미구조분해.
+- **제안 수정:** `const { data, error } = await supabase.rpc(...)` + `if (error) console.warn("get_hot_items RPC:", error)` 추가.
+- **파일:** [site/app.js](site/app.js) line 2948 [lane:CORE]
+
+---
+
+### [M-559] ✅ 분석완료(moot: cur은 SET_TYPES 키, 안전) — `setTypePickHtml` — `data-value="${cur}"` — `cur`에 `esc()` 미적용 → localStorage 조작 시 attribute injection
+
+- **영역:** 프론트엔드 — 세트 모달 (보안)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** localStorage의 `gear_sets[].type`을 `"><img src=x onerror=alert(1)>`로 조작하면 `data-value` attribute injection 가능.
+- **원인:** [site/app.js](site/app.js) line 255 — `data-value="${cur}"` — `cur`에 `esc()` 미적용.
+- **제안 수정:** `data-value="${esc(cur)}"` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 255 [lane:CORE]
+
+---
+
+### [L-462] — `check_export.py` — `price_min > price_max` 역전 케이스 미탐지
+
+- **영역:** 백엔드 — 배포 게이트
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `price_min=50000, price_max=30000` 같은 논리 역전이 FLOOR/CEIL 비율 검사를 모두 통과.
+- **원인:** [pipeline/check_export.py](pipeline/check_export.py) line 65 — `pmin`과 `pmax` 교차 비교 로직 없음.
+- **제안 수정:** `if pmin is not None and pmax is not None and pmin > 0 and pmax > 0 and pmin > pmax:` 위반 추가.
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 65 [lane:BACKEND]
+
+---
+
+### [L-463] — `gate_lint.py` — `changed_paths` 경로 정규화 없어 "no files found"로 lint skip 가능
+
+- **영역:** 백엔드 — devagent lint 게이트
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 경로가 절대경로이거나 다른 기준 상대경로면 `ruff check` 가 "no files found" 경고로 종료코드 0 반환 → lint 사실상 skip.
+- **원인:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 14 — `changed_paths`가 경로 정규화 없이 path 문자열 그대로 반환.
+- **제안 수정:** `os.path.join(wt, p)` 또는 `os.path.abspath(os.path.join(wt, p))`로 정규화.
+- **파일:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 14 [lane:BACKEND]
+
+---
+
+### [L-464] — `signInWithApple` — `state` 생성 후 `response.state` 비교 검증 없음 → CSRF 방어 무의미
+
+- **영역:** 프론트엔드 — Apple 로그인 OAuth (보안)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `state: crypto.randomUUID()`를 생성하지만 `response.state`와 비교 검증하지 않아 CSRF 방어가 무의미함.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 59–66 — `state` 값 생성 후 `response.state` 비교 없음.
+- **제안 수정:** `const state = crypto.randomUUID()` 저장 후 `if (response.state !== state) throw new Error("state mismatch")` 추가.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 59 [lane:AUTH]
+
+---
+
+### [L-465] — `renderAccount` — `bulkBtn`이 `wish-section` 외부 형제 요소로 삽입 → 비로그인 시 숨겨진 채로 키보드 포커스 가능
+
+- **영역:** 프론트엔드 — account.html 찜 목록 / 접근성
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 비로그인 상태에서 `wish-section`이 숨겨져도 `bulkBtn`이 DOM에 남아 키보드 포커스 접근 가능.
+- **원인:** [site/app.js](site/app.js) line 3468 — `wishEl.after(bulkBtn)` — `bulkBtn`이 `wish-section` 내부가 아닌 형제 요소로 삽입.
+- **제안 수정:** `bulkBtn`을 `wish-section` 내부에 `append`하거나, 비로그인 시 `bulkBtn`도 함께 숨기도록 처리.
+- **파일:** [site/app.js](site/app.js) line 3468 [lane:ACCOUNT]
+
+---
+
+### [M-560] — `backend/routers/search.py` — search_index 키 약어 하드코딩 → 구조 불일치 시 조용히 빈 결과
+
+- **영역:** 백엔드 — 검색 라우터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `data_store.search_index`의 키 구조가 달라지면 에러 없이 항상 빈 검색 결과 반환.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 15–20 — `item.get("b")`, `item.get("m")`, `item.get("c")` 약어 키 정적 하드코딩. store.py 로드 경로와 연동 없이 가정.
+- **제안 수정:** search_index 스키마 상수화 또는 키 존재 검증 + 경고 로그 추가.
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 15 [lane:BACKEND]
+
+---
+
+### [M-561] — `backend/db.py` `query_db` — `aiosqlite.Error` 미처리 → DB 내부 스택트레이스 HTTP 500으로 노출
+
+- **영역:** 백엔드 — DB
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** DB 경로 없음, 파일 손상, SQL 오류 시 FastAPI 기본 500 에러로 DB 내부 경로/스택트레이스 클라이언트 노출 가능.
+- **원인:** [backend/db.py](backend/db.py) line 20–22 — `asyncio.TimeoutError`만 catch. `aiosqlite.Error`, `OSError`, `OperationalError` 전혀 처리 안 됨.
+- **제안 수정:** `except (aiosqlite.Error, OSError) as e: raise HTTPException(503, "DB 오류")` 추가.
+- **파일:** [backend/db.py](backend/db.py) line 20 [lane:BACKEND]
+
+---
+
+### [M-562] — `devagent/nodes/apply.py` — `git add -A`로 워크트리 전체 스테이징 → `.env` 등 scope 외 파일 커밋 위험
+
+- **영역:** 백엔드 — devagent apply 노드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `changed_files`에 없는 `.env`, 시크릿 파일이 워크트리에 존재하면 커밋에 포함됨. gate_diff_scope가 `state.changed_files`만 검사해 워크트리 실제 파일의 시크릿은 통과.
+- **원인:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 82 — `_git(["add", "-A"], cwd=wt)` — changed_files 목록으로 한정하지 않음. (publish.py의 동일 패턴은 H-144로 보고됨)
+- **제안 수정:** `git add -A` 대신 `git add -- <changed_file_paths_only>` 로 스코프 제한.
+- **파일:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 82 [lane:BACKEND]
+
+---
+
+### [M-563] — `devagent/nodes/publish.py` — commit 실패 시에도 `ledger.remove()` 무조건 호출 → 원장 오염
+
+- **영역:** 백엔드 — devagent publish 노드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `git commit` 실패 시 변경이 적용되지 않은 채로 원장 thread가 제거되어 다른 세션이 해당 scope를 안전하다고 착각하고 동시 작업 진입 가능.
+- **원인:** [dev-harness/devagent/nodes/publish.py](dev-harness/devagent/nodes/publish.py) line 72–73 — `if thread_id: ledger.remove(thread_id)` — `committed_sha` 체크 없이 무조건 실행.
+- **제안 수정:** `if committed_sha and thread_id: ledger.remove(thread_id)` 로 commit 성공 시에만 원장 제거.
+- **파일:** [dev-harness/devagent/nodes/publish.py](dev-harness/devagent/nodes/publish.py) line 72 [lane:BACKEND]
+
+---
+
+### [M-564] — `go()` 찜 카드 클릭 — 성공 경로에서 `card.dataset.loading` 미삭제 → 모달 닫기 후 재클릭 무반응
+
+- **영역:** 프론트엔드 — 마이페이지/찜 목록
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 찜 카드 클릭 후 모달을 닫아도 같은 카드 재클릭 시 `dataset.loading = "1"` 가드에 걸려 동작 불가.
+- **원인:** [site/app.js](site/app.js) line 3434–3441 — `openProduct` 성공 경로에서 `return` 전에 `delete card.dataset.loading` 미호출. fallback 경로(라인 3444)는 정상 삭제.
+- **제안 수정:** 라인 3440 `return` 앞에 `delete card.dataset.loading;` 추가 또는 `_onCloseOnce`에서 삭제.
+- **파일:** [site/app.js](site/app.js) line 3440 [lane:CORE]
+
+---
+
+### [M-565] — `draw()` 카드 목록 — `a.pli` Enter 키 처리 없어 item 페이지로 이탈
+
+- **영역:** 프론트엔드 — 카테고리 목록 / 접근성
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 상품 카드(a.pli)에 키보드 포커스 후 Enter를 누르면 모달 대신 `/item/{slug}/item-N.html`로 페이지 이동됨. Space는 올바르게 모달을 열지만 Enter는 처리 안 됨.
+- **원인:** [site/app.js](site/app.js) line 2743 — `e.key === " "` 만 체크, `"Enter"` 케이스 누락.
+- **제안 수정:** `if (e.key === " " || e.key === "Enter")` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 2743 [lane:CORE]
+
+---
+
+### [M-566] — `upsertGearSet()` update 경로 — `user_id` 필터 미적용 → RLS 설정 오류 시 타인 세트 덮어쓰기 가능
+
+- **영역:** 프론트엔드 — supabaseClient.js / 기어세트 동기화 (보안)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** stale `remoteId` 혼입 또는 RLS 설정 오류 시 타인의 기어세트를 덮어쓸 수 있음.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 400 — `.update(payload).eq('id', set.remoteId)` 에서 `.eq('user_id', userId)` 누락.
+- **제안 수정:** `.eq('id', set.remoteId).eq('user_id', userId)` 로 user_id 필터 추가.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 400 [lane:SYNC]
+
+---
+
+### [L-466] — `gate_tests.py` — npm test "no tests found" 등 Jest 패턴 미매칭 → 0건 결과가 fail 처리
+
+- **영역:** 백엔드 — devagent 게이트
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** Jest에서 "No tests found", "Test Suites: 0" 등이 exit_code=1로 반환되면 T.1/T.3 fail 처리 → frontend 변경이 revise 루프에 갇힘.
+- **원인:** [dev-harness/devagent/nodes/gate_tests.py](dev-harness/devagent/nodes/gate_tests.py) line 70–72 — `_no_tests_collected`이 pytest 패턴("no tests ran", "collected 0 items")만 체크.
+- **제안 수정:** Jest 패턴 추가: `"no tests found"`, `"test suites: 0"`, `"0 passing"` 등.
+- **파일:** [dev-harness/devagent/nodes/gate_tests.py](dev-harness/devagent/nodes/gate_tests.py) line 70 [lane:BACKEND]
+
+---
+
+### [L-467] — `_reviewCard()` — `safeHttps()` 빈 문자열 반환 시 `src=""` img 렌더 → `.has-photo` 카드 레이아웃 깨짐
+
+- **영역:** 프론트엔드 — 상품 모달/후기
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 리뷰 이미지가 http URL이면 `safeHttps()`가 `""`를 반환, `src=""` img가 렌더되어 `.has-photo` 카드 레이아웃과 `pmrv-more` 배지 숫자가 실제 표시 사진 수와 어긋남.
+- **원인:** [site/app.js](site/app.js) line 2308 — `r.image_urls.length` 체크 후 `safeHttps` 검증 없이 카드 분기 결정. `openReviewDetail`은 `filter(safeHttps)`로 올바르게 처리함.
+- **제안 수정:** `const validImgs = r.image_urls.filter(safeHttps); if (validImgs.length)` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 2308 [lane:CORE]
+
+---
+
+### [L-468] — `showSetConfirm()` — `sac-bar` 연속 담기 시 `bar.offsetWidth` 강제 리플로우 누락 → 프로그레스 바 재시작 불완전
+
+- **영역:** 프론트엔드 — 세트 담기 확인 카드
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 상품을 연속으로 담기 시 프로그레스 바가 처음부터 재시작하지 않고 현재 진행 위치에서 이동.
+- **원인:** [site/app.js](site/app.js) line 748–751 — `bar.style.transition = "none"` 후 `scaleX(1)` 설정 시 강제 리플로우(`void bar.offsetWidth`) 없어 DOM이 transition 없이 리셋 안 됨.
+- **제안 수정:** `bar.style.transition = "none"; bar.style.transform = "scaleX(1)"; void bar.offsetWidth;` 로 강제 리플로우 추가.
+- **파일:** [site/app.js](site/app.js) line 748 [lane:CORE]
 
 ---
