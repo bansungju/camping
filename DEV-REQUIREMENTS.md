@@ -96,6 +96,8 @@
 | FE-WISH-06 | **담은 장비 확인 루트**(모달→꾸러미 내용 이동·열람) | DONE | 카드 '꾸러미 보기'→`openSetDetail`(로그인·페이지 무관 모달 열람) |
 | FE-WISH-07 | **내 세트 표: '가격' 제거 + 항목별 '구매 링크 버튼' 도입** | DONE | 세트 담을 때 `coupang_url` 저장(택1=①). `.set-buy` 버튼·클릭집계. ↔ FE-ITEM-03 |
 | FE-WISH-08 | **'이 세트로 커뮤니티 로그 작성' 아카이브** | DONE(확인) | 이미 `COMMUNITY_ENABLED=false`로 숨김. ↓ 메모 |
+| FE-WISH-09 | **'도장판' 세트 구성 v1**(카테고리 총량 cap·진행형 도장판·빈칸→담기·교체 UX·세트 타입 프리셋) | DONE | SSOT=[SET-COMPOSITION-PLAN.md](SET-COMPOSITION-PLAN.md). 완성=0→≥1, cap=상한선. `SET_SLOTS`(10칸·tier)·`SET_TYPES`·`setCompletion`·`openReplaceModal` ↓ 상세 |
+| FE-WISH-10 | **'담기 모달' UX/UI 폴리시 v1.1**(부록 B) | DONE | 표시 전용(정원/완성 로직 불변). U1 핫픽스(`.sm-new` column)·타입 `<select>`(쉬운말+캡션)·미니 도장판(●○, 모달/상세/카드 공통 `miniStampBoard`)·기존↔새 세트 구분 ↓ 상세 |
 
 #### 상세 스펙 — 장비 꾸러미 담기 확인 (FE-WISH-05 / FE-WISH-06)
 > 사용자 요청(2026-06-12): "장비 꾸러미에 담았으면 **확인을 하는 루트**도 뚫어줘야 한다. 담자마자 **아주 잠깐(2~3초) 유지되는 모달** 형태."
@@ -133,11 +135,11 @@
 | FE-SOC-03 | 댓글·좋아요 | DONE | ↔ BE-SOC migrations 006/009 |
 | FE-SOC-04 | 닉네임(profiles 단일 진실) 표시 | DONE | ↔ BE-SOC-AUTH |
 | FE-SOC-05 | 회원탈퇴 | DONE | ↔ BE-SOC `delete-account` 함수 |
-| FE-SOC-06 | **'내 정보' 프로필 헤더 간소화**(가운데 띄움 → 컴팩트 표기) | TODO | ↓ 상세 스펙 |
-| FE-SOC-07 | **'내 정보' 탭 구조 → 영역 나열(섹션) 형태로 변경** | TODO | ↓ 상세 스펙. KREAM식 |
-| FE-SOC-08 | **닉네임 변경 기능**(최초 설정 후 재변경 UI) | TODO | ↓ 상세 스펙. 백엔드 `setNickname` 재사용 |
-| FE-SOC-09 | **'내 로그'에 내가 남긴 상품 후기 추가** | TODO | ↓ 상세 스펙. ↔ BE-SOC-REVIEW |
-| FE-SOC-10 | **'커뮤니티' 로그 아카이브**(일단 비활성, 복구 가능) | TODO | ↓ 상세 스펙. 플래그 방식 |
+| FE-SOC-06 | **'내 정보' 프로필 헤더 간소화**(가운데 띄움 → 컴팩트 표기) | DONE | `renderProfile` 좌측정렬·email 말줄임. 스켈레톤도 좌측정렬 |
+| FE-SOC-07 | **'내 정보' 탭 구조 → 영역 나열(섹션) 형태로 변경** | DONE | `#acc-tabs`·`_accSetTab`/`_accActiveTab`·`.acc-tab` CSS 제거, 세 섹션 `isLoggedIn`이면 동시 표시 |
+| FE-SOC-08 | **닉네임 변경 기능**(최초 설정 후 재변경 UI) | DONE | 설정 '닉네임' 행 `변경` 버튼+인라인 폼(L-20). 형식·실시간중복·쿨다운(`nickname_cooldown`) 처리, 성공 시 헤더/행 즉시 갱신 |
+| FE-SOC-09 | **'내 로그'에 내가 남긴 상품 후기 추가** | DONE | `getMyReviews()`(supabaseClient)+`_myReviewCard`. 별점·날짜·본문·사진, pcode→search.json으로 상품 링크. ↔ BE-SOC-REVIEW |
+| FE-SOC-10 | **'커뮤니티' 로그 아카이브**(일단 비활성, 복구 가능) | DONE | `COMMUNITY_LOG_ENABLED=false` 플래그. posts는 켜질 때만 `#my-community-logs`에 렌더(편집/삭제 로직 보존) |
 
 #### 상세 스펙 — '내 정보' 페이지 레이아웃 개편 (FE-SOC-06 / FE-SOC-07)
 > 사용자 요청(2026-06-12, 참고 이미지: KREAM 마이페이지). 대상: [account.html](site/account.html).
@@ -227,7 +229,7 @@
 | BE-SOC-LIKE | 좋아요 | DONE | 006_post_likes |
 | BE-SOC-SET | 기어세트 | DONE | 006_gear_sets |
 | BE-SOC-CMT | 댓글 | DONE | 009_comments |
-| BE-SOC-REVIEW | 상품 후기 + **내 후기 조회**(`user_id` 필터) | WIP | reviews 테이블(마이그 020). 목록·작성 DONE, `getMyReviews` 신규 필요 ↔ FE-SOC-09 |
+| BE-SOC-REVIEW | 상품 후기 + **내 후기 조회**(`user_id` 필터) | DONE | reviews 테이블(마이그 001/020). `getMyReviews()` 추가(user_id 필터, RLS reviews_select_public로 읽기 허용, 신규 마이그 불필요) ↔ FE-SOC-09 |
 | BE-SOC-CLICK | 클릭이벤트 수집 | DONE | 008_click_events |
 | BE-SOC-RPC | top_gear_tags / hot_items RPC | DONE | 012/013 |
 | BE-SOC-PUSH | 푸시 구독 + 발송 Edge Function | WIP | 011 + `send-push-notification`, ↔ FE-PLT-04 |
@@ -255,7 +257,7 @@
 | 가격 이력 | FE-ITEM-04 | BE-CAT-06 | TODO |
 | 푸시 알림 | FE-PLT-04 | BE-SOC-PUSH | WIP |
 | 회원탈퇴 | FE-SOC-05 | BE-SOC-DEL | DONE |
-| 내 후기 로그 | FE-SOC-09 | BE-SOC-REVIEW | TODO |
+| 내 후기 로그 | FE-SOC-09 | BE-SOC-REVIEW | DONE |
 
 ---
 
@@ -266,4 +268,11 @@
 - 2026-06-12 FE-CAT-09 DONE — category.html `.toolbar`엔 `#q`만 남겨 풀너비(`.toolbar #q{flex:1 1 100%}`), `#count`를 `.sortrow`로 옮겨 `#sortchips`(innerHTML 갱신)와 형제 배치·우측 정렬. 데스크톱/모바일·다크 검증, 콘솔 무에러.
 - 2026-06-12 FE-CAT-10 DONE — `draw()`에서 `renderValueBanner(k)` 호출, 정렬키 `value`일 때만 `.value-banner` 표시(리스트 위). ✕ 닫기 시 `value_banner_dismissed=1` 영구기억. 칩 클릭 경로로 표시/숨김/지속 검증, 다크·모바일 OK, 콘솔 무에러.
 - 2026-06-12 FE-ITEM-05 DONE — 공통 `priceLabeled(n,nullHtml)`+`.price-basis` 캡션 도입, 가격 노출 7곳(목록·비교모달·추천·최근본·위시·세트목록·커뮤니티)에 '최저가 기준' 부착. 가격없음/—엔 캡션 미표시(AC4). 상세 모달은 기존 `pmprice-note` 유지. 목록(260)·추천(20) 검증, 다크 가독성·콘솔 무에러.
+- 2026-06-13 FE-WISH-10 DONE(v1.1) — '담기 모달' UX/UI 폴리시(부록 B). **표시 전용, 정원/완성 로직 불변**. [1]핫픽스 U1: `.sm-new`를 `flex-direction:column`(라벨→입력행→타입선택 세로), `.sm-new-row`만 가로 유지 → 레이아웃 붕괴 해소. [2a]타입 선택을 칩→`<select>`(쉬운 말 `optLabel`: "가족과 차로 (오토캠핑)"/"가볍게 배낭 메고 (백패킹)"/"차에서 자기 (차박)", 기본 auto, '4인' 제거) + 선택따라 바뀌는 회색 `caption`(공유 `setTypePickHtml`/`setTypeCaption`). 이름입력+만들기 위, 타입 select는 아래 작은 회색 줄. 모달·세트상세 양쪽 교체. [2b]완성도 "필수 n/m"→미니 도장판(채운 ● 컬러+빈 ○ 점선) 공유 컴포넌트 `miniStampBoard` — 모달 세트목록·세트상세(`ssb-prog`)·계정카드(`set-prog`) 3곳 통일, 완성 시 "🏕️ 완성" 칩. [2c]기존↔새 세트 `sm-section-label`+`sm-divider`. 프리뷰 검증(mobile/dark): 세로배치 정상·dropdown 캡션 갱신·●●●○ 도장·구분선·콘솔 무에러. (v1.2: 아이콘 체계는 후속)
+- 2026-06-13 FE-WISH-09 DONE(v1) — '도장판' 세트 구성([SET-COMPOSITION-PLAN.md](SET-COMPOSITION-PLAN.md)). **핵심 규칙 완성=0→≥1, cap=상한선**. ①`SET_SLOTS`를 그룹 10칸(key/slugs/icon/label/tier)으로 재정의 + `SET_TYPES`(auto/backpacking/carcamp 정원 프리셋, cap=0→비노출 → auto는 9칸) + `setCompletion`(채운 필수슬롯/노출 필수슬롯, 슬롯 안 개수 무관). ②`addToSet` 카테고리 총량 가드(P1: 다른 텐트 2개째 'cap' 반환) → `openReplaceModal`(어떤 OO를 뺄까요) 교체 UX. ③세트 카드: 타입 라벨+진행바('필수 n/m')+완성 배지+노출슬롯 도장. ④세트 상세: 타입 칩 전환·완성도·도장판(빈칸=담으러가기 링크, 채운칸 ✓×n 정보표기·압박 없음, 초과 ⚠️ 경고만)·정원 인지 qty 가드. ⑤생성 모달 타입 선택 칩. 프리뷰 검증(mobile/dark): 9칸·완성도 3/4→4/4 배지·교체 스왑·타입전환(차박 텐트칸 제거)·레거시 무type·초과경고·콘솔 무에러. (v1.5: 축하 모션·별도 '비었어요' 넛지 섹션)
+- 2026-06-13 **account.html 모듈 구문오류 핫픽스** — `renderProfile`의 `btnDelete.onclick = async () => {…})` 끝에 `addEventListener` 잔재 `)`가 남아 **모듈 전체가 SyntaxError로 미실행**(로그인·프로필·닉네임·찜동기화 전부 죽음, 화면은 스켈레톤 고착). `})`→`}` 수정. 프리뷰에서 로그인 화면 정상 렌더 확인. (린터의 addEventListener→onclick 변환 잔재로 추정)
+- 2026-06-13 FE-SOC-08 DONE(확인) — 닉네임 변경은 L-20으로 기구현. 설정 '닉네임' 행의 `변경` 버튼→인라인 폼(형식 `NICKNAME_RE`·실시간 중복확인 `isNicknameAvailable`·`setNickname`). DB 거부는 `getErrorMessage`로 표시(쿨다운 `nickname_cooldown`/중복 23505/형식). 성공 시 헤더·설정행 닉네임 즉시 갱신. 프리뷰에서 열기/형식위반/동일닉/확인중/취소 동작 검증.
+- 2026-06-13 FE-SOC-09 DONE — 마이페이지 '내 로그'에 내 상품 후기 표시. `supabaseClient.getMyReviews()`(user_id 필터, image_urls 폴백) + `_myReviewCard`(별점·날짜·본문·사진썸네일, product_pcode=b|m|cap 파싱 + search.json 인덱스로 상품 링크, 미해석 시 링크 없이 표기). 빈 상태 '아직 남긴 후기가 없어요'. 카운트=후기+글. 프리뷰: 링크해석(O)/미해석(plain) 카드·빈 상태·콘솔 무에러 검증.
+- 2026-06-13 FE-SOC-10 DONE — '내 로그'의 커뮤니티 글(posts) 노출을 `COMMUNITY_LOG_ENABLED=false`로 아카이브(복구 가능). posts는 플래그 ON일 때만 `#my-community-logs`에 렌더(편집/삭제 로직·카운트 합산 보존), 후기 영역은 항상 표시. 데이터·작성 기능 불변.
+- 2026-06-13 FE-SOC-06/07 DONE — '내 정보' KREAM식 개편. **06**: `renderProfile` 헤더에서 `max-width:360px;margin:0 auto` 가운데 띄움 제거 → 좌측정렬 컴팩트(아바타+닉네임 17px+이메일 말줄임), 스켈레톤 로더도 좌측정렬로 맞춰 레이아웃 시프트 방지. **07**: `#acc-tabs` 탭 바(HTML)·`_accActiveTab`/`_accSetTab` 헬퍼·탭 카운트 뱃지 로직(app.js)·`.acc-tabs/.acc-tab` CSS(style.css) 제거, 찜/세트/로그 3섹션을 `isLoggedIn`이면 동시 `block` 표시(섹션 헤더 .nd 뱃지로 개수). 프리뷰(mobile 375)에서 3섹션 동시표시·헤더 좌측정렬(left=14px, centered=false)·라이트/다크 검증, 콘솔 무에러(GoTrueClient 다중 인스턴스 경고는 반복 eval 부작용·무관).
 - 2026-06-12 FE-CAT-07 DONE — 모바일(≤640px) 필터를 `#cat-aside` 하단 바텀시트로 전환(열기버튼 `🎛️필터`·백드롭·`body` 스크롤잠금·드래그핸들·헤더/✕·결과보기 푸터·Esc), 기본 닫힘 → 목록 즉시 노출. 데스크톱은 sticky 사이드바 그대로(시트 크롬 숨김). 핫파일 잠금 프로토콜로 작업. FE-CAT-04/05/06/08은 기구현 확인 → DONE 정리.

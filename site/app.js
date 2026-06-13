@@ -90,15 +90,17 @@ const SET_SLOTS = [
   { key: "living",   slugs: ["cooler","wagon","firepit","powerbank"], icon: "🧊", label: "살림", tier: "opt" },
   { key: "bag",      slugs: ["backpacking-bag"],   icon: "🎒", label: "가방",      tier: "opt" },
 ];
-/* 세트 타입별 정원 프리셋(상한선). cap=0 → 해당 타입에서 슬롯 비노출. */
+/* 세트 타입별 정원 프리셋(상한선). cap=0 → 해당 타입에서 슬롯 비노출.
+   label=짧은 표시명(카드/배지), optLabel=드롭다운용 쉬운 말(상황어+괄호용어), caption=선택 따라 바뀌는 회색 보조 1줄. */
 const SET_TYPES = {
-  auto:        { label: "오토캠핑 4인", icon: "🚙", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
-  backpacking: { label: "백패킹",       icon: "🥾", caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0, bag:1 } },
-  carcamp:     { label: "차박",         icon: "🚐", caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4, bag:0 } },
+  auto:        { label: "오토캠핑", icon: "🚙", optLabel: "가족과 차로 (오토캠핑)",   caption: "4인 가족 기준 · 침낭·의자 최대 4", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
+  backpacking: { label: "백패킹",   icon: "🥾", optLabel: "가볍게 배낭 메고 (백패킹)", caption: "1~2인 기준 · 무게 줄이기",        caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0, bag:1 } },
+  carcamp:     { label: "차박",     icon: "🚐", optLabel: "차에서 자기 (차박)",       caption: "차량 취침 기준 · 텐트 생략",      caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4, bag:0 } },
 };
 const DEFAULT_SET_TYPE = "auto";
 const SET_TYPE_ORDER = ["auto", "backpacking", "carcamp"];
 const setTypeCaps = type => (SET_TYPES[type] || SET_TYPES[DEFAULT_SET_TYPE]).caps;
+const setTypeCaption = type => (SET_TYPES[type] || SET_TYPES[DEFAULT_SET_TYPE]).caption;
 const slotCap = (slot, type) => setTypeCaps(type)[slot.key] ?? 0;
 const slotForSlug = slug => SET_SLOTS.find(sl => sl.slugs.includes(slug)) || null;
 /* 슬롯에 담긴 수량 합(여러 하위 slug 합산) */
@@ -112,6 +114,31 @@ function setCompletion(set) {
   const filled = must.filter(sl => slotCount((set && set.items) || [], sl) >= 1).length;
   const total = must.length;
   return { filled, total, pct: total ? Math.round(filled / total * 100) : 0, complete: total > 0 && filled === total };
+}
+/* FE-WISH-10(B-2-3): 완성도 미니 도장판 — 분수("필수 1/4") 대신 채운 dot(컬러)·빈 dot(점선).
+   모달·세트상세·계정카드 3곳 동일 컴포넌트. 표시 전용(완성 판정 로직 불변). */
+function miniStampBoard(set) {
+  const c = setCompletion(set);
+  if (!c.total) return "";
+  if (c.complete) return `<span class="stamp-mini" aria-label="필수 도장 모두 채움 (완성)"><span class="stamp-done">🏕️ 완성</span></span>`;
+  const type = (set && set.type) || DEFAULT_SET_TYPE;
+  const must = activeSlots(type).filter(sl => sl.tier === "must");
+  const dots = must.map(sl => {
+    const on = slotCount((set && set.items) || [], sl) >= 1;
+    return `<span class="stamp-dot${on ? " on" : ""}" title="${esc(sl.label)}${on ? " ✓" : " 비어있음"}"></span>`;
+  }).join("");
+  return `<span class="stamp-mini" aria-label="필수 도장 ${c.filled}/${c.total} 채움"><span class="stamp-dots">${dots}</span></span>`;
+}
+/* FE-WISH-10(B-2-2): 세트 타입 선택 — 쉬운 말 <select>(작은 회색) + 선택 따라 바뀌는 회색 캡션 1줄.
+   모달(새 세트 생성)·세트 상세(타입 변경) 공유. 기본값=auto. */
+function setTypePickHtml(currentType, selectClass) {
+  const cur = SET_TYPES[currentType] ? currentType : DEFAULT_SET_TYPE;
+  const options = SET_TYPE_ORDER.map(k =>
+    `<option value="${k}"${k === cur ? " selected" : ""}>${esc(SET_TYPES[k].optLabel)}</option>`).join("");
+  return `<div class="set-type-pick">
+    <select class="${selectClass}" aria-label="세트 유형 선택">${options}</select>
+    <span class="set-type-caption">${esc(setTypeCaption(cur))}</span>
+  </div>`;
 }
 
 /* 운영자 모드일 땐 눈에 띄는 배너+끄기 버튼(조용히 갇히는 것 방지) */
@@ -358,33 +385,31 @@ function openSetModal(item) {
     document.body.appendChild(modal);
   }
   const sets = getSets();
+  // FE-WISH-10(B-2-3): 완성도는 미니 도장판으로. (B-2-5) 기존/새 세트 섹션 구분.
   const setListHtml = sets.length
     ? sets.map(s => {
         const tdef = SET_TYPES[s.type] || SET_TYPES[DEFAULT_SET_TYPE];
-        const c = setCompletion(s);
-        const meta = c.complete ? "🏕️ 완성" : (c.total ? `필수 ${c.filled}/${c.total}` : `${s.items.length}개`);
         return `<button class="sm-set-btn" data-sid="${s.id}">
         <span class="sm-set-name">${tdef.icon} ${esc(s.title)}</span>
-        <span class="sm-set-cnt">${meta}</span></button>`;
+        <span class="sm-set-cnt">${miniStampBoard(s) || `${s.items.length}개`}</span></button>`;
       }).join("")
-    : `<div class="sm-empty">저장된 세트가 없어요</div>`;
-  // FE-WISH-09: 새 세트 생성 시 타입(오토/백패킹/차박) 선택 — 정원 프리셋 결정. 기본=오토캠핑.
-  const typeChips = SET_TYPE_ORDER.map((k, i) =>
-    `<button type="button" class="sm-type-chip${i === 0 ? " on" : ""}" data-type="${k}">${SET_TYPES[k].icon} ${SET_TYPES[k].label}</button>`).join("");
+    : `<div class="sm-empty">아직 만든 세트가 없어요 — 아래에서 새로 만들어요.</div>`;
   modal.innerHTML = `<div class="pmbox sm-box" role="dialog" aria-modal="true">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div class="sm-head">
       <div class="sm-title">장비 꾸러미에 담기</div>
       <div class="sm-item">${esc(item.b)} ${esc(item.m)}</div>
     </div>
+    ${sets.length ? `<div class="sm-section-label">기존 세트에 담기</div>` : ""}
     <div class="sm-list">${setListHtml}</div>
+    <div class="sm-divider"></div>
     <div class="sm-new">
       <div class="sm-new-label">새 세트 만들기</div>
-      <div class="sm-types">${typeChips}</div>
       <div class="sm-new-row">
         <input class="sm-input" type="text" placeholder="새 세트 이름 입력" maxlength="40">
         <button class="sm-create">만들기</button>
       </div>
+      ${setTypePickHtml(DEFAULT_SET_TYPE, "sm-type-select")}
     </div></div>`;
   modal.classList.add("on");
   const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
@@ -402,9 +427,10 @@ function openSetModal(item) {
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
-  modal.querySelectorAll(".sm-type-chip").forEach(chip => chip.onclick = () => {
-    modal.querySelectorAll(".sm-type-chip").forEach(c => c.classList.toggle("on", c === chip));
-  });
+  // 타입 <select> 변경 시 회색 캡션만 갱신(생성 전이라 세트엔 아직 미적용)
+  const typeSel = modal.querySelector(".sm-type-select");
+  const typeCap = modal.querySelector(".sm-new .set-type-caption");
+  if (typeSel) typeSel.onchange = () => { if (typeCap) typeCap.textContent = setTypeCaption(typeSel.value); };
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
     const res = addToSet(btn.dataset.sid, item);
     if (res.status === "cap") { close(); openReplaceModal(btn.dataset.sid, item, res.slot); return; }
@@ -414,7 +440,7 @@ function openSetModal(item) {
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
-    const type = modal.querySelector(".sm-type-chip.on")?.dataset.type || DEFAULT_SET_TYPE;
+    const type = modal.querySelector(".sm-type-select")?.value || DEFAULT_SET_TYPE;
     const s = newSet(t, type); addToSet(s.id, item);
     close(); showSetConfirm(s.id);
   };
@@ -748,7 +774,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=e7ca584d").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=316199ab").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -961,7 +987,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=e7ca584d").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=316199ab").catch(() => []);
     return idx;
   };
 
@@ -2445,7 +2471,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=e7ca584d"); }
+  try { idx = await getJSON("data/search.json?v=316199ab"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2707,10 +2733,7 @@ function openSetDetail(si) {
       <td style="padding:4px 8px;border-bottom:1px solid var(--line);text-align:right">${buyCell}</td>
     </tr>`;
   }).join("");
-  // FE-WISH-09: 도장판(타입 칩 + 완성도 + 슬롯) — 완성=0→≥1, 빈 칸은 담으러 가기 링크.
-  const comp = setCompletion(s);
-  const typeChips = SET_TYPE_ORDER.map(k =>
-    `<button type="button" class="set-type-chip${k === type ? " on" : ""}" data-type="${k}">${SET_TYPES[k].icon} ${SET_TYPES[k].label}</button>`).join("");
+  // FE-WISH-09/10: 도장판(타입 <select> + 미니 도장판 + 슬롯) — 완성=0→≥1, 빈 칸은 담으러 가기 링크.
   const boardCells = activeSlots(type).map(sl => {
     const n = slotCount(s.items, sl);
     const cap = slotCap(sl, type);
@@ -2725,14 +2748,10 @@ function openSetDetail(si) {
       ? `<div class="ssb-cell on${must ? " must" : ""}${over ? " over" : ""}" title="${esc(sl.label)}${over ? ` 정원 초과(최대 ${cap})` : " 완료"}">${body}</div>`
       : `<a class="ssb-cell${must ? " must" : ""}" href="category.html?cat=${sl.slugs[0]}" title="${esc(sl.label)} 담으러 가기">${body}</a>`;
   }).join("");
-  const compHtml = comp.complete
-    ? `<div class="set-complete-badge lg">🏕️ 세트 완성!</div>`
-    : (comp.total ? `<div class="ssb-prog" aria-label="필수 슬롯 ${comp.filled}/${comp.total} 채움">
-        <div class="set-prog-track"><i style="width:${comp.pct}%"></i></div>
-        <span class="set-prog-label">필수 슬롯 ${comp.filled}/${comp.total} 채움 (${comp.pct}%)</span></div>` : "");
+  const miniBoard = miniStampBoard(s);
   const boardHtml = `
-    <div class="ssb-types">${typeChips}</div>
-    ${compHtml}
+    ${setTypePickHtml(type, "set-type-select")}
+    ${miniBoard ? `<div class="ssb-prog">${miniBoard}</div>` : ""}
     <div class="ssb-grid">${boardCells}</div>
     <p class="ssb-hint">빈 칸을 누르면 담으러 갈 수 있어요. 정원은 상한선이에요(다 채울 필요 없어요).</p>`;
   let modal = document.getElementById("set-detail-modal");
@@ -2776,13 +2795,14 @@ function openSetDetail(si) {
   modal.querySelector(".pmx").onclick = close;
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").focus();
-  // FE-WISH-09: 세트 타입 전환 → 정원 프리셋 재적용. 초과분은 강제 삭제 안 함(§6 하위호환).
-  modal.querySelectorAll(".set-type-chip").forEach(chip => chip.onclick = e => {
+  // FE-WISH-09/10: 세트 타입 전환(<select>) → 정원 프리셋 재적용. 초과분은 강제 삭제 안 함(§6 하위호환).
+  const detailTypeSel = modal.querySelector(".set-type-select");
+  if (detailTypeSel) detailTypeSel.onchange = e => {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
-    set.type = chip.dataset.type; saveSets(arr);
+    set.type = detailTypeSel.value; saveSets(arr);
     renderAccount(); openSetDetail(si);
-  });
+  };
   modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
@@ -2883,7 +2903,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=e7ca584d")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=316199ab")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3161,18 +3181,14 @@ function renderAccount() {
         const on = slotCount(s.items, slot) >= 1;
         return `<span class="set-slot${on ? " on" : ""}" title="${slot.label}${on ? " ✓" : ""}">${slot.icon}</span>`;
       }).join("");
-      const c = setCompletion(s);
-      const completeHtml = c.complete
-        ? `<div class="set-complete-badge">🏕️ 세트 완성!</div>`
-        : (c.total ? `<div class="set-prog" aria-label="필수 슬롯 ${c.filled}/${c.total} 채움">
-             <div class="set-prog-track"><i style="width:${c.pct}%"></i></div>
-             <span class="set-prog-label">필수 ${c.filled}/${c.total}</span></div>` : "");
+      // FE-WISH-10(B-2-3): 완성도 '필수 n/m'/배지 → 미니 도장판(모달·상세와 동일 컴포넌트).
+      const miniBoard = miniStampBoard(s);
       return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}" aria-label="${esc(s.title)} 세트 상세 보기">
         <div class="pli-info">
           <div class="pli-top">${tdef.icon} ${esc(tdef.label)}</div>
           <div class="pli-name">${esc(s.title)}</div>
           <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비 ${weightBadge(totalWeight(s.items))}</div>
-          ${completeHtml}
+          ${miniBoard ? `<div class="set-prog">${miniBoard}</div>` : ""}
           ${goalBar(s)}
           <div class="set-slots">${slotBadges}</div>
         </div>
