@@ -131,12 +131,14 @@ function miniStampBoard(set) {
 }
 /* FE-WISH-10(B-2-2): 세트 타입 선택 — 쉬운 말 <select>(작은 회색) + 선택 따라 바뀌는 회색 캡션 1줄.
    모달(새 세트 생성)·세트 상세(타입 변경) 공유. 기본값=auto. */
-function setTypePickHtml(currentType, selectClass) {
+function setTypePickHtml(currentType, selectClass, labelText) {
   const cur = SET_TYPES[currentType] ? currentType : DEFAULT_SET_TYPE;
   const options = SET_TYPE_ORDER.map(k =>
     `<option value="${k}"${k === cur ? " selected" : ""}>${esc(SET_TYPES[k].optLabel)}</option>`).join("");
+  const lbl = labelText || "세트 유형";
   return `<div class="set-type-pick">
-    <select class="${selectClass}" aria-label="세트 유형 선택">${options}</select>
+    <span class="set-type-label">${esc(lbl)}</span>
+    <select class="${selectClass}" aria-label="${esc(lbl)}">${options}</select>
     <span class="set-type-caption">${esc(setTypeCaption(cur))}</span>
   </div>`;
 }
@@ -409,11 +411,11 @@ function openSetModal(item) {
     <div class="sm-divider"></div>
     <div class="sm-new">
       <div class="sm-new-label">새 세트 만들기</div>
+      ${setTypePickHtml(DEFAULT_SET_TYPE, "sm-type-select", "어떤 캠핑인가요?")}
       <div class="sm-new-row">
         <input class="sm-input" type="text" placeholder="새 세트 이름 입력" maxlength="40">
         <button class="sm-create">만들기</button>
       </div>
-      ${setTypePickHtml(DEFAULT_SET_TYPE, "sm-type-select")}
     </div></div>`;
   modal.classList.add("on");
   const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
@@ -2755,7 +2757,7 @@ function openSetDetail(si) {
   }).join("");
   const miniBoard = miniStampBoard(s);
   const boardHtml = `
-    ${setTypePickHtml(type, "set-type-select")}
+    ${setTypePickHtml(type, "set-type-select", "캠핑 유형")}
     ${miniBoard ? `<div class="ssb-prog">${miniBoard}</div>` : ""}
     <div class="ssb-grid">${boardCells}</div>
     <p class="ssb-hint">빈 칸을 누르면 담으러 갈 수 있어요. 정원은 상한선이에요(다 채울 필요 없어요).</p>`;
