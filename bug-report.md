@@ -2592,7 +2592,7 @@
 - **제안 수정:** `pages.yml`에 `- uses: actions/setup-python@v5` + `with: python-version: "3.11"` (또는 `"3.x"`) 단계 추가.
 - **파일:** [.github/workflows/pages.yml](.github/workflows/pages.yml) [lane:BACKEND]
 
-### [M-141] — `app.js` — `?view-set=` 공유 URL import 시 아이템에 `pcode`·`s`·`coupang_url` 누락 → 구매 버튼 항상 비활성
+### [M-141] ✅ 해결완료(2026-06-13, CORE) — `app.js` — `?view-set=` 공유 URL import 시 아이템에 `pcode`·`s`·`coupang_url` 누락 → 구매 버튼 항상 비활성
 - **영역:** 프론트엔드 — 계정/세트
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
@@ -2611,3 +2611,47 @@
 - **재현:** 현재 Google 외 프로바이더 추가 시 재현. 코드 리뷰 수준 이슈.
 - **제안 수정:** `renderProfile`에 `window._accUser?.app_metadata?.provider` 참조하여 "Google 로그인", "GitHub 로그인" 등 동적 표시. 또는 현재 단계에서는 "소셜 로그인"으로 중립 표현 변경.
 - **파일:** [site/account.html](site/account.html) line 424 [lane:SOCIAL]
+
+---
+
+## R-88 — 정렬·PWA·파이프라인·아이템상세 탐색 (2026-06-13)
+
+### [M-142] — `build-item-pages.js` — `ITEM` 객체·`openSetModal` 호출에 `coupang_url` 누락 → 아이템 상세에서 꾸러미 담기 시 구매 링크 소실
+- **영역:** 프론트엔드 — 아이템 상세 / 빌드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `/item/{cat}/item-N.html`의 "＋ 장비 꾸러미에 담기" 버튼으로 세트에 담으면 저장되는 아이템 객체에 `coupang_url` 필드가 없다. 이후 세트 상세(`openSetDetail`)에서 해당 아이템의 🛒 구매 버튼이 항상 비활성("준비 중")으로 표시된다. 실제 쿠팡 링크가 있는 제품도 동일하게 비활성화됨.
+- **원인:** `scripts/build-item-pages.js` line 319에서 `ITEM` 객체를 생성할 때 `coupang_url`을 포함하지 않는다. line 331의 `openSetModal(...)` 호출에도 `coupang_url` 미전달. `model.coupang_url`은 line 107에서 이미 비구조화하여 사용 가능함에도 ITEM 직렬화 시 누락.
+- **재현:** 쿠팡 링크가 있는 제품의 아이템 상세 페이지(`/item/auto-tent/item-0.html` 등) → "꾸러미에 담기" → 계정 > 내 꾸러미 → 해당 아이템 🛒 클릭 → "준비 중" 비활성 표시.
+- **제안 수정:** `scripts/build-item-pages.js` line 319를 `JSON.stringify({ b: brand, m: modelName, cap: ..., s: catSlug, p: price_min, img: img || null, cu: coupang_url || null })`로 수정하고 ITEM에 `cu` 키 추가; line 331 `openSetModal` 호출에 `coupang_url: ITEM.cu || null` 추가.
+- **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 319, 331 [lane:CORE]
+
+### [L-169] — `app.js` — PWA 배너 `showBanner()` — `display:block` 직후 `offsetHeight` 측정 → layout flush 전이면 0 → `--banner-h: 0px` 세팅
+- **영역:** 프론트엔드 — PWA
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `beforeinstallprompt` 이벤트 핸들러의 `showBanner()`(line 36–39)에서 `banner.style.display = "block"` 직후 `banner.offsetHeight`를 읽는다. 브라우저가 layout을 아직 flush하지 않은 경우 `offsetHeight`가 0을 반환해 `--banner-h: 0px`로 설정된다. 이로 인해 콘텐츠 상단이 배너에 가려지거나 배너 여백이 사라지는 레이아웃 깨짐이 간헐적으로 발생.
+- **원인:** DOM style 변경 직후 layout 강제 reflow 없이 offsetHeight 접근. CSS transition 또는 비동기 렌더링 타이밍에서 재현.
+- **재현:** PWA 지원 브라우저 + 미설치 상태에서 홈 진입 → 개발자도구에서 `--banner-h` CSS 변수 확인 → 0px로 설정되는 경우 있음.
+- **제안 수정:** `showBanner()`에서 `requestAnimationFrame` 사용: `banner.style.display = "block"; requestAnimationFrame(() => { document.documentElement.style.setProperty("--banner-h", banner.offsetHeight + "px"); });`
+- **파일:** [site/app.js](site/app.js) line 36–39 [lane:CORE]
+
+### [L-170] — `export_site.py` — `open(..., "w")` 에 `encoding="utf-8"` 미지정 → non-UTF-8 로케일 환경에서 JSON 파일 인코딩 오류
+- **영역:** 백엔드 — 빌드 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `export_site.py` line 165, 175, 177의 `open(..., "w")`가 `encoding` 인수를 명시하지 않는다. `ensure_ascii=False`로 한국어를 직접 쓰기 때문에 Windows나 `LANG=C` 설정 환경에서 실행하면 `UnicodeEncodeError` 또는 CP949 인코딩으로 저장되어 브라우저가 JSON 파싱에 실패한다.
+- **원인:** Python `open()` 기본 인코딩은 `locale.getpreferredencoding()`에 따라 결정되며 UTF-8이 아닐 수 있다. GitHub Actions ubuntu-latest는 기본 UTF-8이지만 로컬 개발(Windows) 환경에서 재현.
+- **재현:** Windows 개발환경 또는 `PYTHONIOENCODING=cp949 python3 pipeline/export_site.py` 실행 시 재현.
+- **제안 수정:** 3곳 모두 `open(..., "w", encoding="utf-8")` 로 수정.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 165, 175, 177 [lane:BACKEND]
+
+### [L-171] — `app.js` — `openProduct()` 모달 하단 상세 링크 — `d.models.indexOf(m) === -1`일 때 `item--1.html` 링크 렌더링
+- **영역:** 프론트엔드 — 상품 상세
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `openProduct(m)` 모달 하단 "🔗 상세 페이지" 링크(line 1691)에서 `d.models.indexOf(m)`을 사용한다. `renderRecent()`로 복원된 최근 본 상품 객체는 `d.models`의 참조와 다른 새 객체일 수 있어 `indexOf` 결과가 -1이 되면 `href="/item/auto-tent/item--1.html"` 등 깨진 링크가 렌더링된다. 공유 버튼(line 1735)은 `idx >= 0` 조건으로 보호되어 있으나 line 1691은 조건 없이 항상 출력.
+- **원인:** line 1691에서 `STATE.slug` 유무만 체크하고 `idx >= 0` 유효성 검사 없음.
+- **재현:** `renderRecent()`에서 최근 본 상품 클릭 → `openProduct` 모달 하단 "🔗 상세 페이지" href 확인 → `item--1.html` 형태 URL 노출.
+- **제안 수정:** line 1691을 `${STATE.slug && d.models.indexOf(m) >= 0 ? \`<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html"...>\` : ""}` 로 수정.
+- **파일:** [site/app.js](site/app.js) line 1691 [lane:CORE]
