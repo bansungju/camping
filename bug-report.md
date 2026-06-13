@@ -73,6 +73,7 @@
 | 59 | 계정/로그인 (10순환) | 2026-06-12 | 5건 (M-116·M-117·L-97~L-99) |
 | 60 | 커뮤니티/소셜 (10순환) | 2026-06-12 | 2건 (L-100·L-101, H-31·M-98·M-99 재확인) |
 | 61 | 홈/메인 (11순환) | 2026-06-12 | 2건 (M-118 GoTrueClient 이중화·L-102 search.json 버전 하드코딩) |
+| 62 | 코드 정밀 탐색 | 2026-06-13 | 4건 (M-136~M-137·L-160~L-161) |
 
 ---
 
@@ -80,17 +81,17 @@
 
 > 아래 클러스터는 동일 파일·동일 패턴이므로 PR 1개로 묶어서 수정 예정.
 
-### [클러스터 A] setItems 필드 누락 — `M-130` + `M-131`
+### [클러스터 A] ✅ 해결완료(2026-06-12~13) setItems 필드 누락 — `M-130` + `M-131`
 - **공통 원인:** 인라인 객체 수기 생성 시 `s·pcode·coupang_url` 필드 누락
 - **공통 수정:** `items.map(m => setItem(m, STATE.slug))` 헬퍼로 교체
 - **파일:** `site/app.js` 2곳 (bulkBtn ~line 2776, openCmpModal ~line 2076)
 
-### [클러스터 B] initAuth 이중 발화 → 핸들러 누적 — `M-132` + `M-116`
+### [클러스터 B] ✅ 해결완료(2026-06-12~13) initAuth 이중 발화 → 핸들러 누적 — `M-132` + `M-116`
 - **공통 원인:** `initAuth` 합성 `'INITIAL'` 이벤트가 Supabase `INITIAL_SESSION`과 겹쳐 콜백 2회 실행 → `renderProfile` 2회 → `addEventListener` 누적
 - **공통 수정:** `supabaseClient.js` line 22 합성 호출 제거 + `renderProfile` 내 `addEventListener` → `onclick` 직접 할당으로 교체
 - **파일:** `site/supabaseClient.js`, `site/account.html`
 
-### [클러스터 C] account.html 탭 UI 묶음 — `M-52` + `M-53` + `M-74` + `M-84`
+### [클러스터 C] ✅ 해결완료(2026-06-12~13) account.html 탭 UI 묶음 — `M-52` + `M-53` + `M-74` + `M-84`
 - **공통 위치:** `account.html` 탭바 + `app.js` `renderAccount` 탭 섹션
 - M-52: 탭 URL 해시 딥링크 무시 → `history.replaceState` 연동
 - M-53: 찜 탭 카드 클릭 → 카테고리 이탈 → 상품 모달로 전환
@@ -98,12 +99,12 @@
 - M-84: `role="tab"` ARIA 미구현 → `role="tablist"` + `role="tab"` + `aria-selected` 추가
 - **파일:** `site/account.html`, `site/app.js`
 
-### [클러스터 D] supabaseClient.js 인증 버그 — `M-118` + `M-125`
+### [클러스터 D] ✅ 해결완료(2026-06-12~13) supabaseClient.js 인증 버그 — `M-118` + `M-125`
 - M-118: `import("./supabaseClient.js")` 버전 없음 → GoTrueClient 이중 인스턴스 → `stamp_version.py` 동적 import도 교체 또는 싱글턴 패턴
 - M-125: 닉네임 save 시 `clearTimeout(debounce)` 미호출 → 중복 setNickname 가능
 - **파일:** `site/app.js` (dynamic import 교체), `pipeline/stamp_version.py`, `site/account.html`
 
-### [클러스터 E] account.html 로그인 후 동기화 — `M-117` + `M-123`
+### [클러스터 E] ✅ 해결완료(2026-06-12~13) account.html 로그인 후 동기화 — `M-117` + `M-123`
 - M-117: 로그아웃 후 재로그인 시 `myLogsList.dataset.loaded` stale → 로그아웃 분기에서 초기화 추가
 - M-123: 닉네임 설정 완료 후 `syncGearSetsOnLogin` 미호출 → save 핸들러에 호출 추가
 - **파일:** `site/app.js` (~line 2258), `site/account.html` (~line 259)
@@ -891,7 +892,7 @@
 - **원인:** `account.html` 에러 삽입 직후 `initAuth` 콜백이 선행 실행 순서 없이 덮어씀
 - **재현:** `account.html?auth_error=1` 접근 → 오류 메시지 없이 일반 로그인 UI만 표시
 
-### [M-97] `#post=비UUID` 접근 시 Supabase UUID 파싱 에러 코드 콘솔 노출
+### [M-97] ✅ 아카이브(커뮤니티/GNB 비활성화) — `#post=비UUID` 접근 시 Supabase UUID 파싱 에러 코드 콘솔 노출
 - **영역:** 커뮤니티/소셜 — 글 상세
 - **URL:** https://gear-forest.com/community.html#post=99999
 - **증상:** UUID 형식 검증 없이 raw 문자열을 Supabase에 전달. 400 응답과 함께 콘솔에 `{code: 22P02, message: invalid input syntax for type uuid: "99999"}` DB 내부 에러가 노출됨. UI는 "글을 찾을 수 없어요"를 표시하나 내부 오류 코드/타입 정보가 노출됨.
@@ -1664,7 +1665,7 @@
 - **수정 방향:** `stamp_version.py`에 `modulepreload` href 버전 업데이트 패턴 추가. 또는 community.html 32행을 `v=8ae38532`로 직접 수정. [site/community.html:32](site/community.html)
 - **심각도:** 🟢 Low
 
-### [L-101] renderDetail — initAuth 완료로 canParticipate 변경 시 #post=ID 상세보기 강제 재렌더
+### [L-101] ✅ 아카이브(커뮤니티/GNB 비활성화) — renderDetail — initAuth 완료로 canParticipate 변경 시 #post=ID 상세보기 강제 재렌더
 - **영역:** 커뮤니티/소셜 — 상세보기
 - **URL:** https://gear-forest.com/community.html#post=<id>
 - **증상:** `#post=ID` 로딩 중 `initAuth` 완료 → `canParticipate()` 변경 → `route()` 재호출 → `renderDetail(id)` 재실행 → 스피너 재표시·API 재요청·스크롤 초기화. 로그인 사용자가 직접 링크 접근 시 글이 두 번 깜빡임.
@@ -2457,4 +2458,44 @@
 - **현재:** 저울 아이콘(⚖)만 표시 → 사용자가 기능(비교에 추가) 인지 못함
 - **기대:** 아이콘 버튼 완전 제거 (`app.js:2160` `pli-cmp` 버튼 삭제)
 - **보고자:** 사용자 직접 제보 (2026-06-12)
+
+---
+
+## R-85 — 코드 정밀 탐색 (2026-06-13)
+
+### [M-136] — `renderLogFeed` — `p.content` null 시 TypeError → 커뮤니티 피드 전체 렌더 실패
+- **영역:** 커뮤니티 — 로그 피드 렌더링
+- **심각도:** 🟡 Medium
+- **증상:** `renderLogFeed`(app.js line 3234)에서 `p.content.length > 80` 비교 시 `p.content`를 null 가드 없이 직접 참조한다. DB의 `content` 컬럼이 null인 게시글이 존재하면 `TypeError: Cannot read properties of null (reading 'length')` 예외가 발생하고, 그 게시글이 포함된 배치 전체 `posts.map(...)` 실행이 중단돼 피드가 빈 오류 상태(`el.innerHTML = ...로그를 불러오지 못했어요...`)로 떨어진다. 바로 위 `preview` 계산(line 3221)은 `(p.content || "")` 로 보호돼 있으나 length 체크만 누락됨.
+- **원인:** 일관성 없는 null 가드 — preview 변수엔 적용하면서 length 비교엔 미적용.
+- **재현:** `posts` 중 `content: null`인 행이 DB에 있을 때 커뮤니티 피드 진입.
+- **제안 수정:** `p.content.length > 80` → `(p.content || "").length > 80` (또는 `preview.length > 80`)
+- **파일:** [site/app.js](site/app.js) line 3234 [lane:CORE]
+
+### [M-137] — `openCmpModal` — 비교 세트저장 시 `s`(카테고리 슬러그)·`pcode`·`coupang_url` 필드 누락 (M-131 재확인, COMPARE_ENABLED=true 복구 시 재발)
+- **영역:** 스펙 비교 — 세트 저장 (아카이브 상태, 복구 시 발현)
+- **심각도:** 🟡 Medium
+- **증상:** `openCmpModal`(app.js line 2113) `setItems` 생성 시 `s`, `pcode`, `coupang_url` 필드가 누락된다. `s` 없으면 세트 상세 모달의 구매 버튼이 모두 "준비 중"으로 표시되고, click_events 집계에서 slug가 null이 된다. M-131은 COMPARE_ENABLED=false로 moot 처리됐으나 복구 플래그를 켜면 즉시 재발하는 잠재 버그로 별도 기록.
+- **원인:** `setItem()` 헬퍼를 재사용하지 않고 인라인 객체 수기 생성(M-130·M-131과 동일 패턴).
+- **재현:** `COMPARE_ENABLED=true` 후 카테고리에서 2개 비교 선택 → "비교하기" → "세트로 저장" → 세트 상세에서 구매 버튼 확인.
+- **제안 수정:** `items.map(m => ({ b:m.brand, m:m.model, cap:m.capacity??null, weight_g:m.specs.weight_min?.value??null, qty:1, img:m.img??null, p:m.price_min??null }))` → `items.map(m => setItem(m, STATE.slug))`
+- **파일:** [site/app.js](site/app.js) line ~2113 [lane:CORE]
+
+### [L-160] — `renderLogFeed` — 비로그인 사용자도 좋아요(like) RPC 호출 가능 — 인증 없는 집계 조작
+- **영역:** 커뮤니티 — 로그 피드 좋아요 버튼
+- **심각도:** 🟢 Low
+- **증상:** 피드의 좋아요 버튼(`.log-like-btn`, line 3265)은 로그인 여부를 확인하지 않고 즉시 `increment_post_likes` / `decrement_post_likes` RPC를 호출한다. 비로그인 사용자도 좋아요를 누르면 카운트가 즉시 UI에서 변경되고 RPC도 호출된다. DB 측 RLS가 막으면 조용히 실패하지만, 사용자 입장에선 성공한 것처럼 보인다(localStorage만 변경됨). 오해를 유발하고 잘못된 사용자 경험을 제공.
+- **원인:** 로그인 게이트 미삽입 — 리뷰 폼(line 1887 `if (!user)` 체크)·댓글(line 3407 `if (!window._commUser)`)과 달리 피드 좋아요만 빠짐.
+- **재현:** 비로그인 상태에서 커뮤니티 피드 접근(COMMUNITY_ENABLED=true 필요) → 좋아요 버튼 클릭.
+- **제안 수정:** 좋아요 핸들러 진입 시 `if (!window._commUser) { showToast('로그인 후 좋아요를 누를 수 있어요'); return; }` 추가.
+- **파일:** [site/app.js](site/app.js) line ~3265 [lane:CORE]
+
+### [L-161] — `syncGearSetsOnLogin` — `Date.now().toString(36) + Math.random()...` ID 충돌 가능성 — 원격→로컬 병합 시 동시 로그인 환경에서 id 중복
+- **영역:** 기어 세트 — 원격↔로컬 동기화
+- **심각도:** 🟢 Low
+- **증상:** `syncGearSetsOnLogin`(account.html line 243)에서 원격 세트를 로컬에 추가할 때 `id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6)` 형태로 로컬 id를 생성한다. `Date.now()`는 ms 단위로 원격 세트가 여러 개일 때 동일 밀리초 내에 여러 id가 만들어질 경우 Math.random() 4자리 suffix만으로 구분해야 한다. 충돌 확률은 낮지만 0이 아니며, 충돌 시 `getSets().find(x => x.id === setId)` 가 잘못된 세트를 반환해 수량 편집·삭제 등이 엉뚱한 세트에 적용된다.
+- **원인:** 로컬 id 생성 시 `crypto.randomUUID()` 대신 `Date.now()+random` 단축 패턴 사용.
+- **재현:** 원격 세트가 동시에 복수(2개+) 존재하는 계정으로 로그인.
+- **제안 수정:** `id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6)` → `id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)` (길이 증가 및 UUID 활용)
+- **파일:** [site/account.html](site/account.html) line ~243 [lane:SOCIAL]
 - **심각도:** 🟡 Medium
