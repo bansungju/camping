@@ -3603,7 +3603,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <button type="button" class="achip" id="vs-import-btn" style="width:100%;justify-content:center">내 세트에 추가 (로그인 필요)</button>
       </div>`;
       document.body.appendChild(modal);
-      const close = () => { modal.remove(); history.replaceState(null, "", location.pathname); };
+      // L-76: 공유 세트 열람 시 배경 개인 데이터 섹션 숨김
+      const hiddenSections = ["wish-section","sets-section","logs-section","settings-section","profile-section"].map(id => document.getElementById(id)).filter(Boolean);
+      hiddenSections.forEach(el => { el._vsDisplay = el.style.display; el.style.display = "none"; });
+      const close = () => {
+        modal.remove();
+        hiddenSections.forEach(el => { el.style.display = el._vsDisplay ?? ""; });
+        history.replaceState(null, "", location.pathname);
+      };
       modal.onclick = e => { if (e.target === modal) close(); };
       modal.querySelector(".pmx").onclick = close;
       modal.querySelector("#vs-import-btn").onclick = () => {
