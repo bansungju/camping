@@ -28,8 +28,17 @@ graph TD;
 | **persist** | DB 기록 | **빈칸은 빈칸으로**(날조 금지), 멱등(source 3·4 재기록) |
 
 ## 조건엣지 (= 명시적 의사결정 지점)
-- `assess → fetch_detail | infer` : 부족한 필수메트릭이 있을 때만 상세조회
-- `fetch_detail → fetch_fallback | infer` : 상세 후에도 부족하면 폴백, 아니면 통과
+- `assess → fetch_detail | infer` (`route_assess`) : 부족한 필수메트릭이 있을 때만 상세조회
+- `fetch_detail → fetch_fallback | infer` (`route_after_detail`) : 상세 후에도 `packed_volume`이 부족하면 폴백, 아니면 통과. (`fetch_detail`이 채운 뒤 `missing` 재계산 → stale 라우팅 방지)
+
+## State 설계 (단일 진실)
+| 필드 | 역할 |
+|---|---|
+| `db` | **DB 경로 — 모든 노드가 `s["db"]`로 참조.** 전역 뮤터블 대신 State에 주입(동시실행 안전) |
+| `specs` / `missing` | 현재 보유 스펙 / 아직 부족한 메트릭 |
+| `fill_metrics` | **카테고리별 채울 메트릭.** 비면 `FILL`(텐트 기본)로 폴백. 호출부가 주입 |
+| `errors` | 노드별 실패를 `{pid, node, err}`로 누적 → 침묵 삼킴 금지, report에서 집계 |
+| `log` | 모든 결정의 실행경로 추적 |
 
 ## 핵심 원칙
 1. **출처 우선, 추정 최후** — 실제 출처에 값이 있을 때만 사실(fact)로 채움.
@@ -45,11 +54,24 @@ python3 pipeline/graph_pipeline.py --db camping_tents500.db --limit 6
 
 ## 전체 단일 그래프 (`graph_full.py`)
 수집부터 별점까지 하나의 그래프. per-product 서브그래프를 enrich_batch 노드가 호출(그래프 안의 그래프).
-```
-START → harvest? → normalize → enrich_batch → validate → rate → report → END
+```mermaid
+graph LR;
+  __start__ --> harvest;
+  harvest --> normalize;
+  normalize --> enrich_batch;
+  enrich_batch --> validate;
+  validate --> rate;
+  rate --> report;
+  report --> __end__;
 ```
 - `--queries "헬리녹스 텐트"` 주면 harvest 노드가 신규 수확, 없으면 스킵
 - `--enrich-limit -1` 전체 / 0 생략 / N 상위N
+
+### enrich_batch 노드 (병렬 서브그래프 실행)
+- 채울 게 남은 제품마다 per-product 서브그래프(`graph_pipeline`)를 **`ThreadPoolExecutor(4)`로 병렬** 실행.
+- 카테고리별 `FILL_BY_CATEGORY`(텐트/타프/침낭)를 `fill_metrics`로 주입.
+- 서브그래프 `errors`를 모아 `FullState.errors`로 누적 → `report` 노드가 건수·상위 5건 출력.
+- 동시 쓰기 대비: `persist`의 sqlite 커넥션 `timeout=30`. (검증: 병렬 8종 실행 오류 0건)
 
 **실측 결과 (912종 배치, enrich 532종 처리):**
 | 메트릭 | 전 | 후 |
