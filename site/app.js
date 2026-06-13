@@ -107,7 +107,7 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
   (async () => {
     try {
-      const { supabase } = await import('./supabaseClient.js?v=60a81cf0');
+      const { supabase } = await import('./supabaseClient.js?v=d33ddd9b');
       const { data: { session } } = await supabase.auth.getSession();
       _user = session?.user ?? null;
       window._accUser = _user;   // account.html 등 하위호환
@@ -378,7 +378,19 @@ const GRADE_LEGEND = `
     <span><span class="b 데이터부족">데이터부족</span> 미공개</span>
   </div>`;
 
-async function getJSON(p) { const r = await fetch(p); if (!r.ok) throw new Error(p); return r.json(); }
+async function getJSON(p) {
+  const r = await fetch(p);
+  if (!r.ok) throw new Error(`${p} ${r.status}`);
+  // H-60: GitHub Pages가 누락 경로에 200+HTML(커스텀 404/SPA fallback)을 주면 .json() 파싱오류가
+  // caller의 .catch(()=>[])에 무음으로 삼켜져 빈 목록이 정상처럼 표시됨 → JSON이 아니면 명시적으로 throw+경고
+  const ct = r.headers.get("content-type") || "";
+  if (!ct.includes("json")) {
+    const head = (await r.text()).slice(0, 80).replace(/\s+/g, " ");
+    console.warn(`[getJSON] non-JSON response for ${p} (content-type: ${ct || "none"}): ${head}`);
+    throw new Error(`${p}: non-JSON (${ct || "none"})`);
+  }
+  return r.json();
+}
 
 /* HTML 이스케이프 (모델명에 < > & " ' 들어가도 안전) */
 function esc(s) {
@@ -430,7 +442,7 @@ function _execToggleWish(item) {
     const u = window.currentUser && window.currentUser();
     if (u && u.id) {
       if (window.Capacitor?.isNativePlatform?.()) {
-        import("./supabaseClient.js?v=60a81cf0").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
+        import("./supabaseClient.js?v=d33ddd9b").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
       } else if ("serviceWorker" in navigator && "PushManager" in window) {
         requestPushSubscription(u.id);
       }
@@ -1023,7 +1035,11 @@ async function setupHomeSearch() {
     const hlText = (text, tms) => {
       if (!tms.length) return esc(text);
       const re = new RegExp(`(${tms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
-      return esc(text).replace(re, `<mark class="shl">$1</mark>`);
+      // H-65: raw 텍스트를 캡처그룹으로 split → 홀수 인덱스가 매치 조각. 각 조각을 개별 escape.
+      // (esc 먼저 적용 후 정규식을 돌리면 &amp; 등 엔티티 내부에 <mark>가 끼어 깨진 HTML 생성)
+      return String(text).split(re).map((seg, i) =>
+        i % 2 === 1 ? `<mark class="shl">${esc(seg)}</mark>` : esc(seg)
+      ).join("");
     };
     // L-48: 결과·브랜드 매치 모두 없을 때 가장 가까운 브랜드 오타 제안
     let sugHtml = "";
@@ -1167,16 +1183,10 @@ async function setupSearchPage() {
         const prev = { slug: STATE.slug, data: STATE.data };
         STATE.slug = x.s; STATE.data = catData;
         openProduct(prod);
-        // H-49: STATE는 모달이 닫힐 때 복원(즉시 복원 시 비동기 핸들러가 잘못된 slug 참조)
-        // openProduct가 xbtn.onclick/modal.onclick을 설정한 뒤 래핑해서 복원을 주입
+        // H-49/H-92: STATE는 모달이 닫힐 때 복원(즉시 복원 시 비동기 핸들러가 잘못된 slug 참조).
+        // 모든 close 경로(ESC·백드롭·X)에서 복원되도록 일회성 close 훅 사용(onclick 패치는 ESC 우회됨).
         const _pm = document.getElementById("pmodal");
-        if (_pm) {
-          const restore = () => { STATE.slug = prev.slug; STATE.data = prev.data; };
-          const xb = _pm.querySelector(".pmx");
-          const origX = xb?.onclick, origM = _pm.onclick;
-          if (xb) xb.onclick = (e) => { restore(); if (origX) origX(e); };
-          _pm.onclick = (e) => { if (e.target === _pm) { restore(); } if (origM) origM(e); };
-        }
+        if (_pm) _pm._onCloseOnce = () => { STATE.slug = prev.slug; STATE.data = prev.data; };
         return;
       }
     } catch (_) {}
@@ -1209,14 +1219,12 @@ async function setupSearchPage() {
     });
     resultsEl.querySelectorAll(".pli-wish").forEach(btn => {
       btn.onclick = () => {
+        // H-70: 인라인 setWish가 requireLogin 게이트를 우회 → 비로그인 찜이 서버 미동기화되던 문제.
+        // 캐노니컬 toggleWishWithHint로 위임(게이트·원격동기화·가격알림 푸시구독·버튼 페인팅 일괄).
         const x = hits[+btn.dataset.si];
         const key = wishKey(x.b, x.m, x.cap);
-        const arr = getWish();
-        const already = arr.some(w => w.key === key);
-        if (already) { setWish(arr.filter(w => w.key !== key)); }
-        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: key, gf_code: x.g ?? null, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null }); setWish(arr); }
-        btn.classList.toggle("on", !already);
-        btn.setAttribute("aria-pressed", String(!already));
+        const item = { key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: key, gf_code: x.g ?? null, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null };
+        toggleWishWithHint(item, btn);
       };
     });
   };
@@ -1303,7 +1311,7 @@ function restoreState(params) {
   // 71R: sort는 실제 존재하는 옵션일 때만 채택(가짜키→기본 정렬, UI/상태 불일치 방지)
   const srt = params.get("sort");
   const validSort = srt && (srt === "value" || srt === "price_min" ||
-    STATE.data.metrics.some(m => m.is_star && "spec:" + m.key === srt));
+    STATE.data?.metrics?.some(m => m.is_star && "spec:" + m.key === srt));  // H-67: 데이터 로드 실패 시 STATE.data null 가드
   if (validSort) {
     STATE.sortKey = srt;
     // sa 파라미터가 있으면 그대로, 없으면 정렬키의 자연 기본방향을 적용 (M-59)
@@ -1773,7 +1781,10 @@ function buildFilters(d, star) {
     backdrop.onclick = closeSheet;
     aside.querySelector(".fsheet-x").onclick = closeSheet;
     aside.querySelector(".fsheet-apply").onclick = closeSheet;   // 필터는 실시간 적용(draw) — 닫기만
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && aside.classList.contains("open")) closeSheet(); });
+    // H-64: buildFilters 재호출 시 익명 리스너가 누적되지 않도록 이전 핸들러 제거 후 재등록
+    if (document._filterSheetKeyHandler) document.removeEventListener("keydown", document._filterSheetKeyHandler);
+    document._filterSheetKeyHandler = e => { if (e.key === "Escape" && aside.classList.contains("open")) closeSheet(); };
+    document.addEventListener("keydown", document._filterSheetKeyHandler);
   }
 
   // 인원
@@ -1911,7 +1922,7 @@ function renderActiveFilters() {
     chips.push([txt, () => delete STATE.range[k]]);
   });
   if (STATE.qExclude) chips.push(["스펙값 있는 것만", () => { STATE.qExclude = false; }]);
-  if (STATE.q) chips.push([`"${STATE.q}"`, () => { STATE.q = ""; document.getElementById("q").value = ""; }]);
+  if (STATE.q) chips.push([`"${STATE.q}"`, () => { STATE.q = ""; const q = document.getElementById("q"); if (q) q.value = ""; }]);  // H-97: #q 없는 페이지 null 가드
   el.innerHTML = chips.length
     ? chips.map((c, i) => `<button class="achip" data-ai="${i}">${esc(c[0])} ✕</button>`).join("") +
       `<button class="achip clear" data-clear>전체 해제</button>`
@@ -1925,7 +1936,9 @@ function renderActiveFilters() {
 // 모든 필터 초기화(활성칩 '전체 해제' + 빈 상태 버튼 공용)
 function clearAllFilters() {
   STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
+  STATE.campStyle = "";   // H-63: 스타일 칩(.on)·URL style 파라미터 잔류 방지(clearPresetFilters와 동일)
   const q = document.getElementById("q"); if (q) q.value = "";
+  if (STATE.data) renderStyleChips(STATE.data);   // 스타일 칩 하이라이트 재그리기
   syncFilterUI(); draw(); serializeState();
 }
 
@@ -2036,6 +2049,7 @@ function openProduct(m) {
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
   let modal = document.getElementById("pmodal");
   if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }  // L-112: dialog role은 내부 .pmbox에만 — 중첩 제거
+  modal._onCloseOnce = null;   // H-92: 이전 open이 남긴 close 훅 제거(잔여 restore 누수 방지)
   const imgHtml = thumbCell(m.img, m.model, catTint(d.name), catIcon(d.name), "pmimg", "pmicon");
   const specRows = star.map(mt => {
     const s = m.specs[mt.key];
@@ -2047,7 +2061,7 @@ function openProduct(m) {
     const tooltip = isValue
       ? `<button type="button" class="spec-tip-btn" aria-label="가성비 기준 설명" title="가성비 = 같은 그룹 내 주요 스펙 별점을 가격(만원)으로 나눈 점수. 100점에 가까울수록 가격 대비 스펙이 우수해요.">?</button>`
       : "";
-    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${mt.unit ? ` (${mt.unit})` : ""}${tooltip}</span>` +
+    return `<div class="pmspec"><span class="pml">${esc(mt.label)}${tooltip}</span>` +
       `<span class="pmv">${val}${st}${badge}</span></div>`;
   }).join("");
   const wished = inWish(wishKey(m.brand, m.model, m.capacity));
@@ -2096,7 +2110,7 @@ function openProduct(m) {
       const url = buyBtn.dataset.url;
       openExternal(url);
       try {
-        const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+        const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
         let sessionId = localStorage.getItem("_sid");
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
         await supabase.from("click_events").insert({
@@ -2145,6 +2159,8 @@ function openProduct(m) {
     modal.classList.remove("on");
     document.removeEventListener("keydown", onKey);
     if (prevFocus && prevFocus.focus) prevFocus.focus();
+    // H-92: ESC·백드롭·X 등 모든 닫기 경로에서 일회성 close 훅 실행(STATE 복원 등) — 호출부가 onclick만 패치하면 ESC가 우회됨
+    if (typeof modal._onCloseOnce === "function") { const cb = modal._onCloseOnce; modal._onCloseOnce = null; cb(); }
   };
   modal.onclick = e => { if (e.target === modal) close(); };
   const xbtn = modal.querySelector(".pmx");
@@ -2266,7 +2282,7 @@ function openReviewDetail(r) {
     if (!reason || reason.trim().length < 5) return;
     rbtn.disabled = true; rbtn.textContent = "신고 중…";
     try {
-      const { reportContent } = await import("./supabaseClient.js?v=60a81cf0");
+      const { reportContent } = await import("./supabaseClient.js?v=d33ddd9b");
       const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
       if (error) {
         const msg = error.message || "";
@@ -2298,7 +2314,7 @@ async function loadReviews(modal, pcode) {
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
-    const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+    const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
     const rv = await _fetchReviews(supabase, pcode);
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
@@ -2406,7 +2422,7 @@ function wireReviews(modal, m, pcode) {
       const submitBtn = form.querySelector(".pmrv-submit");
       submitBtn.disabled = true;
       try {
-        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=60a81cf0");
+        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=d33ddd9b");
         const { data: { user: u } } = await supabase.auth.getUser();
         if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
         // 사진 업로드(순차)
@@ -2582,7 +2598,12 @@ function draw() {
 
   const k = STATE.sortKey, asc = STATE.sortAsc;
   // 품질: '데이터부족 제외' or 가성비순 → 정렬 기준 값이 없는 모델 숨김
-  if (STATE.qExclude || k === "value") rows = rows.filter(m => cellVal(m, k) != null);
+  let valueExcluded = 0;   // H-95: 가성비순에서 무음 제외된 개수를 사용자에게 안내하기 위해 집계
+  if (STATE.qExclude || k === "value") {
+    const before = rows.length;
+    rows = rows.filter(m => cellVal(m, k) != null);
+    if (k === "value") valueExcluded = before - rows.length;
+  }
   rows.sort((a, b) => {
     let va = cellVal(a, k), vb = cellVal(b, k);
     if (typeof va === "string" || typeof vb === "string")
@@ -2634,7 +2655,7 @@ function draw() {
   }).join("");
   const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q;
   document.getElementById("list").innerHTML = cards
-    ? cards + `<div class="list-end" aria-live="polite" role="status">─ 총 ${rows.length}개 모두 표시됨 ─</div>`
+    ? cards + `<div class="list-end" aria-live="polite" role="status">─ 총 ${rows.length}개 모두 표시됨${valueExcluded ? ` · 가성비 데이터 없는 ${valueExcluded}개 제외됨` : ""} ─</div>`
     : `<div class="pli-empty"><div class="pe-ico">🔍</div>
        <div class="pe-msg">조건에 맞는 결과가 없어요 ${diagnoseEmpty(k)}</div>
        ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}
@@ -2843,7 +2864,7 @@ async function renderHotSection(categories) {
 
   // RPC로 최근 7일 클릭 상위 30개 집계 (카테고리별 분류용으로 여유있게)
   try {
-    const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+    const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
     const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });
     if (data && data.length >= 1) {
       // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
@@ -3004,6 +3025,11 @@ function openSetDetail(si) {
   // L-142: prevFocus 저장(재진입 시 최초 1회만)·ESC 닫기·초기 포커스 — 다른 모달과 일관
   const reopening = modal.classList.contains("on");
   if (!reopening) modal._prevFocus = document.activeElement;
+  // H-87: 타입/수량 변경은 renderAccount()로 계정 세트 목록을 재생성 → 저장된 _prevFocus 노드가 분리됨.
+  // 재진입 시 분리된 경우 재생성된 세트 카드로 갱신해 닫을 때 포커스 복귀가 끊기지 않게 함.
+  else if (modal._prevFocus && !document.contains(modal._prevFocus)) {
+    modal._prevFocus = document.querySelector(`.acc-set[data-si="${si}"]`) || modal._prevFocus;
+  }
   if (modal._onKey) document.removeEventListener("keydown", modal._onKey);
   modal.classList.add("on");
   const close = () => {
@@ -3055,7 +3081,7 @@ function openSetDetail(si) {
     if (!url) return;
     openExternal(url);
     try {
-      const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+      const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
       let sessionId = localStorage.getItem("_sid");
       if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
       await supabase.from("click_events").insert({
@@ -3102,7 +3128,9 @@ function renderAccount() {
   if (!document.getElementById("wishlist")) return;
   const wishes = getWish();
   const sets = getSets();
-  const isLoggedIn = !!window._accUser;
+  // H-69: account.html이 관리하는 _accUser와 전역 캐노니컬 auth 중 하나라도 로그인이면 로그인으로 간주.
+  // (둘은 동일 세션 반영이나 초기화 타이밍이 독립적 — OR로 auth 미완료 구간의 false-logged-out 방지)
+  const isLoggedIn = !!window._accUser || !!(window.isLoggedIn && window.isLoggedIn());
   const hasAny = wishes.length || sets.length;
 
   const emptyEl = document.getElementById("acc-empty");
@@ -3123,7 +3151,7 @@ function renderAccount() {
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-        import("./supabaseClient.js?v=60a81cf0").then(async ({ supabase, getMyReviews }) => {
+        import("./supabaseClient.js?v=d33ddd9b").then(async ({ supabase, getMyReviews }) => {
           myLogsList.dataset.loaded = "1";
           const logsCnt = document.getElementById("logscount");
 
@@ -3210,7 +3238,7 @@ function renderAccount() {
                   if (newBody.length < 20) { errEl2.textContent = "내용을 20자 이상 작성해주세요."; errEl2.style.display = ""; return; }
                   const saveBtn = document.getElementById(`le-save-${pi}`);
                   saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
-                  const { supabase: sb } = await import("./supabaseClient.js?v=60a81cf0");
+                  const { supabase: sb } = await import("./supabaseClient.js?v=d33ddd9b");
                   const { error } = await sb.from("posts")
                     .update({ title: newTitle, body: newBody })
                     .eq("id", p.id).eq("user_id", userId);
@@ -3226,7 +3254,7 @@ function renderAccount() {
                 const p = list[+btn.dataset.pi];
                 if (!confirm(`"${p.title}" 로그를 삭제할까요?`)) return;
                 btn.disabled = true;
-                const { supabase: sb } = await import("./supabaseClient.js?v=60a81cf0");
+                const { supabase: sb } = await import("./supabaseClient.js?v=d33ddd9b");
                 const { error } = await sb.from("posts")
                   .update({ deleted_at: new Date().toISOString() })
                   .eq("id", p.id).eq("user_id", userId);
@@ -3291,7 +3319,7 @@ function renderAccount() {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
       // L-75: role="button" + 내부 <button> 중첩 HTML 위반 → 찜 해제 버튼만 interactive, pli는 click 핸들러만 유지
       return `<div class="pli" data-href="${esc(href)}" style="cursor:pointer">
-        <button type="button" class="pli-wish on" data-i="${i}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
+        <button type="button" class="pli-wish on" data-key="${esc(x.key)}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
         <div class="pli-info">
           <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}</div>
@@ -3314,15 +3342,9 @@ function renderAccount() {
             const prevSlug = STATE.slug, prevData = STATE.data;
             STATE.slug = wx.s; STATE.data = catJson;
             openProduct(prod);
-            // H-49: STATE 복원을 모달 close 시점으로 지연
+            // H-92: STATE 복원을 모든 close 경로(ESC 포함)에서 보장 — 일회성 close 훅 사용
             const _pm = document.getElementById("pmodal");
-            if (_pm) {
-              const restore = () => { STATE.slug = prevSlug; STATE.data = prevData; };
-              const xb = _pm.querySelector(".pmx");
-              const origX = xb?.onclick, origM = _pm.onclick;
-              if (xb) xb.onclick = (e) => { restore(); if (origX) origX(e); };
-              _pm.onclick = (e) => { if (e.target === _pm) { restore(); } if (origM) origM(e); };
-            }
+            if (_pm) _pm._onCloseOnce = () => { STATE.slug = prevSlug; STATE.data = prevData; };
             return;
           }
         } catch (_) {}
@@ -3333,7 +3355,10 @@ function renderAccount() {
     });
     wishEl.querySelectorAll(".pli-wish").forEach(b => b.onclick = e => {
       e.stopPropagation();
-      const arr = getWish(); arr.splice(+b.dataset.i, 1); setWish(arr); renderAccount();
+      // H-88: 렌더시점 data-i를 재로드 배열에 splice하면 빠른 연속삭제 시 stale 인덱스로 엉뚱한 항목 제거.
+      // 안정적 key로 식별·필터해 삭제.
+      const key = b.dataset.key;
+      setWish(getWish().filter(w => w.key !== key)); renderAccount();
       window.accAnnounce?.('찜 해제됐어요');
     });
 
@@ -3485,7 +3510,9 @@ function renderAccount() {
       if (!s) return;
       try {
         const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
-        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        // H-78: deprecated escape/unescape 대신 TextEncoder로 UTF-8 바이트→base64(한글·이모지 안전). 출력은 기존 idiom과 동일.
+        const _utf8 = new TextEncoder().encode(JSON.stringify(payload));
+        const encoded = btoa(String.fromCharCode(...new Uint8Array(_utf8))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         const url = `${location.origin}/account.html?view-set=${encoded}`;
         navigator.clipboard.writeText(url).then(() => {
           b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
@@ -3571,7 +3598,10 @@ async function requestPushSubscription(userId) {
 
     // 알림 권한 요청
     const perm = await Notification.requestPermission();
-    if (perm !== "granted") { localStorage.setItem("push-denied", "1"); return; }
+    // H-81: "denied"(명시적 거부)일 때만 영구 차단 기록. "default"(다이얼로그 단순 닫기)는
+    // 기록 없이 조용히 반환 — 다음 기회에 다시 요청 가능해야 함.
+    if (perm === "denied") { localStorage.setItem("push-denied", "1"); return; }
+    if (perm !== "granted") return;
 
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
@@ -3585,7 +3615,7 @@ async function requestPushSubscription(userId) {
 
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
-  const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+  const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
   await supabase.from("push_subscriptions").upsert({
     user_id: userId,
     endpoint: j.endpoint,
@@ -3619,7 +3649,7 @@ async function renderBestGear() {
 
   // 커뮤니티 태그 집계 TOP-10 (RPC)
   try {
-    const { supabase: sb } = await import("./supabaseClient.js?v=60a81cf0");
+    const { supabase: sb } = await import("./supabaseClient.js?v=d33ddd9b");
     const { data: topTags } = await sb.rpc("get_top_gear_tags", { limit_n: 10 });
     if (topTags && topTags.length) {
       const sec = document.createElement("div");
@@ -3715,7 +3745,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
 
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
-    const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+    const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     let query = supabase
       .from("posts")
@@ -3784,14 +3814,14 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
           btn.dataset.liked = "0";
           btn.classList.remove("on");
           btn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+          const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
           await supabase.rpc("decrement_post_likes", { post_id: pid });
         } else {
           _setPostLiked(pid, true);
           btn.dataset.liked = "1";
           btn.classList.add("on");
           btn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+          const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
           await supabase.rpc("increment_post_likes", { post_id: pid });
         }
       };
@@ -3856,13 +3886,13 @@ function openLogDetail(p) {
         _setPostLiked(pid, false);
         likeBtn.dataset.liked = "0"; likeBtn.classList.remove("on");
         likeBtn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+        const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
         await supabase.rpc("decrement_post_likes", { post_id: pid });
       } else {
         _setPostLiked(pid, true);
         likeBtn.dataset.liked = "1"; likeBtn.classList.add("on");
         likeBtn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+        const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
         await supabase.rpc("increment_post_likes", { post_id: pid });
       }
     };
@@ -3872,7 +3902,7 @@ function openLogDetail(p) {
 
   // 댓글 로드 및 제출
   (async () => {
-    const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+    const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
     const cmtList = document.getElementById("detail-cmt-list");
     const cmtCnt = document.getElementById("detail-cmt-cnt");
     const cmtForm = document.getElementById("detail-cmt-form");
@@ -3933,7 +3963,8 @@ function openLogModal(presetSetIndex) {
   if (!modal) return;
   const body = document.getElementById("log-modal-body");
   if (!body) return;   // M-112: body null → TypeError 방지
-  if (!window._commUser) {
+  // H-72: 캠핑 로그는 account 페이지에서도 동작 — 커뮤니티 전용 _commUser(미할당=항상 undefined) 대신 전역 캐노니컬 auth 사용
+  if (!window.isLoggedIn()) {
     body.innerHTML = `
       <div style="text-align:center;padding:20px 0">
         <div style="font-size:36px;margin-bottom:12px">🌲</div>
@@ -4060,12 +4091,12 @@ function openLogModal(presetSetIndex) {
     errEl.style.display = "none";
     submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
     try {
-      const { supabase } = await import("./supabaseClient.js?v=60a81cf0");
+      const { supabase } = await import("./supabaseClient.js?v=d33ddd9b");
       let image_url = null;
       const imgFile = imgInput.files[0];
       if (imgFile) {
         const ext = imgFile.name.split(".").pop().toLowerCase() || "jpg";
-        const path = `${window._commUser.id}/${Date.now()}.${ext}`;
+        const path = `${window.currentUser().id}/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("post-images").upload(path, imgFile, { upsert: false });
         if (upErr) throw upErr;
@@ -4082,7 +4113,7 @@ function openLogModal(presetSetIndex) {
         }
       }
       const { error } = await supabase.from("posts").insert({
-        user_id: window._commUser.id, title, body: content,
+        user_id: window.currentUser().id, title, body: content,
         tags, is_public, image_url, gear_set_snapshot
       });
       if (error) throw error;
@@ -4135,7 +4166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (vsParam && document.getElementById("auth-section")) {
     try {
       const vsFixed = vsParam.replace(/-/g, '+').replace(/_/g, '/');
-      const s = JSON.parse(decodeURIComponent(escape(atob(vsFixed))));
+      // H-78: deprecated escape 대신 TextDecoder로 base64→UTF-8 디코드(한글·이모지 안전). 기존 공유 URL과 호환.
+      const s = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(vsFixed), c => c.charCodeAt(0))));
       const modal = document.createElement("div");
       modal.className = "pmodal on";
       modal.style.zIndex = "300";
@@ -4169,7 +4201,7 @@ document.addEventListener("DOMContentLoaded", () => {
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
         if (window._accUser?.id) {
-          import("./supabaseClient.js?v=60a81cf0").then(async ({ upsertGearSet }) => {
+          import("./supabaseClient.js?v=d33ddd9b").then(async ({ upsertGearSet }) => {
             const id = await upsertGearSet(newSet, window._accUser.id);
             if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
           }).catch(() => {});
