@@ -149,15 +149,29 @@ def parse_price(html):
 
 def parse_spec_string(s):
     """'돔텐트 / 2인용 / 무게: 1.86kg / 설치크기: ...' → (specs{키:값}, tags[토큰])
-    상품 상세의 meta Description, 검색결과의 spec_list 둘 다 같은 포맷이라 공용 사용."""
+    상품 상세의 meta Description, 검색결과의 spec_list 둘 다 같은 포맷이라 공용 사용.
+
+    H-57: 필드 구분자는 항상 ' / '(공백 패딩)인데, 값 자체에도 '/'가 들어간다
+    (설치크기 '본체 A / 전실 B', 구성품 '이너텐트 / 폴', 색상 '카키/탄' 등).
+    bare '/'로 split하면 이런 값이 잘려 설치크기 등 핵심 스펙이 손상됨. 대책:
+      ① 필드 경계인 ' / '(공백 패딩)로만 분리 → 값 내부의 공백 없는 '/'(10D/15D)는 보존.
+      ② 분리 후 콜론 없는 조각은, 이미 'key:값'을 본 뒤라면(태그 구간 종료) 직전 값의
+         연속('/'가 공백과 함께 든 값)으로 직전 값에 다시 합침.
+    """
     specs, tags = {}, []
-    for part in s.split("/"):
+    last_key = None
+    seen_kv = False   # 첫 'key:값' 이후엔 콜론 없는 조각 = 값의 연속(태그 아님)
+    for part in re.split(r"\s+/\s+", s):
         p = part.strip()
         if not p or p.startswith("["):   # [본체] [크기] 섹션 헤더 무시
             continue
         if ":" in p:
             k, v = p.split(":", 1)
-            specs[k.strip()] = v.strip()
+            k = k.strip()
+            specs[k] = v.strip()
+            last_key, seen_kv = k, True
+        elif seen_kv and last_key is not None:
+            specs[last_key] = f"{specs[last_key]} / {p}"   # 값 내부 '/'로 잘린 조각 복원
         else:
             tags.append(p)
     return specs, tags

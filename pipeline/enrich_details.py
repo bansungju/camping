@@ -34,7 +34,15 @@ def enrich(con, pid, pcode, cid):
         raw = P.find_spec(specs, spec["keys"], spec.get("exclude"))
         if not raw:
             continue
-        val = P.derive_floor(raw) if spec.get("derive") == "floor" else P.FN[spec["fn"]](raw)
+        # H-58: derive 전용 항목은 "fn" 키가 없음. 삼항식이 else에서 spec["fn"]에 []로 접근하면
+        # derive!="floor"인 fn-없는 항목에서 KeyError로 크래시 → spec.get으로 명시 분기.
+        derive, fn = spec.get("derive"), spec.get("fn")
+        if derive == "floor":
+            val = P.derive_floor(raw)
+        elif fn:
+            val = P.FN[fn](raw)
+        else:
+            continue  # derive도 fn도 없는 항목은 변환 불가 → 건너뜀
         if val is None:
             continue
         conf = spec["conf"]
