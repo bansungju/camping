@@ -266,16 +266,20 @@ def main():
         con.commit()
     except sqlite3.OperationalError:
         pass  # 이미 존재
-    # (product_id, note 앞 40자)로 매칭 — 검사 종류+상품을 충분히 식별한다.
-    cur.execute("SELECT product_id, substr(note, 1, 40) FROM data_quality_flags "
+    # M-398: 플래그 조회·삽입 dedup이 (product_id, flag_type, resolved)로 필터되므로 복합 인덱스로
+    #   풀스캔(O(n²))을 막는다.
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_dqf_lookup ON data_quality_flags(product_id, flag_type, resolved)")
+    # M-361: (product_id, note 앞 40자)만으로 매칭하면 서로 다른 flag_type이 노트 앞 40자가 같을 때
+    #   한쪽 이슈가 silently 드롭된다 → flag_type을 포함한 3-튜플로 식별.
+    cur.execute("SELECT product_id, flag_type, substr(note, 1, 40) FROM data_quality_flags "
                 "WHERE resolved = 1 AND IFNULL(resolution_type,'false_positive')='false_positive'")
-    resolved_set = {(r[0], r[1]) for r in cur.fetchall()}
+    resolved_set = {(r[0], r[1], r[2]) for r in cur.fetchall()}
 
     all_flags_labeled = []
     total = 0
     for check_key, fn in checks:
         raw = fn(cur)
-        flags = [f for f in raw if (f[0], f[3][:40]) not in resolved_set]
+        flags = [f for f in raw if (f[0], f[2], f[3][:40]) not in resolved_set]
         dropped = len(raw) - len(flags)
         drop_note = f" (resolved 제외 {dropped}건)" if dropped else ""
         print(f"  [{check_key}] {len(flags)}건 발견{drop_note}")
