@@ -110,8 +110,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 
 /* 카테고리 네비게이션 */
 .catnav-wrap{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:calc(59px + var(--banner-h,0px));z-index:9;overflow:hidden}
-.catnav-wrap::after{content:"";position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to right,transparent,var(--card));pointer-events:none;z-index:1}
-.catnav{display:flex;gap:6px;overflow-x:auto;padding:9px 0;scrollbar-width:thin}
+.catnav-wrap::after{content:"";position:absolute;top:0;right:0;width:48px;height:100%;background:linear-gradient(to right,transparent,var(--card));pointer-events:none;z-index:1}
+.catnav{display:flex;gap:6px;overflow-x:auto;padding:9px 48px 9px 0;scrollbar-width:thin}
 .catnav::-webkit-scrollbar{height:5px}
 .catnav::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .navchip{flex:0 0 auto;font-size:13px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);
@@ -123,10 +123,12 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .navchip .ni{font-size:14px;line-height:1;margin-right:1px}
 /* 상품 상세 모달 */
 .pmodal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:50;
-  align-items:center;justify-content:center;padding:18px}
+  align-items:center;justify-content:center;
+  padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom)) 18px}
 .pmodal.on{display:flex}
 .pmbox{background:var(--card);border-radius:18px;max-width:380px;width:100%;max-height:90vh;
-  overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .pmx{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:0;
   background:rgba(0,0,0,.45);color:#fff;font-size:14px;cursor:pointer;z-index:2}
 .pmimg{width:100%;aspect-ratio:1;object-fit:contain;background:#fafafa;
@@ -416,6 +418,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .achip{font-size:12px;padding:4px 9px;border-radius:7px;border:1px solid var(--accent);
   background:var(--card2);color:var(--accent);cursor:pointer}
 .achip:hover{background:var(--accent);color:#fff}
+.achip.on{background:var(--accent);color:#fff}
 .achip.clear{border-color:var(--line);color:var(--muted)}
 .achip.clear:hover{background:var(--card);color:var(--txt)}
 
@@ -670,7 +673,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   header.top{position:static}            /* 모바일선 sticky 해제(겹침 방지) */
   .catnav-wrap{position:static;top:auto}
   /* 모달이 하단 고정 탭바(62px)에 가리지 않게 하단 여백 확보 */
-  .pmodal{align-items:flex-start;padding:14px 14px calc(72px + env(safe-area-inset-bottom))}
+  .pmodal{align-items:flex-start;padding:max(14px,env(safe-area-inset-top)) 14px calc(72px + env(safe-area-inset-bottom))}
   /* 뷰포트(상14+하72 패딩 제외) 안에 모달을 가두고 내부 스크롤 — 하단 버튼 잘림 방지 (H-32) */
   .pmbox{max-height:calc(100vh - 88px - env(safe-area-inset-bottom));max-height:calc(100dvh - 88px - env(safe-area-inset-bottom))}
   .wrap{padding:0 14px}

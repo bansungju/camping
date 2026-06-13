@@ -1731,8 +1731,7 @@ function buildFilters(d, star) {
   // (다른 프리셋의 잔여 필터가 AND 누적돼 결과가 비정상적으로 적어지던 문제 방지)
   const clearPresetFilters = () => {
     STATE.range = {};                // 모든 range 초기화 (comfort_temp 등 누적 방지, M-89)
-    STATE.brands.clear();            // 브랜드 필터 초기화 (M-89)
-    STATE.campStyle = "";            // 스타일 칩 초기화 (M-101)
+    // M-199: 브랜드·스타일·cap은 건드리지 않음 — 프리셋 무관 필터 유지
     STATE.cap = "";
   };
   // 각 프리셋은 isOn()으로 현재 활성 여부를 판정하고, fn()은 토글(켜져 있으면 끄기) (M-68)
@@ -2822,7 +2821,7 @@ async function renderBrand() {
     const show = sortedBrands.filter(([b]) => !f || b.toLowerCase().includes(f)).slice(0, 40);
     blist.innerHTML = show.length
       ? show.map(([b, n]) =>
-          `<button class="achip${b === (params.get("b") || "") ? "" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("")
+          `<button class="achip${b === (params.get("b") || "") ? " on" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("")  // M-293: 선택된 칩에 on 클래스
       : `<span class="nd">"${esc(filter)}" 브랜드 없음 · 철자를 확인하세요</span>`;
     blist.querySelectorAll("[data-b]").forEach(btn => btn.onclick = () => {
       const nb = btn.dataset.b;
