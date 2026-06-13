@@ -92,6 +92,11 @@ def rank_normalize(values: list, direction: str) -> list:
     if not indexed:
         return [None] * n
 
+    # M-270/L-266: 전원 동점이면 모두 동등 최적 → 만점(1.0). 기존엔 average-rank 공식이 중간값
+    #   0.5(★3)를 배정해 "모두 최적인데 보통" 오표시했다.
+    if len({v for v, _ in indexed}) == 1:
+        return [1.0 if v is not None else None for v in values]
+
     reverse = (direction == "higher_better")
     indexed.sort(key=lambda x: x[0], reverse=reverse)
 
@@ -136,13 +141,18 @@ def compute_value_score(models: list, config: dict, metrics_meta: dict) -> list:
     # 정직성: 전 지표 + price_min 있는 모델만
     eligible = []
     for m in models:
-        if not m.get("price_min"):
+        # M-168/M-166/M-350: price_min은 양수여야 한다(None·0·음수 제외). 0/음수 가격은 무효이며
+        #   value_display = price/spec, V = Q/price 의 분모라 0이면 ZeroDivisionError를 낸다.
+        price = m.get("price_min")
+        if price is None or price <= 0:
             continue
         specs = m.get("specs", {})
-        if all(specs.get(k, {}).get("value") is not None for k in metric_keys):
+        # M-166/M-350: 스펙 값이 0이면 price/value 에서 ZeroDivision → 0·None 모두 제외.
+        if all(specs.get(k, {}).get("value") not in (None, 0) for k in metric_keys):
             eligible.append(m)
 
-    if not eligible:
+    # M-167/M-289: 비교 풀이 2개 미만이면 가성비 순위가 무의미(단일 모델이 무조건 ★5) → 미표시.
+    if len(eligible) < 2:
         return [{"id": m["id"], "value_display": None, "stars": None} for m in models]
 
     if is_single:
@@ -279,7 +289,7 @@ def dry_run(db_path: str):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=os.path.join(ROOT, "camping_tents500.db"))
-    ap.add_argument("--dry-run", action="store_true", default=True)
+    ap.add_argument("--dry-run", action="store_true", default=False)  # L-205: default=True면 쓰기모드 전환 불가
     args = ap.parse_args()
     dry_run(args.db)
 
