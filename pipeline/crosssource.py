@@ -142,6 +142,9 @@ def upsert(con, pid, cid, key, val, raw, conf, src, overwrite=False):
         return False
     mid = P.metric_id(con, cid, key)
     if mid is None:
+        # M-420: 메트릭 키 오타·미정의 등으로 매핑 실패 시 유효 외부확정 데이터가 무음 유실되던 것을
+        #   진단 가능하게 경고. (cid=카테고리, key=요청 메트릭 키)
+        print(f"[WARN] crosssource 미매핑 메트릭 → 데이터 유실: cid={cid} key={key!r} (pid={pid})")
         return False
     # M-201: raw_unit를 placeholder "norm"으로 박으면 단위 정보가 소실(m dict 지표는 raw도 단위 없는
     # 숫자라 단위가 완전 증발). metrics.unit(value_normalized의 기준 단위, NOT NULL)을 기록해 보존.
