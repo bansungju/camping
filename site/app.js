@@ -22,6 +22,7 @@ if (window.Capacitor?.isNativePlatform?.()) {
 // B-3/G2: 외부 링크(쿠팡 등) 오픈 — 앱에선 시스템 브라우저(@capacitor/browser=SFSafariViewController),
 //  웹에선 새 탭. 인앱 WebView에 외부 결제페이지를 띄우지 않기 위함(Apple 심사 리스크 회피).
 async function openExternal(url) {
+  if (!safeHttps(url)) return;   // M-180: 비-https 스킴(javascript:/data: 등) 차단 — buyBtn·세트구매 단일 진입점
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
       const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js');
@@ -334,6 +335,8 @@ const PERSONAS = [
 
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => { const x = Number(n); return (n == null || !Number.isFinite(x)) ? "—" : x.toLocaleString("ko-KR") + "원"; };  // L-250: NaN/비숫자 가드
+// R2-2(M-180/M-233): https URL만 허용. coupang_url·이미지 src는 localStorage/DB 유래라 javascript:·data: 스킴 주입 가능 → 차단.
+const safeHttps = u => (typeof u === "string" && /^https:\/\//i.test(u)) ? u : "";
 const priceRange = (a, b) => (a == null || a === 0) ? '<span class="nd">가격없음</span>' : won(a);
 // FE-ITEM-05: 표시가는 price_min(최저가) 기준 — 실제 쿠팡가와 다를 수 있어 가격 옆 '최저가 기준' 캡션을 일관 부착.
 const PRICE_BASIS_CAP = '<span class="price-basis">최저가 기준</span>';
@@ -507,7 +510,8 @@ function wishItem(m, slug) {
    세트 구조: {id, title, style, items:[{pcode,b,m,cap,s,p,img,weight_g,qty}], created_at} */
 function getSets() { try { return JSON.parse(localStorage.getItem("gear_sets") || "[]"); } catch (e) { return []; } }
 function saveSets(a) { localStorage.setItem("gear_sets", JSON.stringify(a)); }
-function showToast(msg, duration, isHtml) {
+function showToast(msg, duration) {
+  // M-238: isHtml=true(innerHTML 직접삽입) 경로는 호출자가 전무했고 XSS 표면만 남겨 제거 — 항상 textContent.
   let t = document.getElementById("app-toast");
   if (!t) {
     t = document.createElement("div"); t.id = "app-toast";
@@ -515,8 +519,7 @@ function showToast(msg, duration, isHtml) {
     document.body.appendChild(t);
   }
   clearTimeout(t._tid);
-  if (isHtml) { t.innerHTML = msg; t.style.pointerEvents = "auto"; }
-  else { t.textContent = msg; t.style.pointerEvents = "none"; }
+  t.textContent = msg; t.style.pointerEvents = "none";
   requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
   t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; }, duration || 2400);
 }
@@ -2242,7 +2245,7 @@ function _reviewCard(r, i) {
   if (r.image_urls.length) {
     const more = r.image_urls.length > 1 ? `<span class="pmrv-more">+${r.image_urls.length - 1}</span>` : "";
     return `<button type="button" class="pmrv-card has-photo" data-i="${i}">
-      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(r.image_urls[0])}" alt="" loading="lazy" onerror="this.style.display='none'">${more}</span>
+      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(safeHttps(r.image_urls[0]))}" alt="" loading="lazy" onerror="this.style.display='none'">${more}</span>
       ${cap}</button>`;
   }
   return `<button type="button" class="pmrv-card textcard" data-i="${i}">
@@ -2254,7 +2257,7 @@ function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
   if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
-  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="eager" onerror="this.style.display='none'">`).join("");
+  const imgs = (r.image_urls || []).filter(safeHttps).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="eager" onerror="this.style.display='none'">`).join("");
   const me = window.currentUser ? window.currentUser() : null;
   const isMine = me && r.user_id && me.id === r.user_id;
   const reportBtn = isMine ? "" : `<button type="button" class="rv-report">🚩 신고</button>`;
@@ -3110,8 +3113,8 @@ function _myReviewCard(r, prodMap) {
   const ent = prodMap.get(r.product_pcode);
   const href = ent ? `category.html?cat=${ent.s}&brands=${encodeURIComponent(ent.b)}&q=${encodeURIComponent(ent.m)}` : null;
   const dt = new Date(r.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-  const photo = (r.image_urls && r.image_urls[0])
-    ? `<img src="${esc(r.image_urls[0])}" alt="" loading="lazy" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : "";
+  const photo = safeHttps(r.image_urls && r.image_urls[0])
+    ? `<img src="${esc(safeHttps(r.image_urls[0]))}" alt="" loading="lazy" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : "";
   const body = (r.body || "").replace(/\n/g, " ");
   const title = (`${b} ${m}`).trim() || "상품";
   const inner = `<div style="display:flex;gap:12px">
@@ -3773,7 +3776,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
       const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<button type="button" class="log-tag log-tag-btn" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
       const preview = (p.body || "").slice(0, 80).replace(/\n/g, " ");
-      const imgHtml = p.image_url ? `<img class="log-card-img" src="${esc(p.image_url)}" alt="" loading="lazy">` : "";
+      const imgHtml = safeHttps(p.image_url) ? `<img class="log-card-img" src="${esc(safeHttps(p.image_url))}" alt="" loading="lazy">` : "";  // M-233
       const gs = p.gear_set_snapshot;
       const gsBadge = gs ? (() => { const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const cnt = (gs.items||[]).length; return `<div class="log-set-badge">🎒 ${esc(gs.name)}${cnt ? ` · ${cnt}개` : ""}${wTxt ? ` · ${wTxt}` : ""}</div>`; })() : "";
       const liked = _isPostLiked(p.id);
@@ -3853,7 +3856,7 @@ function openLogDetail(p) {
       <span class="log-date">${dt}</span>
     </div>
     <h2 style="font-size:18px;font-weight:700;margin:0 0 12px;line-height:1.4">${esc(p.title)}</h2>
-    ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
+    ${safeHttps(p.image_url) ? `<img src="${esc(safeHttps(p.image_url))}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
     <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
     ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
     ${(() => { const gs = p.gear_set_snapshot; if (!gs) return ""; const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const itemsHtml = (gs.items||[]).slice(0,5).map(x => `<span class="log-set-item">${esc(x.name)}${x.weight_g ? ` <span style="color:var(--muted)">${x.weight_g >= 1000 ? (x.weight_g/1000).toFixed(1)+"kg" : x.weight_g+"g"}</span>` : ""}</span>`).join(""); return `<div class="log-set-detail" style="margin-top:14px;padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--line)"><div style="font-size:12px;font-weight:600;margin-bottom:6px">🎒 ${esc(gs.name)}${wTxt ? ` · 총 ${wTxt}` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:4px">${itemsHtml}${(gs.items||[]).length > 5 ? `<span style="font-size:11px;color:var(--muted)">외 ${(gs.items||[]).length - 5}개</span>` : ""}</div></div>`; })()}
