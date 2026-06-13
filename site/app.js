@@ -2456,11 +2456,7 @@ function openCmpModal(rows) {
     btn.disabled = true;
     const today = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
     const setName = `${catLabel} 비교 ${today}`;
-    const setItems = items.map(m => ({
-      b: m.brand, m: m.model, cap: m.capacity ?? null,
-      weight_g: m.specs.weight_min?.value ?? null, qty: 1,
-      img: m.img ?? null, p: m.price_min ?? null
-    }));
+    const setItems = items.map(m => setItem(m, STATE.slug));
     const sets = getSets();
     sets.push({ id: Date.now().toString(36), title: setName, style: "비교", items: setItems, created_at: new Date().toISOString() });
     saveSets(sets);
