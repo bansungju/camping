@@ -3966,7 +3966,7 @@
 
 ---
 
-### [M-204] — `ensureIdx()` — fetch 실패 시 `idx=[]` 캐시 → 재시도 불가, 검색 영구 비동작
+### [M-204] — `ensureIdx()` — fetch 실패 시 `idx=[]` 캐시 → 재시도 불가, 검색 영구 비동작 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 홈 검색 (app.js)
 - **심각도:** 🟡 Medium
@@ -4063,7 +4063,7 @@
 
 ---
 
-### [M-209] — `sitemap-items.xml` — `sitemap.xml`·`robots.txt` 미연결 → 아이템 2,927개 크롤 불가
+### [M-209] ✅ 해결완료(2026-06-13) — `sitemap-items.xml` — `sitemap.xml`·`robots.txt` 미연결 → 아이템 2,927개 크롤 불가
 
 - **영역:** 프론트엔드 — SEO / 사이트맵
 - **심각도:** 🟡 Medium
@@ -4099,7 +4099,7 @@
 
 ---
 
-### [L-206] — `sitemap.xml` — `community.html` 비활성 페이지 priority 0.9로 등재
+### [L-206] ✅ 해결완료(2026-06-13) — `sitemap.xml` — `community.html` 비활성 페이지 priority 0.9로 등재
 
 - **영역:** 프론트엔드 — SEO / 사이트맵
 - **심각도:** 🟢 Low
@@ -4120,7 +4120,7 @@
 
 ---
 
-### [L-208] — `sitemap.xml` — `backpacking-bag` 카테고리 진입점 누락 + 전체 `<lastmod>` 없음
+### [L-208] ✅ 해결완료(2026-06-13) — `sitemap.xml` — `backpacking-bag` 카테고리 진입점 누락 + 전체 `<lastmod>` 없음
 
 - **영역:** 프론트엔드 — SEO / 사이트맵
 - **심각도:** 🟢 Low
@@ -4228,7 +4228,7 @@
 
 ---
 
-### [L-209] — account.html PWA install — 설치 거절(`dismissed`) 시에도 버튼 숨김 → 세션 내 재시도 불가
+### [L-209] ✅ 해결완료(2026-06-13) — account.html PWA install — 설치 거절(`dismissed`) 시에도 버튼 숨김 → 세션 내 재시도 불가
 
 - **영역:** 프론트엔드 — account.html PWA 설치
 - **심각도:** 🟢 Low
@@ -4471,7 +4471,7 @@
 
 ---
 
-### [M-226] — `openSetDetail` — 수량 변경 시 `renderAccount()` 후 `si` 배열 인덱스가 다른 세트 가리킬 수 있음
+### [M-226] ✅ 해결완료(2026-06-13) — `openSetDetail` — 수량 변경 시 `renderAccount()` 후 `si` 배열 인덱스가 다른 세트 가리킬 수 있음
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟡 Medium
@@ -4495,7 +4495,7 @@
 
 ---
 
-### [M-228] — `applySort` — 수동 정렬 선택 시 `STATE.campStyle` 미초기화로 스타일 칩·URL 이중 활성
+### [M-228] ✅ 해결완료(2026-06-13) — `applySort` — 수동 정렬 선택 시 `STATE.campStyle` 미초기화로 스타일 칩·URL 이중 활성
 
 - **영역:** 프론트엔드 — 정렬
 - **심각도:** 🟡 Medium
@@ -4713,7 +4713,7 @@
 
 ---
 
-### [M-237] — `openReplaceModal` — 슬롯 인덱스 `btn.dataset.ii` 가 splice 후 다른 아이템 가리킬 수 있음
+### [M-237] ✅ 해결완료(2026-06-13) — `openReplaceModal` — 슬롯 인덱스 `btn.dataset.ii` 가 splice 후 다른 아이템 가리킬 수 있음
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟡 Medium
@@ -4802,7 +4802,7 @@
 
 ## R-106 (프론트엔드) — 2026-06-13
 
-### [M-243] — `renderActiveFilters` — `STATE.campStyle` 활성 필터 칩 미표시로 개별 해제 불가
+### [M-243] ✅ 해결완료(2026-06-13) — `renderActiveFilters` — `STATE.campStyle` 활성 필터 칩 미표시로 개별 해제 불가
 
 - **영역:** 프론트엔드 — 필터 UI
 - **심각도:** 🟡 Medium
@@ -5016,7 +5016,7 @@
 
 ---
 
-### [M-253] — `openSetDetail` qty 버튼 — 더블탭 시 re-render 중 두 번째 클릭으로 잘못된 아이템 제거
+### [M-253] ✅ 해결완료(2026-06-13) — `openSetDetail` qty 버튼 — 더블탭 시 re-render 중 두 번째 클릭으로 잘못된 아이템 제거
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟡 Medium
@@ -5437,7 +5437,7 @@
 
 ## R-112 (프론트엔드) — 2026-06-13
 
-### [M-272] — `renderAccount` 세트 삭제 버튼 — 빠른 연속 클릭 시 `data-si` 스탈 인덱스로 잘못된 세트 삭제
+### [M-272] ✅ 해결완료(2026-06-13) — `renderAccount` 세트 삭제 버튼 — 빠른 연속 클릭 시 `data-si` 스탈 인덱스로 잘못된 세트 삭제
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟡 Medium
@@ -5461,7 +5461,7 @@
 
 ---
 
-### [M-274] — 세트 공유 URL 생성 — `unescape()` 사용 deprecated + URL 길이 미검사
+### [M-274] ✅ 해결완료(2026-06-13) — 세트 공유 URL 생성 — `unescape()` 사용 deprecated + URL 길이 미검사
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -5956,7 +5956,7 @@
 
 ## R-116 (프론트엔드) — 2026-06-13
 
-### [M-297] — `openReplaceModal` — `data-ii` 스테일 인덱스로 세트 아이템 오삭제
+### [M-297] ✅ 해결완료(2026-06-13) — `openReplaceModal` — `data-ii` 스테일 인덱스로 세트 아이템 오삭제
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟡 Medium
@@ -6094,7 +6094,7 @@
 
 ---
 
-### [L-246] — `shareSet` / `importSharedSet` — 비표준 `escape`/`unescape` 사용으로 한국어 인코딩 위험
+### [L-246] ✅ 해결완료(2026-06-13) — `shareSet` / `importSharedSet` — 비표준 `escape`/`unescape` 사용으로 한국어 인코딩 위험
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟢 Low
@@ -6106,7 +6106,7 @@
 
 ---
 
-### [L-247] — `importSharedSet` — 중복 import 방지 없어 동일 세트 반복 추가 가능
+### [L-247] ✅ 해결완료(2026-06-13) — `importSharedSet` — 중복 import 방지 없어 동일 세트 반복 추가 가능
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟢 Low
@@ -6395,7 +6395,7 @@
 
 ---
 
-### [M-318] — `openSetDetail` — 타입 선택 핸들러가 `renderAccount()` 호출로 계정 섹션 전체 DOM 재생성, 수량 조작 동시 입력 시 덮어씀
+### [M-318] ✅ 해결완료(2026-06-13) — `openSetDetail` — 타입 선택 핸들러가 `renderAccount()` 호출로 계정 섹션 전체 DOM 재생성, 수량 조작 동시 입력 시 덮어씀
 
 - **영역:** 프론트엔드 — 세트 상세
 - **심각도:** 🟡 Medium
@@ -6729,7 +6729,7 @@
 
 ---
 
-### [L-259] — `sw.js` — 푸시 알림에 `tag` 미설정으로 가격 알림 중복 노티피케이션 누적
+### [L-259] ✅ 해결완료(2026-06-13) — `sw.js` — 푸시 알림에 `tag` 미설정으로 가격 알림 중복 노티피케이션 누적
 
 - **영역:** 프론트엔드 — 서비스 워커
 - **심각도:** 🟢 Low
@@ -6856,7 +6856,7 @@
 
 ---
 
-### [M-338] — `openReplaceModal` — 교체 후 `renderAccount()` 가 카테고리 페이지에서 no-op, 세트 상세 모달 미갱신
+### [M-338] ✅ 해결완료(2026-06-13) — `openReplaceModal` — 교체 후 `renderAccount()` 가 카테고리 페이지에서 no-op, 세트 상세 모달 미갱신
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟡 Medium
@@ -6963,7 +6963,7 @@
 
 ---
 
-### [M-344] — `diagnoseEmpty` — `campStyle` 필터 진단 누락
+### [M-344] ✅ 해결완료(2026-06-13) — `diagnoseEmpty` — `campStyle` 필터 진단 누락
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -6975,7 +6975,7 @@
 
 ---
 
-### [M-345] — `draw()` — `campStyle` 활성 시 `hasFilter` false → "전체 해제" 버튼 미노출
+### [M-345] ✅ 해결완료(2026-06-13) — `draw()` — `campStyle` 활성 시 `hasFilter` false → "전체 해제" 버튼 미노출
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -6987,7 +6987,7 @@
 
 ---
 
-### [M-346] — `shareSet` import — 중복 세트 방지 미구현
+### [M-346] ✅ 해결완료(2026-06-13) — `shareSet` import — 중복 세트 방지 미구현
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -7023,7 +7023,7 @@
 
 ---
 
-### [L-268] — `sw.js` — 프리캐시 실패 후 `skipWaiting()` 강행 → 빈 캐시로 활성화
+### [L-268] ✅ 해결완료(2026-06-13) — `sw.js` — 프리캐시 실패 후 `skipWaiting()` 강행 → 빈 캐시로 활성화
 
 - **영역:** 프론트엔드 — 서비스워커
 - **심각도:** 🟢 Low
@@ -7035,7 +7035,7 @@
 
 ---
 
-### [L-269] — `passExcept` — campStyle 기인 value 정렬 필터링 미반영 → `diagnoseEmpty` 수치 오류
+### [L-269] ✅ 해결완료(2026-06-13) — `passExcept` — campStyle 기인 value 정렬 필터링 미반영 → `diagnoseEmpty` 수치 오류
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -7455,7 +7455,7 @@
 
 ---
 
-### [H-103] — `refresh.py` `_group_prices_by_cat` — `pid2cat` 딕셔너리 키/값 순서 반전 → 이상치 가드 무력화
+### ✅ 해결완료(2026-06-13) [H-103] — `refresh.py` `_group_prices_by_cat` — `pid2cat` 딕셔너리 키/값 순서 반전 → 이상치 가드 무력화
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -7635,7 +7635,7 @@
 
 ---
 
-### [H-104] — `refresh.py` `main` — `strptime` 마이크로초 포맷 불일치 → 관측치를 항상 "오래된 것"으로 처리
+### ✅ 해결완료(2026-06-13) [H-104] — `refresh.py` `main` — `strptime` 마이크로초 포맷 불일치 → 관측치를 항상 "오래된 것"으로 처리
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -7731,7 +7731,7 @@
 
 ---
 
-### [M-369] — `setupHomeSearch` `ensureIdx` — 로딩 중 빠른 타이핑 시 중복 `run()` 큐 실행
+### [M-369] — `setupHomeSearch` `ensureIdx` — 로딩 중 빠른 타이핑 시 중복 `run()` 큐 실행 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟡 Medium
@@ -7755,7 +7755,7 @@
 
 ---
 
-### [M-371] — `ensureIdx` — 네트워크 오류 후 `idxLoading` 미초기화 → 페이지 수명 동안 영구 빈 인덱스
+### [M-371] — `ensureIdx` — 네트워크 오류 후 `idxLoading` 미초기화 → 페이지 수명 동안 영구 빈 인덱스 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟡 Medium
@@ -8754,7 +8754,7 @@
 
 ---
 
-### [M-406] — `backfillGfCodes` — `data/search.json` 버전 쿼리 없이 fetch → SW 구 캐시 서빙
+### [M-406] — `backfillGfCodes` — `data/search.json` 버전 쿼리 없이 fetch → SW 구 캐시 서빙 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -8910,7 +8910,7 @@
 
 ---
 
-### [H-117] — `export_site.py` — `star_eligible` NULL 행 시 외형기준 뱃지 "확정"으로 오표시
+### ✅ 해결완료(2026-06-13) [H-117] — `export_site.py` — `star_eligible` NULL 행 시 외형기준 뱃지 "확정"으로 오표시
 
 - **영역:** 백엔드 — 사이트 내보내기
 - **심각도:** 🔴 High
@@ -9426,7 +9426,7 @@
 
 ---
 
-### [H-122] — `export_site.py` `product_spec_values` — `ORDER BY` 없는 `LIMIT 1`로 비결정적 `source_id`·`confidence` 선택
+### ✅ 해결완료(2026-06-13) [H-122] — `export_site.py` `product_spec_values` — `ORDER BY` 없는 `LIMIT 1`로 비결정적 `source_id`·`confidence` 선택
 
 - **영역:** 백엔드 — 사이트 내보내기
 - **심각도:** 🔴 High
@@ -9630,7 +9630,7 @@
 
 ---
 
-### [M-435] — `setupHomeSearch` `ensureIdx` — fetch 실패 시 빈 배열 캐시로 세션 내 검색 영구 불능
+### [M-435] — `setupHomeSearch` `ensureIdx` — fetch 실패 시 빈 배열 캐시로 세션 내 검색 영구 불능 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 홈 검색
 - **심각도:** 🟡 Medium
@@ -9954,7 +9954,7 @@
 
 ---
 
-### [M-450] — 브랜드 검색 페이지 `ensureIdx` — 동시 호출 시 `search.json` 중복 fetch
+### [M-450] — 브랜드 검색 페이지 `ensureIdx` — 동시 호출 시 `search.json` 중복 fetch — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 브랜드 검색
 - **심각도:** 🟡 Medium
@@ -10947,5 +10947,101 @@
 - **원인:** [pipeline/value_metric.py](pipeline/value_metric.py) line 253–257 — `ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC` 없음.
 - **제안 수정:** `export_site.py`와 동일한 ORDER BY 추가.
 - **파일:** [pipeline/value_metric.py](pipeline/value_metric.py) line 253 [lane:BACKEND]
+
+---
+
+### [H-135] — `buildFilters` 스펙 슬라이더 — `NaN` 값 통과 + 대형 배열 spread RangeError
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 스펙 값에 `NaN` 포함 시 `Math.min/max` 반환값 NaN → 슬라이더 `min=NaN max=NaN` 비기능. 수백 건 대형 카테고리에서 `Math.min(...vals)` spread → 콜스택 초과 RangeError.
+- **원인:** [site/app.js](site/app.js) line 1661, 1687 — `num()` 필터가 `NaN != null` 통과, spread 방식 사용.
+- **제안 수정:** `num = arr => arr.filter(v => v != null && Number.isFinite(v))`, spread 대신 `vals.reduce((a,b) => Math.min(a,b), Infinity)`.
+- **파일:** [site/app.js](site/app.js) line 1661 [lane:CORE]
+
+---
+
+### [M-494] — `renderActiveFilters` — EXTRA_SPECS 범위 필터 unit `STATE.unit`에 없어 단위 빈 문자열
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `water_head`, `r_value` 등 EXTRA_SPEC 슬라이더 필터 활성 칩에 단위 표시 안 됨 (`300~2000` → `300~2000mm` 이어야 함).
+- **원인:** [site/app.js](site/app.js) line 1954 — `STATE.unit`은 `d.metrics` 키만 포함, EXTRA_SPECS 키 없음.
+- **제안 수정:** `STATE.unit[k]` 미존재 시 `(EXTRA_SPECS[STATE.slug]||[]).find(e=>e.key===k)?.unit || ""` 폴백 추가.
+- **파일:** [site/app.js](site/app.js) line 1954 [lane:CORE]
+
+---
+
+### [M-495] — `saveRemoteWishlist` 병합 경로 — 코얼리싱으로 첫 번째 호출자가 `undefined` 수신
+
+- **영역:** 프론트엔드 — 찜 동기화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 빠른 연속 `saveRemoteWishlist` 호출 시 첫 번째 호출이 코얼리싱으로 early-return → Promise 반환값 `undefined`, 호출자가 성공/실패 판단 불가.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 162–176 — 공유 체인 Promise 반환, 코얼리싱된 호출은 `return undefined`.
+- **제안 수정:** 호출별 Promise 반환 또는 "코얼리싱될 수 있음" 명시 문서화 + 호출자 방어 코드.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 162 [lane:CORE]
+
+---
+
+### [M-496] — 2탭 localStorage 동시 쓰기 — `toggleWish` read-modify-write TOCTOU 경합
+
+- **영역:** 프론트엔드 — 찜
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 두 탭에서 거의 동시에 찜 토글 시 두 번째 `setWish`가 첫 번째 덮어씀 → 한 탭의 토글 조작 소실.
+- **원인:** [site/app.js](site/app.js) line 441–445 — `getWish()` stale read 후 `setWish()` 덮어쓰기, localStorage 원자적 조작 없음.
+- **제안 수정:** `storage` 이벤트 수신 후 외부 변경 반영, 또는 쓰기 직전 재read.
+- **파일:** [site/app.js](site/app.js) line 441 [lane:CORE]
+
+---
+
+### [M-497] — `view-set` import — `atob` 실패 시 숨겨진 섹션 미복원 → 빈 화면 잔존
+
+- **영역:** 프론트엔드 — 세트 공유
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 링크 단축 등으로 `view-set` 파라미터가 잘려 `atob()` 실패 시 `catch {}` 무음 처리, 이전에 숨긴 섹션이 복원 안 됨 → 빈 계정 페이지 표시.
+- **원인:** [site/app.js](site/app.js) line 4247, 4297 — 섹션 숨기기가 try 블록 앞에서 실행, catch에서 복원 없음.
+- **제안 수정:** `finally { hiddenSections.forEach(el => el.style.display = ''); }` 추가, toast("유효하지 않은 공유 링크예요") 표시.
+- **파일:** [site/app.js](site/app.js) line 4247 [lane:CORE]
+
+---
+
+### [M-498] — `renderStyleChips` 빈 모델 카테고리 — `STATE.sortKey = "spec:undefined"` 두 번째 경로
+
+- **영역:** 프론트엔드 — 카테고리 렌더링
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `models: []` 카테고리에서 `star[0]=undefined` → line 1570 `"spec:undefined"` 설정. H-107의 `applyStyleSort` 가드는 해당 line을 커버하지 않음.
+- **원인:** [site/app.js](site/app.js) line 1570 — `"spec:" + (star[0] && star[0].key)` 에서 `star[0]=undefined` 시 `"spec:undefined"` 생성.
+- **제안 수정:** `STATE.sortKey = star[0] ? "spec:" + star[0].key : null;` 로 변경, null sortKey 처리.
+- **파일:** [site/app.js](site/app.js) line 1570 [lane:CORE]
+
+---
+
+### [L-409] — `buildFilters` EXTRA_SPEC 슬라이더 — `lo === hi` 퇴화 케이스 미스킵
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 모든 모델의 EXTRA_SPEC 값이 동일하면 `min=X max=X` 슬라이더 렌더 → 이동 불가 UX. (가격 슬라이더 L-385와 동일 패턴, EXTRA_SPEC 버전)
+- **원인:** [site/app.js](site/app.js) line 1685–1699 — `lo === hi` 체크 없음 (star 슬라이더는 `vals.length < 2` 가드 있음).
+- **제안 수정:** `if (lo === hi) return;` 추가 (line 1687 이후).
+- **파일:** [site/app.js](site/app.js) line 1687 [lane:CORE]
+
+---
+
+### [L-410] — `applySort` — stale `star` 클로저로 이전 카테고리 star 메트릭 키 사용
+
+- **영역:** 프론트엔드 — 정렬
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 이동 후 `buildFilters` 재호출 없이 sort chip 클릭 시 이전 카테고리 `star[0].key`로 `STATE.sortKey` 설정 → 현재 카테고리에 없는 메트릭으로 정렬 시도.
+- **원인:** [site/app.js](site/app.js) line 1891–1894 — `applySort` 클로저가 `buildFilters` 시점의 `star` 캡처.
+- **제안 수정:** `applySort` 내부에서 `STATE.data?.metrics?.filter(m => m.is_star)[0]` 신선 조회로 대체.
+- **파일:** [site/app.js](site/app.js) line 1891 [lane:CORE]
 
 ---
