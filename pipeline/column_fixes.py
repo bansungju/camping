@@ -24,13 +24,22 @@ def main():
     ap.add_argument("--db", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "camping_tents500.db"))
     args = ap.parse_args()
     con = sqlite3.connect(args.db)
-    con.execute("DELETE FROM data_quality_flags WHERE note LIKE '[기준의심]%'")
+    # H-71: 무조건 삭제하면 검토자가 resolved=1로 처리한 플래그까지 매 실행마다 날아가 수동 리뷰가
+    #       비영속적이 된다. 미해결(resolved=0)만 지우고 재생성 → 검토 완료분은 보존.
+    con.execute("DELETE FROM data_quality_flags WHERE note LIKE '[기준의심]%' AND resolved=0")
+    # 이미 검토완료(resolved=1)한 (product,metric)은 재플래그하지 않는다. 안 그러면 보존된 resolved=1
+    # 옆에 매 실행 새 resolved=0 플래그가 중복 생성돼 검토 결과가 사실상 무력화된다.
+    reviewed = {(r[0], r[1]) for r in con.execute(
+        "SELECT product_id, metric_id FROM data_quality_flags WHERE note LIKE '[기준의심]%' AND resolved=1")}
 
     # 1) 가격 channel 분리
-    con.execute("""UPDATE price_observations SET channel='직구'
-        WHERE product_id IN (SELECT id FROM products WHERE model_name LIKE '%해외구매%')""")
-    con.execute("""UPDATE price_observations SET channel='국내'
-        WHERE product_id IN (SELECT id FROM products WHERE model_name NOT LIKE '%해외구매%')""")
+    # M-281/M-360: 자동분류는 자동값(NULL·danawa_search·직구·국내)에만 적용한다. 수동 채널
+    #   ('수동'·'병행수입'·'B2C' 등)은 매 실행 덮어쓰지 않도록 allowlist로 보호(멱등 재분류는 유지).
+    AUTO_CH = "AND IFNULL(channel,'') IN ('', 'danawa_search', '직구', '국내')"
+    con.execute(f"""UPDATE price_observations SET channel='직구'
+        WHERE product_id IN (SELECT id FROM products WHERE model_name LIKE '%해외구매%') {AUTO_CH}""")
+    con.execute(f"""UPDATE price_observations SET channel='국내'
+        WHERE product_id IN (SELECT id FROM products WHERE model_name NOT LIKE '%해외구매%') {AUTO_CH}""")
     dom = con.execute("SELECT COUNT(*) FROM price_observations WHERE channel='국내'").fetchone()[0]
     imp = con.execute("SELECT COUNT(*) FROM price_observations WHERE channel='직구'").fetchone()[0]
 
@@ -39,6 +48,8 @@ def main():
     for pid, mid, val in con.execute("""SELECT psv.product_id, psv.metric_id, psv.value_normalized
         FROM product_spec_values psv JOIN metrics m ON m.id=psv.metric_id AND m.key='water_head'
         WHERE psv.valid=1 AND psv.value_normalized>=?""", (WATER_SUSPECT,)):
+        if (pid, mid) in reviewed:
+            continue
         con.execute("""INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note)
             VALUES(?,?,'needs_review',?)""", (pid, mid, f"[기준의심] 내수압 {val:g}≥{WATER_SUSPECT} → 바닥HH/마케팅 가능, 플라이 기준 확인"))
         w_sus += 1
@@ -51,6 +62,8 @@ def main():
         WHERE psv.valid=1 AND c.name_ko='백패킹텐트'"""):
         cap_max = WEIGHT_CAP_BP.get(cap)
         if cap_max and val > cap_max:
+            if (pid, mid) in reviewed:
+                continue
             con.execute("""INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note)
                 VALUES(?,?,'needs_review',?)""", (pid, mid, f"[기준의심] 무게 {val:g}g > {cap}인 상한 {cap_max} → 패킹무게/오태깅 가능"))
             g_sus += 1
