@@ -158,7 +158,9 @@ def flag_price_outliers(con):
         if len(rows) < 3:
             continue
         prices = [r[1] for r in rows]
-        med = prices[(len(prices) - 1) // 2]
+        # M-359/M-400: 하위 중앙값(prices[(n-1)//2])은 B 패스의 statistics.median(짝수=두 중앙값 평균)과
+        #   달라 동일 데이터에서 두 패스가 다른 이상치 경계를 산출했다(H-83이 B만 적용) → median으로 통일.
+        med = statistics.median(prices)
         if med <= 0:
             continue
         for oid, pr, pid in rows:
