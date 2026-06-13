@@ -79,6 +79,11 @@ def fill_one(con, pid, pcode, cid, cat_name):
         raw = P.find_spec(specs, keys, exclude)
         if not raw:
             continue
+        # H-96: derive도 fn도 없는 화이트리스트 항목은 설정 오류다. 그대로 두면 FN[None] KeyError가
+        #       아래 except Exception에 조용히 삼켜져 무음 실패(설정 버그를 영영 못 본다) → 명시 경고 후 스킵.
+        if derive != "floor" and fn is None:
+            print(f"   ⚠ 설정오류: metric={metric} 에 fn/derive 미정의 → 건너뜀", flush=True)
+            continue
         try:
             val = P.derive_floor(raw) if derive == "floor" else FN[fn](raw)
         except Exception:

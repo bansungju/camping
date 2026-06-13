@@ -6745,7 +6745,8 @@
 
 ## R-123 (백엔드) — 2026-06-13
 
-### [H-96] — `fill_whitelist_specs.py` `fill_one()` — `fn=None` 시 `FN[None]` KeyError 조용히 삼킴
+### [H-96] ✅ 해결완료(2026-06-13, BACKEND) — `fill_whitelist_specs.py` `fill_one()` — `fn=None` 시 `FN[None]` KeyError 조용히 삼킴
+> `if derive != "floor" and fn is None: 경고출력 + continue` 가드를 try 앞에 추가 → except Exception에 삼켜지던 설정오류 무음실패 표면화.
 
 - **영역:** 백엔드 — 화이트리스트 스펙 채우기
 - **심각도:** 🔴 High
