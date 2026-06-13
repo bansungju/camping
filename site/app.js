@@ -1308,7 +1308,7 @@ let STATE = {};
 /* 필터 상태 → URL (공유·뒤로가기·새로고침에 필터 보존). 69R 사용성감사 [상]1 */
 function defaultSortKey() {
   const s0 = (STATE.data?.metrics || []).filter(m => m.is_star)[0];
-  return "spec:" + (s0 && s0.key);
+  return s0 ? "spec:" + s0.key : "price";  // M-358: star 없으면 price 폴백
 }
 function serializeState() {
   // M-198: category.html 외 페이지에서 URL 덮어쓰기 방지
@@ -1569,7 +1569,7 @@ async function renderCategory() {
 
   buildFilters(d, star);
   STATE.hasCap = d.models.some(m => m.capacity != null);
-  STATE.sortKey = "spec:" + (star[0] && star[0].key);
+  STATE.sortKey = star[0] ? "spec:" + star[0].key : "price";  // M-258: star 없으면 price 폴백
   STATE.sortAsc = defaultAsc(STATE.sortKey);   // 주력지표 '좋은 것 먼저'
   restoreState(params);                        // URL의 필터상태 복원(공유링크·뒤로가기)
   // style= 파라미터로 직접 진입·공유 시 명시적 sort가 없으면 스타일 기본 정렬을 적용한다. (H-22 ②)
@@ -1893,7 +1893,7 @@ function buildFilters(d, star) {
   const applySort = v => {
     // M-228: 수동 정렬 시 스타일 칩 이중활성 방지 — campStyle 초기화
     if (STATE.campStyle) { STATE.campStyle = ""; if (STATE.data) renderStyleChips(STATE.data); }
-    if (!v) { STATE.sortKey = "spec:" + (star[0] && star[0].key); STATE.sortAsc = defaultAsc(STATE.sortKey); }
+    if (!v) { STATE.sortKey = star[0] ? "spec:" + star[0].key : "price"; STATE.sortAsc = defaultAsc(STATE.sortKey); }  // M-258
     else if (v === "value") { STATE.sortKey = "value"; STATE.sortAsc = false; }
     else { STATE.sortKey = v; STATE.sortAsc = defaultAsc(v); }
     if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : STATE.sortKey;
@@ -2657,7 +2657,9 @@ function draw() {
   let valueExcluded = 0;   // H-95: 가성비순에서 무음 제외된 개수를 사용자에게 안내하기 위해 집계
   if (STATE.qExclude || k === "value") {
     const before = rows.length;
-    rows = rows.filter(m => cellVal(m, k) != null);
+    // M-316: 검색어 매칭 상품은 qExclude 예외 — 검색 의도 우선
+    const qMatch = STATE.q ? (m => (m.brand + " " + m.model).toLowerCase().includes(STATE.q)) : null;
+    rows = rows.filter(m => (qMatch && qMatch(m)) || cellVal(m, k) != null);
     if (k === "value") valueExcluded = before - rows.length;
   }
   rows.sort((a, b) => {
@@ -2680,6 +2682,8 @@ function draw() {
   });
 
   const tint = catTint(d.name), icon = catIcon(d.name);
+  // M-257/M-304: 원본 인덱스 Map(O(1))으로 href 링크 일관성 + O(n²) 탐색 제거
+  const _origIdx = new Map(d.models.map((m, i) => [m, i]));
   const cards = rows.map((m, i) => {
     const top = `${esc(m.brand)}${STATE.hasCap && m.capacity != null ? ` · ${m.capacity}인` : ""}` +
       (m.variants > 1 ? ` · +${m.variants - 1}색` : "");
@@ -2694,7 +2698,7 @@ function draw() {
     }).join("");
     const wished = inWish(wishKey(m.brand, m.model, m.capacity));
     const inCmp = _cmpSet.includes(m);
-    return `<a class="pli" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
+    return `<a class="pli" href="/item/${STATE.slug}/item-${_origIdx.get(m) ?? i}.html" data-mi="${i}" aria-label="${esc(m.brand)} ${esc(m.model)} 상세 보기">
       <button type="button" class="pli-wish${wished ? " on" : ""}" data-mi="${i}"
         aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
       ${thumbCell(m.img, m.model, tint, icon)}
