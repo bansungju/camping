@@ -92,11 +92,14 @@ def export(con, outdir):
                 row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
                     FROM product_spec_values v JOIN metrics mt ON mt.id=v.metric_id
                     WHERE v.product_id=? AND mt.key=? AND v.valid=1
-                    ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC LIMIT 1""",
+                    ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC,
+                             IFNULL(v.confidence,0) DESC, v.id DESC LIMIT 1""",
                     (rep, m["key"])).fetchone()
                 val = row[0] if row else None
                 src = row[1] if row else None
-                se = row[2] if row else 1
+                # H-117: star_eligible 컬럼 추가 이전 구 행은 NULL → None==0이 False라 외형기준 값이
+                #   "확정"으로 오표시된다. NULL은 기본 1(별점대상=확정 가능)로 간주.
+                se = row[2] if row and row[2] is not None else 1
                 conf = row[3] if row else None
                 # M-231: 같은 (product,metric)에 comparison_scope가 여럿(예: 랜턴 base+seg)일 때
                 #   임의 scope가 나오지 않도록 가장 구체적인 scope(가장 긴 문자열=seg 포함) 우선.
