@@ -133,7 +133,8 @@ def export(con, outdir):
             models.append(mdict)
             search_index.append({"b": brand, "m": cm, "c": cat, "s": slug, "cap": cap,
                                  "p": pr[0] if pr else None,
-                                 "img": imgr[0] if imgr else None})
+                                 "img": imgr[0] if imgr else None,
+                                 "g": gf_code})
 
         # 가성비 후처리 패스 — value_metric.CATEGORY_CONFIG에 있는 카테고리만
         if slug in VM.CATEGORY_CONFIG:

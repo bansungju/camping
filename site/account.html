@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=70cd664d"></script>
+<script src="app.js?v=3c8c9e83"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -252,12 +252,32 @@ async function syncGearSetsOnLogin(userId) {
   if (typeof renderAccount === 'function') renderAccount()
 }
 
+// P0.5: 기존 찜 항목에 gf_code 역매핑(1회 백필). brand|model|cap(=key) → search.json의 g.
+// 매칭 실패(단종/이름변경) 항목은 gf_code=null로 두고 보존 — 가격알림 대상에서만 빠지고 찜 자체는 유지.
+// 'gf_code' 키 보유 여부로 1회성 판정(이미 모두 보유하면 인덱스 fetch 없이 스킵).
+async function backfillGfCodes(items) {
+  if (!Array.isArray(items) || !items.length) return items
+  if (items.every(it => it && 'gf_code' in it)) return items
+  let map
+  try {
+    const data = await fetch('data/search.json').then(r => r.ok ? r.json() : null)
+    if (!Array.isArray(data)) return items                        // 인덱스 못 받으면 비파괴로 그대로
+    map = new Map()
+    for (const e of data) map.set([e.b, e.m, e.cap == null ? '' : e.cap].join('|'), e.g ?? null)
+  } catch { return items }                                        // fetch 실패도 비파괴
+  return items.map(it => {
+    if (!it || 'gf_code' in it) return it                         // 이미 백필된 항목은 보존
+    const k = it.key || [it.b, it.m, it.cap == null ? '' : it.cap].join('|')
+    return { ...it, gf_code: map.has(k) ? map.get(k) : null }
+  })
+}
+
 // 로그인 직후 1회: 로컬↔원격 찜 병합 → 양쪽 저장 → 이후 변경은 onWishChange로 원격 반영
 async function syncWishlistOnLogin() {
   window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   const remote = await loadRemoteWishlist()
   if (remote === null) return                 // 네트워크/권한 실패 시 로컬 유지(비파괴)
-  const merged = mergeWishlists(localWish.get(), remote)
+  const merged = await backfillGfCodes(mergeWishlists(localWish.get(), remote))   // P0.5 gf_code 주입
   localWish.set(merged)
   if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
   if (typeof renderAccount === 'function') renderAccount()        // 병합본으로 다시 그림
