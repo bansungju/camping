@@ -164,6 +164,10 @@ def main():
     # 정식 브랜드만 남김 → 용량 큰 순 (상한 없음, 전량)
     models.sort(key=lambda m: -m["cap_l"])
     caps = [m["cap_l"] for m in models]
+    # M-195/M-223/M-320: 브랜드/가격 필터 후 0건이면 min()/max()가 ValueError → 가드.
+    if not models:
+        print("필터 후 모델 없음 — 종료")
+        return
     lo, hi = min(caps), max(caps)
     print(f"필터 후 {len(models)}개 (용량 {lo}~{hi}L)")
 
@@ -218,14 +222,18 @@ def main():
 
     # manifest 갱신
     mpath = os.path.join(DATA, "manifest.json")
-    man = json.load(open(mpath))
+    # M-224/M-321: with+encoding="utf-8"로 읽기(핸들 누수·UnicodeDecodeError 방지).
+    with open(mpath, encoding="utf-8") as f:
+        man = json.load(f)
     man["categories"] = [c for c in man["categories"] if c["slug"] != SLUG]
     man["categories"].append({
         "slug": SLUG, "name": LABEL, "grade": "🔴 C",
         "count": len(out_models), "verified": len(out_models),
         "star_metrics": ["용량"], "limits": ["용량"],
     })
-    json.dump(man, open(mpath, "w"), ensure_ascii=False, indent=2)
+    # M-196/M-321: with 블록으로 원자적 쓰기 — 직렬화 중 예외 시 빈 파일로 manifest 손상 방지.
+    with open(mpath, "w", encoding="utf-8") as f:
+        json.dump(man, f, ensure_ascii=False, indent=2)
     print(f"manifest 갱신: +{SLUG}")
     print("\n샘플 5:")
     for m in out_models[:5]:
