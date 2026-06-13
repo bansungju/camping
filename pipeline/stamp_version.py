@@ -79,6 +79,10 @@ def main():
         # './supabaseClient.js' 또는 './supabaseClient.js?v=...' (작은/큰따옴표 모두)
         new = re.sub(r"(['\"])\./supabaseClient\.js(\?v=[^'\"]*)?\1",
                      lambda mm: f"{mm.group(1)}./supabaseClient.js?v={hs}{mm.group(1)}", new)
+        # prefix 없는 href="supabaseClient.js?v=..." (modulepreload/preload 힌트)도 동기화.
+        # './' 없는 형태라 위 import 규칙이 못 잡아 supabaseClient.js 변경 시 stale → 404 preload.
+        new = re.sub(r'href="supabaseClient\.js(\?v=[^"]*)?"',
+                     f'href="supabaseClient.js?v={hs}"', new)
         if new != html:
             with open(p, "w", encoding="utf-8") as f:
                 f.write(new)
