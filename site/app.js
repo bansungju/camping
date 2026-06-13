@@ -981,7 +981,8 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(() => (idx = []));
+    // M-204/M-371/M-435: 실패 시 idx·idxLoading 모두 초기화 → 재시도 가능
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(e => { idxLoading = null; console.warn("search.json load failed", e); return []; });
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1040,7 +1041,7 @@ async function setupHomeSearch() {
     const q = inp.value.trim().toLowerCase();
     const terms = q.split(/\s+/).filter(Boolean);
     if (!terms.length) { closeBox(); return; }
-    if (!idx) { ensureIdx().then(run); return; }  // L-14: 인덱스 미로드 시 로드 후 재실행
+    if (!idx) { const _q = inp.value; ensureIdx().then(() => { if (inp.value === _q) run(); }); return; }  // L-14+M-369: 인덱스 미로드 시 로드 후 재실행, 쿼리 바뀌면 취소
     // 브랜드 단위 매치 — 첫 번째 토큰으로 브랜드 히트, 전체 토큰 AND로 상품 히트
     const bcount = {};
     idx.forEach(x => { if (terms[0] && (x.b.toLowerCase().includes(terms[0]) || _brandAlias(x.b).includes(terms[0]))) bcount[x.b] = (bcount[x.b] || 0) + 1; });  // M-70: 영문 별칭 매칭
@@ -1200,8 +1201,9 @@ async function setupSearchPage() {
   let _idxLoading;
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(() => (idx = []));
-    return _idxLoading;  // H-75: in-flight 가드로 동시 호출 시 중복 fetch 방지
+    // M-369/M-371/M-450: 실패 시 _idxLoading 초기화 → 재시도 가능, in-flight 가드(H-75) 유지
+    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(e => { _idxLoading = null; console.warn("search.json load failed", e); return []; });
+    return _idxLoading;
   };
 
   const openFromSearch = async (x) => {
