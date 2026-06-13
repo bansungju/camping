@@ -4192,7 +4192,7 @@
 
 ---
 
-### [M-215] — `enrich_details.py` `main()` — `targets` 빈 리스트 시 `IN ()` SQL 문법 오류
+### [M-215] ✅ 해결완료(2026-06-13, C19) — `enrich_details.py` `main()` — `targets` 빈 리스트 시 `IN ()` SQL 문법 오류
 
 - **영역:** 백엔드 — 파이프라인 / 상품 상세 수집
 - **심각도:** 🟡 Medium
@@ -4954,7 +4954,7 @@
 
 ## R-108 (백엔드) — 2026-06-13
 
-### [M-250] — `enrich_details.py` `main()` — `recompute_ratings` 예외 시 DB 커넥션 누수 + rollback 없음
+### [M-250] ✅ 해결완료(2026-06-13, C19) — `enrich_details.py` `main()` — `recompute_ratings` 예외 시 DB 커넥션 누수 + rollback 없음
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🟡 Medium
@@ -6496,7 +6496,7 @@
 
 ---
 
-### [M-322] — `enrich_details.py` `main()` — `"?" * N` 이 `"???"` 생성, N>1 시 IN() 쿼리 malformed
+### [M-322] ✅ 분석완료(무효, C19) — `enrich_details.py` `main()` — `"?" * N` 이 `"???"` 생성, N>1 시 IN() 쿼리 malformed
 
 - **영역:** 백엔드 — 상세 보강
 - **심각도:** 🟡 Medium
