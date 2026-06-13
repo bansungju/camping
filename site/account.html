@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=1b573091"></script>
+<script src="app.js?v=22a2079a"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -201,7 +201,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=6e7cf8d9'
+} from './supabaseClient.js?v=60a81cf0'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -397,10 +397,13 @@ function showLoggedInSections(show) {
   }
 }
 
-// B-2: Apple 로그인 버튼. Supabase Auth의 Apple provider 설정(Apple Developer
-//  Services ID·Key·Team ID) 완료 후 true로 켠다. 끄여 있으면 버튼 미노출(깨진 버튼 방지).
-//  ※ iOS 네이티브 앱(Capacitor)에선 웹 OAuth가 아닌 네이티브 Sign in with Apple 필요(별도).
+// B-2: Apple 로그인 플래그 — 웹용 OAuth (Apple Console 설정 완료 후 true로 켬)
+// Capacitor 앱 환경에서는 이 플래그와 무관하게 네이티브 Sign in with Apple 항상 노출
 const APPLE_LOGIN_ENABLED = false;
+const _isApp = !!(window.Capacitor?.isNativePlatform?.())
+const _showApple = APPLE_LOGIN_ENABLED || _isApp
+
+const _APPLE_SVG = `<svg width="17" height="17" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>`
 
 function renderLogin() {
   window.onWishChange = null   // 로그아웃 상태에선 원격 동기화 안 함
@@ -418,13 +421,12 @@ function renderLogin() {
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.4 28.6A14.7 14.7 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.5 13.3A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.4 0-11.8-3.7-13.6-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
         Google로 로그인
       </button>
-      ${APPLE_LOGIN_ENABLED ? `
+      ${_showApple ? `
       <button id="btn-apple" type="button" style="
         width:100%;padding:13px;border-radius:8px;border:none;margin-top:10px;
         background:#000;color:#fff;cursor:pointer;font-size:15px;font-weight:600;
         display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg width="17" height="17" viewBox="0 0 384 512" fill="#fff" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        Apple로 로그인
+        ${_APPLE_SVG} Apple로 로그인
       </button>` : ''}
       <p id="auth-error" style="color:#e53e3e;font-size:13px;margin-top:12px;display:none"></p>
     </div>`
@@ -444,15 +446,16 @@ function renderLogin() {
     }
   })
 
-  // B-2: Apple 로그인 (플래그 켜질 때만 버튼 존재). signInWithOAuth는 provider 범용.
-  if (APPLE_LOGIN_ENABLED) {
+  // B-2: Apple 로그인 — 앱(네이티브 signInWithApple) / 웹(signInWithOAuth 'apple') 분기
+  if (_showApple) {
     document.getElementById('btn-apple').addEventListener('click', async () => {
       const btn = document.getElementById('btn-apple')
       const orig = btn.innerHTML
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
-      if (location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { error } = await signInWithOAuth('apple')
+      if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=60a81cf0')
+      const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)
         document.getElementById('auth-error').style.display = 'block'
