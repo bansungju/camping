@@ -3520,7 +3520,7 @@
 
 ---
 
-### [M-183] — `multicat.py` `ingest_one()` — `fetchone()` None 반환 시 `[0]` 인덱스 TypeError
+### [M-183] ✅ 해결완료(2026-06-13, C17) — `multicat.py` `ingest_one()` — `fetchone()` None 반환 시 `[0]` 인덱스 TypeError
 
 - **영역:** 백엔드 — 파이프라인 / 멀티카테고리
 - **심각도:** 🟡 Medium
@@ -5104,7 +5104,7 @@
 
 ---
 
-### [M-256] — `multicat.py` `main()` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 모델 오탐 차단
+### [M-256] ⏸ 보류(C17) — `multicat.py` `main()` — `seen_names` 전 카테고리 공유로 다른 카테고리 동명 모델 오탐 차단
 
 - **영역:** 백엔드 — 멀티카테고리
 - **심각도:** 🟡 Medium
@@ -5764,7 +5764,7 @@
 
 ---
 
-### [M-290] — `multicat.py` `ingest_one()` — INSERT OR IGNORE 충돌 시 SELECT가 다른 상품 pid 반환, 스펙 덮어씀
+### [M-290] ✅ 해결완료(2026-06-13, C17) — `multicat.py` `ingest_one()` — INSERT OR IGNORE 충돌 시 SELECT가 다른 상품 pid 반환, 스펙 덮어씀
 
 - **영역:** 백엔드 — 다중 카테고리
 - **심각도:** 🟡 Medium
@@ -11295,5 +11295,233 @@
 - **원인:** [site/app.js](site/app.js) line 1963 — `v + rawUnit` 에서 `v` 반올림 없음.
 - **제안 수정:** `Number(v).toFixed(1) + rawUnit` 로 변경.
 - **파일:** [site/app.js](site/app.js) line 1963 [lane:CORE]
+
+---
+
+### [H-138] — `download_images.py` — `image_local=''` 빈 문자열 재다운로드 미실행 (WHERE 절 논리 오류)
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `image_local`이 빈 문자열(`''`)인 상품이 재다운로드 대상에서 제외 → 이미지 없는 상품이 영구적으로 이미지 없는 상태 유지.
+- **원인:** [pipeline/download_images.py](pipeline/download_images.py) line 93–101 — `NOT EXISTS(SELECT 1 FROM (SELECT 1))` 상수 서브쿼리, 항상 FALSE 반환. `image_local IS NULL`만 재다운로드 대상.
+- **제안 수정:** `AND (p.image_local IS NULL OR length(p.image_local) = 0)` 직접 조건으로 교체.
+- **파일:** [pipeline/download_images.py](pipeline/download_images.py) line 93 [lane:BACKEND]
+
+---
+
+### [M-509] — `multicat.py` `ingest_one` — `INSERT OR IGNORE` 중복 시 `fetchone()[0]` TypeError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 중복 INSERT가 무시된 후 SELECT 결과가 None → `None[0]` TypeError. `harvest_tents.py`의 H-79 수정과 동일한 버그, `multicat.py`에 미적용.
+- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 167–170 — `cur.lastrowid` 패턴 미사용.
+- **제안 수정:** `harvest_tents.py`의 `cur.lastrowid` + SELECT 폴백 패턴 동일 적용.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 167 [lane:BACKEND]
+
+---
+
+### [M-510] — `collect_images.py` — 검증 상품 0건 시 `100*done/tot` ZeroDivisionError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 신규 DB에서 `curation_status='verified'` 상품 없으면 `tot=0` → ZeroDivisionError 크래시.
+- **원인:** [pipeline/collect_images.py](pipeline/collect_images.py) line 94 — 0 나눔 가드 없음.
+- **제안 수정:** `round(100*done/(tot or 1))` 또는 `if tot else 0`.
+- **파일:** [pipeline/collect_images.py](pipeline/collect_images.py) line 94 [lane:BACKEND]
+
+---
+
+### [M-511] — `backfill_capacity.py` — products 테이블 비어있을 때 `have*100//total` ZeroDivisionError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 빈 DB에서 `total=0` → 요약 출력 시 ZeroDivisionError.
+- **원인:** [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py) line 78 — 0 나눔 가드 없음.
+- **제안 수정:** `(have*100//total if total else 0)`.
+- **파일:** [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py) line 78 [lane:BACKEND]
+
+---
+
+### [M-512] — `enrich_details.py` — `targets` 빈 리스트 시 `IN ()` SQL 문법 오류
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `danawa_pcode` 없는 신규 DB에서 `IN ()` SQLite 문법 오류 → OperationalError 크래시.
+- **원인:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122–124 — `",".join("?" * 0)` = `""`.
+- **제안 수정:** `if not targets: return` 조기 반환 또는 `if targets:` 조건부 실행.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122 [lane:BACKEND]
+
+---
+
+### [M-513] — `seed_coupang.py` `--load` — 비정수 `rep_product_id` CSV 행에서 `int()` ValueError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 수동 편집 CSV의 오타/빈 `rep_product_id` 행에서 `int(r["rep_product_id"])` ValueError 크래시, 이후 행 전체 미처리.
+- **원인:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 87 — try/except 없음.
+- **제안 수정:** `try/except ValueError: print(f"건너뜀: {r}"); continue` 래핑.
+- **파일:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 87 [lane:BACKEND]
+
+---
+
+### [M-514] — `harvest_tents.py` — `p_trunc` 정의 순서가 `report()` 호출 뒤 → 코드 추출 시 NameError 위험
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `report()` 함수(line 251)가 `p_trunc`(line 263)보다 앞에 위치 → REPL 혹은 부분 import 시 NameError.
+- **원인:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 251 — 파일 내 정의 순서 역전.
+- **제안 수정:** `p_trunc` 정의를 `report()` 앞으로 이동.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 251 [lane:BACKEND]
+
+---
+
+### [L-420] — `seed_coupang.py` — 쿠팡 URL 유효성 검사 없음 → 임의 URL DB 기록 위험
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 수동 편집 CSV의 오타나 비쿠팡 URL이 검증 없이 DB에 기록, 사용자에게 제공 가능.
+- **원인:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 84–87 — URL 도메인 검증 없음.
+- **제안 수정:** `url.startswith(("https://www.coupang.com/", "https://coupa.ng/"))` 검증 추가.
+- **파일:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 84 [lane:BACKEND]
+
+---
+
+### [L-421] — `collect_images.py` — fetch 예외 silent 누적 (어떤 상품·오류인지 미기록)
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** HTTP 429, SSL 오류 등 체계적 실패 시 `err += 1`만 집계, 원인 진단 불가.
+- **원인:** [pipeline/collect_images.py](pipeline/collect_images.py) line 69–70 — `except Exception: err += 1` 로그 없음.
+- **제안 수정:** `print(f"! pid={pid} pcode={pcode}: {e}", file=sys.stderr)` 추가.
+- **파일:** [pipeline/collect_images.py](pipeline/collect_images.py) line 69 [lane:BACKEND]
+
+---
+
+### [L-422] — `multicat.py` `harvest()` — fetch 예외 silent break → 조기 종료 원인 불명
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 네트워크/파싱 오류 시 `except Exception: break` 무음 처리 → harvest 조기 종료와 "더 이상 페이지 없음" 구분 불가.
+- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 196–209 — 예외 로그 없음.
+- **제안 수정:** `print(f"! fetch error q={q} p={page}: {e}")` 추가 후 break.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 200 [lane:BACKEND]
+
+---
+
+### [L-423] — `reclassify_other_tent.py` — cat7 비어있을 때 조기 반환 없어 불필요한 `recompute_ratings` 실행
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 이미 재배정 완료된 상태에서 재실행 시 빈 rows로 `recompute_ratings` 불필요하게 실행.
+- **원인:** [pipeline/reclassify_other_tent.py](pipeline/reclassify_other_tent.py) line 86 — 빈 rows 조기 반환 없음.
+- **제안 수정:** `if not rows: print("이미 완료"); return` 추가.
+- **파일:** [pipeline/reclassify_other_tent.py](pipeline/reclassify_other_tent.py) line 86 [lane:BACKEND]
+
+---
+
+### [L-424] — `enrich_details.py` — `filled` 카운터가 flag 해소 수 아닌 스펙 삽입 수 집계 → 출력 오해
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 최종 "메트릭 N개 채움" 메시지가 실제 해소된 flag 수보다 높게 표시될 수 있음.
+- **원인:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 54–56 — `filled`가 spec 삽입 수 집계, flag 해소 확인 없음.
+- **제안 수정:** 주석으로 의도 명시하거나 flag 해소 수 별도 추적.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 54 [lane:BACKEND]
+
+---
+
+### [M-515] — `renderAccount` 찜 카드 `go()` — stale 클로저 인덱스 `ci`로 찜 아이템 오참조
+
+- **영역:** 프론트엔드 — 계정/찜
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 빠른 찜 삭제 후 카드 클릭 시 렌더 시점 스냅샷 `wishes[ci]`가 잘못된 아이템 참조 가능.
+- **원인:** [site/app.js](site/app.js) line 3407–3408 — `forEach` 클로저가 렌더 시점 `wishes` 캡처.
+- **제안 수정:** `go()` 내부에서 `getWish().find(w => w.key === card.dataset.key)` 재조회, 카드에 `data-key` 추가.
+- **파일:** [site/app.js](site/app.js) line 3407 [lane:CORE]
+
+---
+
+### [M-516] — 찜 카드 `go()` — `wx.s === ""` 빈 문자열 시 falsy로 내비게이션 오작동
+
+- **영역:** 프론트엔드 — 계정/찜
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `s: ""` 빈 문자열로 저장된 찜 아이템 클릭 시 `!wx.s` true → 빈 카테고리 URL로 내비게이션.
+- **원인:** [site/app.js](site/app.js) line 3410 — `!wx.s` falsy 체크가 빈 문자열도 null/undefined와 동일 처리.
+- **제안 수정:** `wx.s == null` 명시적 null 비교로 변경.
+- **파일:** [site/app.js](site/app.js) line 3410 [lane:CORE]
+
+---
+
+### [M-517] — `syncGearSetsOnLogin` — `remoteId` 기반만 dedup, 콘텐츠 동일 세트 신규 기기에서 중복 생성
+
+- **영역:** 프론트엔드 — 세트 동기화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 신규 기기 로그인 시 오프라인 생성 로컬 세트와 내용 동일한 원격 세트가 별개로 추가 → 중복 세트 노출.
+- **원인:** [site/account.html](site/account.html) line 238–253 — `remoteId` 링크로만 dedup, 콘텐츠 동일성 미확인.
+- **제안 수정:** 동기화 전 제목+아이템 수+아이템명 지문으로 기존 세트와 대조, 일치 시 병합.
+- **파일:** [site/account.html](site/account.html) line 238 [lane:CORE]
+
+---
+
+### [L-425] — `renderAccount` 미로그인 CTA — `account.html`에서 `href="account.html"` 자기 자신 리로드
+
+- **영역:** 프론트엔드 — 계정
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 계정 페이지 미로그인 상태에서 "로그인" CTA 클릭 시 동일 페이지 새로고침, 인증 동작 없음.
+- **원인:** [site/app.js](site/app.js) line 3488 — `href="account.html"`이 다른 페이지 용도로 작성됨.
+- **제안 수정:** `href="account.html#auth-section"` 앵커 또는 현재 페이지 컨텍스트 감지 후 인라인 로그인 트리거.
+- **파일:** [site/app.js](site/app.js) line 3488 [lane:CORE]
+
+---
+
+### [L-426] — `_savePushSub` — Supabase upsert 결과 미확인 → 실패 시 push 등록된 것으로 오인
+
+- **영역:** 프론트엔드 — 푸시 알림
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** RLS 거부, 네트워크 오류 등 upsert 실패 시 오류 무음 처리 → 사용자는 push 활성화 상태로 오인, 가격 알림 미전달.
+- **원인:** [site/app.js](site/app.js) line 3702–3711 — upsert 반환값 미확인.
+- **제안 수정:** `const { error } = await supabase.from(...).upsert(...); if (error) console.error('_savePushSub failed:', error);` 추가.
+- **파일:** [site/app.js](site/app.js) line 3702 [lane:CORE]
+
+---
+
+### [L-427] — `account.html` `localWish.set()` — `setWish()` 우회로 `onWishChange` 미트리거
+
+- **영역:** 프론트엔드 — 찜 동기화
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `syncWishlistOnLogin`의 `localWish.set(merged)`가 `app.js`의 `setWish()`를 거치지 않아 `onWishChange` 콜백 미실행 — 향후 onWishChange 의존 코드 추가 시 누락 버그 유발.
+- **원인:** [site/account.html](site/account.html) line 223, 281 — 병렬 localStorage 쓰기 경로.
+- **제안 수정:** `localWish.set()`이 `setWish()` 우회임을 주석 명시, 또는 `setWish()` 호출로 통일.
+- **파일:** [site/account.html](site/account.html) line 223 [lane:CORE]
+
+---
+
+### [L-428] — `scrollToHashSection` — 섹션 `display:none` 시 silent 종료, 인증 완료 후 재시도 없음
+
+- **영역:** 프론트엔드 — 계정
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 인증 지연 중 `account.html#sets` 접속 시 섹션이 아직 `display:none` → `scrollToHashSection` 조기 종료, 인증 완료 후 재스크롤 없음.
+- **원인:** [site/account.html](site/account.html) line 364–369 — `display:none` 가드 후 재시도 없음.
+- **제안 수정:** `renderAccount()` 내부 또는 `requestAnimationFrame` 후에 `scrollToHashSection()` 호출.
+- **파일:** [site/account.html](site/account.html) line 364 [lane:CORE]
 
 ---
