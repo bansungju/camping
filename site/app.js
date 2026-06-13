@@ -851,6 +851,90 @@ async function setupHomeSearch() {
   if (initQ) { inp.value = initQ; run(); }
 }
 
+/* ---------- search.html 전용 인라인 검색 결과 ---------- */
+async function setupSearchPage() {
+  const inp = document.getElementById("homeq");
+  const resultsEl = document.getElementById("search-results");
+  if (!inp || !resultsEl) return;
+
+  let idx = null;
+  const ensureIdx = async () => {
+    if (!idx) idx = await getJSON("data/search.json?v=2cd7b927").catch(() => []);
+    return idx;
+  };
+
+  const openFromSearch = async (x) => {
+    try {
+      const catData = await getJSON(`data/${x.s}.json`);
+      const prod = (catData.items || []).find(p => p.brand === x.b && p.model === x.m);
+      if (prod) {
+        const prev = { slug: STATE.slug, data: STATE.data };
+        STATE.slug = x.s; STATE.data = catData;
+        openProduct(prod);
+        STATE.slug = prev.slug; STATE.data = prev.data;
+        return;
+      }
+    } catch (_) {}
+    location.href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
+  };
+
+  const render = (hits, q) => {
+    if (!q) { resultsEl.innerHTML = ""; return; }
+    if (!hits.length) {
+      resultsEl.innerHTML = `<p style="color:var(--muted);font-size:14px;padding:20px 0">"${esc(q)}"에 대한 결과가 없어요.</p>`;
+      return;
+    }
+    resultsEl.innerHTML = `<p style="font-size:12px;color:var(--muted);margin:8px 0 12px">${hits.length}개 결과${hits.length >= 50 ? " · 상위 50개" : ""}</p>` +
+      `<div class="plist">` +
+      hits.map((x, i) => {
+        const wished = inWish(wishKey(x.b, x.m, x.cap));
+        return `<div class="pli" data-si="${i}" style="cursor:pointer">
+          ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "pli-thumb", "pli-noimg")}
+          <div class="pli-body">
+            <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}<span class="pli-cat" style="color:var(--muted);font-size:11px;margin-left:6px">${esc(x.c || "")}</span></div>
+            <div class="pli-name">${esc(x.m)}</div>
+            <div class="pli-price">${x.p ? x.p.toLocaleString() + "원~" : ""}</div>
+          </div>
+          <button class="pli-wish${wished ? " on" : ""}" data-si="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
+        </div>`;
+      }).join("") + `</div>`;
+
+    resultsEl.querySelectorAll(".pli").forEach((el, i) => {
+      el.onclick = e => { if (e.target.closest(".pli-wish")) return; openFromSearch(hits[i]); };
+    });
+    resultsEl.querySelectorAll(".pli-wish").forEach(btn => {
+      btn.onclick = () => {
+        const x = hits[+btn.dataset.si];
+        const key = wishKey(x.b, x.m, x.cap);
+        const arr = getWish();
+        const already = arr.some(w => w.key === key);
+        if (already) { setWish(arr.filter(w => w.key !== key)); }
+        else { arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img }); setWish(arr); }
+        btn.classList.toggle("on", !already);
+        btn.setAttribute("aria-pressed", String(!already));
+      };
+    });
+  };
+
+  let debounce;
+  const run = async () => {
+    const q = inp.value.trim();
+    history.replaceState(null, "", q ? `?q=${encodeURIComponent(q)}` : location.pathname);
+    if (!q) { render([], ""); return; }
+    await ensureIdx();
+    const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    const hits = idx.filter(x => { const t = (x.b + " " + x.m).toLowerCase(); return terms.every(tok => t.includes(tok)); }).slice(0, 50);
+    render(hits, q);
+  };
+
+  inp.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(run, 120); });
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") { clearTimeout(debounce); run(); } });
+
+  const initQ = new URLSearchParams(location.search).get("q") || "";
+  if (initQ) { inp.value = initQ; await run(); }
+  else inp.focus();
+}
+
 /* ---------- 캠핑 스타일 칩 상수 ---------- */
 // cats: 표시할 카테고리 slug 화이트리스트. 없으면 전 카테고리.
 const STYLE_META = [
