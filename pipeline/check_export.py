@@ -88,6 +88,12 @@ def main():
 
     files = sorted(f for f in glob.glob(os.path.join(args.data, "*.json"))
                    if os.path.basename(f) not in SKIP_FILES)
+    # M-441: export_site.py 실패 후 site/data/가 비면 files=[] → 위반 0건 → exit 0으로 게이트가
+    #   '이상 없음'을 오신호해 빈/깨진 배포를 통과시킨다. 카테고리 데이터가 0개면 export 실패로 보고 차단.
+    if not files:
+        print("=" * 70)
+        print(f"  ❌ 데이터 파일 0개 ({args.data}) — export 실패 의심, 배포 차단")
+        return 1
     all_violations = []
     parse_failures = []           # L-231: 파싱 실패 파일을 추적해 게이트에서 차단
     for f in files:
