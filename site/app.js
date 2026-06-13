@@ -35,7 +35,9 @@ window.addEventListener("beforeinstallprompt", e => {
   </div>`;
   const showBanner = () => {
     banner.style.display = "block";
-    document.documentElement.style.setProperty("--banner-h", banner.offsetHeight + "px");
+    requestAnimationFrame(() => {
+      document.documentElement.style.setProperty("--banner-h", banner.offsetHeight + "px");
+    });
   };
   const hideBanner = () => {
     banner.style.display = "none";
@@ -65,25 +67,52 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 const OPS = localStorage.getItem("ops") === "1";
 const LEGAL_LINKS = ` · <a href="privacy.html" style="color:var(--muted);text-decoration:underline">개인정보처리방침</a> · <a href="terms.html" style="color:var(--muted);text-decoration:underline">이용약관</a>`;
 
-/* 세트 수량 한도: 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
+/* 세트 수량 한도(같은 상품 pcode 기준): 텐트류·침낭·매트·코트·가방 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
 const SET_QTY_MAX = {
   "backpacking-tent": 1, "auto-tent": 1, "shelter": 1, "tarp": 1,
   "sleeping-bag": 1, "mat": 1, "cot": 1, "backpacking-bag": 1,
 };
 const qtyMax = slug => SET_QTY_MAX[slug] ?? (slug === "chair" ? 4 : slug === "table" ? 2 : 4);
 
-/* 세트 슬롯 도장판 — 8개 슬롯, 해당 카테고리 장비가 있으면 불 들어옴 */
+/* FE-WISH-09 — '도장판' 세트 구성(SET-COMPOSITION-PLAN.md, v1).
+   핵심 규칙: 완성 = 슬롯에 1개라도 담기면(0→≥1). 정원(cap)은 목표가 아니라 상한선 —
+   넘기려 할 때만 교체 유도. 15개 카테고리를 그룹 10칸으로 묶음(타입별 cap=0이면 비노출 → auto는 9칸).
+   완성도 = 채운 필수슬롯 / 노출 필수슬롯(슬롯 안 개수 무관, 0이냐 아니냐만 봄). */
 const SET_SLOTS = [
-  { slugs: ["backpacking-tent","auto-tent","shelter","tarp"], icon: "⛺", label: "텐트" },
-  { slugs: ["sleeping-bag"], icon: "🛌", label: "침낭" },
-  { slugs: ["mat","cot"], icon: "🧘", label: "매트" },
-  { slugs: ["burner"], icon: "🔥", label: "버너" },
-  { slugs: ["cookware"], icon: "🍳", label: "코펠" },
-  { slugs: ["chair"], icon: "🪑", label: "의자" },
-  { slugs: ["table"], icon: "🪵", label: "테이블" },
-  { slugs: ["lantern"], icon: "🔦", label: "랜턴" },
-  { slugs: ["backpacking-bag"], icon: "🎒", label: "가방" },
+  { key: "tent",     slugs: ["backpacking-tent","auto-tent","shelter"], icon: "⛺", label: "텐트·쉘터", tier: "must" },
+  { key: "tarp",     slugs: ["tarp"],              icon: "⛱️", label: "타프",      tier: "nice" },
+  { key: "sleeping", slugs: ["sleeping-bag"],      icon: "🛌", label: "침낭",      tier: "must" },
+  { key: "mat",      slugs: ["mat","cot"],         icon: "🧘", label: "매트·침대",  tier: "must" },
+  { key: "chair",    slugs: ["chair"],             icon: "🪑", label: "의자",      tier: "must" },
+  { key: "table",    slugs: ["table"],             icon: "🪵", label: "테이블",     tier: "nice" },
+  { key: "cook",     slugs: ["burner","cookware"], icon: "🔥", label: "화력",      tier: "nice" },
+  { key: "light",    slugs: ["lantern"],           icon: "🔦", label: "랜턴",      tier: "nice" },
+  { key: "living",   slugs: ["cooler","wagon","firepit","powerbank"], icon: "🧊", label: "살림", tier: "opt" },
+  { key: "bag",      slugs: ["backpacking-bag"],   icon: "🎒", label: "가방",      tier: "opt" },
 ];
+/* 세트 타입별 정원 프리셋(상한선). cap=0 → 해당 타입에서 슬롯 비노출. */
+const SET_TYPES = {
+  auto:        { label: "오토캠핑 4인", icon: "🚙", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
+  backpacking: { label: "백패킹",       icon: "🥾", caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0, bag:1 } },
+  carcamp:     { label: "차박",         icon: "🚐", caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4, bag:0 } },
+};
+const DEFAULT_SET_TYPE = "auto";
+const SET_TYPE_ORDER = ["auto", "backpacking", "carcamp"];
+const setTypeCaps = type => (SET_TYPES[type] || SET_TYPES[DEFAULT_SET_TYPE]).caps;
+const slotCap = (slot, type) => setTypeCaps(type)[slot.key] ?? 0;
+const slotForSlug = slug => SET_SLOTS.find(sl => sl.slugs.includes(slug)) || null;
+/* 슬롯에 담긴 수량 합(여러 하위 slug 합산) */
+const slotCount = (items, slot) => (items || []).reduce((n, x) => slot.slugs.includes(x.s) ? n + (x.qty || 1) : n, 0);
+/* 현재 타입에서 노출되는 슬롯(cap>0) */
+const activeSlots = type => SET_SLOTS.filter(sl => slotCap(sl, type) > 0);
+/* 완성도: 채운 필수슬롯 / 노출 필수슬롯 (슬롯 안 개수 무관, 0이냐 아니냐만) */
+function setCompletion(set) {
+  const type = (set && set.type) || DEFAULT_SET_TYPE;
+  const must = activeSlots(type).filter(sl => sl.tier === "must");
+  const filled = must.filter(sl => slotCount((set && set.items) || [], sl) >= 1).length;
+  const total = must.length;
+  return { filled, total, pct: total ? Math.round(filled / total * 100) : 0, complete: total > 0 && filled === total };
+}
 
 /* 운영자 모드일 땐 눈에 띄는 배너+끄기 버튼(조용히 갇히는 것 방지) */
 if (OPS) window.addEventListener("DOMContentLoaded", () => {
@@ -291,17 +320,29 @@ function showToast(msg, duration, isHtml) {
   requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
   t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; }, duration || 2400);
 }
-function newSet(title) {
-  const s = { id: Date.now().toString(36), title, style: "", items: [], created_at: new Date().toISOString() };
+function newSet(title, type) {
+  const s = { id: Date.now().toString(36), title, type: type || DEFAULT_SET_TYPE, style: "", items: [], created_at: new Date().toISOString() };
   const a = getSets(); a.unshift(s); saveSets(a); return s;
 }
+/* FE-WISH-09 담기 가드: 슬롯 정원(상한) 도달 시 추가 대신 'cap' 반환 → 호출부가 교체 유도.
+   반환 { status: 'added'|'cap'|'noset', set?, slot? }. 정원 미만이면 그냥 담거나 수량 증가. */
 function addToSet(setId, item) {
   const a = getSets(), s = a.find(x => x.id === setId);
-  if (!s) return;
+  if (!s) return { status: "noset" };
+  const type = s.type || DEFAULT_SET_TYPE;
+  const slot = slotForSlug(item.s);
+  const cap = slot ? slotCap(slot, type) : 0;
   const i = s.items.findIndex(x => x.pcode === item.pcode);
-  if (i >= 0) { const cur = s.items[i].qty || 1; if (cur < qtyMax(s.items[i].s)) s.items[i].qty = cur + 1; }
-  else s.items.push({ ...item, qty: 1 });
-  saveSets(a);
+  if (i >= 0) {
+    // 같은 상품 수량 증가 — 같은-상품 한도(qtyMax)와 슬롯 정원(cap) 둘 다 검사
+    const cur = s.items[i].qty || 1;
+    const slotFull = slot && cap > 0 && slotCount(s.items, slot) >= cap;
+    if (cur >= qtyMax(item.s) || slotFull) return { status: "cap", set: s, slot };
+    s.items[i].qty = cur + 1; saveSets(a); return { status: "added", set: s };
+  }
+  // 새(다른) 상품 — 슬롯 정원 도달 시 교체 유도(P1: 다른 텐트 2개째 차단)
+  if (slot && cap > 0 && slotCount(s.items, slot) >= cap) return { status: "cap", set: s, slot };
+  s.items.push({ ...item, qty: 1 }); saveSets(a); return { status: "added", set: s };
 }
 function setItem(m, slug) {
   return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
@@ -318,10 +359,18 @@ function openSetModal(item) {
   }
   const sets = getSets();
   const setListHtml = sets.length
-    ? sets.map(s => `<button class="sm-set-btn" data-sid="${s.id}">
-        <span class="sm-set-name">${esc(s.title)}</span>
-        <span class="sm-set-cnt">${s.items.length}개 장비</span></button>`).join("")
+    ? sets.map(s => {
+        const tdef = SET_TYPES[s.type] || SET_TYPES[DEFAULT_SET_TYPE];
+        const c = setCompletion(s);
+        const meta = c.complete ? "🏕️ 완성" : (c.total ? `필수 ${c.filled}/${c.total}` : `${s.items.length}개`);
+        return `<button class="sm-set-btn" data-sid="${s.id}">
+        <span class="sm-set-name">${tdef.icon} ${esc(s.title)}</span>
+        <span class="sm-set-cnt">${meta}</span></button>`;
+      }).join("")
     : `<div class="sm-empty">저장된 세트가 없어요</div>`;
+  // FE-WISH-09: 새 세트 생성 시 타입(오토/백패킹/차박) 선택 — 정원 프리셋 결정. 기본=오토캠핑.
+  const typeChips = SET_TYPE_ORDER.map((k, i) =>
+    `<button type="button" class="sm-type-chip${i === 0 ? " on" : ""}" data-type="${k}">${SET_TYPES[k].icon} ${SET_TYPES[k].label}</button>`).join("");
   modal.innerHTML = `<div class="pmbox sm-box" role="dialog" aria-modal="true">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div class="sm-head">
@@ -330,28 +379,86 @@ function openSetModal(item) {
     </div>
     <div class="sm-list">${setListHtml}</div>
     <div class="sm-new">
-      <input class="sm-input" type="text" placeholder="새 세트 이름 입력" maxlength="40">
-      <button class="sm-create">만들기</button>
+      <div class="sm-new-label">새 세트 만들기</div>
+      <div class="sm-types">${typeChips}</div>
+      <div class="sm-new-row">
+        <input class="sm-input" type="text" placeholder="새 세트 이름 입력" maxlength="40">
+        <button class="sm-create">만들기</button>
+      </div>
     </div></div>`;
   modal.classList.add("on");
   const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
   const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
-  const onKey = e => { if (e.key === "Escape") close(); };   // L-106: ESC 닫기
+  const onKey = e => {   // L-174: Tab focus trap + ESC
+    if (e.key === "Escape") { close(); return; }
+    if (e.key !== "Tab") return;
+    const box = modal.querySelector(".pmbox");
+    const f = box.querySelectorAll('button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
+  modal.querySelectorAll(".sm-type-chip").forEach(chip => chip.onclick = () => {
+    modal.querySelectorAll(".sm-type-chip").forEach(c => c.classList.toggle("on", c === chip));
+  });
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
-    addToSet(btn.dataset.sid, item);
+    const res = addToSet(btn.dataset.sid, item);
+    if (res.status === "cap") { close(); openReplaceModal(btn.dataset.sid, item, res.slot); return; }
     btn.textContent = "✓ 추가됨"; btn.disabled = true;
     setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);
   });
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
-    const s = newSet(t); addToSet(s.id, item);
+    const type = modal.querySelector(".sm-type-chip.on")?.dataset.type || DEFAULT_SET_TYPE;
+    const s = newSet(t, type); addToSet(s.id, item);
     close(); showSetConfirm(s.id);
   };
   inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
+  modal.querySelector(".pmx").focus();
+}
+
+/* FE-WISH-09: 슬롯 정원(상한) 도달 시 교체 모달 — 기존 항목 하나를 빼고 새 항목을 담는다.
+   정원 미만에서는 호출되지 않음(압박 금지 규칙). */
+function openReplaceModal(setId, item, slot) {
+  const sets = getSets();
+  const s = sets.find(x => x.id === setId);
+  if (!s || !slot) return;
+  const cap = slotCap(slot, s.type || DEFAULT_SET_TYPE);
+  const inSlot = s.items.map((x, ii) => ({ x, ii })).filter(o => slot.slugs.includes(o.x.s));
+  let modal = document.getElementById("set-replace-modal");
+  if (!modal) { modal = document.createElement("div"); modal.id = "set-replace-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
+  const rows = inSlot.map(o => `<button type="button" class="srp-item" data-ii="${o.ii}">
+      <span class="srp-item-name">${esc(`${o.x.b || ""} ${o.x.m || ""}`.trim())}${(o.x.qty || 1) > 1 ? ` ×${o.x.qty}` : ""}</span>
+      <span class="srp-item-act">빼고 담기 ›</span></button>`).join("");
+  modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true" aria-labelledby="srp-title" style="max-width:380px;width:100%;padding:22px">
+    <button type="button" class="pmx" aria-label="닫기">✕</button>
+    <h2 id="srp-title" style="font-size:16px;font-weight:700;margin:0 0 4px">${slot.icon} ${esc(slot.label)} 칸이 찼어요</h2>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px">이 칸은 최대 ${cap}개예요. <b>${esc(`${item.b || ""} ${item.m || ""}`.trim())}</b>을(를) 담으려면 무엇을 뺄까요?</p>
+    <div class="srp-list">${rows}</div>
+    <button type="button" class="srp-cancel">그냥 둘게요</button>
+  </div>`;
+  modal.classList.add("on");
+  const prevFocus = document.activeElement;
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  modal.onclick = e => { if (e.target === modal) close(); };
+  modal.querySelector(".pmx").onclick = close;
+  modal.querySelector(".srp-cancel").onclick = close;
+  modal.querySelectorAll(".srp-item").forEach(btn => btn.onclick = () => {
+    const arr = getSets(); const set = arr.find(x => x.id === setId); if (!set) { close(); return; }
+    set.items.splice(+btn.dataset.ii, 1);   // 기존 항목 제거
+    saveSets(arr);
+    const res = addToSet(setId, item);       // 이제 자리 생김 → 새 항목 담기
+    close();
+    renderAccount();
+    if (res.status === "added") showSetConfirm(setId);
+  });
   modal.querySelector(".pmx").focus();
 }
 
@@ -646,7 +753,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=62628706").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=e7ca584d").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -859,7 +966,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=62628706").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=e7ca584d").catch(() => []);
     return idx;
   };
 
@@ -2343,7 +2450,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=62628706"); }
+  try { idx = await getJSON("data/search.json?v=e7ca584d"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2519,7 +2626,7 @@ async function renderHotSection(categories) {
           const tint = catTint(catName);
           const top3 = items.slice(0, 3);
           const rowsHtml = top3.map((h, i) =>
-            `<a class="hot-rank-row" href="category.html?cat=${cat}&brands=${encodeURIComponent(h.brand)}&q=${encodeURIComponent(h.model)}">
+            `<a class="hot-rank-row" href="category.html?cat=${cat}&q=${encodeURIComponent(h.brand + ' ' + h.model)}">
               <span class="hot-rank-num rank-${i + 1}">${i + 1}</span>
               <span class="hot-rank-info">
                 <span class="hot-rank-brand">${esc(h.brand)}</span>
@@ -2577,13 +2684,17 @@ function openSetDetail(si) {
   if (!s) return;
   const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
   const fmtP = p => p ? p.toLocaleString() + "원" : "—";
+  const type = s.type || DEFAULT_SET_TYPE;
   const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
   const tp = s.items.reduce((sum, x) => x.p ? sum + x.p * (x.qty || 1) : sum, 0);
   const rows = s.items.map((x, ii) => {
     const w = x.weight_g != null ? fmtW(x.weight_g * (x.qty || 1)) : "—";
     const p = x.p ? fmtP(x.p * (x.qty || 1)) : "—";
     const qty = x.qty || 1;
-    const max = qtyMax(x.s);
+    // FE-WISH-09: 증가 가능 여부 = 같은상품 한도(qtyMax) & 슬롯 정원(cap) 둘 다 여유 있을 때만
+    const slot = slotForSlug(x.s);
+    const cap = slot ? slotCap(slot, type) : qtyMax(x.s);
+    const canInc = qty < qtyMax(x.s) && (!slot || cap <= 0 || slotCount(s.items, slot) < cap);
     const buyCell = x.coupang_url
       ? `<button type="button" class="set-buy" data-ii="${ii}">🛒 구매</button>`
       : `<button type="button" class="set-buy is-off" disabled aria-disabled="true" title="구매 링크 준비 중">준비 중</button>`;
@@ -2595,19 +2706,48 @@ function openSetDetail(si) {
         <div class="qty-ctrl">
           <button class="qty-dec" data-ii="${ii}" aria-label="수량 감소">−</button>
           <span class="qty-num">${qty}</span>
-          <button class="qty-inc" data-ii="${ii}" aria-label="수량 증가"${qty >= max ? ' disabled' : ''}>＋</button>
+          <button class="qty-inc" data-ii="${ii}" aria-label="수량 증가"${canInc ? '' : ' disabled'}>＋</button>
         </div>
       </td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--line);text-align:right">${buyCell}</td>
     </tr>`;
   }).join("");
+  // FE-WISH-09: 도장판(타입 칩 + 완성도 + 슬롯) — 완성=0→≥1, 빈 칸은 담으러 가기 링크.
+  const comp = setCompletion(s);
+  const typeChips = SET_TYPE_ORDER.map(k =>
+    `<button type="button" class="set-type-chip${k === type ? " on" : ""}" data-type="${k}">${SET_TYPES[k].icon} ${SET_TYPES[k].label}</button>`).join("");
+  const boardCells = activeSlots(type).map(sl => {
+    const n = slotCount(s.items, sl);
+    const cap = slotCap(sl, type);
+    const on = n >= 1;
+    const over = on && cap > 0 && n > cap;   // §6 하위호환: 정원 초과는 경고만(강제삭제 안 함)
+    const must = sl.tier === "must";
+    const state = on
+      ? `<span class="ssb-state ${over ? "over" : "ok"}">${over ? "⚠️" : "✓"}${n > 1 ? ` ×${n}` : ""}</span>`
+      : `<span class="ssb-state">0/${cap}</span>`;
+    const body = `<span class="ssb-icon">${sl.icon}</span><span class="ssb-label">${esc(sl.label)}</span>${state}`;
+    return on
+      ? `<div class="ssb-cell on${must ? " must" : ""}${over ? " over" : ""}" title="${esc(sl.label)}${over ? ` 정원 초과(최대 ${cap})` : " 완료"}">${body}</div>`
+      : `<a class="ssb-cell${must ? " must" : ""}" href="category.html?cat=${sl.slugs[0]}" title="${esc(sl.label)} 담으러 가기">${body}</a>`;
+  }).join("");
+  const compHtml = comp.complete
+    ? `<div class="set-complete-badge lg">🏕️ 세트 완성!</div>`
+    : (comp.total ? `<div class="ssb-prog" aria-label="필수 슬롯 ${comp.filled}/${comp.total} 채움">
+        <div class="set-prog-track"><i style="width:${comp.pct}%"></i></div>
+        <span class="set-prog-label">필수 슬롯 ${comp.filled}/${comp.total} 채움 (${comp.pct}%)</span></div>` : "");
+  const boardHtml = `
+    <div class="ssb-types">${typeChips}</div>
+    ${compHtml}
+    <div class="ssb-grid">${boardCells}</div>
+    <p class="ssb-hint">빈 칸을 누르면 담으러 갈 수 있어요. 정원은 상한선이에요(다 채울 필요 없어요).</p>`;
   let modal = document.getElementById("set-detail-modal");
   if (!modal) { modal = document.createElement("div"); modal.id = "set-detail-modal"; modal.className = "pmodal"; modal.setAttribute("role","dialog"); modal.setAttribute("aria-modal","true"); modal.setAttribute("aria-labelledby","set-detail-title"); document.body.appendChild(modal); }
   modal.innerHTML = `<div class="pmbox" style="max-width:520px;width:100%;padding:20px">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     <h2 id="set-detail-title" style="font-size:16px;font-weight:700;margin-bottom:4px">${esc(s.title)}</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">${s.items.length}개 장비</p>
-    <table style="width:100%;border-collapse:collapse">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${s.items.length}개 장비</p>
+    ${boardHtml}
+    <table style="width:100%;border-collapse:collapse;margin-top:18px">
       <thead><tr>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
@@ -2641,6 +2781,13 @@ function openSetDetail(si) {
   modal.querySelector(".pmx").onclick = close;
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").focus();
+  // FE-WISH-09: 세트 타입 전환 → 정원 프리셋 재적용. 초과분은 강제 삭제 안 함(§6 하위호환).
+  modal.querySelectorAll(".set-type-chip").forEach(chip => chip.onclick = e => {
+    e.stopPropagation();
+    const arr = getSets(); const set = arr[si]; if (!set) return;
+    set.type = chip.dataset.type; saveSets(arr);
+    renderAccount(); openSetDetail(si);
+  });
   modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
@@ -2653,7 +2800,11 @@ function openSetDetail(si) {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
     const ii = +btn.dataset.ii; const item = set.items[ii]; if (!item) return;
+    // 같은상품 한도 + 슬롯 정원 둘 다 검사(정원 도달 시 증가 무시)
+    const slot = slotForSlug(item.s);
+    const cap = slot ? slotCap(slot, set.type || DEFAULT_SET_TYPE) : qtyMax(item.s);
     if ((item.qty || 1) >= qtyMax(item.s)) return;
+    if (slot && cap > 0 && slotCount(set.items, slot) >= cap) return;
     item.qty = (item.qty || 1) + 1;
     saveSets(arr); renderAccount(); openSetDetail(si);
   });
@@ -2737,7 +2888,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=62628706")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=e7ca584d")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3008,16 +3159,25 @@ function renderAccount() {
       return goalHtml;
     };
     setsEl.innerHTML = sets.map((s, si) => {
-      const cats = new Set(s.items.map(x => x.s));
-      const slotBadges = SET_SLOTS.map(slot => {
-        const has = slot.slugs.some(sg => cats.has(sg));
-        return `<span class="set-slot${has ? " on" : ""}" title="${slot.label}">${slot.icon}</span>`;
+      const type = s.type || DEFAULT_SET_TYPE;
+      const tdef = SET_TYPES[type] || SET_TYPES[DEFAULT_SET_TYPE];
+      // FE-WISH-09: 노출 슬롯만, 1개라도 담겼으면 도장 켜짐(0→≥1). 개수 압박 없음.
+      const slotBadges = activeSlots(type).map(slot => {
+        const on = slotCount(s.items, slot) >= 1;
+        return `<span class="set-slot${on ? " on" : ""}" title="${slot.label}${on ? " ✓" : ""}">${slot.icon}</span>`;
       }).join("");
+      const c = setCompletion(s);
+      const completeHtml = c.complete
+        ? `<div class="set-complete-badge">🏕️ 세트 완성!</div>`
+        : (c.total ? `<div class="set-prog" aria-label="필수 슬롯 ${c.filled}/${c.total} 채움">
+             <div class="set-prog-track"><i style="width:${c.pct}%"></i></div>
+             <span class="set-prog-label">필수 ${c.filled}/${c.total}</span></div>` : "");
       return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}" aria-label="${esc(s.title)} 세트 상세 보기">
         <div class="pli-info">
-          <div class="pli-top">${esc(s.style || "세트")}</div>
+          <div class="pli-top">${tdef.icon} ${esc(tdef.label)}</div>
           <div class="pli-name">${esc(s.title)}</div>
           <div class="pli-top" style="margin-top:3px">${s.items.length}개 장비 ${weightBadge(totalWeight(s.items))}</div>
+          ${completeHtml}
           ${goalBar(s)}
           <div class="set-slots">${slotBadges}</div>
         </div>
@@ -3071,7 +3231,7 @@ function renderAccount() {
       const s = getSets()[+b.dataset.si];
       if (!s) return;
       try {
-        const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null })) };
+        const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
         const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
         const url = `${location.origin}/account.html?view-set=${encoded}`;
         navigator.clipboard.writeText(url).then(() => {
@@ -3425,9 +3585,11 @@ function openLogDetail(p) {
     </div>
   </div>`;
   modal.classList.add("on");
-  const close = () => modal.classList.remove("on");
+  const prevFocus = document.activeElement;   // L-175: 닫을 때 포커스 복귀
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };   // L-173+L-175
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
+  modal.querySelector(".pmx").focus();
   const likeBtn = modal.querySelector("#detail-like-btn");
   if (likeBtn) {
     likeBtn.onclick = async e => {
@@ -3451,7 +3613,7 @@ function openLogDetail(p) {
       }
     };
   }
-  const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  const onKey = e => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
 
   // 댓글 로드 및 제출
