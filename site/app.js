@@ -3605,7 +3605,8 @@ function renderAccount() {
         // H-78: deprecated escape/unescape 대신 TextEncoder로 UTF-8 바이트→base64(한글·이모지 안전). 출력은 기존 idiom과 동일.
         const _utf8 = new TextEncoder().encode(JSON.stringify(payload));
         const encoded = btoa(Array.from(new Uint8Array(_utf8), c => String.fromCharCode(c)).join("")).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');  // H-108: spread 대신 Array.from → 대형 세트 스택 오버플로 방지
-        const url = `${location.origin}/account.html?view-set=${encoded}`;
+        const _origin = location.hostname === "localhost" ? "https://gear-forest.com" : location.origin;  // M-219: localhost URL 방지
+        const url = `${_origin}/account.html?view-set=${encoded}`;
         // M-274: URL 2000자 초과 시 경고(일부 환경에서 링크 단축기 파손)
         if (url.length > 2000) showToast("세트 크기가 커 일부 환경에서 링크가 깨질 수 있어요");
         navigator.clipboard.writeText(url).then(() => {
