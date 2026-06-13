@@ -70,6 +70,11 @@ CATEGORIES = {
 }
 
 
+# H-109: DB를 모듈 로드 시점에 기본값으로 정의한다. 전엔 main()의 `global DB` 선언만 있어
+#   main() 미호출 경로(테스트 import 등)에서 sh() 실행 시 NameError가 났다. main()이 --db로 덮어씀.
+DB = os.path.join(ROOT, "camping_tents500.db")
+
+
 def sh(script, *args):
     subprocess.run([sys.executable, os.path.join(HERE, script), "--db", DB, *args], check=True)
 

@@ -15,11 +15,19 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 P_ROOT = os.path.dirname(HERE)
 
-CORE = ["weight_min", "water_head", "floor_area"]   # product_spec_values 기반 완비 메트릭
-# H-77: capacity(인원)도 텐트 완비 기준이지만 products 컬럼이라 CORE(메트릭 키)에 못 넣는다.
-#       기존엔 SQL에 `capacity IS NOT NULL`을 묻어둬 CORE 리스트와 불일치(의도 불투명)했다.
-#       run_all.promote_all의 need_capacity 정책과 일관되게 명시 상수로 분리 — 토글 가능.
-NEED_CAPACITY = True
+# H-112: 텐트 완비기준(core)의 단일 진실원은 run_all.CATEGORIES["텐트"]. 과거 이 리스트에
+#   water_head를 필수로 박아 run_all(내수압=선택, weight_min·floor_area만)과 어긋나, promote_catalog
+#   단독 실행 시 내수압 미공개 브랜드(힐레베르그·콜맨 등)가 pending으로 강등됐다 → 레지스트리에서
+#   가져와 항상 일치시킨다. import 실패 시 레지스트리와 동일한 값으로 폴백(드리프트 방지).
+try:
+    sys.path.insert(0, HERE)
+    from run_all import CATEGORIES as _CATS
+    CORE = list(_CATS["텐트"]["core"])            # = ["weight_min", "floor_area"]
+    NEED_CAPACITY = bool(_CATS["텐트"]["need_capacity"])
+except Exception:
+    CORE = ["weight_min", "floor_area"]           # 폴백(run_all 레지스트리와 동일)
+    NEED_CAPACITY = True
+# 주: capacity(인원)는 products 컬럼이라 CORE(메트릭 키)에 못 넣고 NEED_CAPACITY로 별도 게이트.
 
 
 def main():
