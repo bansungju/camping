@@ -82,9 +82,11 @@ def http_get(url, referer=None, timeout=20, retries=3):
                 time.sleep(2 ** attempt + random.random())
                 continue
             raise                          # 404 등은 재시도 무의미
-        except urllib.error.URLError:
+        except urllib.error.URLError as e:
+            # L-210: last=None으로 덮으면 직전 HTTPError(상태코드 보유)가 소실돼 끝에서 generic만 raise된다.
+            #   실제 발생 에러를 보존해 최종 raise가 정보를 유지하게 한다.
             time.sleep(2 ** attempt + random.random())
-            last = None
+            last = e
             continue
     if last:
         raise last
