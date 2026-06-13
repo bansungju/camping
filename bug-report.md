@@ -2506,7 +2506,7 @@
 - **제안 수정:** `p.content.length > 80` → `(p.content || "").length > 80` (또는 `preview.length > 80`)
 - **파일:** [site/app.js](site/app.js) line 3234 [lane:CORE]
 
-### [M-137] — `openCmpModal` — 비교 세트저장 시 `s`(카테고리 슬러그)·`pcode`·`coupang_url` 필드 누락 (M-131 재확인, COMPARE_ENABLED=true 복구 시 재발)
+### [M-137] ⏸ 보류(COMPARE_ENABLED=false, 복구 시 재처리) — 비교 세트저장 시 `s`(카테고리 슬러그)·`pcode`·`coupang_url` 필드 누락 (M-131 재확인, COMPARE_ENABLED=true 복구 시 재발)
 - **영역:** 스펙 비교 — 세트 저장 (아카이브 상태, 복구 시 발현)
 - **심각도:** 🟡 Medium
 - **증상:** `openCmpModal`(app.js line 2113) `setItems` 생성 시 `s`, `pcode`, `coupang_url` 필드가 누락된다. `s` 없으면 세트 상세 모달의 구매 버튼이 모두 "준비 중"으로 표시되고, click_events 집계에서 slug가 null이 된다. M-131은 COMPARE_ENABLED=false로 moot 처리됐으나 복구 플래그를 켜면 즉시 재발하는 잠재 버그로 별도 기록.
@@ -3607,7 +3607,7 @@
 
 ---
 
-### [M-188] — `toggleLike` — 낙관적 UI 업데이트 후 RPC 결과 미확인 → 실패 시 UI·DB 불일치
+### [M-188] ⏸ 보류(COMMUNITY_ENABLED=false) — 낙관적 UI 업데이트 후 RPC 결과 미확인 → 실패 시 UI·DB 불일치
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3619,7 +3619,7 @@
 
 ---
 
-### [M-189] — `toggleLike` — 빠른 연속 클릭 시 `wasLiked` 플래그 오염 → increment/decrement RPC 교차 호출로 카운트 오염
+### [M-189] ⏸ 보류(COMMUNITY_ENABLED=false) — 빠른 연속 클릭 시 `wasLiked` 플래그 오염 → increment/decrement RPC 교차 호출로 카운트 오염
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3643,7 +3643,7 @@
 
 ---
 
-### [M-191] — `manifest.webmanifest` — 192px maskable 아이콘 없음 → Android 런처에서 safe-zone 없이 크롭
+### [M-191] ⏸ 보류(maskable 아이콘 에셋 생성 필요) — 192px maskable 아이콘 없음 → Android 런처에서 safe-zone 없이 크롭
 
 - **영역:** 프론트엔드 — PWA
 - **심각도:** 🟡 Medium
@@ -3740,7 +3740,7 @@
 
 ---
 
-### [M-194] — `openLogDetail` 댓글 미로그인 — `alert()` 사용 → PWA 모드 블로킹 UI
+### [M-194] ⏸ 보류(COMMUNITY_ENABLED=false) — `alert()` 사용 → PWA 모드 블로킹 UI
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -4483,7 +4483,7 @@
 
 ---
 
-### [M-227] — `renderLogFeed` — 로그 제출 후 태그 필터 `_logFeedTag` 유지로 신규 포스트 숨김
+### [M-227] ⏸ 보류(COMMUNITY_ENABLED=false) — 로그 제출 후 태그 필터 `_logFeedTag` 유지로 신규 포스트 숨김
 
 - **영역:** 프론트엔드 — 커뮤니티 (비활성 영역 — 참고용)
 - **심각도:** 🟡 Medium
@@ -6844,7 +6844,7 @@
 
 ---
 
-### [M-337] — `openCmpModal` — 비교 세트 저장 시 Supabase 미동기화, 로그인 사용자 크로스 디바이스 손실
+### [M-337] ⏸ 보류(COMPARE_ENABLED=false, 복구 시 재처리) — 비교 세트 저장 시 Supabase 미동기화, 로그인 사용자 크로스 디바이스 손실
 
 - **영역:** 프론트엔드 — 비교 모달
 - **심각도:** 🟡 Medium
@@ -7359,7 +7359,7 @@
 
 ---
 
-### [M-362] — `normalize.py` `parse_dims_cm` — 유니코드 타이포그래픽 따옴표 인치 미감지
+### ✅ 해결완료(2026-06-13) [M-362] — `normalize.py` `parse_dims_cm` — 유니코드 타이포그래픽 따옴표 인치 미감지
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8222,7 +8222,7 @@
 - **제안 수정:** `header.top{padding-top:max(18px, env(safe-area-inset-top))}` 추가.
 - **파일:** [site/style.css](site/style.css) line 33 [lane:FRONTEND]
 
-### [M-389] (xcode) — `showTooltip` — 카테고리→홈 페이지 이동 후 별점 설명 툴팁 잔류
+### [M-389] ⏸ 보류(xcode 기기 재현 필요) — 카테고리→홈 페이지 이동 후 별점 설명 툴팁 잔류
 
 - **영역:** 프론트엔드 — UI 상태 관리
 - **심각도:** 🟡 Medium
@@ -8232,7 +8232,7 @@
 - **제안 수정:** 페이지 전환(popstate·navigate) 이벤트에서 활성 툴팁 닫기 처리 추가.
 - **파일:** [site/app.js](site/app.js) tooltip 관련 함수 [lane:FRONTEND]
 
-### [M-390] (xcode) — `.header-acct` — 검색 포커스 후 헤더 계정 아이콘 사라짐
+### [M-390] ⏸ 보류(xcode iOS 키보드 뷰포트 이슈, 기기 재현 필요) — 검색 포커스 후 헤더 계정 아이콘 사라짐
 
 - **영역:** 프론트엔드 — UI 레이아웃
 - **심각도:** 🟡 Medium
@@ -9270,7 +9270,7 @@
 
 ---
 
-### [M-424] — `enrich_details.py` — `danawa_pcode=NULL` 제품이 `IN (NULL, ...)` 절에서 미매칭으로 요약 누락
+### ✅ 해결완료(2026-06-13) [M-424] — `enrich_details.py` — `danawa_pcode=NULL` 제품이 `IN (NULL, ...)` 절에서 미매칭으로 요약 누락
 
 - **영역:** 백엔드 — 상세 보강
 - **심각도:** 🟡 Medium
@@ -9966,7 +9966,7 @@
 
 ---
 
-### [M-451] — 브랜드 페이지 `openFromSearch` — `STATE.slug`/`STATE.data` 복원 시 stale `prev` 스냅샷
+### [M-451] ⏸ 보류(복잡한 비동기 race, 추가 분석 필요) — `STATE.slug`/`STATE.data` 복원 시 stale `prev` 스냅샷
 
 - **영역:** 프론트엔드 — 브랜드/검색
 - **심각도:** 🟡 Medium
@@ -10986,7 +10986,7 @@
 
 ---
 
-### [M-496] — 2탭 localStorage 동시 쓰기 — `toggleWish` read-modify-write TOCTOU 경합
+### [M-496] ⏸ 보류(멀티탭 TOCTOU, storage event 대응 필요) — `toggleWish` read-modify-write TOCTOU 경합
 
 - **영역:** 프론트엔드 — 찜
 - **심각도:** 🟡 Medium
@@ -11742,7 +11742,7 @@
 
 ---
 
-### [M-527] — `saveRemoteWishlist` — 멀티탭 환경에서 `_wishWriteChain` 탭 간 공유 안 됨 → 찜 항목 유실
+### [M-527] ⏸ 보류(멀티탭 wishWriteChain 공유 불가, BroadcastChannel 대응 필요) — 멀티탭 환경에서 `_wishWriteChain` 탭 간 공유 안 됨 → 찜 항목 유실
 
 - **영역:** 프론트엔드 — 위시리스트 동기화
 - **심각도:** 🟡 Medium
