@@ -81,6 +81,7 @@
 | 67 | recommend렌더·별점계산·stamp_version·세트무게·터치슬라이더 | 2026-06-13 | 3건 (M-148·L-178·L-179) |
 | 68 | 자동완성키보드·필터URL직렬화·크롤링파싱·세트localStorage·리뷰모달 | 2026-06-13 | 4건 (M-149·M-150·L-180·L-181) |
 | 69 | initApp·모달상태·draw인덱스·auth게이트·툴팁·푸시 | 2026-06-13 | 6건 (M-257~M-259·L-224~L-226) |
+| 70 | (xcode) iOS 시뮬레이터 — 상품 상세·카테고리 탭·스펙 단위 | 2026-06-13 | 5건 (H-104·M-367·M-368·L-284·L-285) |
 
 ---
 
@@ -3467,7 +3468,8 @@
 
 ## R-95 — 프론트/백엔드 종합 버그 탐색 5차 (2026-06-13)
 
-### [H-48] — `graph_full.py` `harvest_node()` — 수확 실패 시 `break`로 조용히 누락, 부분 커밋 + 오류 미전파
+### [H-48] ✅ 해결완료(2026-06-13, BACKEND) — `graph_full.py` `harvest_node()` — 수확 실패 시 `break`로 조용히 누락, 부분 커밋 + 오류 미전파
+> 실패를 state `errors`에 적재(`{node:"harvest"}`) + 콘솔 ⚠ 출력 → report_node가 요약·표면화. 리포트의 `raise` 제안 대신 errors 전파 채택: raise는 normalize/enrich/rate까지 중단시켜 데이터 파이프라인엔 과함(해당 쿼리 후속페이지만 break, 타 쿼리 계속).
 
 - **영역:** 백엔드 — 파이프라인 / 그래프 수확
 - **심각도:** 🔴 High
@@ -4634,7 +4636,8 @@
 
 ## R-105 — 2026-06-13
 
-### [H-68] — `graph_full.py` `report_node()` — `n=0` 시 ZeroDivisionError 크래시
+### [H-68] ✅ 해결완료(2026-06-13, BACKEND) — `graph_full.py` `report_node()` — `n=0` 시 ZeroDivisionError 크래시
+> `pct = lambda c: (c*100//n) if n else 0` 로 분모 가드. 검증: n=0→0%(무크래시), n=10→정상.
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🔴 High
@@ -6164,7 +6167,8 @@
 
 ## R-118 (백엔드) — 2026-06-13
 
-### [H-86] — `graph_full.py` `enrich_node()` — `FILL_BY_CATEGORY` 키가 실제 `name_ko` 미매칭으로 텐트 커스텀 지표 항상 무시
+### [H-86] ✅ 해결완료(2026-06-13, BACKEND) — `graph_full.py` `enrich_node()` — `FILL_BY_CATEGORY` 키가 실제 `name_ko` 미매칭으로 텐트 커스텀 지표 항상 무시
+> `next((v for k,v in FILL_BY_CATEGORY.items() if k in cat), [])` 부분매칭. 검증: 백패킹텐트/오토캠핑텐트→텐트4종, 침낭→[weight_min,packed_volume], 타프→3종, 미매칭→[]. (텐트는 기존 `or FILL` 폴백과 동일값이라 무변화, 실질 개선은 침낭·타프의 부적절 텐트메트릭 fetch 제거.)
 
 - **영역:** 백엔드 — 그래프 파이프라인
 - **심각도:** 🔴 High
@@ -7418,5 +7422,401 @@
 - **원인:** [site/app.js](site/app.js) line 3813 — `new Date(p.created_at)` null 가드 없음.
 - **제안 수정:** `p.created_at ? new Date(p.created_at) : null` 후 null 체크해서 날짜 표시 처리.
 - **파일:** [site/app.js](site/app.js) line 3813 [lane:CORE]
+
+---
+
+### [H-102] — `add_manual_models.py` `upsert_model` — 빈 prices 리스트 시 `min()`/`max()` ValueError 크래시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** JSON에서 가격 배열 누락 시 `min()` 빈 시퀀스 오류로 `add_manual_models.py` 전체 실행 중단.
+- **원인:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 70 — `prices` 리스트 길이 검증 없음.
+- **제안 수정:** `if not prices: raise ValueError(f"가격 없음: {m['brand']} {m['model']}")` 조기 검출 추가.
+- **파일:** [pipeline/add_manual_models.py](pipeline/add_manual_models.py) line 70 [lane:BACKEND]
+
+---
+
+### [H-103] — `refresh.py` `_group_prices_by_cat` — `pid2cat` 딕셔너리 키/값 순서 반전 → 이상치 가드 무력화
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `pid2cat.get(pid)`가 항상 None 반환 → 카테고리 중앙값 기준선이 절대 사용되지 않아 신규 가격 이상치 가드 완전 무력화.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 129 — `SELECT category_id, id` 순서인데 `{pid: cid for cid, pid in ...}` 언패킹으로 `{category_id: id}` 역방향 매핑 생성.
+- **제안 수정:** `for pid, cid in con.execute("SELECT id, category_id FROM products ...")` 로 컬럼 순서 수정.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 129 [lane:BACKEND]
+
+---
+
+### [M-365] — `babysit.py` `main` — `near` 제품 목록이 todos 루프 외부 출력으로 리포트 구조 깨짐
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `[할 일]` 출력 블록 종료 후 `near` 제품 라인이 이어붙여져 리포트 파싱/가독성 오류.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 113 — `near` 출력이 `for x in todos` 루프 외부.
+- **제안 수정:** `near` 출력을 todos 루프 내부 또는 `if near:` 블록으로 이동.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 113 [lane:BACKEND]
+
+---
+
+### [M-366] — `multicat.py` `ingest_one` — `danawa_pcode` 중복 시 동명 타 브랜드 제품의 pid 오취득
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `INSERT OR IGNORE` 후 `brand_id+model_name`으로만 pid 조회 → 동명 타 브랜드 제품 pid 반환, 스펙/가격이 다른 제품에 기록.
+- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 169 — SELECT 조건에 `danawa_pcode` 미포함.
+- **제안 수정:** `SELECT id FROM products WHERE danawa_pcode=?` 로 변경.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 169 [lane:BACKEND]
+
+---
+
+### [L-282] — `affiliate_links.py` `sample` — `kind='product'` 시 `naver_fallback` KeyError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `--sample` 실행 시 쿠팡 URL 있는 제품에서 `KeyError: 'naver_fallback'` 크래시.
+- **원인:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 74 — product 분기 반환값에 `naver_fallback` 키 누락.
+- **제안 수정:** `link.get('naver_fallback', '—')` 방어적 접근 또는 product 분기에도 키 추가.
+- **파일:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 74 [lane:BACKEND]
+
+---
+
+### [L-283] — `enrich_details.py` `main` — `--all` 모드 결과 출력에서 비-rep 제품 보강 내역 누락
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `--all` 모드로 보강한 비-rep 제품이 결과 출력 쿼리에서 표시 안 됨.
+- **원인:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122–123 — 출력 쿼리가 `--all`/기본 모드 구분 없이 동일 `danawa_pcode IN (...)` 필터 적용.
+- **제안 수정:** `--all` 모드에서는 `WHERE p.id IN (...)` with pid 목록으로 변경.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122 [lane:BACKEND]
+
+---
+
+### (xcode) [H-104] — `.pmodal` safe area 미반영 — 상품 상세 모달 닫기·찜 버튼 iOS 상태바에 가려져 탭 불가
+
+- **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13 (xcode 시뮬레이터 iPhone 17 iOS 26.5)
+- **증상:** 상품 카드 탭 후 열리는 상세 모달에서 닫기 버튼(`.pmx`)과 찜 버튼(`.pmwish`)이 iOS 상태바 아래에 위치해 탭이 되지 않음. 유저가 상세 모달을 닫을 수 없어 앱이 사실상 멈춘 것처럼 보임.
+- **원인:** [site/style.css](site/style.css) line 425 — `.pmodal{padding:18px}` 이 `env(safe-area-inset-top)` 미반영. Capacitor WKWebView는 `viewport-fit=cover` 설정으로 상태바 영역(~54px)도 웹뷰가 차지하는데, 모달 상단 패딩이 18px에 불과해 `.pmx`(top:10px)·`.pmwish`(top:10px)가 상태바 뒤에 숨음.
+- **제안 수정:** `padding-top: max(18px, env(safe-area-inset-top))` 으로 변경. 또는 `.pmodal { padding: env(safe-area-inset-top) 18px 18px; }`.
+- **파일:** [site/style.css](site/style.css) line 425 [lane:STYLE]
+
+---
+
+### (xcode) [M-367] — `.pmodal` safe area 미반영 — 상품 상세 모달 이미지 상단 상태바에 가려짐
+
+- **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13 (xcode 시뮬레이터 iPhone 17 iOS 26.5)
+- **증상:** 상품 이미지 상단 약 36px(상태바 54px - padding 18px)가 iOS 상태바에 가려져 이미지가 잘려 보임. 브랜드명·모델명도 위에서부터 렌더되어 일부 텍스트 숨김.
+- **원인:** H-104와 동일 root cause — safe area inset 미적용.
+- **제안 수정:** H-104 수정으로 함께 해결됨.
+- **파일:** [site/style.css](site/style.css) line 425 [lane:STYLE]
+
+---
+
+### (xcode) [M-368] — `.pmbox` 내부 스크롤 불가 — 상품 상세 모달 하단 구매·세트 버튼 접근 불가
+
+- **영역:** 프론트엔드 — 상품 상세 모달 (iOS 네이티브 앱)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13 (xcode 시뮬레이터 iPhone 17 iOS 26.5)
+- **증상:** 상품 상세 모달에서 스펙 목록 아래 "쿠팡에서 구매하기" 버튼, "장비 꾸러미에 담기" 버튼이 보이지 않음. `.pmbox{max-height:90vh;overflow-y:auto}` 이지만 Capacitor 내 WKWebView에서 모달 내부 스크롤이 동작하지 않음.
+- **원인:** Capacitor WKWebView에서 `position:fixed` 모달 내부 스크롤이 iOS에서 막히는 known issue. `-webkit-overflow-scrolling:touch` 누락 또는 iOS 16+ `overscroll-behavior` 필요.
+- **제안 수정:** `.pmbox { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }` 추가. 또는 `overflow-y: scroll` 강제 지정.
+- **파일:** [site/style.css](site/style.css) line 128 [lane:STYLE]
+
+---
+
+### (xcode) [L-284] — `최소무게 (g)` 레이블인데 값은 `kg` 단위로 표시 — 단위 불일치
+
+- **영역:** 프론트엔드 — 상품 상세 모달
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13 (xcode 시뮬레이터)
+- **증상:** 상품 상세 모달 스펙 행에서 `최소무게 (g)` 레이블이지만 표시 값은 `3kg` — 단위가 g와 kg으로 불일치, 혼란 유발.
+- **원인:** [site/app.js](site/app.js) line 2062 — `fmtVal(s.value, mt.unit)` 함수가 1000g 이상을 자동으로 kg 변환해 표기하지만 레이블의 `mt.unit`은 여전히 `g` 그대로 출력.
+- **제안 수정:** `fmtVal`이 단위를 변환할 경우 반환값에 새 단위 포함, 레이블에도 반영. 또는 레이블을 `최소무게` (단위 미표기)로 통일하고 값에만 단위 표기.
+- **파일:** [site/app.js](site/app.js) line 2062 [lane:CORE]
+
+---
+
+### (xcode) [L-285] — 카테고리 탭 우측 페이드 그라디언트로 마지막 탭 레이블이 잘린 것처럼 보임
+
+- **영역:** 프론트엔드 — 카테고리 네비게이션 탭
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13 (xcode 시뮬레이터)
+- **증상:** `.catnav-wrap::after` 32px 흰색 그라디언트가 마지막 visible 탭 위에 겹쳐 "매..." 처럼 보임. 스크롤 가능한 탭 바임을 알 수 없어 UX 혼란.
+- **원인:** [site/style.css](site/style.css) line 113 — `::after` 그라디언트 너비(32px)가 탭 텍스트를 가려, 탭이 truncate된 것처럼 보임. 스크롤 화살표 등 명시적 인디케이터 없음.
+- **제안 수정:** 그라디언트 너비를 48px로 늘려 부분 노출 유도, 또는 우측에 스크롤 가능 화살표 아이콘 추가.
+- **파일:** [site/style.css](site/style.css) line 113 [lane:STYLE]
+
+---
+
+### [L-284] — `priceRange` — `b`(price_max) 파라미터 미사용 데드 인자
+
+- **영역:** 프론트엔드 — 가격 표시
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `priceRange(a, b)` 호출 시 `b`(price_max) 무시, 가격 범위 표시 미구현.
+- **원인:** [site/app.js](site/app.js) line 337 — `b` 파라미터 선언 후 미참조.
+- **제안 수정:** `won(a) + (b && b !== a ? "~" + won(b) : "")` 로 범위 표시 구현하거나 파라미터 제거.
+- **파일:** [site/app.js](site/app.js) line 337 [lane:CORE]
+
+---
+
+### [L-285] — DOMContentLoaded — 하단 네비 패딩 최초 1회만 적용, 뷰포트 회전/리사이즈 미대응
+
+- **영역:** 프론트엔드 — 레이아웃
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 데스크탑에서 모바일로 화면 전환 시 하단 네비가 콘텐츠를 가리고 패딩 미적용.
+- **원인:** [site/app.js](site/app.js) line 4234 — `matchMedia.matches` DOMContentLoaded 1회 체크, `change` 이벤트 리스너 없음.
+- **제안 수정:** `mq.addEventListener("change", handler)` 추가해 반응형 대응.
+- **파일:** [site/app.js](site/app.js) line 4234 [lane:CORE]
+
+---
+
+### [L-286] — `fmtVal` — `cm3` 단위 1000 미만 값 `_UNIT_DISPLAY` 미매핑 → 원시 `"cm3"` 표시
+
+- **영역:** 프론트엔드 — 스펙 표시
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 300cm³ 스펙이 `"300cm3"`으로 표시(표준 단위 기호 아님).
+- **원인:** [site/app.js](site/app.js) line 349–350 — `_UNIT_DISPLAY` 에 `"cm3"` 항목 없음, 1000 미만은 변환 미적용.
+- **제안 수정:** `_UNIT_DISPLAY`에 `"cm3": "cm³"` 추가.
+- **파일:** [site/app.js](site/app.js) line 349 [lane:CORE]
+
+---
+
+### [L-287] — `_showAuthGateModal` — 배경 클릭 `close()` 시 `keydown` 리스너 미제거
+
+- **영역:** 프론트엔드 — 인증
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 모달 배경 클릭 후 ESC 키마다 잔류 핸들러 실행, 메모리 누수.
+- **원인:** [site/app.js](site/app.js) line 159 — `close = () => m.remove()` — `removeEventListener` 없음, 버튼 클릭 경로만 리스너 제거.
+- **제안 수정:** `close = () => { m.remove(); document.removeEventListener('keydown', onKey); }` 로 통합.
+- **파일:** [site/app.js](site/app.js) line 159 [lane:CORE]
+
+---
+
+### [L-288] — 검색 결과 가격 표시 — `"원~"` 고정 접미사로 range 없는 가격에 혼란 야기
+
+- **영역:** 프론트엔드 — 검색
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 검색 결과에서 `"10,000원~"` 표시 — max 가격 없어도 tilde 노출, 앱 다른 곳과 불일치.
+- **원인:** [site/app.js](site/app.js) line 1213 — 하드코딩 `"원~"` 접미사, `priceLabeled()` 헬퍼 미사용.
+- **제안 수정:** `priceLabeled(x.p)` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 1213 [lane:CORE]
+
+---
+
+### [H-104] — `refresh.py` `main` — `strptime` 마이크로초 포맷 불일치 → 관측치를 항상 "오래된 것"으로 처리
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `observed_at`에 마이크로초가 포함된 경우 `strptime` ValueError → `age_days=9e9` 반환 → 신규 가격을 직전 기록 무관하게 항상 삽입, 중복 가격 레코드 누적.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 108 — `DTFMT="%Y-%m-%d %H:%M:%S"` 포맷이 마이크로초 포함 ISO 타임스탬프와 불일치.
+- **제안 수정:** `datetime.fromisoformat(obs)` 로 교체 (Python 3.7+ 가변 정밀도 지원).
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 108 [lane:BACKEND]
+
+---
+
+### [M-367] — `multicat.py` `ingest_one` — INSERT OR IGNORE 후 SELECT 조건 불일치 → `NoneType` TypeError
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** variant/model_year가 다른 기존 행으로 INSERT가 무시될 때 `SELECT ... WHERE model_year IS NULL AND variant IS NULL` 이 기존 행을 찾지 못해 `fetchone()[0]` TypeError 크래시.
+- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 167–170 — INSERT 유니크 키와 SELECT WHERE 조건 불일치.
+- **제안 수정:** `INSERT OR IGNORE ... RETURNING id` (SQLite≥3.35) 또는 삽입 유니크 키와 동일 조건으로 SELECT.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 169 [lane:BACKEND]
+
+---
+
+### [M-368] — `enrich_details.py` `main` — `targets` 빈 리스트 시 `IN ()` 구문 오류
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 매칭 제품 없는 경우 `WHERE p.danawa_pcode IN ()` SQLite 구문 오류로 크래시.
+- **원인:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122–124 — `targets` 빈 리스트 가드 없음.
+- **제안 수정:** `if targets:` 가드 추가 후 SELECT 실행.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 122 [lane:BACKEND]
+
+---
+
+### [L-289] — `refresh.py` `_group_prices_by_cat` — 튜플 언패킹 사이드이펙트 의존 패턴
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `cur_cid, _ = cid, bucket.append(price)` 리팩토링 시 append 누락으로 가격 데이터 드롭 위험.
+- **원인:** [pipeline/refresh.py](pipeline/refresh.py) line 81 — append 반환값(None)을 `_`로 받는 사이드이펙트 패턴.
+- **제안 수정:** `cur_cid = cid; bucket.append(price)` 두 문장으로 분리.
+- **파일:** [pipeline/refresh.py](pipeline/refresh.py) line 81 [lane:BACKEND]
+
+---
+
+### [L-290] — `babysit.py` `main` — `near` 쿼리 예외 미처리로 워치독 전체 중단
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `near` 쿼리에서 스키마 불일치 등 예외 발생 시 `babysit.py` 전체 종료, 다른 모니터링 항목도 실행 불가.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 77 — `near` 쿼리 try/except 없음.
+- **제안 수정:** `try/except Exception as e: print(f"near 쿼리 오류: {e}"); near = []` 추가.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 77 [lane:BACKEND]
+
+---
+
+### [L-291] — `buildSortChips` — `aria-pressed` 정적 `"false"` 고정, 정렬 변경 후 미갱신
+
+- **영역:** 프론트엔드 — 접근성
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 스크린 리더 사용자가 현재 활성 정렬 기준 확인 불가, 모든 칩이 `aria-pressed="false"` 유지.
+- **원인:** [site/app.js](site/app.js) line 1863 — 칩 렌더 시 `aria-pressed="false"` 하드코딩, `applySort` 이후 미갱신.
+- **제안 수정:** `applySort` 후 `.schip` 버튼 순회해 `aria-pressed` 토글.
+- **파일:** [site/app.js](site/app.js) line 1863 [lane:CORE]
+
+---
+
+### [L-292] — PWA 설치 배너 — `_pwaPrompt` null 시 `prompt.prompt()` TypeError
+
+- **영역:** 프론트엔드 — PWA
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `beforeinstallprompt` 미발생 상태에서 설치 버튼 클릭 시 `null.prompt()` TypeError.
+- **원인:** [site/app.js](site/app.js) line 78 — `const prompt = _pwaPrompt` 후 null 체크 없음.
+- **제안 수정:** `if (!prompt) return;` 추가 (line 76 직후).
+- **파일:** [site/app.js](site/app.js) line 76 [lane:CORE]
+
+---
+
+### [H-105] — `defaultSortKey` — 데이터 로딩 전 호출 시 `STATE.data.metrics` undefined TypeError
+
+- **영역:** 프론트엔드 — 정렬
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `clearAllFilters → draw()` 가 `renderCategory` 완료 전 호출될 때 `STATE.data.metrics`가 undefined → TypeError, 전체 렌더 크래시.
+- **원인:** [site/app.js](site/app.js) line 1275–1277 — `STATE.data.metrics.filter(...)` null 가드 없음.
+- **제안 수정:** `if (!STATE.data?.metrics) return "price_min";` 가드 추가.
+- **파일:** [site/app.js](site/app.js) line 1275 [lane:CORE]
+
+---
+
+### [M-369] — `setupHomeSearch` `ensureIdx` — 로딩 중 빠른 타이핑 시 중복 `run()` 큐 실행
+
+- **영역:** 프론트엔드 — 검색
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 인덱스 로딩 중 키 입력마다 `.then(run)` 이 쌓여 로딩 완료 후 N번의 DOM 재작성 발생.
+- **원인:** [site/app.js](site/app.js) line 1016 — 이미 대기 중인 run이 있어도 `.then(run)` 반복 추가.
+- **제안 수정:** post-load run 대기 플래그 추가 또는 `.then(() => { if (inp === document.activeElement) run(); })` 로 단일 실행 보장.
+- **파일:** [site/app.js](site/app.js) line 1016 [lane:CORE]
+
+---
+
+### [M-370] — `draw` — 빠른 카테고리 전환 시 첫 번째 draw가 두 번째 카테고리 DOM에 첫 번째 데이터 기록
+
+- **영역:** 프론트엔드 — 카테고리 페이지
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 전환 레이스 시 카드 클릭하면 현재 카테고리가 아닌 이전 카테고리 상품이 열림.
+- **원인:** [site/app.js](site/app.js) line 2590–2682 — `STATE` 전역 뮤테이션에 generation 토큰 없음, 비동기 draw들이 서로의 상태를 덮어씀.
+- **제안 수정:** `const gen = ++_renderGen;` + 각 draw 진입 시 `if (gen !== _renderGen) return;` 가드 추가.
+- **파일:** [site/app.js](site/app.js) line 2590 [lane:CORE]
+
+---
+
+### [M-371] — `ensureIdx` — 네트워크 오류 후 `idxLoading` 미초기화 → 페이지 수명 동안 영구 빈 인덱스
+
+- **영역:** 프론트엔드 — 검색
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 일시적 네트워크 오류 후 검색이 결과 0건으로 고착, 새로고침 없이 복구 불가.
+- **원인:** [site/app.js](site/app.js) line 955–958 — `.catch()`에서 `idxLoading = null` 미설정, 이후 호출이 빈 배열 promise를 재사용.
+- **제안 수정:** catch 블록에 `idxLoading = null;` 추가해 재시도 허용.
+- **파일:** [site/app.js](site/app.js) line 958 [lane:CORE]
+
+---
+
+### [M-372] — `toggleWishWithHint` — `authReady()` 대기 없이 `isLoggedIn()` 체크 → 초기화 레이스 시 false 반환
+
+- **영역:** 프론트엔드 — 찜/인증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 콜드 스타트 직후 찜 버튼 클릭 시 로그인 상태여도 인증 게이트 모달 표시.
+- **원인:** [site/app.js](site/app.js) line 484–491 — 동기 함수에서 `authReady()` 대기 없이 `isLoggedIn()` 호출 (`toggleWish`는 `_gAuthReady` 체크 존재).
+- **제안 수정:** `async` 함수로 변경 후 `await window.authReady()` 후 체크.
+- **파일:** [site/app.js](site/app.js) line 484 [lane:CORE]
+
+---
+
+### [M-373] — `run_all.py` `promote_all` — 트랜잭션 없는 demote→promote 루프, 중단 시 DB 부분 부패
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 루프 중 예외 발생 시 일부 카테고리만 promoted 상태로 남고 나머지는 pending으로 강등된 채 방치.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 79 — 전체 demote 후 per-category promote 루프에 `BEGIN/ROLLBACK` 없음.
+- **제안 수정:** `with con:` 또는 명시적 `BEGIN/ROLLBACK`으로 전체 블록 래핑.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 79 [lane:BACKEND]
+
+---
+
+### [M-374] — `detect_price_drops.py` `send` — `urlopen` HTTPError/URLError 미처리 → 푸시 알림 크래시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 4xx/5xx 응답 또는 네트워크 오류 시 traceback으로 크래시, 이후 알림 발송 불가.
+- **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 131 — `urlopen` 예외 미처리.
+- **제안 수정:** `try/except (urllib.error.URLError, urllib.error.HTTPError) as e:` 래핑 후 명확한 에러 출력.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 131 [lane:BACKEND]
+
+---
+
+### [M-375] — `stamp_version.py` `_hash` — 파일 미존재 시 FileNotFoundError → 전체 파이프라인 중단
+
+- **영역:** 백엔드 — 빌드
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `site/style.css` 등 누락 시 `run_all.py` `check=True` 호출에서 파이프라인 전체 중단.
+- **원인:** [pipeline/stamp_version.py](pipeline/stamp_version.py) line 19 — `open()` 파일 존재 확인 없음.
+- **제안 수정:** `if not os.path.exists(path): raise SystemExit(f"누락: {path}")` 명확한 오류 메시지 추가.
+- **파일:** [pipeline/stamp_version.py](pipeline/stamp_version.py) line 19 [lane:BACKEND]
+
+---
+
+### [L-293] — `column_fixes.py` `main` — DELETE 즉시 커밋 후 INSERT 실패 시 플래그 전체 소실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `DELETE FROM data_quality_flags` 자동 커밋 후 INSERT 도중 예외 시 품질 플래그 테이블이 빈 채로 남음.
+- **원인:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 27 — sqlite3 기본 isolation_level이 각 DML 자동 커밋, DELETE→INSERT가 단일 트랜잭션 아님.
+- **제안 수정:** `isolation_level=None` + 명시적 `BEGIN/COMMIT/ROLLBACK` 또는 INSERT-then-DELETE 순서로 변경.
+- **파일:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 27 [lane:BACKEND]
+
+---
+
+### [L-294] — `verify_internal.py` — 모듈 레벨 경로(`QUEUE_OUT`, `DB_DEFAULT`)가 상대 경로 → cwd 의존
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 서브디렉토리에서 실행 또는 다른 스크립트에서 import 시 `verify_queue.json`이 엉뚱한 경로에 생성.
+- **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 12–13 — `QUEUE_OUT = "verify_queue.json"` 절대 경로 없음.
+- **제안 수정:** `os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "verify_queue.json")` 사용.
+- **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 13 [lane:BACKEND]
 
 ---

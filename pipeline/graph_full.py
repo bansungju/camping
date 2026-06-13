@@ -51,12 +51,20 @@ def harvest_node(s: FullState) -> dict:
     con = sqlite3.connect(s["db"])
     seen = {r[0] for r in con.execute("SELECT danawa_pcode FROM products WHERE danawa_pcode IS NOT NULL")}
     seen_names = {r[0] for r in con.execute("SELECT model_name FROM products")}
-    added = 0
+    added, errors = 0, []
     for q in s["queries"].split(","):
         for page in range(1, 4):
             try:
                 cands = HT.parse_results(HT.fetch_page(q.strip(), page))
-            except Exception:
+            except Exception as e:
+                # H-48: 수확 실패를 조용히 break하지 않는다. 그냥 break하면 부분 데이터만 커밋되고
+                #       실패가 로그/상태로 전파되지 않아 사후 감지가 불가능했다. 오류를 state errors에
+                #       적재해 report_node가 요약·표면화하게 하고, 콘솔에도 경고를 남긴다.
+                #       (해당 쿼리의 후속 페이지는 의미 없어 break하되, 다른 쿼리는 계속 진행 —
+                #        전체 파이프라인을 raise로 중단시키는 것보다 데이터 손실 가시성이 높다.)
+                errors.append({"pid": "-", "node": "harvest",
+                               "err": f"query='{q.strip()}' page={page}: {e}"})
+                print(f"   ⚠ harvest 실패 query='{q.strip()}' page={page}: {e}", flush=True)
                 break
             if not cands:
                 break
@@ -69,7 +77,8 @@ def harvest_node(s: FullState) -> dict:
             con.commit()
             time.sleep(0.4)
     con.close()
-    return {"log": s["log"] + [f"harvest: 신규 {added}종 추가"]}
+    msg = f"harvest: 신규 {added}종 추가" + (f", 실패 {len(errors)}건(요약은 report 참조)" if errors else "")
+    return {"errors": s.get("errors", []) + errors, "log": s["log"] + [msg]}
 
 
 def normalize_node(s: FullState) -> dict:
@@ -112,7 +121,10 @@ def enrich_node(s: FullState) -> dict:
             st = sub.invoke({"db": s["db"], "pid": pid, "pcode": pcode, "name": name,
                              "category": cat, "capacity": cap, "cap_source": None,
                              "specs": {}, "detail": {}, "missing": [],
-                             "fill_metrics": FILL_BY_CATEGORY.get(cat, []),
+                             # H-86: DB의 name_ko는 "백패킹텐트"/"오토캠핑텐트" 전체 명칭이라
+                             #       FILL_BY_CATEGORY.get(cat)는 항상 미스 → 빈 배열로 폴백돼
+                             #       모든 텐트가 기본 FILL만 적용됐다. 키 부분매칭으로 해결.
+                             "fill_metrics": next((v for k, v in FILL_BY_CATEGORY.items() if k in cat), []),
                              "errors": [], "log": []})
             return st.get("errors", [])
         except Exception as e:
@@ -156,10 +168,11 @@ def report_node(s: FullState) -> dict:
     price = con.execute("SELECT COUNT(DISTINCT product_id) FROM price_observations").fetchone()[0]
     cap = con.execute("SELECT COUNT(*) FROM products WHERE capacity IS NOT NULL").fetchone()[0]
     con.close()
+    pct = lambda c: (c * 100 // n) if n else 0  # H-68: 빈 DB/신규 카테고리 n=0 시 ZeroDivision 방지
     lines = [f"\n{'='*56}", f"전체 그래프 완료 — 제품 {n}종 커버리지", "=" * 56,
-             f"  가격 {price} ({price*100//n}%) | 인원 {cap} ({cap*100//n}%)"]
+             f"  가격 {price} ({pct(price)}%) | 인원 {cap} ({pct(cap)}%)"]
     for k, c in cov.items():
-        lines.append(f"  {k:<14} {c:>4} ({c*100//n}%)")
+        lines.append(f"  {k:<14} {c:>4} ({pct(c)}%)")
     errs = s.get("errors", [])
     if errs:
         lines.append(f"\n  ⚠ enrich 오류 {len(errs)}건 (상위 5):")
