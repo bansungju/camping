@@ -1457,7 +1457,8 @@ function buildFilters(d, star) {
   // 빠른 정렬 칩(항상 노출 — 모바일에서 필터바가 접혀도 한 번에 정렬). 발견율 개선
   const sc = document.getElementById("sortchips");
   if (sc) {
-    const CHIPS = [["", "기본"], ["price_min", "가격 낮은순"], ["value", "가성비순"]];
+    const hasValue = STATE.data?.models?.some(m => cellVal(m, "value") != null);
+    const CHIPS = [["", "기본"], ["price_min", "가격 낮은순"], ...(hasValue ? [["value", "가성비순"]] : [])];
     sc.innerHTML = `<span class="flab">정렬</span>` + CHIPS.map(([v, lab]) =>
       `<button type="button" class="schip" data-sortval="${v}" aria-pressed="false">${esc(lab)}</button>`).join("");  // L-16
     sc.querySelectorAll(".schip").forEach(b => b.onclick = () => applySort(b.dataset.sortval));
