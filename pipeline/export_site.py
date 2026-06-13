@@ -75,7 +75,7 @@ def export(con, outdir):
         reps = con.execute("""SELECT MIN(p.id) rep, b.name_ko brand, p.canonical_model,
                    p.capacity, COUNT(*) variants,
                    (SELECT p2.gf_code FROM products p2
-                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
+                    WHERE p2.brand_id=p.brand_id AND p2.canonical_model IS p.canonical_model
                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1)
                     AND p2.curation_status='verified' ORDER BY p2.id LIMIT 1) gf_code,
                    p.brand_id
@@ -86,16 +86,23 @@ def export(con, outdir):
         for rep, brand, cm, cap, variants, gf_code, brand_id in reps:
             specs = {}
             for m in star_metrics:
+                # M-242/M-331: 같은 metric에 valid 행이 여럿(crosssource 보정·source 1/4 공존)일 때
+                #   ORDER BY 없는 LIMIT 1은 임의 행을 줘 낮은 신뢰도 값이 대표가 될 수 있다.
+                #   is_primary 우선 → 높은 source_id(외부확정 4) 우선으로 결정화.
                 row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
                     FROM product_spec_values v JOIN metrics mt ON mt.id=v.metric_id
-                    WHERE v.product_id=? AND mt.key=? AND v.valid=1 LIMIT 1""",
+                    WHERE v.product_id=? AND mt.key=? AND v.valid=1
+                    ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC LIMIT 1""",
                     (rep, m["key"])).fetchone()
                 val = row[0] if row else None
                 src = row[1] if row else None
                 se = row[2] if row else 1
                 conf = row[3] if row else None
+                # M-231: 같은 (product,metric)에 comparison_scope가 여럿(예: 랜턴 base+seg)일 때
+                #   임의 scope가 나오지 않도록 가장 구체적인 scope(가장 긴 문자열=seg 포함) 우선.
                 stars = con.execute("""SELECT r.stars FROM ratings r JOIN metrics mt ON mt.id=r.metric_id
-                    WHERE r.product_id=? AND mt.key=?""", (rep, m["key"])).fetchone()
+                    WHERE r.product_id=? AND mt.key=?
+                    ORDER BY LENGTH(r.comparison_scope) DESC LIMIT 1""", (rep, m["key"])).fetchone()
                 specs[m["key"]] = {
                     "value": round(val, 2) if val is not None else None,
                     "stars": stars[0] if stars else None,
@@ -129,7 +136,7 @@ def export(con, outdir):
                     FROM canonical_models cm2
                     JOIN products p ON p.id=?
                     JOIN products pr2 ON pr2.id=cm2.rep_product_id
-                    WHERE cm2.brand_id=p.brand_id AND cm2.canonical_model=p.canonical_model
+                    WHERE cm2.brand_id=p.brand_id AND cm2.canonical_model IS p.canonical_model
                     AND IFNULL(cm2.capacity,-1)=IFNULL(p.capacity,-1)
                     AND pr2.coupang_url IS NOT NULL""", (rep,)).fetchone()
                 if cu and cu[0]:
