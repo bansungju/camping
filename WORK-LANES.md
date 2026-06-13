@@ -36,7 +36,7 @@
 | **B4** | `run_all.py` | H-61·H-62 | ✅ 2026-06-13 완료 |
 | **B5** | `normalize.py` | H-89·H-90 | ✅ 2026-06-13 완료 |
 | **B6** | `fill_whitelist_specs.py` | H-96 (H-47은 완료) | ✅ 2026-06-13 완료 |
-| **B7** | `crosssource.py` | H-76 (H-53·H-54는 완료) | ⬜ 미착수 |
+| **B7** | `crosssource.py` | H-76 (H-53·H-54는 완료) | ✅ 2026-06-13 완료 |
 | **B8** | `detect_price_drops.py` | H-66 | ⬜ 단독 |
 | **B9** | `column_fixes.py` | H-71 | ⬜ 단독 |
 | **B10** | `.github/workflows/pages.yml` | H-73 | ⬜ 단독 |

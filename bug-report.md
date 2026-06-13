@@ -5049,7 +5049,8 @@
 
 ## R-109 (백엔드) — 2026-06-13
 
-### [H-76] — `crosssource.py` `main()` — 첫 `commit()` 후 `recompute_ratings` 예외 시 spec 변경사항 롤백 불가
+### [H-76] ✅ 해결완료(2026-06-13, BACKEND) — `crosssource.py` `main()` — 첫 `commit()` 후 `recompute_ratings` 예외 시 spec 변경사항 롤백 불가
+> recompute 전 중간 commit 제거 → spec upsert+ratings 재계산 단일 트랜잭션, 마지막 1회 commit. recompute_ratings는 같은 con·내부 commit 없음 확인(기존 H-54 주석의 "별도 commit 필요" 전제는 오류였음). 검증: recompute 예외 시뮬레이션에서 spec INSERT도 함께 롤백(before=after=10850).
 
 - **영역:** 백엔드 — 크로스소스
 - **심각도:** 🔴 High
@@ -8125,5 +8126,77 @@
 - **원인:** [site/app.js](site/app.js) line 521 — `Date.now().toString(36)` 1ms 해상도, 유니크 보장 없음.
 - **제안 수정:** `` `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}` `` 랜덤 접미사 추가.
 - **파일:** [site/app.js](site/app.js) line 521 [lane:CORE]
+
+---
+
+### [H-110] — `normalize_models.py` `normalize_db` — `canonical_models` DROP+재생성 트랜잭션 없음 → 크래시 시 테이블 소실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** DROP TABLE 후 CREATE/INSERT 전 프로세스 중단 시 `canonical_models` 테이블 없어져 export·verify 등 하위 스크립트 전체 실패.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 209 — DROP + CREATE + INSERT 블록에 SAVEPOINT/ROLLBACK 없음.
+- **제안 수정:** `BEGIN`/`COMMIT` 또는 `SAVEPOINT nm` + `ROLLBACK TO nm`으로 전체 블록 래핑.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 209 [lane:BACKEND]
+
+---
+
+### [M-387] — `validate_ranges.py` `validate_db` — `rederive_thickness`로 `value_normalized=NULL`된 행이 `valid=1` 재설정
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `rederive_thickness` 후 `value_normalized=NULL`이지만 `valid=1`인 행이 export에서 "데이터부족" 배지로 출력, 슬롯 낭비.
+- **원인:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 416 — 전체 `valid=1` 리셋이 rederive_thickness 결과도 덮어씀.
+- **제안 수정:** rederive_thickness 후 `value_normalized IS NULL`인 행에 `valid=0` 설정.
+- **파일:** [pipeline/validate_ranges.py](pipeline/validate_ranges.py) line 395 [lane:BACKEND]
+
+---
+
+### [M-388] — `export_site.py` `export` — rep 제품만 스펙 조회 → 비-rep variant에만 있는 스펙 누락
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** canonical 그룹의 rep와 canonical_models.rep_product_id 불일치 시 존재하는 스펙이 "데이터부족"으로 표시.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 91 — `v.product_id=rep` 단일 제품만 조회.
+- **제안 수정:** 그룹 내 전체 제품 JOIN 후 `MAX(v.value_normalized)` 또는 non-NULL 우선 선택.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 91 [lane:BACKEND]
+
+---
+
+### [L-307] — `graph_full.py` `harvest_node` — 예외 발생 시 SQLite 커넥션 미닫힘
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `HT.ingest()` 예외 시 `con.close()` 미실행으로 SQLite 커넥션 누수.
+- **원인:** [pipeline/graph_full.py](pipeline/graph_full.py) line 77 — `con.close()`가 예외 경로에서 미호출.
+- **제안 수정:** `try/finally: con.close()` 추가.
+- **파일:** [pipeline/graph_full.py](pipeline/graph_full.py) line 79 [lane:BACKEND]
+
+---
+
+### [L-308] — `pipeline.py` `_assign_gf_code` — 동시 실행 시 `COUNT(*)` 기반 seq 중복 가능
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 병렬 `enrich_node` 스레드에서 동일 seq 계산 후 둘 다 gf_code 할당 시도 → 중복 코드.
+- **원인:** [pipeline/pipeline.py](pipeline/pipeline.py) line 109 — `COUNT(*)` 읽기와 INSERT 사이 다른 스레드 진입 가능.
+- **제안 수정:** `gf_code`에 UNIQUE 제약 + `IntegrityError` 재시도 또는 sequence 테이블 사용.
+- **파일:** [pipeline/pipeline.py](pipeline/pipeline.py) line 109 [lane:BACKEND]
+
+---
+
+### [L-309] — `verify_internal.py` `main` — resolved_set 40자 vs insert_flags 80자 prefix 불일치
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 40자 resolved 필터가 80자 기준 insert와 불일치 → 잘못 억제된 플래그가 verify_queue.json에 잔류 가능.
+- **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 267 — `note[:40]` 기준 필터, `insert_flags`는 `note[:80]` 사용.
+- **제안 수정:** 두 곳 모두 동일 prefix 길이(80자) 적용.
+- **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 267 [lane:BACKEND]
 
 ---

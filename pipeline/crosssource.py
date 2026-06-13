@@ -189,9 +189,12 @@ def main():
             for key, val in r.get("m", {}).items():
                 n += upsert(con, pid, cid, key, val, str(val), "high", r["src"], ow)
             filled += n
-        con.commit()
+        # H-76: spec 변경을 recompute 전에 commit하면 recompute_ratings 예외 시 rollback이
+        #       이미 커밋된 spec을 되돌리지 못해 "spec 커밋 + ratings 미반영" 반쪽 상태가 남았다.
+        #       recompute_ratings는 같은 con을 쓰고 내부 commit이 없으므로(확인됨), spec upsert와
+        #       ratings 재계산을 단일 트랜잭션으로 묶어 마지막에 한 번만 commit한다 → 예외 시 둘 다 롤백.
         P.recompute_ratings(con)
-        con.commit()  # H-54: ratings까지 단일 트랜잭션으로 묶어야 하지만, recompute_ratings는 자체 cursor를 사용하므로 ratings commit을 분리 유지. 실패 시 rollback.
+        con.commit()
     except Exception as e:
         con.rollback()
         print(f"[crosssource] 오류 발생, 롤백 완료: {e}")
