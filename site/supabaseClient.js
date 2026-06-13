@@ -67,6 +67,33 @@ export async function signInWithApple() {
   return { error }
 }
 
+// ── B-1/G1: 네이티브 푸시(APNs/FCM) 토큰 ────────────────────────────────────
+// iOS 앱은 Web Push가 안 되므로 디바이스 토큰을 push_subscriptions에 저장(platform 구분).
+// 발송은 Edge Function send-price-alert가 platform별 분기(web=Web Push / ios=APNs).
+export async function savePushToken(token, platform) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || !token) return { error: { message: 'no user/token' } }
+  return supabase.from('push_subscriptions').upsert(
+    { user_id: user.id, native_token: token, platform },
+    { onConflict: 'user_id,native_token' }
+  )
+}
+
+// 네이티브 앱에서 푸시 권한 요청 + 토큰 등록. 웹/미설치 환경에선 조용히 no-op.
+// (Push Notifications capability·plugin 동기화가 안 됐으면 catch로 무시)
+export async function registerNativePush() {
+  if (!window.Capacitor?.isNativePlatform?.()) return
+  try {
+    const { PushNotifications } = await import('https://cdn.jsdelivr.net/npm/@capacitor/push-notifications/dist/esm/index.js')
+    const perm = await PushNotifications.requestPermissions()
+    if (perm.receive !== 'granted') return
+    PushNotifications.addListener('registration', (t) => {
+      savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
+    })
+    await PushNotifications.register()
+  } catch (_) { /* 플러그인 미동기화 등 — 무시 */ }
+}
+
 export async function signOut() {
   localStorage.removeItem("wish");
   localStorage.removeItem("sets");
