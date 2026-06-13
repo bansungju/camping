@@ -3188,7 +3188,7 @@
 
 ---
 
-### [L-188] — `affiliate_links.py` `sample()` — `naver_fallback` 키 없는 결과에서 KeyError
+### [L-188] ✅ 해결완료(2026-06-13, C14) — `affiliate_links.py` `sample()` — `naver_fallback` 키 없는 결과에서 KeyError
 
 - **영역:** 백엔드 — 파이프라인 / 제휴링크
 - **심각도:** 🟢 Low
@@ -5728,7 +5728,7 @@
 
 ## R-115 (백엔드) — 2026-06-13
 
-### [M-287] — `affiliate_links.py` `sample()` — `naver_fallback` KeyError: 쿠팡 직접링크 시 키 미존재
+### [M-287] ✅ 해결완료(2026-06-13, C14) — `affiliate_links.py` `sample()` — `naver_fallback` KeyError: 쿠팡 직접링크 시 키 미존재
 
 - **영역:** 백엔드 — 제휴 링크
 - **심각도:** 🟡 Medium
@@ -6296,7 +6296,7 @@
 
 ---
 
-### [M-315] — `affiliate_links.py` `coupang_search()` — `&channel=` 파라미터가 쿠팡 파트너스 미인식, 수익 미추적
+### [M-315] ✅ 해결완료(2026-06-13, C14) — `affiliate_links.py` `coupang_search()` — `&channel=` 파라미터가 쿠팡 파트너스 미인식, 수익 미추적
 
 - **영역:** 백엔드 — 제휴 링크
 - **심각도:** 🟡 Medium
@@ -11043,5 +11043,257 @@
 - **원인:** [site/app.js](site/app.js) line 1891–1894 — `applySort` 클로저가 `buildFilters` 시점의 `star` 캡처.
 - **제안 수정:** `applySort` 내부에서 `STATE.data?.metrics?.filter(m => m.is_star)[0]` 신선 조회로 대체.
 - **파일:** [site/app.js](site/app.js) line 1891 [lane:CORE]
+
+---
+
+### [H-136] — `.github/workflows/pages.yml` — CI가 stale `site/data` JSON 검증 (export 단계 없음)
+
+- **영역:** 백엔드 — CI/CD
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `export_site.py` 미실행 상태에서 `check_export.py`가 이전 커밋 JSON만 검증 → 로컬 DB 변경 후 `site/data/` 미커밋 시 CI 통과, 구버전 데이터 배포.
+- **원인:** [.github/workflows/pages.yml](.github/workflows/pages.yml) line 39 — export 단계 없이 검증만 실행.
+- **제안 수정:** `export_site.py` 단계 추가 또는 `site/data/` 파일이 현재 커밋에서 변경됐는지 확인 단계 추가. 임시로 `git add site/data/` 필수 문서화.
+- **파일:** [.github/workflows/pages.yml](.github/workflows/pages.yml) line 39 [lane:BACKEND]
+
+---
+
+### [M-499] — `export_site.py` — `value_normalized` 문자열 저장 시 `round()` TypeError 크래시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** OCR·수동 입력 등 텍스트 경로로 `"1500"` 같이 문자열로 저장된 `value_normalized`에 `round(val, 2)` 호출 → TypeError, export 크래시.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 110 — `round()` 전 타입 변환 없음.
+- **제안 수정:** `round(float(val), 2) if val is not None else None` 적용.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 110 [lane:BACKEND]
+
+---
+
+### [M-500] — `export_site.py` — value metric을 `star_metrics` 스펙만으로 계산 → `CATEGORY_CONFIG` 비star 메트릭 silent 누락
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `vm_models`가 star 메트릭 스펙만 포함 → `CATEGORY_CONFIG`의 `water_head` 등 non-star 메트릭이 없는 상품은 `eligible`에서 제외 → value_score 전체 미계산.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 154–182 — `star_metrics` 필터링으로 vm_models 구성.
+- **제안 수정:** vm_models를 전체 `metrics`로 구성하거나 CATEGORY_CONFIG 메트릭이 모두 star 메트릭임을 assert.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 154 [lane:BACKEND]
+
+---
+
+### [M-501] — `normalize_models.py` C-pass — 구 하위 인덱스 중앙값 공식 사용 (H-83 B-pass 수정 미적용)
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** C-pass가 `prices[(len(prices)-1)//2]` (하위 인덱스) 사용 → 짝수 목록에서 B-pass보다 낮은 중앙값 → 15× 임계값이 더 낮게 적용, 고가 정품 오탐 가능.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 161 — H-83 B-pass `statistics.median` 수정이 C-pass에 미적용.
+- **제안 수정:** line 161을 `statistics.median(prices)` 로 변경.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 161 [lane:BACKEND]
+
+---
+
+### [M-502] — `normalize_models.py` — `valid=1` 일괄 리셋과 A-pass 플래그 재설정 사이 크래시 시 outlier 영구 허용
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** line 112 `valid=1` 리셋 후 A/B/C 플래그 재설정 전 크래시 시 이전에 플래그된 이상 가격이 `valid=1` 상태로 DB에 남아 다음 완전 실행까지 노출.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 112 — 리셋+플래그가 비원자적.
+- **제안 수정:** 전체 reset+flagging 블록을 단일 트랜잭션으로 묶거나 flag-epoch 컬럼으로 stale 행 구분.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 112 [lane:BACKEND]
+
+---
+
+### [M-503] — `check_export.py` — `price_max=0` 시 `or pmin` 폴백으로 제로 최대가 마스킹
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** DB 이상으로 `price_max=0` 수출 시 `or pmin`이 0을 None처럼 처리 → 실제 비정상 최대가 마스킹, 검증 통과.
+- **원인:** [pipeline/check_export.py](pipeline/check_export.py) line 65 — truthiness 체크(`or`)로 0 처리 오류.
+- **제안 수정:** `m.get("price_max") if m.get("price_max") is not None else pmin` 명시적 None 비교.
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 65 [lane:BACKEND]
+
+---
+
+### [M-504] — `backend/routers/search.py` — 동시 `data_store` 재로드 시 `search_index` 반복 중 경합
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 백그라운드 인덱스 재로드 중 검색 요청이 반복 중인 리스트가 교체되면 부분 결과 반환 가능.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 15–20 — 스레드 안전 가드 없음.
+- **제안 수정:** 로컬 참조 스냅샷 `idx = data_store.search_index` 후 반복, 또는 재로드 시 새 리스트 객체 교체(기존 참조는 안전).
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 15 [lane:BACKEND]
+
+---
+
+### [L-411] — `export_site.py` value metric `direction` — magic string 비교로 미래 카테고리 오적용
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `vkey == "value_per_g"` 하드코딩 → 새 `lower_better` value key 카테고리 추가 시 `higher_better` 오적용.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 178 — `CATEGORY_CONFIG`에서 direction 미읽음.
+- **제안 수정:** `CATEGORY_CONFIG` 항목에 `"direction"` 필드 추가 후 읽기.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 178 [lane:BACKEND]
+
+---
+
+### [L-412] — `normalize_models.py` GENERIC 폴백 — 카테고리 단어가 상품명인 정상 제품도 `#pcode` 캐노니컬 배정
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** "의자", "텐트" 등 GENERIC 단어가 실제 모델명인 제품이 `#pcode` 캐노니컬을 받아 카탈로그에 해시 ID로 표시.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 183–187 — 이름 없음 vs 이름이 카테고리 단어인 경우 동일 처리.
+- **제안 수정:** 이름 없음 → `unknown#pc`, GENERIC 단어 이름 → `name#pc` (상품명 유지).
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) line 183 [lane:BACKEND]
+
+---
+
+### [L-413] — `check_export.py` — `MIN_MODELS` 가격 있는 상품만 집계, 희소 가격 카테고리 중앙값 불안정
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `len(mins)` (가격 있는 상품) < 전체 상품 수 → 소수 샘플 중앙값으로 가격 이상 탐지 불안정.
+- **원인:** [pipeline/check_export.py](pipeline/check_export.py) line 56–59 — `MIN_MODELS`이 전체 모델 수 아닌 가격 보유 수 기준.
+- **제안 수정:** `len(models)` 기준으로 변경하거나 주석으로 의도 명시.
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 56 [lane:BACKEND]
+
+---
+
+### [L-414] — `graph_full.py` — WAL PRAGMA를 닫히는 읽기 커넥션에 설정, 최초 실행 영속화 불확실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** WAL PRAGMA가 즉시 닫히는 커넥션에 설정 → 신규 DB 최초 실행 시 워커 커넥션이 DELETE 모드로 열릴 수 있어 동시성 충돌 위험.
+- **원인:** [pipeline/graph_full.py](pipeline/graph_full.py) line 110–121 — PRAGMA용 전용 커넥션 미분리.
+- **제안 수정:** PRAGMA 전용 커넥션 열고 정상 닫은 후 진행.
+- **파일:** [pipeline/graph_full.py](pipeline/graph_full.py) line 110 [lane:BACKEND]
+
+---
+
+### [L-415] — `graph_full.py` `normalize_db` — 암묵적 트랜잭션 열린 커넥션에서 `BEGIN` 실패 가능
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 호출자 커넥션에 암묵적 트랜잭션이 열려 있으면 `normalize_db`의 `BEGIN` 실행 시 "cannot start a transaction within a transaction" 오류.
+- **원인:** [pipeline/graph_full.py](pipeline/graph_full.py) line 87 — `normalize_db` 호출 시 커넥션 트랜잭션 상태 미확인.
+- **제안 수정:** `normalize_db` 진입 시 `if con.in_transaction: con.execute("COMMIT")` 추가.
+- **파일:** [pipeline/graph_full.py](pipeline/graph_full.py) line 87 [lane:BACKEND]
+
+---
+
+### [L-416] — `.github/workflows/pages.yml` — `cancel-in-progress: true`로 정상 배포 취소 위험
+
+- **영역:** 백엔드 — CI/CD
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 빠른 연속 push 시 첫 번째 정상 배포가 두 번째 push로 취소 → 버그 버전이 게이트 없이 배포될 수 있음.
+- **원인:** [.github/workflows/pages.yml](.github/workflows/pages.yml) line 14–15 — 프로덕션 환경 취소 위험.
+- **제안 수정:** 프로덕션 배포는 `cancel-in-progress: false` 고려 또는 main 브랜치 보호.
+- **파일:** [.github/workflows/pages.yml](.github/workflows/pages.yml) line 14 [lane:BACKEND]
+
+---
+
+### [L-417] — `backend/routers/categories.py` `SLUG_RE` — 언더스코어 미허용으로 미래 slug 변경 시 400 오탐
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 새 카테고리 slug에 언더스코어(`_`) 포함 시 400 반환, store 조회 전 거부 → 설정 오류 진단 어려움.
+- **원인:** [backend/routers/categories.py](backend/routers/categories.py) line 6 — `SLUG_RE = r"^[a-z0-9-]+$"` 언더스코어 제외.
+- **제안 수정:** `r"^[a-z0-9_-]+$"` 로 변경하거나 제약 이유 주석 추가.
+- **파일:** [backend/routers/categories.py](backend/routers/categories.py) line 6 [lane:BACKEND]
+
+---
+
+### [H-137] — `renderActiveFilters` — 카테고리 로드 전 호출 시 `STATE.unit` 미정의 TypeError
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `STATE.unit`이 초기화되기 전 `renderActiveFilters()` 호출(또는 `clearAllFilters`) 시 `STATE.unit[k]` → TypeError 크래시.
+- **원인:** [site/app.js](site/app.js) line 1956 — `let STATE = {}` 초기화 시 `unit` 프로퍼티 없음.
+- **제안 수정:** `(STATE.unit && STATE.unit[k]) || ""` 가드 추가 또는 `STATE = { unit: {}, range: {}, brands: new Set(), ... }` 초기화.
+- **파일:** [site/app.js](site/app.js) line 1956 [lane:CORE]
+
+---
+
+### [M-505] — `syncWishlistOnLogin` 최초 로그인+닉네임 설정 플로 — 이중 원격 쓰기 경합
+
+- **영역:** 프론트엔드 — 찜 동기화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 닉네임 저장 후 line 352와 `initAuth` 콜백 line 636에서 `syncWishlistOnLogin` 두 번 호출 → 두 merge+upsert 경합으로 한 쪽 결과 덮어씀.
+- **원인:** [site/account.html](site/account.html) line 352, 636 — 재진입 방지 플래그 없음.
+- **제안 수정:** `let _wishSynced = false` 플래그로 첫 번째 완료 후 재호출 차단.
+- **파일:** [site/account.html](site/account.html) line 352 [lane:CORE]
+
+---
+
+### [M-506] — `restoreState` `?brands=|||...` URL — 빈 문자열 브랜드 Set 대량 추가 → 전체 모델 필터 제거
+
+- **영역:** 프론트엔드 — URL 상태
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `?brands=|||||...` URL 조작으로 수천 개 빈 문자열 브랜드가 `STATE.brands` Set에 추가 → 어떤 모델도 brand 매칭 실패 → 빈 카테고리 렌더.
+- **원인:** [site/app.js](site/app.js) line 1338 — `br.split("|")` 후 빈 문자열 필터 없음.
+- **제안 수정:** `.filter(Boolean)` 추가: `br.split("|").filter(Boolean).forEach(...)`.
+- **파일:** [site/app.js](site/app.js) line 1338 [lane:CORE]
+
+---
+
+### [M-507] — `syncWishlistOnLogin` 재진입 시 `window.onWishChange` 비행 중 덮어씀
+
+- **영역:** 프론트엔드 — 찜 동기화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 재호출 시 기존 `onWishChange` 클로저가 진행 중 저장 완료 전 덮어씌워져 이전 저장과 새 병합 쓰기 경합.
+- **원인:** [site/account.html](site/account.html) line 278 — 핸들러 재등록 전 진행 중 저장 대기 없음.
+- **제안 수정:** `if (!window.onWishChange) window.onWishChange = ...` 조건부 등록.
+- **파일:** [site/account.html](site/account.html) line 278 [lane:CORE]
+
+---
+
+### [M-508] — `importSet` `?view-set=` — `JSON.parse` 실패 시 섹션 숨김 미복원 → 계정 페이지 빈 화면
+
+- **영역:** 프론트엔드 — 세트 공유
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `atob` 성공 but `JSON.parse` 실패 시 `catch {}` 무음 처리, 이미 숨겨진 섹션 미복원 → 계정 페이지 빈 화면. (M-497은 atob 실패 케이스)
+- **원인:** [site/app.js](site/app.js) line 4254–4307 — 섹션 숨기기가 JSON.parse 전에 실행.
+- **제안 수정:** `finally { hiddenSections.forEach(el => el.style.display = ''); }` 또는 섹션 숨기기를 parse 성공 이후로 이동.
+- **파일:** [site/app.js](site/app.js) line 4277 [lane:CORE]
+
+---
+
+### [L-418] — `buildFilters` 가격 슬라이더 — 상품 1개 카테고리에서 `step=0` + NaN fill bar
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 가격 있는 상품이 1개인 카테고리에서 `lo===hi` → `step=Math.round(0/100/1000)*1000=0` → `step="0"` 유효하지 않은 range input, fill bar `NaN%`.
+- **원인:** [site/app.js](site/app.js) line 1644–1655 — `prices.length < 2` 조기 반환 없음.
+- **제안 수정:** `if (prices.length < 2) return;` 추가.
+- **파일:** [site/app.js](site/app.js) line 1644 [lane:CORE]
+
+---
+
+### [L-419] — `renderActiveFilters` 범위 필터 칩 — 부동소수점 미반올림 표시 (`"1.5000000000000002m²"`)
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 슬라이더 step 연산 부동소수점 누적 오차가 활성 필터 칩 텍스트에 그대로 노출.
+- **원인:** [site/app.js](site/app.js) line 1963 — `v + rawUnit` 에서 `v` 반올림 없음.
+- **제안 수정:** `Number(v).toFixed(1) + rawUnit` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 1963 [lane:CORE]
 
 ---
