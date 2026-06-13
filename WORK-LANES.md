@@ -108,7 +108,7 @@
 | **C28** | `reclassify_other_tent.py` | M-234·L-196 | ⬜ |
 | **C29** | `refresh.py` | M-206(idiom 명료화·동작 기정상)·M-207([:19] 방어) 수정 | ✅ 2026-06-13 |
 | **C30** | `danawa.py` | L-210 수정(URLError last=e 보존) / L-244 보류(bare토큰=값연속은 docstring 의도설계 '/' 복원, 휴리스틱 변경은 핵심 스펙파싱 회귀위험 → 테스트 픽스처 필요) | ✅ 2026-06-13 |
-| **C31** | `run_all.py` | M-229·L-219 | ⬜ |
+| **C31** | `run_all.py` | L-219(데드 total=0 제거) 수정 / M-229 기해결(타 세션 마킹됨) | ✅ 2026-06-13 |
 | **C32** | `detect_price_drops.py` | M-251·M-334 | ⬜ |
 | **C33** | `ocr_specs.py` | M-299·M-300 | ⬜ |
 | **C34** | `make_logo.py` | L-199·L-200 | ⬜ |

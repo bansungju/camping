@@ -82,7 +82,7 @@ def sh(script, *args):
 def promote_all(con):
     """카테고리별 core 지표 완비 → verified. (텐트는 인원도 요구)"""
     con.execute("UPDATE products SET curation_status='pending' WHERE curation_status='verified'")  # rejected 보존
-    total = 0
+    # L-219: `total = 0` 데드 초기화 제거 — 아래 루프는 total을 누적하지 않고 line 107 SELECT가 덮어씀.
     for cfg in CATEGORIES.values():
         for sub in cfg["subcats"]:
             core = cfg["core"]
