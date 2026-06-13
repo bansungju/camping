@@ -3397,7 +3397,7 @@
 
 ---
 
-### [M-178] — `brand_filter.py` `--apply` — 카테고리 필터 없는 `price_observations` 무효화로 타 카테고리 가격 관측치 의도치 않게 삭제
+### [M-178] ✅ 분석완료(무효, C16) — `brand_filter.py` `--apply` — 카테고리 필터 없는 `price_observations` 무효화로 타 카테고리 가격 관측치 의도치 않게 삭제
 
 - **영역:** 백엔드 — 파이프라인 / 브랜드 필터
 - **심각도:** 🟡 Medium
@@ -5512,7 +5512,7 @@
 
 ---
 
-### [L-232] — `brand_filter.py` `main()` — `drop_n` 출력값이 UPDATE 이전 SELECT 카운트로 실제 변경 행수와 상이
+### [L-232] ✅ 해결완료(2026-06-13, C16) — `brand_filter.py` `main()` — `drop_n` 출력값이 UPDATE 이전 SELECT 카운트로 실제 변경 행수와 상이
 
 - **영역:** 백엔드 — 브랜드 필터
 - **심각도:** 🟢 Low
@@ -6781,7 +6781,7 @@
 
 ---
 
-### [M-333] — `brand_filter.py` `main()` — BRANDS 수 급증 시 SQLite `SQLITE_LIMIT_VARIABLE_NUMBER` 초과 위험
+### [M-333] ✅ 해결완료(2026-06-13, C16) — `brand_filter.py` `main()` — BRANDS 수 급증 시 SQLite `SQLITE_LIMIT_VARIABLE_NUMBER` 초과 위험
 
 - **영역:** 백엔드 — 브랜드 필터
 - **심각도:** 🟡 Medium
