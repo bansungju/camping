@@ -20,6 +20,8 @@ def parse_weight(raw):
     if not raw:
         return None
     s = raw.lower().replace(",", "")
+    if "mg" in s:        # M-288: 'mg'(밀리그램)은 캠핑장비 무게 단위 아님 → 'g' 매칭 오인 차단
+        return None
     lbs = re.search(r"(\d*\.?\d+)\s*(?:lbs?|파운드)", s)
     oz = re.search(r"(\d*\.?\d+)\s*oz", s)
     if lbs or oz:
@@ -58,7 +60,12 @@ def parse_water_head(raw):
     """'2,000mm', '~3000mm', '1200mm DuraShield' -> mm"""
     if not raw:
         return None
-    return _num(raw)
+    v = _num(raw)
+    # M-276/M-339: 음수(OCR '-1500')·범위 밖(cm/m 오인 등) 값을 검증 없이 저장하지 않는다.
+    #   내수압은 양수 mm, 물리 상한 30000(=HARD_RANGES). 벗어나면 파싱 신뢰불가 → None.
+    if v is None or v <= 0 or v > 30000:
+        return None
+    return v
 
 
 def floor_area_m2(raw=None, dims_cm=None):
@@ -105,8 +112,9 @@ def parse_capacity_l(raw):
     m = re.search(r"(\d*\.?\d+)\s*(?:l|리터|ℓ)", s)  # L
     if m:
         return float(m.group(1))
-    m = re.search(r"\d*\.?\d+", s)                  # 일반숫자(음수 미포착)
-    return float(m.group()) if m else None
+    # L-263: 단위 없는 bare-number 폴백 제거. 모델명 속 숫자(예 '코펠 24')가 리터로 오인돼
+    #   잘못된 용량이 저장되던 것 차단 — 명시 단위(ml/l/리터/ℓ)가 있을 때만 파싱.
+    return None
 
 
 def parse_lumens(raw):
@@ -126,8 +134,11 @@ def parse_temp(raw):
     """'-4℃', '-18℃' -> °C (음수 보존). 침낭 내한온도."""
     if not raw:
         return None
-    m = re.search(r"-?\d+\.?\d*", raw.replace(",", ""))
-    return float(m.group()) if m else None
+    # M-319: 내한온도는 범위('5℃ ~ -10℃') 중 '최저값'(한계). 첫 숫자만 취하면 안락온도(+5)를
+    #   잡아 한계 성능을 과대평가한다 → 전체 숫자 추출 후 min().
+    nums = re.findall(r"-?\d+\.?\d*", raw.replace(",", ""))
+    vals = [float(n) for n in nums if n not in ("", "-", ".", "-.")]
+    return min(vals) if vals else None
 
 
 def parse_number(raw):
