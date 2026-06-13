@@ -213,8 +213,12 @@ def main():
                 stats[r] = stats.get(r, 0) + 1
                 if r == "ok":
                     new += 1
+                    if stats["ok"] >= target:   # H-80: 페이지 처리 도중 목표 도달 시 즉시 중단(잔여 후보 미처리)
+                        break
             con.commit()
             print(f"  [{q.strip()} p{page}] +{new}  (누적 ok={stats['ok']})")
+            if stats["ok"] >= target:   # H-80: 목표 도달 → 트레일링 sleep·다음 페이지 fetch 회피하고 종료
+                break
             D.polite_sleep(0.8, 1.2)   # 고정 간격 대신 지터(봇 지문 제거 + 서버 정중)
 
     P.recompute_ratings(con)
