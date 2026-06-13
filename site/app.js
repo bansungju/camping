@@ -646,7 +646,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=2cd7b927").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=38f1d546").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -859,7 +859,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=2cd7b927").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=38f1d546").catch(() => []);
     return idx;
   };
 
@@ -2343,7 +2343,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=2cd7b927"); }
+  try { idx = await getJSON("data/search.json?v=38f1d546"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2737,7 +2737,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=2cd7b927")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=38f1d546")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3722,7 +3722,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.querySelector(".pmx").onclick = close;
       modal.querySelector("#vs-import-btn").onclick = () => {
         const arr = getSets();
-        const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null })) };
+        const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: x.coupang_url || "" })) };
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
         if (window._accUser?.id) {
