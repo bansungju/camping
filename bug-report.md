@@ -4519,7 +4519,8 @@
 
 ## R-104 — 2026-06-13
 
-### [H-66] — `detect_price_drops.py` `load_catalog()` — 파일핸들 누수로 macOS 256핸들 한도 초과 가능
+### [H-66] ✅ 해결완료(2026-06-13, BACKEND) — `detect_price_drops.py` `load_catalog()` — 파일핸들 누수로 macOS 256핸들 한도 초과 가능
+> `with open(...) as fh: d = json.load(fh)`. 검증: 2326개 로드 후 열린 핸들 ~33개(누수 없음).
 
 - **영역:** 백엔드 — 가격 추적
 - **심각도:** 🔴 High
@@ -4760,7 +4761,8 @@
 
 ## R-106 (백엔드) — 2026-06-13
 
-### [H-71] — `column_fixes.py` `main()` — `[기준의심]` 플래그 무조건 DELETE로 수동 검토 결과 소실
+### [H-71] ✅ 해결완료(2026-06-13, BACKEND) — `column_fixes.py` `main()` — `[기준의심]` 플래그 무조건 DELETE로 수동 검토 결과 소실
+> (1) DELETE에 `AND resolved=0` (검토완료분 보존) (2) 재INSERT 전 `reviewed` 집합으로 resolved=1인 (pid,mid) 재플래그 스킵 — 안 그러면 보존분 옆에 새 resolved=0 중복 생성돼 검토가 무력화됨. E2E: resolved=1 보존+중복 미생성(내수압 78→77) 확인.
 
 - **영역:** 백엔드 — 데이터 품질
 - **심각도:** 🔴 High
@@ -4886,7 +4888,8 @@
 
 ## R-107 (백엔드) — 2026-06-13
 
-### [H-73] — `.github/workflows/pages.yml` — 존재하지 않는 GitHub Actions 버전으로 CI 배포 실패
+### [H-73] ✅ 해결완료(2026-06-13, BACKEND) — `.github/workflows/pages.yml` — 존재하지 않는 GitHub Actions 버전으로 CI 배포 실패
+> checkout@v4·setup-python@v5·configure-pages@v5·upload-pages-artifact@v3·deploy-pages@v4 로 실재 안정버전 교정. YAML 유효성 확인.
 
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🔴 High
