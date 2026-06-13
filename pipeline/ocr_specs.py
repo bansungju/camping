@@ -123,6 +123,46 @@ def parse_specs(text):
     return out
 
 
+def shop_price(page_url):
+    """상세 페이지에서 대표 판매가(최빈값) 추출. 가격은 텍스트라 OCR 불필요."""
+    from collections import Counter
+    html = D.http_get(_enc(page_url))
+    cands = []
+    for m in re.findall(r'(?:price|sale_price|product_price|판매가)["\']?\s*[:=]\s*["\']?(\d{4,8})', html, re.I):
+        v = int(m)
+        if 5000 <= v <= 20000000:
+            cands.append(v)
+    for m in re.findall(r'(\d{1,3}(?:,\d{3})+)\s*원', html):
+        v = int(m.replace(",", ""))
+        if 5000 <= v <= 20000000:
+            cands.append(v)
+    if not cands:
+        return None
+    return Counter(cands).most_common(1)[0][0]
+
+
+def verify_price(con, pid, url, mode):
+    """DB 가격 vs 쇼핑몰 가격 비교. 불일치 conflict flag, 2배+ 차이는 가격관측 무효화."""
+    sp = shop_price(url)
+    dn = con.execute("SELECT min_price FROM canonical_models WHERE rep_product_id=?", (pid,)).fetchone()
+    if not sp or not dn or not dn[0]:
+        return
+    dv = dn[0]
+    ratio = max(sp, dv) / min(sp, dv)
+    if ratio < 1.3:
+        print(f"  [price] DB={dv:,} 쇼핑몰={sp:,} → 일치({ratio:.2f}x)")
+        return
+    severe = ratio >= 2.0
+    print(f"  [price] DB={dv:,} 쇼핑몰={sp:,} → {'심각불일치' if severe else '불일치'}({ratio:.1f}x)")
+    con.execute("""INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note,resolved,created_at)
+        VALUES(?,NULL,'conflict',?,0,datetime('now'))""",
+        (pid, f"가격: DB={dv:,} vs 쇼핑몰OCR={sp:,} ({ratio:.1f}x)"))
+    if severe and mode == "fill":
+        # 명백 오류 → 가격관측 무효화(노출 차단), 정정 전까지 보류
+        con.execute("UPDATE price_observations SET valid=0 WHERE product_id=?", (pid,))
+        print(f"    → 가격관측 무효화(노출 보류, 정정 필요)")
+
+
 def get_target_url(con, pid):
     """ocr_targets.json에서 product_id→쇼핑몰 URL."""
     path = os.path.join(ROOT, "ocr_targets.json")
@@ -145,8 +185,15 @@ def run(con, mode):
         if not row:
             print(f"  pid={pid} 없음"); continue
         model, cid = row
-        parsed = parse_specs(ocr_text(url))
         print(f"\n[{model}] pid={pid}")
+        # 가격 교차검증 (텍스트 추출, 스펙과 함께)
+        try:
+            verify_price(con, pid, url, mode)
+            con.commit()
+        except Exception as e:
+            print(f"  [price] 검증 실패: {e}")
+
+        parsed = parse_specs(ocr_text(url))
         if not parsed:
             print("  OCR 스펙 추출 실패"); continue
 
