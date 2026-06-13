@@ -108,7 +108,7 @@ def fill_one(con, pid, pcode, cid, cat_name):
 
 def candidates(con, only_cat=None, limit=None):
     ph = ",".join("?" * len(WHITELIST))
-    acc = " AND ".join([f"p.canonical_model NOT LIKE '%{w}%'" for w in ACC_PAT])
+    acc = " AND ".join(["p.canonical_model NOT LIKE ?" for _ in ACC_PAT])
     sql = f"""
         SELECT p.id, p.danawa_pcode, p.category_id, c.name_ko, b.name_ko, p.canonical_model
         FROM products p
@@ -122,7 +122,7 @@ def candidates(con, only_cat=None, limit=None):
           AND cm.min_price IS NOT NULL
           AND {acc}
     """
-    args = list(WHITELIST)
+    args = list(WHITELIST) + [f"%{w}%" for w in ACC_PAT]
     if only_cat:
         sql += " AND c.name_ko=?"
         args.append(only_cat)
