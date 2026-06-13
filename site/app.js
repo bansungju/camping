@@ -304,12 +304,12 @@ const PERSONAS = [
 
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
 const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
-const priceRange = (a, b) => a == null ? '<span class="nd">가격없음</span>' : won(a);
+const priceRange = (a, b) => (a == null || a === 0) ? '<span class="nd">가격없음</span>' : won(a);
 // FE-ITEM-05: 표시가는 price_min(최저가) 기준 — 실제 쿠팡가와 다를 수 있어 가격 옆 '최저가 기준' 캡션을 일관 부착.
 const PRICE_BASIS_CAP = '<span class="price-basis">최저가 기준</span>';
 // 가격 + 캡션. 값 없으면 캡션 없이 nullHtml(곳마다 '가격없음'/'—' 등) 반환(AC4).
 const priceLabeled = (n, nullHtml = '<span class="nd">가격없음</span>') =>
-  n == null ? nullHtml : won(n) + PRICE_BASIS_CAP;
+  (n == null || n === 0) ? nullHtml : won(n) + PRICE_BASIS_CAP;
 
 /* 값 표시: 무게(g) 1000↑ → kg, 부피(cm3) 1000↑ → L 환산 */
 const _UNIT_DISPLAY = { C: "°C", m2: "m²" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑
@@ -1869,7 +1869,7 @@ function renderActiveFilters() {
 function clearAllFilters() {
   STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
   const q = document.getElementById("q"); if (q) q.value = "";
-  syncFilterUI(); draw();
+  syncFilterUI(); draw(); serializeState();
 }
 
 // 칩/입력 UI를 STATE에 동기화(활성칩에서 해제 시 컨트롤도 반영)
@@ -3362,7 +3362,7 @@ function renderAccount() {
       if (!s) return;
       try {
         const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
-        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         const url = `${location.origin}/account.html?view-set=${encoded}`;
         navigator.clipboard.writeText(url).then(() => {
           b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
@@ -4006,7 +4006,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const vsParam = new URLSearchParams(location.search).get("view-set");
   if (vsParam && document.getElementById("auth-section")) {
     try {
-      const s = JSON.parse(decodeURIComponent(escape(atob(vsParam))));
+      const vsFixed = vsParam.replace(/-/g, '+').replace(/_/g, '/');
+      const s = JSON.parse(decodeURIComponent(escape(atob(vsFixed))));
       const modal = document.createElement("div");
       modal.className = "pmodal on";
       modal.style.zIndex = "300";
