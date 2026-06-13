@@ -3776,7 +3776,7 @@
 
 ---
 
-### [M-197] — `add_manual_models.py` — `prices` 빈 리스트 시 `min([])` `ValueError`
+### [M-197] ✅ 해결완료(기존확인, C18) — `add_manual_models.py` — `prices` 빈 리스트 시 `min([])` `ValueError`
 
 - **영역:** 백엔드 — 파이프라인 / 수동 모델 추가
 - **심각도:** 🟡 Medium
@@ -4401,7 +4401,7 @@
 
 ---
 
-### [M-225] — `add_manual_models.py` `main()` — JSON 파일 열기 `with`/예외처리 누락
+### [M-225] ✅ 해결완료(2026-06-13, C18) — `add_manual_models.py` `main()` — JSON 파일 열기 `with`/예외처리 누락
 
 - **영역:** 백엔드 — 수동 데이터
 - **심각도:** 🟡 Medium
@@ -5579,7 +5579,7 @@
 
 ---
 
-### [H-80] — `harvest_tents.py` `main()` — `stats["ok"] >= target` 체크가 쿼리 루프 상단에만 → 조기 종료 불가
+### ✅ 해결완료(2026-06-13) [H-80] — `harvest_tents.py` `main()` — `stats["ok"] >= target` 체크가 쿼리 루프 상단에만 → 조기 종료 불가
 
 - **영역:** 백엔드 — 크롤링
 - **심각도:** 🔴 High
@@ -5603,7 +5603,7 @@
 
 ---
 
-### [M-280] — `add_manual_models.py` `upsert_model()` — `rep_product_id` 무조건 덮어쓰기로 외부 canonical 지정 소실
+### [M-280] ✅ 분석완료(by-design, C18) — `add_manual_models.py` `upsert_model()` — `rep_product_id` 무조건 덮어쓰기로 외부 canonical 지정 소실
 
 - **영역:** 백엔드 — 수동 데이터
 - **심각도:** 🟡 Medium
@@ -11523,5 +11523,137 @@
 - **원인:** [site/account.html](site/account.html) line 364–369 — `display:none` 가드 후 재시도 없음.
 - **제안 수정:** `renderAccount()` 내부 또는 `requestAnimationFrame` 후에 `scrollToHashSection()` 호출.
 - **파일:** [site/account.html](site/account.html) line 364 [lane:CORE]
+
+---
+
+### [H-139] — `run_all.py` → `detect_price_drops.py` — `--db` 인수 미전달로 기본 DB 고정 가격 알림
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `--db` 커스텀 옵션으로 run_all 실행 시 price-drop 감지기가 항상 기본 DB(`camping_tents500.db`) 읽어 엉뚱한 데이터 기반 알림 발송.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 232 — `detect_price_drops.py` 호출 시 `--db` 미전달. `detect_price_drops.py` 자체에도 `--db` 인수 없음.
+- **제안 수정:** `detect_price_drops.py`에 `--db` argparse 추가, `run_all.py`에서 전달.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 232 [lane:BACKEND]
+
+---
+
+### [H-140] — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 + `store-assets/` 디렉터리 미생성
+
+- **영역:** 백엔드 — 빌드 스크립트
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** Linux/CI에서 `/System/Library/Fonts/AppleSDGothicNeo.ttc` OSError, 또는 `store-assets/` 없으면 FileNotFoundError → 아이콘 전체 미생성.
+- **원인:** [pipeline/make_logo.py](pipeline/make_logo.py) line 96 — macOS 전용 경로. line 139, 144 — `os.makedirs` 없음.
+- **제안 수정:** `ImageFont.load_default()` 폴백 추가, `os.makedirs(dir, exist_ok=True)` 추가.
+- **파일:** [pipeline/make_logo.py](pipeline/make_logo.py) line 96 [lane:BACKEND]
+
+---
+
+### [M-518] — `ocr_specs.py` — 무게 주석 "가장 큰 값" vs 코드 `min()` 불일치 → 유지보수 위험
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 주석("가장 큰 값 = 본체 추정")이 코드 `min(kgs)`와 반대 → 유지보수자가 주석 기준으로 `max()`로 수정하면 전체 무게 데이터 과대 계산.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 100–103 — 주석과 코드 의미 역전.
+- **제안 수정:** 주석을 "가장 작은 값 = 본체 최소무게(weight_min 정의)"로 수정.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 100 [lane:BACKEND]
+
+---
+
+### [M-519] — `ocr_specs.py` `run()` — `ocr_text()` 예외 미처리로 스펙 삽입 롤백
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 네트워크 오류, tesseract 미설치, PIL 이미지 오류 등 `ocr_text()` 예외 발생 시 같은 PID의 현재 루프 스펙 삽입 무음 롤백, 로그 없음.
+- **원인:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 201 — `ocr_text()` 호출 try/except 없음.
+- **제안 수정:** `try: parsed = parse_specs(ocr_text(url)) except Exception as e: print(f"! {pid}: {e}"); continue` 래핑.
+- **파일:** [pipeline/ocr_specs.py](pipeline/ocr_specs.py) line 201 [lane:BACKEND]
+
+---
+
+### [M-520] — `star_catalog.py` TOP3 리포트 쿼리 — `valid=1` 필터 없어 무효 가격 표시
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** TOP3 리포트에 무효화된 이상 가격(예: 2,167원)이 표시 → 실제 star 점수와 불일치, 운영자 혼란.
+- **원인:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 92 — 리포트 서브쿼리에 `AND po.valid=1` 없음.
+- **제안 수정:** `AND po.valid=1` 추가.
+- **파일:** [pipeline/star_catalog.py](pipeline/star_catalog.py) line 92 [lane:BACKEND]
+
+---
+
+### [M-521] — `seed_coupang.py` CSV `open()` — 인코딩 미지정으로 Windows/CP949 환경 한글 문자 깨짐
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 비UTF-8 기본 인코딩 환경에서 브랜드·모델명 mojibake → `existing` 딕셔너리 매칭 실패, 기존 쿠팡 URL 전체 초기화.
+- **원인:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 54, 82 — `open()` 인코딩 미지정.
+- **제안 수정:** 두 `open()` 호출에 `encoding="utf-8"` 추가.
+- **파일:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 54 [lane:BACKEND]
+
+---
+
+### [M-522] — `promote_catalog.py` `covpct()` — 비따옴표 f-string SQL 삽입으로 인젝션 스캐너 우회
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `covpct(expr)`가 `{expr}` 그대로 SQL에 삽입 → `scan_sql_injection.py`가 따옴표 없는 삽입 탐지 불가, 미래 신뢰할 수 없는 호출자 추가 시 SQL 인젝션 무방비.
+- **원인:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 82 — 비매개변수화 f-string SQL. 스캐너가 `QUOTED_BRACE`만 탐지.
+- **제안 수정:** 헬퍼 함수 인라인화 또는 `# sql-ok` 주석으로 안전성 근거 명시.
+- **파일:** [pipeline/promote_catalog.py](pipeline/promote_catalog.py) line 82 [lane:BACKEND]
+
+---
+
+### [M-523] — `add_value_star.py` — `backpacking-bag.json` 미존재 시 FileNotFoundError (export 미실행 환경)
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 신규 클론 또는 export 미실행 환경에서 스크립트 실행 시 비설명적 FileNotFoundError 크래시.
+- **원인:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 44 — 파일 존재 확인 없음.
+- **제안 수정:** `if not os.path.exists(PATH): sys.exit("backpacking-bag.json 없음 — export_site.py 먼저 실행")`.
+- **파일:** [pipeline/add_value_star.py](pipeline/add_value_star.py) line 44 [lane:BACKEND]
+
+---
+
+### [L-429] — `column_fixes.py` — channel 무조건 덮어쓰기로 수동 배정값 유실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 재실행 시 수동으로 배정된 `channel` 값이 '직구'/'국내'로 리셋.
+- **원인:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 36–39 — WHERE 절에 `channel IS NULL` 조건 없음.
+- **제안 수정:** `AND (channel IS NULL OR channel='')` 추가.
+- **파일:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 36 [lane:BACKEND]
+
+---
+
+### [L-430] — `scan_sql_injection.py` — 비따옴표 SQL 삽입(`{expr}` 키워드 위치) 탐지 불가
+
+- **영역:** 백엔드 — 보안 도구
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `QUOTED_BRACE` 패턴이 따옴표 내 삽입만 탐지 → M-522 같은 SQL 키워드 위치 f-string 삽입 완전 누락, false-safe 인상.
+- **원인:** [pipeline/scan_sql_injection.py](pipeline/scan_sql_injection.py) line 22–25 — 탐지 범위 협소.
+- **제안 수정:** SQL 키워드(SELECT/WHERE/FROM/UPDATE/DELETE) 뒤 비따옴표 `{…}` 패턴 추가 탐지.
+- **파일:** [pipeline/scan_sql_injection.py](pipeline/scan_sql_injection.py) line 22 [lane:BACKEND]
+
+---
+
+### [L-431] — `detect_price_drops.py` — `--db` CLI 인수 없어 스테이징 DB 테스트 불가
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 개발자가 다른 DB로 price-drop 감지 테스트 시 소스 파일 직접 수정 필요, H-139의 근본 원인.
+- **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 139–141 — argparse에 `--db` 없음.
+- **제안 수정:** `ap.add_argument("--db", default=DB)` 추가.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 139 [lane:BACKEND]
 
 ---
