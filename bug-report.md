@@ -4425,7 +4425,7 @@
 
 ---
 
-### [L-213] — `stamp_version.py` `main()` — `supabaseClient.js` 해시 print 출력 누락
+### [L-213] ✅ 해결완료(2026-06-13, C21) — `stamp_version.py` `main()` — `supabaseClient.js` 해시 print 출력 누락
 
 - **영역:** 백엔드 — 빌드 도구
 - **심각도:** 🟢 Low
@@ -4916,7 +4916,7 @@
 
 ---
 
-### [M-248] — `stamp_version.py` `main()` — `supabaseClient.js` 존재 여부 미확인으로 FileNotFoundError 시 전체 스탬프 중단
+### [M-248] ✅ 해결완료(기존확인, C21) — `stamp_version.py` `main()` — `supabaseClient.js` 존재 여부 미확인으로 FileNotFoundError 시 전체 스탬프 중단
 
 - **영역:** 백엔드 — 빌드 도구
 - **심각도:** 🟡 Medium
@@ -5929,7 +5929,7 @@
 
 ---
 
-### [M-296] — `stamp_version.py` `main()` — `search.json` 부재 시 앱 내 구버전 `?v=` 스텁 무음 유지
+### [M-296] ✅ 해결완료(2026-06-13, C21) — `stamp_version.py` `main()` — `search.json` 부재 시 앱 내 구버전 `?v=` 스텁 무음 유지
 
 - **영역:** 백엔드 — 빌드 도구
 - **심각도:** 🟡 Medium
@@ -9210,7 +9210,7 @@
 
 ---
 
-### [H-120] — `download_images.py` — 상수 서브쿼리로 `image_local=""` 행 재다운로드 대상 누락
+### ✅ 해결완료(2026-06-13) [H-120] — `download_images.py` — 상수 서브쿼리로 `image_local=""` 행 재다운로드 대상 누락
 
 - **영역:** 백엔드 — 이미지 다운로드
 - **심각도:** 🔴 High
