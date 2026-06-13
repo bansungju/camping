@@ -5065,7 +5065,8 @@
 
 ---
 
-### [H-77] — `promote_catalog.py` `main()` — `capacity IS NOT NULL` 하드코딩으로 CORE 지표 완비 제품도 승격 탈락
+### [H-77] ✅ 해결완료(2026-06-13, BACKEND) — `promote_catalog.py` `main()` — `capacity IS NOT NULL` 하드코딩으로 CORE 지표 완비 제품도 승격 탈락
+> 근본원인(하드코딩·CORE 불일치)을 명시 상수 `NEED_CAPACITY`로 해소 + run_all.promote_all의 need_capacity 정책과 일관화. **판단:** promote_catalog는 미참조 레거시(활성 경로는 run_all.promote_all), 정규 정책상 텐트는 인원이 완비기준이라 capacity 게이트는 의도된 품질바(검증 카탈로그 인원 100% 유지) → 게이트 유지하되 토글 가능하게 명시화. 검증: True→verified 543(인원100%)/False→896(인원60.6%) 양쪽 SQL 정상.
 
 - **영역:** 백엔드 — 카탈로그 승격
 - **심각도:** 🔴 High
@@ -8201,5 +8202,77 @@
 - **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 267 — `note[:40]` 기준 필터, `insert_flags`는 `note[:80]` 사용.
 - **제안 수정:** 두 곳 모두 동일 prefix 길이(80자) 적용.
 - **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 267 [lane:BACKEND]
+
+---
+
+### [M-389] — `setupSearchPage` — 한글 IME 조합 중 `isComposing` 가드 없어 미완성 음절로 검색
+
+- **영역:** 프론트엔드 — 검색
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 한글 입력 조합 중 매 키스트로크마다 "ㅎㄹ" 같은 미완성 음절로 검색 실행.
+- **원인:** [site/app.js](site/app.js) line 1243 — `input` 이벤트 핸들러에 `if (e.isComposing) return;` 없음 (홈/카테고리 검색은 처리됨).
+- **제안 수정:** `if (e.isComposing) return;` 추가 + `compositionend` 리스너 보완.
+- **파일:** [site/app.js](site/app.js) line 1243 [lane:CORE]
+
+---
+
+### [M-390] — `draw` 필터 — 카테고리 내 브랜드 영문명 검색 0건
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 뷰에서 "helinox", "naturehike" 등 영문 브랜드명 입력 시 항상 0건.
+- **원인:** [site/app.js](site/app.js) line 2596 — 필터 조건이 `m.brand + " " + m.model` 만 검사, `_brandAlias` 미포함 (홈 자동완성은 포함).
+- **제안 수정:** `|| _brandAlias(m.brand).toLowerCase().includes(STATE.q)` 추가.
+- **파일:** [site/app.js](site/app.js) line 2596 [lane:CORE]
+
+---
+
+### [M-391] — `clearAllFilters` — 스타일칩 해제 후 `STATE.sortKey` 미복원
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** "필터 전체 해제" 클릭 후 정렬이 캠핑 스타일 기준(`spec:weight_min` 등)으로 유지, 공유 URL에 비맥락 정렬 포함.
+- **원인:** [site/app.js](site/app.js) line 1937 — `STATE.campStyle = ""` 하지만 `STATE.sortKey` 미복원.
+- **제안 수정:** `clearAllFilters` 내 `applyStyleSort(STATE.data)` 호출 추가(campStyle="" 상태에서 기본 정렬로 복귀).
+- **파일:** [site/app.js](site/app.js) line 1937 [lane:CORE]
+
+---
+
+### [L-310] — `renderActiveFilters` — EXTRA_SPECS 필터 활성 칩에 단위 누락
+
+- **영역:** 프론트엔드 — 필터 UI
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 내수압 슬라이더 조정 시 활성 칩에 "내수압 500~3000" — 단위(mm) 미표시.
+- **원인:** [site/app.js](site/app.js) line 1912 — `STATE.unit[k]`가 star 지표만 포함, EXTRA_SPECS 키 없음.
+- **제안 수정:** `(EXTRA_SPECS[STATE.slug]||[]).find(e=>e.key===k)?.unit || ""` fallback 추가.
+- **파일:** [site/app.js](site/app.js) line 1912 [lane:CORE]
+
+---
+
+### [L-311] — `diagnoseEmpty` / `passExcept` — 가성비순 정렬 암묵적 제외 진단 미지원
+
+- **영역:** 프론트엔드 — 필터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 가성비 정렬+필터 조합으로 0건 시 "가성비 데이터 없는 모델 제외"가 원인으로 제시 안 됨.
+- **원인:** [site/app.js](site/app.js) line 2014 — `passExcept`가 `k==="value"` 암묵 제외 미처리.
+- **제안 수정:** `passExcept`에 value 정렬 null 제외 조건 추가, diagnoseEmpty에 해당 설명 항목 추가.
+- **파일:** [site/app.js](site/app.js) line 2014 [lane:CORE]
+
+---
+
+### [L-312] — `openSetDetail` — Tab 포커스 트랩 미구현 (WCAG 2.1.2 위반)
+
+- **영역:** 프론트엔드 — 접근성
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 세트 상세 모달에서 Tab 연속 입력 시 포커스가 모달 밖으로 이탈.
+- **원인:** [site/app.js](site/app.js) line 3040 — `modal._onKey`가 ESC만 처리, Tab 순환 없음 (`openProduct`는 완전 구현됨).
+- **제안 수정:** `openProduct`의 Tab 순환 로직을 `openSetDetail`에도 동일 적용.
+- **파일:** [site/app.js](site/app.js) line 3040 [lane:CORE]
 
 ---

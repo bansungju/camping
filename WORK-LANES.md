@@ -40,7 +40,7 @@
 | **B8** | `detect_price_drops.py` | H-66 | ✅ 2026-06-13 완료 |
 | **B9** | `column_fixes.py` | H-71 | ✅ 2026-06-13 완료 |
 | **B10** | `.github/workflows/pages.yml` | H-73 | ✅ 2026-06-13 완료 |
-| **B11** | `promote_catalog.py` | H-77 | ⬜ 단독 |
+| **B11** | `promote_catalog.py` | H-77 | ✅ 2026-06-13 완료 (NEED_CAPACITY 명시화; capacity 게이트는 정규 정책상 유지) |
 | **B12** | `harvest_tents.py` | H-79 | ⬜ 단독 |
 | **B13** | `normalize_models.py` | H-83 (+M-329 동일파일) | ⬜ 단독 |
 | **B14** | `backfill_capacity.py` | H-84 | ⬜ 단독 |

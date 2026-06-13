@@ -15,7 +15,11 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 P_ROOT = os.path.dirname(HERE)
 
-CORE = ["weight_min", "water_head", "floor_area"]   # 완비 판정 기준(가격·인원은 별도 집계)
+CORE = ["weight_min", "water_head", "floor_area"]   # product_spec_values 기반 완비 메트릭
+# H-77: capacity(인원)도 텐트 완비 기준이지만 products 컬럼이라 CORE(메트릭 키)에 못 넣는다.
+#       기존엔 SQL에 `capacity IS NOT NULL`을 묻어둬 CORE 리스트와 불일치(의도 불투명)했다.
+#       run_all.promote_all의 need_capacity 정책과 일관되게 명시 상수로 분리 — 토글 가능.
+NEED_CAPACITY = True
 
 
 def main():
@@ -31,10 +35,11 @@ def main():
     con.execute("UPDATE products SET curation_status='pending'")
     if not CORE:
         con.commit(); return
+    capclause = "AND capacity IS NOT NULL" if NEED_CAPACITY else ""
     con.execute(f"""
         UPDATE products SET curation_status='verified'
-        WHERE capacity IS NOT NULL          -- 인원도 핵심지표 → 완비 기준 포함
-          AND EXISTS(SELECT 1 FROM price_observations po WHERE po.product_id=products.id)  -- 가격 필수
+        WHERE EXISTS(SELECT 1 FROM price_observations po WHERE po.product_id=products.id)  -- 가격 필수
+          {capclause}                       -- 인원(NEED_CAPACITY 정책) — run_all과 일관
           AND id IN (
             SELECT p.id FROM products p
             JOIN product_spec_values v ON v.product_id=p.id AND v.valid=1
