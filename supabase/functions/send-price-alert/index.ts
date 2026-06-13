@@ -37,7 +37,7 @@ function fmtKRW(n?: number): string {
   return typeof n === "number" ? n.toLocaleString("ko-KR") + "원" : "";
 }
 
-function buildPayload(ev: AlertEvent): string {
+function buildContent(ev: AlertEvent): { title: string; body: string; url: string } {
   const name = ev.name || "찜한 상품";
   let title: string, body: string;
   if (ev.kind === "restock") {
@@ -54,13 +54,76 @@ function buildPayload(ev: AlertEvent): string {
         ? `${fmtKRW(ev.old_price)} → ${fmtKRW(ev.new_price)}`
         : "가격이 하락했습니다";
   }
+  return { title, body, url: ev.url || "/" };
+}
+
+// 웹 Web Push 페이로드(JSON 문자열)
+function buildPayload(ev: AlertEvent): string {
+  const c = buildContent(ev);
   return JSON.stringify({
-    title,
-    body,
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    data: { url: ev.url || "/" },
+    title: c.title, body: c.body,
+    icon: "/icon-192.png", badge: "/icon-192.png",
+    data: { url: c.url },
   });
+}
+
+// ── APNs (iOS 네이티브 푸시) ────────────────────────────────────────────────
+// env: APNS_KEY_ID·APNS_TEAM_ID·APNS_P8(.p8 내용)·APNS_BUNDLE_ID·APNS_PRODUCTION
+const APNS_KEY_ID = Deno.env.get("APNS_KEY_ID") || "";
+const APNS_TEAM_ID = Deno.env.get("APNS_TEAM_ID") || "";
+const APNS_P8 = Deno.env.get("APNS_P8") || "";
+const APNS_BUNDLE_ID = Deno.env.get("APNS_BUNDLE_ID") || "com.gearforest.app";
+const APNS_HOST = Deno.env.get("APNS_PRODUCTION") === "true"
+  ? "https://api.push.apple.com"
+  : "https://api.sandbox.push.apple.com";
+const apnsEnabled = !!(APNS_KEY_ID && APNS_TEAM_ID && APNS_P8);
+
+function b64url(buf: ArrayBuffer): string {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+let _apnsJwt: { token: string; iat: number } | null = null;
+async function apnsJwt(): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  if (_apnsJwt && now - _apnsJwt.iat < 3000) return _apnsJwt.token; // <55분 재사용
+  const pem = APNS_P8.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    "pkcs8", der, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"],
+  );
+  const enc = new TextEncoder();
+  const header = b64url(enc.encode(JSON.stringify({ alg: "ES256", kid: APNS_KEY_ID })).buffer as ArrayBuffer);
+  const claims = b64url(enc.encode(JSON.stringify({ iss: APNS_TEAM_ID, iat: now })).buffer as ArrayBuffer);
+  const sig = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" }, key, enc.encode(`${header}.${claims}`),
+  );
+  const token = `${header}.${claims}.${b64url(sig)}`;
+  _apnsJwt = { token, iat: now };
+  return token;
+}
+
+// 반환: HTTP 상태(200=성공, 410=만료 토큰). 미설정/실패 시 0.
+async function sendAPNs(deviceToken: string, c: { title: string; body: string; url: string }): Promise<number> {
+  if (!apnsEnabled) return 0;
+  try {
+    const jwt = await apnsJwt();
+    const res = await fetch(`${APNS_HOST}/3/device/${deviceToken}`, {
+      method: "POST",
+      headers: {
+        authorization: `bearer ${jwt}`,
+        "apns-topic": APNS_BUNDLE_ID,
+        "apns-push-type": "alert",
+      },
+      body: JSON.stringify({
+        aps: { alert: { title: c.title, body: c.body }, sound: "default" },
+        url: c.url,
+      }),
+    });
+    return res.status;
+  } catch (_) {
+    return 0;
+  }
 }
 
 serve(async (req) => {
@@ -95,6 +158,7 @@ serve(async (req) => {
     if (wErr || !watchers?.length) continue;
 
     const payload = buildPayload(ev);
+    const content = buildContent(ev);
 
     for (const w of watchers) {
       const userId = w.user_id as string;
@@ -112,17 +176,28 @@ serve(async (req) => {
         continue;
       }
 
-      // 3. 디바이스 구독 조회
+      // 3. 디바이스 구독 조회 (웹 Web Push + 네이티브 토큰)
       const { data: subs } = await supabase
         .from("push_subscriptions")
-        .select("endpoint, p256dh, auth_key")
+        .select("endpoint, p256dh, auth_key, platform, native_token")
         .eq("user_id", userId);
       if (!subs?.length) continue;
 
-      // 4. 전송 (+ 만료 구독 정리)
+      // 4. 전송 — platform 분기 (web=Web Push / ios=APNs) (+ 만료 토큰 정리)
       let delivered = false;
       await Promise.allSettled(
         subs.map(async (s) => {
+          // 네이티브(APNs)
+          if (s.native_token && (s.platform === "ios" || s.platform === "android")) {
+            const status = await sendAPNs(s.native_token, content); // 현재 iOS만 구현(android는 추후 FCM)
+            if (status === 200) delivered = true;
+            else if (status === 410) {
+              await supabase.from("push_subscriptions").delete().eq("native_token", s.native_token);
+            }
+            return;
+          }
+          // 웹(Web Push)
+          if (!s.endpoint) return;
           try {
             await webpush.sendNotification(
               { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } },
@@ -132,7 +207,6 @@ serve(async (req) => {
           } catch (err) {
             const code = (err as { statusCode?: number })?.statusCode;
             if (code === 404 || code === 410) {
-              // 만료/해지된 구독 제거
               await supabase.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
             }
           }
