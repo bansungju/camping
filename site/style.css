@@ -811,7 +811,8 @@ a.ssb-cell:hover{border-color:var(--accent);color:var(--accent)}
 .ssb-icon{font-size:22px;line-height:1;opacity:.4}
 .ssb-cell.on .ssb-icon{opacity:1}
 .ssb-label{font-size:11.5px;font-weight:600;text-align:center;line-height:1.2}
-.ssb-state{font-size:10.5px;font-weight:700;color:var(--muted)}
+.ssb-cell .stamp-dot{width:11px;height:11px;margin-top:1px}
+.ssb-state{font-size:12px;font-weight:700;color:var(--muted)}
 .ssb-state.ok{color:var(--accent)}
 .ssb-state.over{color:#d97706}
 .ssb-cell.over{border-color:#d97706;background:rgba(217,119,6,.08)}
