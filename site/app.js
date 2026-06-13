@@ -157,13 +157,14 @@ function _showAuthGateModal() {
     <button type="button" class="agm-cancel">취소</button>
   </div>`;
   document.body.appendChild(m);
-  const close = () => m.remove();
+  // M-247/M-259/L-249: 취소·백드롭·ESC 등 모든 닫기에서 keydown 리스너 제거 + 재오픈 시 이전 리스너 정리(누적 방지)
+  if (window._authGateOnKey) document.removeEventListener('keydown', window._authGateOnKey);
+  const close = () => { m.remove(); document.removeEventListener('keydown', onKey); window._authGateOnKey = null; };
+  const onKey = e => { if (e.key === 'Escape') close(); };
   m.querySelector('.agm-cancel').onclick = close;
   m.onclick = e => { if (e.target === m) close(); };
-  // ESC
-  const onKey = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } };
+  window._authGateOnKey = onKey;
   document.addEventListener('keydown', onKey);
-  m.querySelector('.agm-btn').addEventListener('click', () => document.removeEventListener('keydown', onKey));
 }
 
 /* 운영자 모드: ?ops=1 로 켜면(localStorage 영속) 신뢰등급·값배지·데이터한계가 보인다.
@@ -658,6 +659,8 @@ function openReplaceModal(setId, item, slot) {
   const prevFocus = document.activeElement;
   const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
   const onKey = e => { if (e.key === "Escape") close(); };
+  if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // L-243: 재호출 시 onKey 누적 방지
+  modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
@@ -1186,6 +1189,9 @@ async function setupSearchPage() {
       const catData = await getJSON(`data/${x.s}.json`);
       const prod = (catData.models || []).find(p => p.brand === x.b && p.model === x.m);
       if (prod) {
+        // M-262: 직전 검색모달이 STATE를 바꿔둔 채 닫히지 않았으면 먼저 복원 → prev가 원본을 가리키게(중첩 오염 방지)
+        const _pmOld = document.getElementById("pmodal");
+        if (_pmOld && typeof _pmOld._onCloseOnce === "function") { const cb = _pmOld._onCloseOnce; _pmOld._onCloseOnce = null; cb(); }
         const prev = { slug: STATE.slug, data: STATE.data };
         STATE.slug = x.s; STATE.data = catData;
         openProduct(prod);
@@ -2213,6 +2219,8 @@ function openProduct(m) {
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
+  if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // M-181: 모달 재오픈 시 이전 onKey 누적 → ESC 중복 close 방지
+  modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
 }
 
@@ -2312,6 +2320,8 @@ function openReviewDetail(r) {
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
+  if (ov._onKey) document.removeEventListener("keydown", ov._onKey, true);  // L-255: 리뷰 재오픈 시 capture onKey 누적 방지
+  ov._onKey = onKey;
   document.addEventListener("keydown", onKey, true);
 }
 
@@ -3904,6 +3914,8 @@ function openLogDetail(p) {
     };
   }
   const onKey = e => { if (e.key === "Escape") close(); };
+  if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // M-193: 로그 연속 클릭 시 onKey 누적 → ESC 중복 close 방지
+  modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
 
   // 댓글 로드 및 제출
