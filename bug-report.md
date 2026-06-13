@@ -3990,7 +3990,7 @@
 
 ---
 
-### [M-206] — `refresh.py` `_group_prices_by_cat()` — 그룹 경계에서 첫 항목이 이전 그룹 bucket에 append 후 초기화 → 중앙값 오계산
+### [M-206] ✅ 해결완료(2026-06-13, C29) — `refresh.py` `_group_prices_by_cat()` — 그룹 경계에서 첫 항목이 이전 그룹 bucket에 append 후 초기화 → 중앙값 오계산
 
 - **영역:** 백엔드 — 파이프라인 / 가격 갱신
 - **심각도:** 🟡 Medium
@@ -4002,7 +4002,7 @@
 
 ---
 
-### [M-207] — `refresh.py` `main()` — SQLite `datetime('now')` 소수점 초 포함 시 `strptime` 파싱 실패
+### [M-207] ✅ 해결완료(2026-06-13, C29) — `refresh.py` `main()` — SQLite `datetime('now')` 소수점 초 포함 시 `strptime` 파싱 실패
 
 - **영역:** 백엔드 — 파이프라인 / 가격 갱신
 - **심각도:** 🟡 Medium
