@@ -4048,7 +4048,7 @@ function openLogModal(presetSetIndex) {
         }
       }
       const { error } = await supabase.from("posts").insert({
-        user_id: window._commUser.id, title, content,
+        user_id: window._commUser.id, title, body: content,
         tags, is_public, image_url, gear_set_snapshot
       });
       if (error) throw error;
