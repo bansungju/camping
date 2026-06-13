@@ -38,7 +38,8 @@ SKIP_FILES = {"manifest.json", "search.json"}
 
 def load_models(path):
     try:
-        d = json.load(open(path, encoding="utf-8"))
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
     except Exception as e:
         print(f"  ⚠️  {os.path.basename(path)} 읽기 실패: {e}")
         return None, []

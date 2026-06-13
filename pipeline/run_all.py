@@ -134,7 +134,7 @@ def promote_all(con):
 def main():
     global DB
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default=os.path.join(ROOT, "camping_all.db"))
+    ap.add_argument("--db", default=os.path.join(ROOT, "camping_tents500.db"))
     ap.add_argument("--harvest", action="store_true", help="카테고리별 신규 수확 포함")
     ap.add_argument("--only", help="특정 카테고리만(수확 대상)")
     args = ap.parse_args()

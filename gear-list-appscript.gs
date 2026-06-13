@@ -14,10 +14,11 @@ var SITE = 'https://gear-forest.com';
 var SHEET_ID = '1yjRXPO2ZOW6QEEU74WDAaHU3w1h1e9p6lJyKc7Nkcpc';
 var SHEET_NAME = '시트1'; // 다른 시트에 쓰려면 이름 변경
 
-// 웹앱 URL(/exec) 접속 시 자동 실행
+// 웹앱 URL(/exec) 접속 시 자동 실행 — H열 완료 체크(비파괴).
+// 주의: 시트를 사이트 데이터로 다시 채우려면(파괴적) 에디터에서 fillGearList를 직접 실행할 것.
 function doGet() {
-  var n = fillGearList();
-  return ContentService.createTextOutput('완료 — ' + n + '개 상품 입력됨. 시트를 확인하세요.');
+  var n = markApplied();
+  return ContentService.createTextOutput('완료 — H열 ' + n + '건 ✅ 표기됨. 시트를 확인하세요.');
 }
 
 function fillGearList() {
@@ -58,4 +59,76 @@ function fillGearList() {
 
   Logger.log('완료: ' + rows.length + '개 상품 입력됨');
   return rows.length;
+}
+
+/**
+ * 특정 카테고리 상품을 시트 '맨 아래에 추가'(비파괴 — 기존 행·쿠팡링크 보존).
+ * 중복 방지: 이미 B열(제품명)에 있는 제품은 건너뛴다. 여러 번 실행해도 안전.
+ *
+ * 사용: appendBackpackingBags 실행. (다른 카테고리는 appendCategory('slug') 직접 호출)
+ */
+function appendCategory(slug) {
+  var resp = UrlFetchApp.fetch(SITE + '/data/' + slug + '.json', { muteHttpExceptions: true });
+  if (resp.getResponseCode() !== 200) { Logger.log('데이터 없음: ' + slug); return 0; }
+  var data = JSON.parse(resp.getContentText());
+  var catName = data.name || slug;
+  var models = data.models || [];
+
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+  var last = sheet.getLastRow();
+
+  // 기존 제품명(B열) 집합 — 중복 추가 방지
+  var seen = {};
+  if (last >= 2) {
+    var names = sheet.getRange(2, 2, last - 1, 1).getValues();
+    for (var k = 0; k < names.length; k++) seen[(names[k][0] || '').toString()] = true;
+  }
+
+  var rows = [];
+  for (var j = 0; j < models.length; j++) {
+    var m = models[j];
+    var name = ((m.brand || '') + ' ' + (m.model || '')).trim();
+    if (seen[name]) continue; // 이미 있음 → 스킵
+    var price = (m.price_min != null) ? m.price_min : (m.price_max != null ? m.price_max : '');
+    rows.push([catName, name, price, m.coupang_url || '']);
+  }
+
+  // 헤더가 없으면(빈 시트) 먼저 추가
+  if (last < 1) {
+    sheet.getRange(1, 1, 1, 4).setValues([['카테고리', '제품명', '가격', '쿠팡링크']]);
+    last = 1;
+  }
+  if (rows.length) sheet.getRange(last + 1, 1, rows.length, 4).setValues(rows);
+  Logger.log(catName + ' 추가: ' + rows.length + '개 (중복 ' + (models.length - rows.length) + '개 스킵)');
+  return rows.length;
+}
+
+function appendBackpackingBags() {
+  return appendCategory('backpacking-bag');
+}
+
+/**
+ * H열(적용 완료 여부) 자동 체크.
+ * D열에 유효한 쿠팡 단축링크(https://link.coupang.com...)가 있는 행 = 상용반영 완료 → H열에 ✅.
+ * 사용: 이 함수를 추가 저장 후 markApplied 실행(최초 1회 권한 승인).
+ */
+function markApplied() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME) || ss.getSheets()[0];
+  var last = sheet.getLastRow();
+  if (last < 2) return 0;
+  var links = sheet.getRange(2, 4, last - 1, 1).getValues(); // D열(쿠팡링크)
+  var existing = sheet.getRange(2, 8, last - 1, 1).getValues(); // H열 기존값
+  var done = 0;
+  var out = links.map(function (row, i) {
+    var v = (row[0] || '').toString();
+    var ok = v.indexOf('https://link.coupang.com') === 0;
+    if (ok) done++;
+    var cur = (existing[i][0] || '').toString();
+    return [ok ? '✅' : (cur || '')]; // 쿠팡링크 없는 행은 기존값 유지(덮어쓰기 방지)
+  });
+  sheet.getRange(2, 8, out.length, 1).setValues(out); // H열(=8번째 열)
+  Logger.log('H열 완료 표기: ' + done + '건');
+  return done;
 }
