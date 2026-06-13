@@ -2094,13 +2094,36 @@ function openProduct(m) {
   const xbtn = modal.querySelector(".pmx");
   xbtn.onclick = close;
   xbtn.focus();
-  // 가성비 ? 툴팁 — 모바일 클릭 토글
+  // 가성비 ? 툴팁 — fixed 버블로 뷰포트 기준 위치 계산(좌우 잘림 방지)
+  let _tipBubble = document.getElementById("spec-tip-bubble");
+  if (!_tipBubble) {
+    _tipBubble = document.createElement("div");
+    _tipBubble.id = "spec-tip-bubble";
+    document.body.appendChild(_tipBubble);
+  }
+  const showTip = (btn) => {
+    _tipBubble.textContent = btn.title;
+    _tipBubble.style.display = "block";
+    const r = btn.getBoundingClientRect();
+    const bw = _tipBubble.offsetWidth || 220;
+    let left = r.left + r.width / 2 - bw / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - bw - 12));
+    const top = r.top - _tipBubble.offsetHeight - 8;
+    _tipBubble.style.left = left + "px";
+    _tipBubble.style.top = (top < 8 ? r.bottom + 8 : top) + "px";
+  };
+  const hideTip = () => { _tipBubble.style.display = "none"; };
   modal.querySelectorAll(".spec-tip-btn").forEach(btn => {
-    btn.onclick = e => { e.stopPropagation(); btn.classList.toggle("open"); };
+    btn.addEventListener("mouseenter", () => showTip(btn));
+    btn.addEventListener("mouseleave", hideTip);
+    btn.addEventListener("focus", () => showTip(btn));
+    btn.addEventListener("blur", hideTip);
+    btn.onclick = e => {
+      e.stopPropagation();
+      _tipBubble.style.display === "block" ? hideTip() : showTip(btn);
+    };
   });
-  modal.querySelector(".pmbox").addEventListener("click", () => {
-    modal.querySelectorAll(".spec-tip-btn.open").forEach(b => b.classList.remove("open"));
-  });
+  modal.querySelector(".pmbox").addEventListener("click", hideTip);
   // 포커스 트랩 (H-29, WCAG 2.1.2) — Tab/Shift+Tab이 모달 밖으로 탈출하지 않고 순환.
   const onKey = e => {
     if (e.key === "Escape") { close(); return; }
