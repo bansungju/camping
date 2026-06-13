@@ -83,10 +83,16 @@ def load(db_path, csv_path):
     with open(csv_path, newline="", encoding="utf-8") as f:   # L-193: load도 UTF-8 명시
         for r in csv.DictReader(f):
             url = (r.get("coupang_url") or "").strip()
-            if url:
-                con.execute("UPDATE products SET coupang_url=? WHERE id=?",
-                            (url, int(r["rep_product_id"])))
-                applied += 1
+            if not url:
+                continue
+            # M-393: 빈 행·공백·비정수 rep_product_id에서 int() ValueError로 전체 로드가 중단되던 것을
+            #   방지. 해당 행만 경고 후 스킵해 나머지 유효 행은 정상 적용·커밋된다.
+            rid = (r.get("rep_product_id") or "").strip()
+            if not rid.isdigit():
+                print(f"  ⚠ seed_coupang: rep_product_id 비정수 → 행 스킵: {rid!r} (url={url[:40]})")
+                continue
+            con.execute("UPDATE products SET coupang_url=? WHERE id=?", (url, int(rid)))
+            applied += 1
     con.commit()
     total = con.execute("SELECT COUNT(*) FROM products WHERE coupang_url IS NOT NULL").fetchone()[0]
     con.close()
