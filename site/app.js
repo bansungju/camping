@@ -640,8 +640,10 @@ async function openSetModal(item) {
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
     const type = modal.querySelector(".sm-type-select")?.dataset.value || DEFAULT_SET_TYPE;
-    const s = newSet(t, type); addToSet(s.id, item);
-    close(); showSetConfirm(s.id);
+    const s = newSet(t, type); const _r = addToSet(s.id, item);  // M-175/M-302: 반환값 검사
+    close();
+    if (_r.status === "added") showSetConfirm(s.id);
+    else showToast("담기에 실패했어요 — 슬롯 한도를 확인해 주세요.");
   };
   inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
   modal.querySelector(".pmx").focus();
