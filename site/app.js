@@ -2358,21 +2358,35 @@ function openReviewDetail(r) {
   const rbtn = ov.querySelector(".rv-report");
   if (rbtn) rbtn.onclick = async () => {
     if (!window.currentUser || !window.currentUser()) { showToast("로그인 후 신고할 수 있어요"); return; }
-    const reason = prompt("신고 사유를 적어주세요 (5자 이상)");
-    if (!reason || reason.trim().length < 5) return;
-    rbtn.disabled = true; rbtn.textContent = "신고 중…";
-    try {
-      const { reportContent } = await import("./supabaseClient.js?v=7f3fb55f");
-      const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
-      if (error) {
-        const msg = error.message || "";
-        showToast(msg === "already_reported" || msg.includes("duplicate") || msg.includes("unique") ? "이미 신고한 후기예요" : (getErrorMessage ? getErrorMessage(error) : "신고 중 오류가 발생했어요"));
-        rbtn.disabled = false; rbtn.textContent = "🚩 신고";
-      } else {
-        rbtn.textContent = "신고됨"; rbtn.disabled = true;
-        showToast("신고가 접수되었어요. 검토 후 조치합니다.");
-      }
-    } catch (e) { showToast("신고 중 오류가 발생했어요"); rbtn.disabled = false; rbtn.textContent = "🚩 신고"; }
+    // M-544: prompt() → 인라인 폼 (iOS Safari PWA에서 prompt() 차단 방지)
+    rbtn.style.display = "none";
+    const rform = document.createElement("div");
+    rform.style.cssText = "display:flex;gap:6px;margin-top:4px";
+    rform.innerHTML = `<input class="rv-report-inp lf-input" type="text" maxlength="100" placeholder="신고 사유 (5자 이상)" style="flex:1;font-size:13px;padding:7px 10px">
+      <button type="button" class="rv-report-submit achip" style="font-size:13px">신고</button>
+      <button type="button" class="rv-report-cancel achip clear" style="font-size:13px">취소</button>`;
+    rbtn.insertAdjacentElement("afterend", rform);
+    const inp = rform.querySelector(".rv-report-inp");
+    const submitBtn2 = rform.querySelector(".rv-report-submit");
+    rform.querySelector(".rv-report-cancel").onclick = () => { rform.remove(); rbtn.style.display = ""; };
+    inp.focus();
+    submitBtn2.onclick = async () => {
+      const reason = inp.value.trim();
+      if (reason.length < 5) { showToast("5자 이상 입력해주세요"); inp.focus(); return; }
+      submitBtn2.disabled = true; submitBtn2.textContent = "신고 중…";
+      try {
+        const { reportContent } = await import("./supabaseClient.js?v=7f3fb55f");
+        const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
+        if (error) {
+          const msg = error.message || "";
+          showToast(msg === "already_reported" || msg.includes("duplicate") || msg.includes("unique") ? "이미 신고한 후기예요" : (getErrorMessage ? getErrorMessage(error) : "신고 중 오류가 발생했어요"));
+          submitBtn2.disabled = false; submitBtn2.textContent = "신고";
+        } else {
+          rform.remove(); rbtn.style.display = ""; rbtn.textContent = "신고됨"; rbtn.disabled = true;
+          showToast("신고가 접수되었어요. 검토 후 조치합니다.");
+        }
+      } catch (e) { showToast("신고 중 오류가 발생했어요"); submitBtn2.disabled = false; submitBtn2.textContent = "신고"; }
+    };
   };
   // M-120: capture+stopImmediatePropagation — ESC가 하위 상품모달 onKey까지 전파돼 동시에 닫히는 것 방지
   // L-122: Tab 포커스 트랩
@@ -2515,7 +2529,7 @@ function wireReviews(modal, m, pcode) {
             const { url, path, error } = await uploadImage(f);
             if (error) {
               // L-111: 부분 업로드 실패 시 이미 올라간 파일 정리
-              removeUploadedImages(uploadedPaths);
+              await removeUploadedImages(uploadedPaths);  // M-182: await 추가 — Storage 롤백 보장
               showToast((getErrorMessage && getErrorMessage(error)) || "사진 업로드 실패"); submitBtn.disabled = false; submitBtn.textContent = "등록"; return;
             }
             urls.push(url); uploadedPaths.push(path);
@@ -4107,6 +4121,9 @@ function openLogModal(presetSetIndex) {
   const sets = getSets();
   const tagSuggestions = sets.flatMap(s => (s.items || []).map(i => `${i.b} ${i.m}`)).slice(0, 20);
 
+  // M-407: 재오픈 시 이전 Blob URL 해제 (body.innerHTML 교체 전)
+  const _prevThumb = body.querySelector("#lf-img-thumb");
+  if (_prevThumb?.src?.startsWith("blob:")) URL.revokeObjectURL(_prevThumb.src);
   body.innerHTML = `
     <form id="log-form" autocomplete="off">
       <div class="lf-field">
