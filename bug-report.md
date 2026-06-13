@@ -3444,7 +3444,7 @@
 
 ---
 
-### [L-193] — `seed_coupang.py` CSV 읽기 — `encoding` 미지정 → 한글 브랜드명·모델명 깨짐
+### [L-193] ✅ 해결완료(2026-06-13, C23) — `seed_coupang.py` CSV 읽기 — `encoding` 미지정 → 한글 브랜드명·모델명 깨짐
 
 - **영역:** 백엔드 — 파이프라인 / 쿠팡 씨드
 - **심각도:** 🟢 Low
@@ -4570,7 +4570,7 @@
 
 ---
 
-### [L-215] — `seed_coupang.py` `build()` — CSV `rep_product_id` 공백으로 기존 쿠팡 URL 유실
+### [L-215] ✅ 해결완료(2026-06-13, C23) — `seed_coupang.py` `build()` — CSV `rep_product_id` 공백으로 기존 쿠팡 URL 유실
 
 - **영역:** 백엔드 — 쿠팡 파트너스
 - **심각도:** 🟢 Low
@@ -5788,7 +5788,7 @@
 
 ---
 
-### [L-239] — `seed_coupang.py` `build()` — `existing` dict 키 타입 불일치(str vs int) 잠재적 미스
+### [L-239] ✅ 해결완료(2026-06-13, C23) — `seed_coupang.py` `build()` — `existing` dict 키 타입 불일치(str vs int) 잠재적 미스
 
 - **영역:** 백엔드 — 쿠팡 시드
 - **심각도:** 🟢 Low
