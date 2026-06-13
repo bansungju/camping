@@ -2574,7 +2574,7 @@
 - **제안 수정:** 단기: `aggregateRating` 블록을 star 평균값만 있을 경우 조건부 생략(리뷰 실데이터 없으면 아예 출력 안 함). 장기: 빌드 시 DB에서 상품별 리뷰 수 집계 후 주입.
 - **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 135-139 [lane:CORE]
 
-### [L-166] — `renderNicknameModal()` — 진입 시 `window.onWishChange = null` 로 재로그인 세션의 찜 동기화 핸들러를 강제 삭제
+### [L-166] ✅ 해결완료(2026-06-13, SOCIAL) — `renderNicknameModal()` — 진입 시 `window.onWishChange = null` 로 재로그인 세션의 찜 동기화 핸들러를 강제 삭제
 - **영역:** 프론트엔드 — account.html 찜 동기화
 - **심각도:** 🟢 Low
 - **증상:** `renderNicknameModal()`(account.html line 262)의 첫 줄이 `window.onWishChange = null` 이다. 기존 사용자가 로그아웃 후 재로그인 → `syncWishlistOnLogin`이 `onWishChange` 핸들러를 설정한 뒤, 어떤 이유로 닉네임 모달 경로로 진입하면 핸들러가 삭제된다. 이후 찜 추가/제거 시 원격 저장이 호출되지 않아 변경사항이 소실된다.
