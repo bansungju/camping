@@ -3349,7 +3349,7 @@
 
 ---
 
-### [M-174] — `toggleWishWithHint` — `_gAuthReady` 확인 없이 `isLoggedIn()` 직접 호출 → 인증 초기화 중 false 반환으로 오게이팅
+### [M-174] — `toggleWishWithHint` — `_gAuthReady` 확인 없이 `isLoggedIn()` 직접 호출 → 인증 초기화 중 false 반환으로 오게이팅 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 찜 / 인증 (app.js)
 - **심각도:** 🟡 Medium
@@ -3496,7 +3496,7 @@
 
 ---
 
-### [M-181] — `openProduct` — `keydown` 리스너 중복 등록 → ESC 키 중복 처리 / `close()` 이중 호출
+### [M-181] ✅ 해결완료(2026-06-13) — `openProduct` — `keydown` 리스너 중복 등록 → ESC 키 중복 처리 / `close()` 이중 호출
 
 - **영역:** 프론트엔드 — 상품 상세 모달 (app.js)
 - **심각도:** 🟡 Medium
@@ -3729,7 +3729,7 @@
 
 ---
 
-### [M-193] — `openLogDetail` — 재오픈 시 `keydown` onKey 리스너 누적 → ESC 중복 처리
+### [M-193] ✅ 해결완료(2026-06-13) — `openLogDetail` — 재오픈 시 `keydown` onKey 리스너 누적 → ESC 중복 처리
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3849,7 +3849,7 @@
 
 ---
 
-### [M-198] — `serializeState` — category.html 외 페이지에서 호출 시 URL을 `category.html`로 덮어씀
+### [M-198] ✅ 해결완료(2026-06-13) — `serializeState` — category.html 외 페이지에서 호출 시 URL을 `category.html`로 덮어씀
 
 - **영역:** 프론트엔드 — 카테고리 (app.js)
 - **심각도:** 🟡 Medium
@@ -3943,7 +3943,7 @@
 
 ---
 
-### [M-202] — `openFromSearch` / 찜카드 `go()` — ESC 닫기 시 `restore()` 미호출 → STATE.slug 미복원
+### [M-202] ✅ 해결완료(2026-06-13) — `openFromSearch` / 찜카드 `go()` — ESC 닫기 시 `restore()` 미호출 → STATE.slug 미복원
 
 - **영역:** 프론트엔드 — 검색 / 찜 (app.js)
 - **심각도:** 🟡 Medium
@@ -4087,7 +4087,7 @@
 
 ---
 
-### [M-211] — `openLogDetail` async IIFE — `.catch()` 없음 → 댓글 로드 실패 시 UnhandledPromiseRejection
+### [M-211] ✅ 해결완료(2026-06-13) — `openLogDetail` async IIFE — `.catch()` 없음 → 댓글 로드 실패 시 UnhandledPromiseRejection
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -4749,7 +4749,7 @@
 
 ---
 
-### [M-240] — `renderAccount` 세트 섹션 — `loginShown` 플래그 미제거로 로그아웃 후 로그인 CTA 재표시 안 됨
+### [M-240] — `renderAccount` 세트 섹션 — `loginShown` 플래그 미제거로 로그아웃 후 로그인 CTA 재표시 안 됨 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -4826,7 +4826,7 @@
 
 ---
 
-### [M-245] — `openProduct` 스펙 툴팁 — 모달 재오픈 시 이전 툴팁 텍스트 잔류
+### [M-245] ✅ 해결완료(2026-06-13) — `openProduct` 스펙 툴팁 — 모달 재오픈 시 이전 툴팁 텍스트 잔류
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -4838,7 +4838,7 @@
 
 ---
 
-### [M-246] — `renderAccount` 로그 섹션 — `dataset.loaded` 가드로 재로그인 후 로그 목록 갱신 안 됨
+### [M-246] — `renderAccount` 로그 섹션 — `dataset.loaded` 가드로 재로그인 후 로그 목록 갱신 안 됨 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -4876,7 +4876,7 @@
 
 ---
 
-### [M-247] — `_showAuthGateModal` — 백드롭 클릭 닫기 시 `keydown` 리스너 미제거 누수
+### [M-247] ✅ 해결완료(2026-06-13) — `_showAuthGateModal` — 백드롭 클릭 닫기 시 `keydown` 리스너 미제거 누수
 
 - **영역:** 프론트엔드 — 인증 모달
 - **심각도:** 🟡 Medium
@@ -5154,7 +5154,7 @@
 
 ---
 
-### [M-259] — `_showAuthGateModal()` — ESC 키 리스너 모달 닫힌 후 미제거 (다중 등록 누적)
+### [M-259] ✅ 해결완료(2026-06-13) — `_showAuthGateModal()` — ESC 키 리스너 모달 닫힌 후 미제거 (다중 등록 누적)
 
 - **영역:** 프론트엔드 — 인증 게이트 모달
 - **심각도:** 🟡 Medium
@@ -5233,7 +5233,7 @@
 
 ## R-110 (프론트엔드) — 2026-06-13
 
-### [M-261] — `openFromSearch` — ESC 키 닫기 시 `restore()` 미호출로 STATE.slug/data 오염 잔류
+### [M-261] ✅ 해결완료(2026-06-13) — `openFromSearch` — ESC 키 닫기 시 `restore()` 미호출로 STATE.slug/data 오염 잔류
 
 - **영역:** 프론트엔드 — 검색 연동
 - **심각도:** 🟡 Medium
@@ -5245,7 +5245,7 @@
 
 ---
 
-### [M-262] — `openFromSearch` — 모달 중첩 열기 시 첫 번째 restore가 원본 대신 중간 STATE 복원
+### [M-262] ✅ 해결완료(2026-06-13) — `openFromSearch` — 모달 중첩 열기 시 첫 번째 restore가 원본 대신 중간 STATE 복원
 
 - **영역:** 프론트엔드 — 검색 연동
 - **심각도:** 🟡 Medium
@@ -5347,7 +5347,7 @@
 
 ---
 
-### [M-267] — `openProduct` — `STATE.data` null 시 `d.metrics` 접근 TypeError 크래시
+### [M-267] ✅ 해결완료(2026-06-13) — `openProduct` — `STATE.data` null 시 `d.metrics` 접근 TypeError 크래시
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -5527,7 +5527,7 @@
 
 ## R-113 (프론트엔드) — 2026-06-13
 
-### [M-278] — `openFromSearch` — 백드롭 클릭 시 `origM` 재호출로 `onKey` 이중 제거, 이후 ESC 작동 불가
+### [M-278] ✅ 해결완료(2026-06-13) — `openFromSearch` — 백드롭 클릭 시 `origM` 재호출로 `onKey` 이중 제거, 이후 ESC 작동 불가
 
 - **영역:** 프론트엔드 — 검색 연동
 - **심각도:** 🟡 Medium
@@ -5653,7 +5653,7 @@
 
 ## R-114 (프론트엔드) — 2026-06-13
 
-### [M-283] — `_showAuthGateModal` — `loginHref` 계산 후 미사용, 깊은 경로에서 `./account.html` 오해석
+### [M-283] ✅ 해결완료(2026-06-13) — `_showAuthGateModal` — `loginHref` 계산 후 미사용, 깊은 경로에서 `./account.html` 오해석
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟡 Medium
@@ -5665,7 +5665,7 @@
 
 ---
 
-### [M-284] — `openProduct` — wish 버튼 `innerHTML` 선 리셋으로 미로그인 시 `on` 클래스 소실
+### [M-284] ✅ 해결완료(2026-06-13) — `openProduct` — wish 버튼 `innerHTML` 선 리셋으로 미로그인 시 `on` 클래스 소실
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -6046,7 +6046,7 @@
 
 ## R-117 (프론트엔드) — 2026-06-13
 
-### [M-301] — `applySort` — 정렬 변경 후 `serializeState()` 미호출로 URL 미반영
+### [M-301] ✅ 해결완료(2026-06-13) — `applySort` — 정렬 변경 후 `serializeState()` 미호출로 URL 미반영
 
 - **영역:** 프론트엔드 — 정렬
 - **심각도:** 🟡 Medium
@@ -6128,7 +6128,7 @@
 
 ---
 
-### [M-305] — `toggleWishWithHint` — auth 초기화 전 호출 시 비로그인 판정 오동작
+### [M-305] — `toggleWishWithHint` — auth 초기화 전 호출 시 비로그인 판정 오동작 — ✅ 해결완료(2026-06-13)
 
 - **발견일시:** 2026-06-13
 - **증상:** 페이지 로드 직후 `_gAuthReady`가 아직 `false`인 상태에서 사용자가 찜 버튼을 빠르게 클릭하면, `window.isLoggedIn()`이 `false`를 반환(`_ready=false` → `!!_user`=false)하므로 실제로 로그인된 사용자도 인증 게이트 모달이 뜬다. `toggleWish`(app.js line 443~458)는 `_gAuthReady` 여부를 분기해 `authReady()` 대기 로직을 갖고 있으나, `toggleWishWithHint`(line 472~480)는 이 분기 없이 단순히 `isLoggedIn()`만 확인하므로 초기화 중 클릭을 처리하지 못한다.
@@ -6158,7 +6158,7 @@
 
 ---
 
-### [M-306] — `serializeState` — `cat` 파라미터가 `&` 뒤에 오는 URL에서 `?cat=` 중복 생성
+### [M-306] ✅ 해결완료(2026-06-13) — `serializeState` — `cat` 파라미터가 `&` 뒤에 오는 URL에서 `?cat=` 중복 생성
 
 - **발견일시:** 2026-06-13
 - **증상:** `serializeState`(app.js line 1288~1289)는 `URLSearchParams`로 필터 상태를 직렬화한 뒤, 항상 `?cat=${STATE.slug}` 앞에 붙여 URL을 수동 조합한다. `qs`에 이미 `cat` 파라미터가 포함되어 있을 경우(예: 외부에서 `?cat=X&cat=Y` 형식으로 진입) `cat`이 두 번 나타나며, `location.pathname`이 `category.html` 이외 경로일 때(`base="category.html"`) 상대경로 URL에 이전 경로 컨텍스트가 혼입된다. 또한 `sort`와 `sa`가 기본값과 같으면 생략하는 로직(line 1281)은 `defaultSortKey()`·`defaultAsc(dk)` 두 함수를 매 `draw()` 호출마다 재실행하므로 카테고리 전환 시 타이밍에 따라 이전 카테고리의 기본 정렬 기준이 쓰인다.
@@ -6383,7 +6383,7 @@
 
 ---
 
-### [M-317] — `renderAccount` — `myLogsList.dataset.loaded` 미초기화로 다른 사용자 로그인 시 이전 사용자 로그 노출
+### [M-317] — `renderAccount` — `myLogsList.dataset.loaded` 미초기화로 다른 사용자 로그인 시 이전 사용자 로그 노출 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정 페이지
 - **심각도:** 🟡 Medium
@@ -6999,7 +6999,7 @@
 
 ---
 
-### [M-347] — `serializeState` — 중첩 경로에서 상대 URL `category.html?cat=...` 생성 → 404
+### [M-347] ✅ 해결완료(2026-06-13) — `serializeState` — 중첩 경로에서 상대 URL `category.html?cat=...` 생성 → 404
 
 - **영역:** 프론트엔드 — URL/라우팅
 - **심각도:** 🟡 Medium
@@ -7047,7 +7047,7 @@
 
 ---
 
-### [H-98] — `promote_catalog.py` `main()` — None 스펙 float 포맷 TypeError 크래시
+### ✅ 해결완료(2026-06-13) [H-98] — `promote_catalog.py` `main()` — None 스펙 float 포맷 TypeError 크래시
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -7311,7 +7311,7 @@
 
 ---
 
-### [H-101] — `validate_ranges.py` `validate_db` — `valid=1` 리셋 후 재격리 전 크래시 시 DB 불일치
+### ✅ 해결완료(2026-06-13) [H-101] — `validate_ranges.py` `validate_db` — `valid=1` 리셋 후 재격리 전 크래시 시 DB 불일치
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -7767,7 +7767,7 @@
 
 ---
 
-### [M-372] — `toggleWishWithHint` — `authReady()` 대기 없이 `isLoggedIn()` 체크 → 초기화 레이스 시 false 반환
+### [M-372] — `toggleWishWithHint` — `authReady()` 대기 없이 `isLoggedIn()` 체크 → 초기화 레이스 시 false 반환 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 찜/인증
 - **심각도:** 🟡 Medium
@@ -7923,7 +7923,7 @@
 
 ---
 
-### [M-380] — `view-set` 핸들러 — JSON 파싱 실패 시 `hiddenSections` 복원 누락 → 섹션 영구 숨김
+### [M-380] ✅ 해결완료(2026-06-13) — `view-set` 핸들러 — JSON 파싱 실패 시 `hiddenSections` 복원 누락 → 섹션 영구 숨김
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -7947,7 +7947,7 @@
 
 ---
 
-### [H-109] — `run_all.py` `sh()` — `DB` 전역 변수 `main()` 호출 전 미설정 시 NameError
+### ✅ 해결완료(2026-06-13) [H-109] — `run_all.py` `sh()` — `DB` 전역 변수 `main()` 호출 전 미설정 시 NameError
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -8562,7 +8562,7 @@
 
 ---
 
-### [H-111] — `validate_ranges.py` `ensure_implausible_flagtype` — `products` 빈 테이블 시 `TypeError` + SAVEPOINT 미해제
+### ✅ 해결완료(2026-06-13) [H-111] — `validate_ranges.py` `ensure_implausible_flagtype` — `products` 빈 테이블 시 `TypeError` + SAVEPOINT 미해제
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -8574,7 +8574,7 @@
 
 ---
 
-### [H-112] — `promote_catalog.py` vs `run_all.py` — 텐트 `CORE` 기준 불일치로 단독 실행 시 강등 오작동
+### ✅ 해결완료(2026-06-13) [H-112] — `promote_catalog.py` vs `run_all.py` — 텐트 `CORE` 기준 불일치로 단독 실행 시 강등 오작동
 
 - **영역:** 백엔드 — 카탈로그 프로모션
 - **심각도:** 🔴 High
@@ -8634,7 +8634,7 @@
 
 ---
 
-### [M-403] — `renderAccount` — `myLogsList.dataset.loaded` 미초기화로 재로그인 시 이전 사용자 로그 표시
+### [M-403] — `renderAccount` — `myLogsList.dataset.loaded` 미초기화로 재로그인 시 이전 사용자 로그 표시 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟡 Medium
@@ -8658,7 +8658,7 @@
 
 ---
 
-### [M-405] — `openFromSearch` — `_onCloseOnce`가 `STATE.slug`/`STATE.data`를 `undefined`로 복원
+### [M-405] ✅ 해결완료(2026-06-13) — `openFromSearch` — `_onCloseOnce`가 `STATE.slug`/`STATE.data`를 `undefined`로 복원
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟡 Medium
@@ -8790,7 +8790,7 @@
 
 ---
 
-### [M-409] — `renderAccount` — `setsEl.dataset.loginShown` 미초기화로 로그인 후에도 로그인 안내 잔류
+### [M-409] — `renderAccount` — `setsEl.dataset.loginShown` 미초기화로 로그인 후에도 로그인 안내 잔류 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 계정/세트
 - **심각도:** 🟡 Medium
@@ -9114,7 +9114,7 @@
 
 ---
 
-### [M-419] — `openProduct` `close()` — `onKey` TDZ 의존 취약 순서
+### [M-419] ✅ 해결완료(2026-06-13) — `openProduct` `close()` — `onKey` TDZ 의존 취약 순서
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -9354,7 +9354,7 @@
 
 ---
 
-### [M-425] — `openProduct` `close()` — `#spec-tip-bubble` 툴팁 미숨김으로 모달 닫힌 후 잔류
+### [M-425] ✅ 해결완료(2026-06-13) — `openProduct` `close()` — `#spec-tip-bubble` 툴팁 미숨김으로 모달 닫힌 후 잔류
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟡 Medium
@@ -9366,7 +9366,7 @@
 
 ---
 
-### [M-426] — `serializeState` — `/` 경로 진입 시 `"category.html"` 상대 URL로 PWA 캐시 미스
+### [M-426] ✅ 해결완료(2026-06-13) — `serializeState` — `/` 경로 진입 시 `"category.html"` 상대 URL로 PWA 캐시 미스
 
 - **영역:** 프론트엔드 — 라우팅
 - **심각도:** 🟡 Medium
@@ -9978,7 +9978,7 @@
 
 ---
 
-### [M-452] — `importSet` — `close()` 후 `alert()` 호출로 iOS Safari에서 성공 확인 무음 처리
+### [M-452] ✅ 해결완료(2026-06-13) — `importSet` — `close()` 후 `alert()` 호출로 iOS Safari에서 성공 확인 무음 처리
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -10611,5 +10611,341 @@
 - **원인:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 107 — `fetchone()` None 미처리.
 - **제안 수정:** `row = ..fetchone(); cur_cap = row[0] if row else None` 패턴 적용.
 - **파일:** [pipeline/fill_whitelist_specs.py](pipeline/fill_whitelist_specs.py) line 107 [lane:BACKEND]
+
+---
+
+### [H-132] — `updateLeadText` — `STYLE_META.find()` undefined 시 `sm.icon` TypeError
+
+- **영역:** 프론트엔드 — 카테고리 렌더링
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** URL `?style=X` 등으로 `STATE.campStyle`이 `STYLE_META`에 없는 키로 설정되면 `sm = undefined` → `sm.icon` TypeError 크래시.
+- **원인:** [site/app.js](site/app.js) line 1432 — `find()` 결과 null 가드 없음.
+- **제안 수정:** `if (!sm) { leadEl.innerHTML = ''; return; }` 가드 추가.
+- **파일:** [site/app.js](site/app.js) line 1432 [lane:CORE]
+
+---
+
+### [H-133] — `renderAccount` 찜 카드 `go()` — `wx.b`/`wx.m` undefined 시 `"?brands=undefined"` 브로큰 URL
+
+- **영역:** 프론트엔드 — 계정/찜
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 저장된 찜 아이템의 `b` 또는 `m` 필드 누락 시 `encodeURIComponent(undefined)` → `"?brands=undefined&q=undefined"` 브로큰 URL, 0건 검색 결과.
+- **원인:** [site/app.js](site/app.js) line 3399 — `!wx.b`/`!wx.m` 가드 없음.
+- **제안 수정:** `if (!wx || !wx.s || !wx.b || !wx.m) { location.href = card.dataset.href; return; }` 추가.
+- **파일:** [site/app.js](site/app.js) line 3399 [lane:CORE]
+
+---
+
+### [M-480] — `priceRange` — `price_min=null`이지만 `price_max` 유효 시 "가격없음" 오표시
+
+- **영역:** 프론트엔드 — 가격 표시
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `price_min=null`, `price_max` 유효값인 상품이 "가격없음"으로 표시됨.
+- **원인:** [site/app.js](site/app.js) line 341 — `priceRange(a, b)`에서 `b` 파라미터 미사용.
+- **제안 수정:** `(a == null || a === 0) ? ((b == null || b === 0) ? '가격없음' : won(b)) : won(a)` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 341 [lane:CORE]
+
+---
+
+### [M-481] — `renderRecent` — `x.b`/`x.m` undefined 시 `"?brands=undefined"` 브로큰 URL
+
+- **영역:** 프론트엔드 — 최근 본 상품
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 오래된 스키마 또는 데이터 오염으로 `b`/`m` 누락된 recent 아이템이 브로큰 카테고리 URL 생성.
+- **원인:** [site/app.js](site/app.js) line 2985 — `encodeURIComponent(x.b)` 전 null 가드 없음.
+- **제안 수정:** `.map()` 내부에 `if (!x || !x.b || !x.m || !x.s) return '';` 추가.
+- **파일:** [site/app.js](site/app.js) line 2985 [lane:CORE]
+
+---
+
+### [M-482] — `account.html` `initAuth` + `app.js` `_setupGlobalAuth` — 이중 `onAuthStateChange` 구독으로 이중 동기화
+
+- **영역:** 프론트엔드 — 인증
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `TOKEN_REFRESHED` 등 이벤트가 두 구독에 동시 전달 → `syncWishlistOnLogin` 중복 실행, 두 번째 호출이 첫 번째 merge 결과 덮어씀.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 19 및 [site/app.js](site/app.js) line 109–125 — 동일 세션에 두 개의 독립 `onAuthStateChange` 리스너.
+- **제안 수정:** `initAuth` 콜백에 `_syncedOnLogin` 플래그로 동일 사용자 ID 재동기 차단.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 19 [lane:CORE]
+
+---
+
+### [M-483] — `draw()` — `STATE.q` 다중 단어 검색 토큰화 미적용 (홈 검색과 불일치)
+
+- **영역:** 프론트엔드 — 카테고리 검색
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 홈 검색은 `q.split(/\s+/)` 토큰화로 다중 단어 검색 지원, 카테고리 내 검색은 `.includes()` 단순 비교 → `"big agnes"` 등 이중 공백/토큰 쿼리 불일치.
+- **원인:** [site/app.js](site/app.js) line 2648 — 홈 검색(line 1041)의 토큰화 패턴 미적용.
+- **제안 수정:** `draw()` 내 검색 필터도 `STATE.q.split(/\s+/).filter(Boolean)` 토큰화 적용.
+- **파일:** [site/app.js](site/app.js) line 2648 [lane:CORE]
+
+---
+
+### [M-484] — 찜 카드 `go()` — `r.ok` 미확인으로 404 응답도 `r.json()` 파싱 시도
+
+- **영역:** 프론트엔드 — 계정/찜
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 삭제된 카테고리 JSON 요청 시 404 응답도 `r.json()` 파싱 → 에러 객체 또는 파싱 실패, 상품 모달 미표시.
+- **원인:** [site/account.html](site/account.html) line 3399 부근 — `r.ok` 확인 없이 `r.json()` 호출.
+- **제안 수정:** `if (!r.ok) throw new Error(r.status);` 추가 후 `r.json()` 호출.
+- **파일:** [site/account.html](site/account.html) line 3399 [lane:CORE]
+
+---
+
+### [M-485] — `pushRecent` — `item.key`가 undefined이면 dedup 실패로 recent 목록 오염
+
+- **영역:** 프론트엔드 — 최근 본 상품
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `m.brand`/`m.model` 누락 상품 open 시 `key="undefined|undefined|"` 아이템이 dedup 없이 중복 추가 → recent 목록 오염.
+- **원인:** [site/app.js](site/app.js) line 756–760 — `!item.b`/`!item.m` 가드 없음.
+- **제안 수정:** line 757에 `if (!item.s || !item.b || !item.m) return;` 추가.
+- **파일:** [site/app.js](site/app.js) line 757 [lane:CORE]
+
+---
+
+### [L-398] — `priceRange` `b` 파라미터 dead code — 유지보수 혼란
+
+- **영역:** 프론트엔드 — 가격 표시
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `priceRange(a, b)` 함수 시그니처에 `b`가 있으나 미사용 — 정적 분석 도구 경고 및 유지보수 혼란.
+- **원인:** [site/app.js](site/app.js) line 341 — M-480 수정 전까지 `b` 미사용 상태.
+- **제안 수정:** M-480 수정으로 함께 해소.
+- **파일:** [site/app.js](site/app.js) line 341 [lane:CORE]
+
+---
+
+### [L-399] — `openProduct` — `d.models.indexOf(m)` O(n) 중복 호출
+
+- **영역:** 프론트엔드 — 상품 모달
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 모달 오픈 시 `d.models.indexOf(m)` O(n) 탐색 2회(href 생성 + share URL) → 대형 카테고리에서 불필요한 중복 연산.
+- **원인:** [site/app.js](site/app.js) line 2141, 2186 — indexOf 결과 미캐시.
+- **제안 수정:** `const idx = d.models.indexOf(m)` 한 번 캐시 후 재사용.
+- **파일:** [site/app.js](site/app.js) line 2141 [lane:CORE]
+
+---
+
+### [L-400] — `requestPushSubscription` — `pushManager.subscribe` 실패 시 `push-denied` 미설정으로 재시도 반복
+
+- **영역:** 프론트엔드 — 푸시 알림
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 권한 허용 후 `pushManager.subscribe()` 네트워크 오류 시 toast 없고 `push-denied` 미설정 → 다음 페이지 로드 시 또다시 구독 시도 반복.
+- **원인:** [site/app.js](site/app.js) line 3670 — subscribe 실패 경로에 backoff/flag 없음.
+- **제안 수정:** subscribe 실패 시 toast 표시하고 재시도 flag 설정.
+- **파일:** [site/app.js](site/app.js) line 3670 [lane:CORE]
+
+---
+
+### [L-401] — `toggleWish` 지연 실행 경로 — `.pli-wish` 카드 버튼 시각 갱신 누락
+
+- **영역:** 프론트엔드 — 찜
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** auth 초기화 중 찜 토글 시 `authReady().then()` 지연 실행 후 `_paintWishBtn`이 `data-key` 버튼만 업데이트, `data-mi` 기반 `.pli-wish` 카드 버튼은 갱신 안 됨.
+- **원인:** [site/app.js](site/app.js) line 472–476 — `_paintWishBtn`이 `data-mi` 속성 카드 버튼 미포함.
+- **제안 수정:** 지연 실행 완료 후 `draw()` 호출 또는 `.pli-wish[data-mi]` 버튼도 `_paintWishBtn`에 포함.
+- **파일:** [site/app.js](site/app.js) line 472 [lane:CORE]
+
+---
+
+### [L-402] — `account.html` 세션 감지 휴리스틱 — 다른 Supabase 앱 토큰 오탐으로 로딩 스피너 flash
+
+- **영역:** 프론트엔드 — 계정
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 다른 Supabase 프로젝트 토큰이 localStorage에 있으면 로딩 스피너 표시 후 즉시 로그인 화면 전환 → 미세한 UX 깜빡임.
+- **원인:** [site/account.html](site/account.html) line 596 — `sb-*-auth-token` 정규식이 프로젝트 ref 미검증.
+- **제안 수정:** 알려진 Supabase 프로젝트 ref를 키 패턴에 포함하거나 flash를 허용 가능 범위로 수용.
+- **파일:** [site/account.html](site/account.html) line 596 [lane:CORE]
+
+---
+
+### [L-403] — `pushRecent` — `QuotaExceededError` 무음 처리로 recent 목록 갱신 중단
+
+- **영역:** 프론트엔드 — 최근 본 상품
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** localStorage 용량 초과 시 최근 본 목록 갱신 중단, 사용자 알림 없음. `saveSets`(M-467)와 달리 toast도 없음.
+- **원인:** [site/app.js](site/app.js) line 760 — `catch (e) { /* 무시 */ }` 처리.
+- **제안 수정:** 오래된 항목 절반 trim 후 재시도하거나 허용 가능한 silent fail로 수용.
+- **파일:** [site/app.js](site/app.js) line 760 [lane:CORE]
+
+---
+
+### [H-134] — `run_all.py` — 예외 시 DB 커넥션 누수 (try/finally 없음)
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `normalize_db`/`validate_db` 예외 시 `con.close()` 미호출 → WAL 쓰기 락 점유, 다음 파이프라인 실행 차단.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 169–176 — try/finally 없음, 두 번째 `con` 열기 전 첫 번째 미닫힘.
+- **제안 수정:** `try/finally: con.close()` 또는 컨텍스트 매니저 사용.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 169 [lane:BACKEND]
+
+---
+
+### [M-486] — `run_all.py` — `check_export.py` 호출 시 `--data` 미전달 → 잘못된 경로 검사
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `--out` 커스텀 옵션 사용 시 `check_export.py`가 기본 `site/data`를 검사 → 실제 export 디렉터리 미검증, 이상 데이터 배포 통과.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 217 — `subprocess.run`에 `--data` 인수 없음.
+- **제안 수정:** `sh("check_export.py", "--data", os.path.join(ROOT, "site", "data"))` 또는 export 출력 경로 전달.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 217 [lane:BACKEND]
+
+---
+
+### [M-487] — `run_all.py` 다중 포장 거부 정규식 — `N개세트`(공백 없음) 정상 번들 오거부
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `N개세트` (공백 없이) 표기된 정상 번들 상품이 다중 포장 거부 정규식에 걸려 오거부됨.
+- **원인:** [pipeline/run_all.py](pipeline/run_all.py) line 185–191 — 부정형 lookahead `(?!월| ?세트)`에서 공백 선택이 `\s*`가 아닌 ` ?`(공백 1개 옵션).
+- **제안 수정:** `(?!월| ?세트)` → `(?!월|\s*세트)`로 변경.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 187 [lane:BACKEND]
+
+---
+
+### [M-488] — `normalize.py` `floor_area_m2` — 테이퍼 평균 정수 반올림으로 소수점 정밀도 손실
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `210.5(185.3)` 같은 소수 테이퍼 치수가 `round()` 후 정수(`198`)로 치환 → floor_area 계산 정밀도 최대 ~0.5% 손실.
+- **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 94–95 — `round()` 인수 없이 호출, 정수 반환.
+- **제안 수정:** `round(..., 1)` 로 변경, 소수점 1자리 유지.
+- **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 94 [lane:BACKEND]
+
+---
+
+### [M-489] — `export_site.py` — value 메트릭 `fill: 100` 하드코딩 → 실제 커버리지 미반영
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** value_score가 없는 상품이 많아도 `fill: 100`이 hardcoded → UI에서 커버리지 100%로 잘못 표시.
+- **원인:** [pipeline/export_site.py](pipeline/export_site.py) line 175–178 — `fill` 값 계산 없이 100 고정.
+- **제안 수정:** `fill = round(sum(1 for m in models if "value_score" in m.get("specs", {})) * 100 / max(len(models), 1))` 계산 후 사용.
+- **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 175 [lane:BACKEND]
+
+---
+
+### [M-490] — `babysit.py` — `promote_all` 예외 시 DB 커넥션 누수
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `promote_all(con)` 예외(DB 잠금 등) 발생 시 `con.close()` 미호출 → 커넥션 누수.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 31–100 — try/finally 없음.
+- **제안 수정:** `try/finally: con.close()` 래핑.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 31 [lane:BACKEND]
+
+---
+
+### [M-491] — `babysit.py` — 커버리지 검사 카테고리 이름 하드코딩 → 이름 변경 시 silent 무음
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 이름 `'백패킹텐트'` 변경 시 서브쿼리 결과 0 → NULL 전파 → `c is None` 가드로 커버리지 알림 완전 무음.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 91–98 — 카테고리 이름 하드코딩, 존재 여부 미확인.
+- **제안 수정:** 카테고리 존재 여부 사전 확인 후 쿼리 실행.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 91 [lane:BACKEND]
+
+---
+
+### [M-492] — `danawa.py` `http_get` — URLError 재시도 시 `last=None` 리셋으로 이전 HTTPError 정보 손실
+
+- **영역:** 백엔드 — 데이터 수집
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 시도1 HTTPError(403) → 시도2 URLError → `last=None` 리셋 → 최종 raise에서 403 정보 소실, 일반 오류 메시지만 출력.
+- **원인:** [pipeline/danawa.py](pipeline/danawa.py) line 85–88 — URLError 브랜치에서 `last = None` 재설정.
+- **제안 수정:** URLError에서도 `last = e` 유지, 덮어쓰지 않음.
+- **파일:** [pipeline/danawa.py](pipeline/danawa.py) line 85 [lane:BACKEND]
+
+---
+
+### [M-493] — `backend/main.py` `get_real_ip` — `CF-Connecting-IP` 헤더 무조건 신뢰 → rate-limit 우회 가능
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** Cloudflare 우회 직접 접근 시 `CF-Connecting-IP` 헤더 위조로 임의 IP를 rate-limit 키로 주입 가능.
+- **원인:** [backend/main.py](backend/main.py) line 14–19 — 소켓 IP가 Cloudflare IP 범위인지 검증 없이 헤더 신뢰.
+- **제안 수정:** 소켓 IP(request.client.host)가 Cloudflare IP 범위 내일 때만 `CF-Connecting-IP` 신뢰.
+- **파일:** [backend/main.py](backend/main.py) line 14 [lane:BACKEND]
+
+---
+
+### [L-404] — `normalize.py` `parse_dims_cm` — 유럽식 소수 쉼표 문자열 오처리
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `"2,5x3,0"` 같은 유럽식 소수 표기에서 쉼표 제거 → `"25x30"`, 10배 오차.
+- **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 47 — `replace(",", "")` 천 단위 구분자와 소수점 구분자를 구별하지 않음.
+- **제안 수정:** `re.sub(r"(\d),(\d{3})", r"\1\2", s)` 패턴으로 천 단위만 제거.
+- **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 47 [lane:BACKEND]
+
+---
+
+### [L-405] — `normalize.py` `parse_capacity_l` — 용량 정규식 `l` 단어 경계 없음
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 용량 정규식 `l` 대안이 단어 경계 없이 서브스트링 매칭 가능 (이론적 오탐 위험).
+- **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 110–113 — `(?:l|리터|ℓ)` 에 `\b` 없음.
+- **제안 수정:** `(?:l\b|리터|ℓ)` 로 변경.
+- **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 112 [lane:BACKEND]
+
+---
+
+### [L-406] — `danawa.py` `parse_spec_string` — 빈 키 silent 삽입
+
+- **영역:** 백엔드 — 데이터 수집
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 콜론으로 시작하는 스펙 문자열 파싱 시 `k=""` 빈 키로 `specs[""] = v` 삽입 → 다운스트림 키 조회 오류.
+- **원인:** [pipeline/danawa.py](pipeline/danawa.py) line 169 — `split(":", 1)` 후 빈 key 가드 없음.
+- **제안 수정:** `if not k: continue` 추가.
+- **파일:** [pipeline/danawa.py](pipeline/danawa.py) line 169 [lane:BACKEND]
+
+---
+
+### [L-407] — `backend/store.py` — `site/data/*.json` glob이 임시/백업 파일 로드
+
+- **영역:** 백엔드 — API 서버
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `.json` 확장자를 가진 임시 파일이 카테고리 데이터로 로드 → `categories` 오염.
+- **원인:** [backend/store.py](backend/store.py) line 19 — glob에 slug 유효성 검사 없음.
+- **제안 수정:** 로드된 딕셔너리에 `"slug"` 키 존재·파일명 일치 여부 검증.
+- **파일:** [backend/store.py](backend/store.py) line 19 [lane:BACKEND]
+
+---
+
+### [L-408] — `value_metric.py` `dry_run()` — 스펙 쿼리 `ORDER BY` 없어 export와 다른 값 반환
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `dry_run()`이 `export_site.py`와 다른 스펙 값을 반환 → dry-run 검증 결과가 실제 export와 불일치.
+- **원인:** [pipeline/value_metric.py](pipeline/value_metric.py) line 253–257 — `ORDER BY v.is_primary DESC, IFNULL(v.source_id,1) DESC` 없음.
+- **제안 수정:** `export_site.py`와 동일한 ORDER BY 추가.
+- **파일:** [pipeline/value_metric.py](pipeline/value_metric.py) line 253 [lane:BACKEND]
 
 ---
