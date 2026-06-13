@@ -41,20 +41,30 @@ def main():
 
     # 2) 완비 제품 판정 → verified, 나머지 pending
     # M-277: 매 실행 전체 리셋하면 수동 rejected(노네임 등) 처리가 pending으로 부활해 재노출된다 → 보존.
-    con.execute("UPDATE products SET curation_status='pending' WHERE curation_status != 'rejected'")
-    if not CORE:
-        con.commit(); return
-    capclause = "AND capacity IS NOT NULL" if NEED_CAPACITY else ""
-    con.execute(f"""
-        UPDATE products SET curation_status='verified'
-        WHERE EXISTS(SELECT 1 FROM price_observations po WHERE po.product_id=products.id)  -- 가격 필수
-          {capclause}                       -- 인원(NEED_CAPACITY 정책) — run_all과 일관
-          AND id IN (
-            SELECT p.id FROM products p
-            JOIN product_spec_values v ON v.product_id=p.id AND v.valid=1
-            JOIN metrics m ON m.id=v.metric_id AND m.key IN ({','.join('?'*len(CORE))})
-            GROUP BY p.id HAVING COUNT(DISTINCT m.key)={len(CORE)})""", CORE)
+    # M-392: 전체 demote→재promote를 SAVEPOINT로 원자화. 재promote 쿼리가 크래시하면 demote만
+    #   적용돼 모든 상품이 pending으로 남는다 → ROLLBACK으로 직전 상태 복원(호출부 예외삼킴에도 안전).
+    con.execute("SAVEPOINT promote")
+    try:
+        con.execute("UPDATE products SET curation_status='pending' WHERE curation_status != 'rejected'")
+        if CORE:
+            capclause = "AND capacity IS NOT NULL" if NEED_CAPACITY else ""
+            con.execute(f"""
+                UPDATE products SET curation_status='verified'
+                WHERE EXISTS(SELECT 1 FROM price_observations po WHERE po.product_id=products.id)  -- 가격 필수
+                  {capclause}                       -- 인원(NEED_CAPACITY 정책) — run_all과 일관
+                  AND id IN (
+                    SELECT p.id FROM products p
+                    JOIN product_spec_values v ON v.product_id=p.id AND v.valid=1
+                    JOIN metrics m ON m.id=v.metric_id AND m.key IN ({','.join('?'*len(CORE))})
+                    GROUP BY p.id HAVING COUNT(DISTINCT m.key)={len(CORE)})""", CORE)
+        con.execute("RELEASE promote")
+    except Exception:
+        con.execute("ROLLBACK TO promote")
+        con.execute("RELEASE promote")
+        raise
     con.commit()
+    if not CORE:
+        return
 
     # 3) 검증 카탈로그 뷰
     con.execute("DROP VIEW IF EXISTS v_verified_catalog")
