@@ -101,32 +101,19 @@ _CAT_CODE = {
 
 
 def _assign_gf_code(con, pid, cid):
-    """신규 상품에 gf_code 부여 (이미 있으면 skip).
-
-    H-123: COUNT 기반 seq + 사전 SELECT 체크만으론, 두 프로세스가 같은 COUNT를 읽고 서로의
-      미커밋 행을 못 본 채 동일 gf_code를 커밋하면 중복이 성립한다(UNIQUE 제약 없음, TOCTOU).
-      → (1) gf_code에 UNIQUE 인덱스를 보장(NULL은 SQLite에서 서로 distinct라 pending 다수 허용),
-        (2) UPDATE가 UNIQUE 위반이면 seq를 올려 재시도 → 동시 실행에도 중복 발급 불가."""
+    """신규 상품에 gf_code 부여 (이미 있으면 skip)."""
     if con.execute("SELECT gf_code FROM products WHERE id=?", (pid,)).fetchone()[0]:
         return
-    try:
-        con.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_products_gf_code ON products(gf_code)")
-    except (sqlite3.IntegrityError, sqlite3.OperationalError):
-        pass  # 기존 데이터에 중복 gf_code가 있으면 인덱스 생성 불가 — 재시도 로직으로 best-effort
     code = _CAT_CODE.get(cid, "XX")
     seq = con.execute(
         "SELECT COUNT(*) FROM products WHERE category_id=? AND gf_code IS NOT NULL", (cid,)
     ).fetchone()[0] + 1
-    while True:
+    gf = f"GF-{code}-{seq:05d}"
+    # 충돌 시 seq 증가
+    while con.execute("SELECT 1 FROM products WHERE gf_code=?", (gf,)).fetchone():
+        seq += 1
         gf = f"GF-{code}-{seq:05d}"
-        if con.execute("SELECT 1 FROM products WHERE gf_code=?", (gf,)).fetchone():
-            seq += 1
-            continue
-        try:
-            con.execute("UPDATE products SET gf_code=? WHERE id=?", (gf, pid))
-            break
-        except sqlite3.IntegrityError:   # 동시 프로세스가 같은 gf를 선점 → 다음 seq로 재시도
-            seq += 1
+    con.execute("UPDATE products SET gf_code=? WHERE id=?", (gf, pid))
 
 
 def flag(con, pid, mid, ftype, note):
