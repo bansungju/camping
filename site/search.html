@@ -48,10 +48,17 @@
 (function() {
   const q = new URLSearchParams(location.search).get('q') || '';
   if (q) {
-    document.title = '“' + q + '” 검색 — 장비의 숲';
-    document.getElementById('search-heading').textContent = '“' + q + '” 검색 결과';
+    document.title = '”' + q + '” 검색 — 장비의 숲';
+    document.getElementById('search-heading').textContent = '”' + q + '” 검색 결과';
   }
   setupHomeSearch();
+  if (q) {
+    const inp = document.getElementById('homeq');
+    if (inp) {
+      inp.value = q;
+      inp.dispatchEvent(new Event('input')); // 검색 실행 (focus 없이 — 모바일 키보드 팝업 방지)
+    }
+  }
 })();
 </script>
 </body>
