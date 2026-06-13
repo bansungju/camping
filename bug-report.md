@@ -3264,7 +3264,7 @@
 
 ---
 
-### [M-170] — `_savePushSub` — Supabase `upsert()` 에러 미처리 → 푸시 구독 저장 실패 무음 처리
+### [M-170] — `_savePushSub` — Supabase `upsert()` 에러 미처리 → 푸시 구독 저장 실패 무음 처리 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 푸시 알림 (app.js)
 - **심각도:** 🟡 Medium
@@ -3276,7 +3276,7 @@
 
 ---
 
-### [M-171] — `openLogDetail` 댓글 삭제 — Supabase `update()` 에러 미처리 → 삭제 실패 시 목록 재로드로 삭제된 척
+### [M-171] — `openLogDetail` 댓글 삭제 — Supabase `update()` 에러 미처리 → 삭제 실패 시 목록 재로드로 삭제된 척 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (app.js)
 - **심각도:** 🟡 Medium
@@ -3337,7 +3337,7 @@
 
 ---
 
-### [M-173] — `saveSets` — `localStorage.setItem` try/catch 없음 → QuotaExceededError 시 세트 기능 전체 중단
+### [M-173] — `saveSets` — `localStorage.setItem` try/catch 없음 → QuotaExceededError 시 세트 기능 전체 중단 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 빌더 (app.js)
 - **심각도:** 🟡 Medium
@@ -5677,7 +5677,7 @@
 
 ---
 
-### [M-285] — `saveSets` — `localStorage.setItem` try/catch 없어 QuotaExceededError 미처리
+### [M-285] — `saveSets` — `localStorage.setItem` try/catch 없어 QuotaExceededError 미처리 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 저장
 - **심각도:** 🟡 Medium
@@ -9678,7 +9678,7 @@
 
 ---
 
-### [H-125] — `backend/db.py` WAL 체크포인트 — read-write 모드 오픈으로 파이프라인 동시 쓰기 시 WAL 손상 위험
+### ✅ 해결완료(2026-06-13) [H-125] — `backend/db.py` WAL 체크포인트 — read-write 모드 오픈으로 파이프라인 동시 쓰기 시 WAL 손상 위험
 
 - **영역:** 백엔드 — 서버 DB
 - **심각도:** 🔴 High
@@ -9762,7 +9762,7 @@
 
 ---
 
-### [M-440] — `_savePushSub` — Supabase upsert 오류 무음 처리로 푸시 구독 서버 미저장
+### [M-440] — `_savePushSub` — Supabase upsert 오류 무음 처리로 푸시 구독 서버 미저장 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟡 Medium
