@@ -3555,6 +3555,8 @@ function renderAccount() {
         const _utf8 = new TextEncoder().encode(JSON.stringify(payload));
         const encoded = btoa(String.fromCharCode(...new Uint8Array(_utf8))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         const url = `${location.origin}/account.html?view-set=${encoded}`;
+        // M-274: URL 2000자 초과 시 경고(일부 환경에서 링크 단축기 파손)
+        if (url.length > 2000) showToast("세트 크기가 커 일부 환경에서 링크가 깨질 수 있어요");
         navigator.clipboard.writeText(url).then(() => {
           b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
           window.accAnnounce?.('링크가 복사됐어요');
@@ -4238,8 +4240,13 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       modal.onclick = e => { if (e.target === modal) close(); };
       modal.querySelector(".pmx").onclick = close;
-      modal.querySelector("#vs-import-btn").onclick = () => {
+      modal.querySelector("#vs-import-btn").onclick = function() {
+        // M-346/L-247: 중복 import 방지 — 버튼 즉시 비활성화 + 제목+아이템 수 지문 비교
+        this.disabled = true;
         const arr = getSets();
+        const fingerprint = `${s.name || ""}|${(s.items || []).length}|${(s.items || []).map(x => `${x.b}${x.m}`).join(",")}`;
+        const isDup = arr.some(x => `${x.title || x.name || ""}|${(x.items || []).length}|${(x.items || []).map(i => `${i.b}${i.m}`).join(",")}` === fingerprint);
+        if (isDup) { alert("이미 동일한 세트가 있어요."); close(); return; }
         const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: x.coupang_url || "" })) };
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
