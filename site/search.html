@@ -32,33 +32,32 @@
   <a href="account.html" class="header-acct" aria-label="내 계정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></a>
 </div></header>
 <main class="wrap" id="main">
-  <h1 id="search-heading">검색</h1>
+  <h1 id="search-heading" style="margin-top:22px">검색</h1>
 
-  <form class="homesearch" role="search" onsubmit="return false" style="margin-bottom:8px">
-    <input id="homeq" type="text" placeholder="브랜드·모델 검색 (예: 헬리녹스, 호넷, 펜타…)" autocomplete="off">
-    <div id="homeres" class="sresbox"></div>
+  <form role="search" onsubmit="return false" style="position:relative;margin-bottom:16px">
+    <input id="homeq" type="text" placeholder="브랜드·모델 검색 (예: 헬리녹스, 호넷, 펜타…)" autocomplete="off"
+      style="width:100%;box-sizing:border-box;padding:12px 40px 12px 16px;border:2px solid var(--accent);border-radius:12px;font-size:15px;background:var(--card);color:var(--txt);outline:none">
+    <button id="homeq-clear" type="button" aria-label="검색어 지우기"
+      style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:4px">✕</button>
   </form>
-  <p style="font-size:13px;color:var(--muted);margin:0 0 24px">Enter 또는 항목 선택 시 카테고리 결과로 이동합니다.</p>
+
+  <div id="search-results"></div>
 </main>
 
 <footer><div class="wrap" id="foot"></div></footer>
 
-<script src="app.js?v=eabeb6ba"></script>
+<script src="app.js?v=0f82be91"></script>
 <script>
 (function() {
+  const inp = document.getElementById('homeq');
+  const clr = document.getElementById('homeq-clear');
+  inp.addEventListener('input', () => { clr.style.display = inp.value ? 'block' : 'none'; });
+  clr.onclick = () => { inp.value = ''; clr.style.display = 'none'; inp.dispatchEvent(new Event('input')); inp.focus(); };
+
   const q = new URLSearchParams(location.search).get('q') || '';
-  if (q) {
-    document.title = '”' + q + '” 검색 — 장비의 숲';
-    document.getElementById('search-heading').textContent = '”' + q + '” 검색 결과';
-  }
-  setupHomeSearch();
-  if (q) {
-    const inp = document.getElementById('homeq');
-    if (inp) {
-      inp.value = q;
-      inp.dispatchEvent(new Event('input')); // 검색 실행 (focus 없이 — 모바일 키보드 팝업 방지)
-    }
-  }
+  if (q) document.getElementById('search-heading').textContent = '"' + q + '" 검색 결과';
+
+  setupSearchPage();
 })();
 </script>
 </body>
