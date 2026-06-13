@@ -74,6 +74,7 @@
 | 60 | 커뮤니티/소셜 (10순환) | 2026-06-12 | 2건 (L-100·L-101, H-31·M-98·M-99 재확인) |
 | 61 | 홈/메인 (11순환) | 2026-06-12 | 2건 (M-118 GoTrueClient 이중화·L-102 search.json 버전 하드코딩) |
 | 62 | 코드 정밀 탐색 | 2026-06-13 | 4건 (M-136~M-137·L-160~L-161) |
+| 63 | 찜동기화·카테고리정렬·export·아이템페이지·CI | 2026-06-13 | 4건 (M-140·L-165~L-167) |
 
 ---
 
@@ -2500,3 +2501,92 @@
 - **파일:** [site/account.html](site/account.html) line ~243 [lane:SOCIAL]
 - **심각도:** 🟡 Medium
 - **해결:** `crypto.randomUUID()` 우선 사용, 미지원 환경은 `Date.now()+random(slice(2))` 폴백. 충돌 가능성 제거.
+
+---
+
+## R-86 — 빌드 파이프라인·검색·AppScript·Supabase 탐색 (2026-06-13)
+
+### [M-138] ✅ 기구현(2026-06-13 검증) — `run_all.py` — 기본 DB 경로가 실제 파일과 불일치 → 인수 없이 실행 즉시 실패
+- **영역:** 백엔드 — 빌드 파이프라인 오케스트레이터
+- **심각도:** 🔴 High
+- **증상:** `run_all.py` argparse 기본값이 `camping_all.db`(line 137)이나 실제 DB 파일은 `camping_tents500.db`다. `python3 pipeline/run_all.py` 를 인수 없이 실행하면 `DB 없음: .../camping_all.db` 메시지와 함께 즉시 종료된다. CI나 새 개발자가 문서 없이 실행할 경우 파이프라인 전체가 동작하지 않는다.
+- **원인:** DB 파일명이 `camping_tents500.db`로 변경됐지만 `run_all.py`의 `--db` 기본값이 업데이트되지 않음.
+- **재현:** `python3 pipeline/run_all.py` (인수 없이 실행)
+- **제안 수정:** `ap.add_argument("--db", default=os.path.join(ROOT, "camping_all.db"))` → `os.path.join(ROOT, "camping_tents500.db")`
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py) line 137 [lane:BACKEND]
+
+### [M-139] ✅ 기구현(2026-06-13 검증) — `check_export.py` — `load_models`에서 파일을 `with` 없이 열어 파일 핸들 누수
+- **영역:** 백엔드 — 배포 게이트 스크립트
+- **심각도:** 🟡 Medium
+- **증상:** `load_models(path)`(line 41)에서 `json.load(open(path, encoding="utf-8"))` 형태로 파일을 열고 닫지 않는다. 파이썬 GC에 닫힘을 의존하므로 카테고리 수가 많아질수록(현재 ~18개) 동시 열린 파일 핸들이 쌓이며, 시스템 `ulimit`이 낮은 CI 환경(기본 1024)에서 `OSError: [Errno 24] Too many open files` 가 발생할 수 있다.
+- **원인:** `with open(...) as f:` 패턴 미사용.
+- **재현:** CI ubuntu-latest에서 카테고리 파일이 많을 때 간헐 재현 가능. 로컬에서는 드물게 발생.
+- **제안 수정:** `d = json.load(open(path, encoding="utf-8"))` → `with open(path, encoding="utf-8") as f: d = json.load(f)`
+- **파일:** [pipeline/check_export.py](pipeline/check_export.py) line 41 [lane:BACKEND]
+
+### [L-162] — `supabase/migrations/` — 마이그레이션 순번 006 중복 → 적용 순서 모호
+- **영역:** 백엔드 — Supabase 마이그레이션
+- **심각도:** 🟢 Low
+- **증상:** `006_gear_sets.sql` 과 `006_post_likes.sql` 이 동일 순번 006 을 공유한다. Supabase CLI나 수동 적용 시 어느 파일을 먼저 실행해야 하는지 불명확하고, `post_likes` 가 `gear_sets` 테이블을 참조하지 않더라도 향후 의존 관계가 생기면 잘못된 순서로 적용될 수 있다. 현재도 파일 목록 정렬 시 OS에 따라 순서가 달라진다(`gear_sets` < `post_likes` 알파벳순이나 보장되지 않음).
+- **원인:** 마이그레이션 추가 시 순번 충돌 검토 누락.
+- **재현:** `ls supabase/migrations/ | grep ^006` → 2개 파일 확인.
+- **제안 수정:** `006_post_likes.sql` → `006b_post_likes.sql` 또는 `007` 이후 재번호화하고 이후 파일 번호를 순차 조정.
+- **파일:** [supabase/migrations/](supabase/migrations/) [lane:BACKEND]
+
+### [L-163] — `search.html` — `autofocus` 속성과 URL `?q=` pre-fill이 경쟁 — 모바일에서 키보드 팝업 오작동
+- **영역:** 프론트엔드 — 검색 페이지
+- **심각도:** 🟢 Low
+- **증상:** `search.html`의 `<input id="homeq" ... autofocus>`(line 38)는 페이지 로드 즉시 키보드를 팝업한다. 이후 인라인 스크립트(line 51–55)가 URL `?q=` 파라미터를 읽어 `inp.value = initQ; run()` 로 검색창을 채운다. 모바일 iOS/Android에서 `autofocus`가 소프트 키보드를 열면서 뷰포트가 위로 밀리고, 그 상태에서 `run()`이 dropdown을 열어 레이아웃이 겹쳐 보이는 현상이 발생한다. 또한 `?q=` 없는 단순 `/search.html` 진입 시에도 불필요하게 키보드가 열려 UX가 나쁘다.
+- **원인:** `autofocus`를 조건 없이 전체 환경에 적용; `?q=` 파라미터 유무에 따른 분기 없음.
+- **재현:** 모바일 브라우저에서 `https://gear-forest.com/search.html?q=헬리녹스` 진입.
+- **제안 수정:** `autofocus` 제거 후 인라인 스크립트에서 `initQ` 없을 때만 `inp.focus()` 호출; `initQ` 있으면 focus 생략하고 드롭다운만 표시.
+- **파일:** [site/search.html](site/search.html) line 38 [lane:CORE]
+
+### [L-164] — `gear-list-appscript.gs` — `markApplied` — H열에 `''` 기록이 기존 수동 입력값을 덮어씀
+- **영역:** 백엔드(Google Apps Script) — 완료 표기 유틸리티
+- **심각도:** 🟢 Low
+- **증상:** `markApplied()`(line 116–132)는 D열에 쿠팡 링크가 없는 모든 행의 H열을 `''`(빈 문자열)로 덮어쓴다. 운영자가 H열에 "작업중", "확인필요" 등 수동 메모를 적어두면 `markApplied` 재실행 시 모두 삭제된다. `doGet()` webhook으로 자동 호출될 경우 사이드이펙트가 더 커진다.
+- **원인:** `links.map(...)` 결과를 H열 전체 범위에 무조건 `setValues` 하는 구조; 빈 문자열 처리 시 기존값 보존 로직 없음.
+- **재현:** H열에 임의 텍스트 입력 후 `markApplied()` 실행 → 해당 행 D열에 쿠팡 링크 없으면 H열 값 사라짐.
+- **제안 수정:** `return [ok ? '✅' : '']` → `return [ok ? '✅' : row[7] || '']` 식으로 H열 기존값을 읽어 보존하거나, `✅` 기록만 하고 비어있는 경우 기존값 유지.
+- **파일:** [gear-list-appscript.gs](gear-list-appscript.gs) line 127 [lane:BACKEND]
+
+---
+
+## R-87 — 찜동기화·카테고리·export·아이템페이지·CI 탐색 (2026-06-13)
+
+### [M-140] — `build-item-pages.js` — `coupang_url` 없는 상품의 `availability`가 `PreOrder`(예약판매)로 잘못 설정
+- **영역:** 프론트엔드 — 빌드 스크립트 / Schema.org JSON-LD
+- **심각도:** 🟡 Medium
+- **증상:** `scripts/build-item-pages.js` line 132에서 `coupang_url`이 없을 때 `"availability": "https://schema.org/PreOrder"` 로 출력한다. 쿠팡 링크 미등록 상품은 단순히 링크가 없는 것이지 예약판매 상품이 아니다. Google 리치결과 검색에 "예약가능" 뱃지가 붙어 사용자를 오도하고, 품질 가이드라인 위반으로 Search Console 페널티 대상이 될 수 있다.
+- **원인:** `coupang_url` 유무를 재고 여부가 아닌 구매 가능 여부로 잘못 매핑.
+- **재현:** `site/item/` 내 `coupang_url`이 없는 페이지 HTML에서 `"PreOrder"` 검색 → 다수 확인.
+- **제안 수정:** `coupang_url ? "https://schema.org/InStock" : "https://schema.org/PreOrder"` → `coupang_url ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"`. 또는 쿠팡 링크 없는 경우 `offers` 블록 자체를 생략.
+- **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 132 [lane:CORE]
+
+### [L-165] — `build-item-pages.js` — `aggregateRating.ratingCount` / `reviewCount` 항상 `1` 하드코딩
+- **영역:** 프론트엔드 — 빌드 스크립트 / Schema.org JSON-LD
+- **심각도:** 🟢 Low
+- **증상:** `scripts/build-item-pages.js` line 139에서 `"ratingCount": 1, "reviewCount": 1` 이 모든 상품 페이지에 고정값으로 출력된다. Google의 `aggregateRating` 가이드라인은 실제 리뷰 수를 요구하며, 허위 리뷰 카운트는 구조화 데이터 정책 위반으로 리치결과 자격 박탈 원인이 된다.
+- **원인:** 실제 Supabase `reviews` 테이블 집계 없이 빌드 시점 정적 값으로 대체.
+- **재현:** 임의 `item-*.html` 소스의 `aggregateRating` 확인 → `"ratingCount":1,"reviewCount":1`.
+- **제안 수정:** 단기: `aggregateRating` 블록을 star 평균값만 있을 경우 조건부 생략(리뷰 실데이터 없으면 아예 출력 안 함). 장기: 빌드 시 DB에서 상품별 리뷰 수 집계 후 주입.
+- **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 135-139 [lane:CORE]
+
+### [L-166] — `renderNicknameModal()` — 진입 시 `window.onWishChange = null` 로 재로그인 세션의 찜 동기화 핸들러를 강제 삭제
+- **영역:** 프론트엔드 — account.html 찜 동기화
+- **심각도:** 🟢 Low
+- **증상:** `renderNicknameModal()`(account.html line 262)의 첫 줄이 `window.onWishChange = null` 이다. 기존 사용자가 로그아웃 후 재로그인 → `syncWishlistOnLogin`이 `onWishChange` 핸들러를 설정한 뒤, 어떤 이유로 닉네임 모달 경로로 진입하면 핸들러가 삭제된다. 이후 찜 추가/제거 시 원격 저장이 호출되지 않아 변경사항이 소실된다.
+- **원인:** 닉네임 미설정 상태 초기화 목적으로 `onWishChange`를 무조건 null 처리. 재로그인 경로에서 핸들러가 이미 설정된 상황을 고려하지 않음.
+- **재현:** 닉네임 있는 계정에서 `profile.nickname`을 임시로 null 처리(또는 트리거로 초기화) → 재로그인 → 닉네임 모달 진입 → 모달 도중 찜 추가 → 원격 DB 미반영.
+- **제안 수정:** `renderNicknameModal` 진입 시 기존 `onWishChange` 핸들러를 보존하거나, 닉네임 저장 완료 후 `syncWishlistOnLogin()`에서 핸들러를 재설정하는 현재 로직(line 325)으로 충분하므로 `window.onWishChange = null` 라인 제거 검토.
+- **파일:** [site/account.html](site/account.html) line 262 [lane:SOCIAL]
+
+### [L-167] — `pages.yml` — CI에서 `python3` 버전 명시 없음 → ubuntu-latest Python 버전 변경 시 스크립트 호환성 미보장
+- **영역:** 백엔드 — CI/CD
+- **심각도:** 🟢 Low
+- **증상:** `.github/workflows/pages.yml`에서 `python3 pipeline/check_export.py`를 실행하지만 `actions/setup-python` 없이 `ubuntu-latest`의 기본 Python을 사용한다. `ubuntu-latest` 이미지가 `ubuntu-24.04`로 업그레이드되거나 Python 버전이 변경될 경우(현재 3.12) `check_export.py` 또는 그 의존 모듈(`limits_map.py`, `value_metric.py`)이 버전별 문법 차이로 실패할 수 있다. 특히 `match-case`, `typing` 변경 사항 등이 영향을 줄 수 있다.
+- **원인:** CI 파이프라인에 `actions/setup-python@v5`로 버전을 고정하지 않음.
+- **재현:** 현재는 재현 안 됨. `ubuntu-latest` 이미지 변경 시 잠재 실패.
+- **제안 수정:** `pages.yml`에 `- uses: actions/setup-python@v5` + `with: python-version: "3.11"` (또는 `"3.x"`) 단계 추가.
+- **파일:** [.github/workflows/pages.yml](.github/workflows/pages.yml) [lane:BACKEND]
