@@ -24,9 +24,16 @@ def _ssot_touch(state) -> bool:
 def _schema_change(state) -> bool:
     for f in state.get("changed_files", []):
         p = f.get("path", "")
-        if p.endswith("schema.sql") or p.endswith(".sql"):
-            if _DESTRUCTIVE.search(f.get("new_body", "")) or f.get("status") == "deleted":
-                return True
+        if not p.endswith(".sql"):
+            continue
+        # 파괴적 SQL(DROP/ALTER 등)은 어떤 .sql이든 스키마 변경으로 본다.
+        if _DESTRUCTIVE.search(f.get("new_body", "")):
+            return True
+        # M-446: 단순 삭제는 schema.sql·migration_*.sql 만 파괴로 간주한다. 임시 쿼리 .sql 삭제까지
+        #   schema_change=True로 잡으면 불필요한 human 승인 블록이 걸린다.
+        base = p.rsplit("/", 1)[-1]
+        if f.get("status") == "deleted" and (base == "schema.sql" or base.startswith("migration")):
+            return True
     return False
 
 
