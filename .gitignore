@@ -38,3 +38,6 @@ camping_backup/
 
 # 이미지: GitHub Pages 배포에 포함돼야 라이브에서 보임 → git 추적 필수.
 # (gitignore 시 로컬 프리뷰만 되고 gear-forest.com에선 404. 현 76MB, Pages 1GB 한도 내)
+
+# 임시 루프 계획서 (세션 분할용, 진행 중 갱신)
+LOOP-PLAN-DATA.md
