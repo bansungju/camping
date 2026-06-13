@@ -646,7 +646,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=38f1d546").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=62628706").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -859,7 +859,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=38f1d546").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=62628706").catch(() => []);
     return idx;
   };
 
@@ -1504,7 +1504,7 @@ function buildFilters(d, star) {
     };
     const updateFill = () => {
       const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
-      const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+      const pct = v => totalHi === totalLo ? 0 : ((v - totalLo) / (totalHi - totalLo)) * 100;
       fill.style.left = pct(lo) + "%";
       fill.style.width = (pct(hi) - pct(lo)) + "%";
     };
@@ -1649,7 +1649,7 @@ function syncFilterUI() {
     minInp.value = loVal; maxInp.value = hiVal;
     if (minLbl) minLbl.textContent = fmtLabel(loVal);
     if (maxLbl) maxLbl.textContent = fmtLabel(hiVal);
-    const pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100;
+    const pct = v => totalHi === totalLo ? 0 : ((v - totalLo) / (totalHi - totalLo)) * 100;
     if (fill) { fill.style.left = pct(loVal) + "%"; fill.style.width = (pct(hiVal) - pct(loVal)) + "%"; }
   });
   const qx = bar.querySelector("[data-qx]"); if (qx) qx.checked = STATE.qExclude;
@@ -1772,7 +1772,7 @@ function openProduct(m) {
        }
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
-       ${STATE.slug ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
+       ${STATE.slug && d.models.indexOf(m) >= 0 ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
        <section class="pmrv" aria-label="유저 후기">
          <div class="pmrv-head">
            <span class="pmrv-title">유저 후기<span class="pmrv-cnt" id="pmrv-cnt"></span></span>
@@ -2343,7 +2343,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=38f1d546"); }
+  try { idx = await getJSON("data/search.json?v=62628706"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2737,7 +2737,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=38f1d546")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=62628706")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3398,7 +3398,7 @@ function openLogDetail(p) {
   const nick = p.profiles?.nickname || "익명";
   const dt = new Date(p.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
   const tagHtml = (p.tags || []).map(t => `<span class="log-tag" style="font-size:12px;padding:3px 10px">${esc(t)}</span>`).join("");
-  const body = (p.content || "").replace(/\n/g, "<br>");
+  const body = esc(p.content || "").replace(/\n/g, "<br>");
   modal.innerHTML = `<div class="pmbox log-detail-box" role="dialog" aria-modal="true">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
