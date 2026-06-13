@@ -5080,7 +5080,7 @@
 
 ---
 
-### [M-254] — `harvest_tents.py` `ingest()` — `product_spec_values` INSERT에 `valid` 컬럼 누락
+### [M-254] ✅ 해결완료(2026-06-13, C22) — `harvest_tents.py` `ingest()` — `product_spec_values` INSERT에 `valid` 컬럼 누락
 
 - **영역:** 백엔드 — 텐트 수확
 - **심각도:** 🟡 Medium
@@ -5476,7 +5476,7 @@
 
 ## R-113 (백엔드) — 2026-06-13
 
-### [M-275] — `harvest_tents.py` `ingest()` — `seen_names` 모델명만으로 중복 체크해 다른 브랜드 동명 모델 오탐 차단
+### [M-275] ⏸ 보류(C22) — `harvest_tents.py` `ingest()` — `seen_names` 모델명만으로 중복 체크해 다른 브랜드 동명 모델 오탐 차단
 
 - **영역:** 백엔드 — 텐트 수확
 - **심각도:** 🟡 Medium
@@ -5941,7 +5941,7 @@
 
 ---
 
-### [L-241] — `harvest_tents.py` `ingest()` — `seen_names` 브랜드 미분리로 타 브랜드 동명 모델 중복 오판
+### [L-241] ⏸ 보류(C22) — `harvest_tents.py` `ingest()` — `seen_names` 브랜드 미분리로 타 브랜드 동명 모델 중복 오판
 
 - **영역:** 백엔드 — 크롤링
 - **심각도:** 🟢 Low
@@ -9450,7 +9450,7 @@
 
 ---
 
-### [H-124] — `detect_price_drops.py` — 색상 변형 제품이 각각 별도 가격 하락 알림 발송으로 중복 푸시
+### ✅ 해결완료(2026-06-13) [H-124] — `detect_price_drops.py` — 색상 변형 제품이 각각 별도 가격 하락 알림 발송으로 중복 푸시
 
 - **영역:** 백엔드 — 가격 감지
 - **심각도:** 🔴 High
@@ -11691,5 +11691,173 @@
 - **원인:** [site/app.js](site/app.js) line 4298 — `coupang_url: x.coupang_url || ""` `safeHttps()` 미통과.
 - **제안 수정:** `/^https:\/\//i.test(x.coupang_url) ? x.coupang_url : ""` 로 변경.
 - **파일:** [site/app.js](site/app.js) line 4298 [lane:CORE]
+
+---
+
+### [H-142] — `signInWithApple` — Apple nonce SHA-256 해싱 없이 랜덤 UUID 두 번 생성 → 인증 항상 실패
+
+- **영역:** 프론트엔드 — Auth/OAuth (보안)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** Apple 로그인 시 "nonce mismatch" / "invalid id_token" 오류로 항상 실패.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 59–66 — `crypto.randomUUID()`를 `authorize()`와 `signInWithIdToken()` 두 곳에서 각각 독립 호출해 pair가 전혀 매칭되지 않음. Apple 표준은 SHA-256 해시값을 Apple에, 원본을 Supabase에 전달해야 함.
+- **제안 수정:** nonce를 한 번만 생성 후 `crypto.subtle.digest('SHA-256', ...)` 해시를 `authorize()`에, 원본 rawNonce를 `signInWithIdToken()`에 전달.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 59 [lane:AUTH]
+
+---
+
+### [H-143] — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
+
+- **영역:** 프론트엔드 — 기어세트 동기화
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 로그인 후 동기화된 원격 기어세트의 `type`(auto/backpacking/carcamp)이 undefined가 되어 슬롯·도장판이 항상 DEFAULT_SET_TYPE("auto")로 표시됨.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 385 — `loadRemoteGearSets()`의 `.select()`에 `type` 컬럼 누락. [site/account.html](site/account.html) line 248 — `newFromRemote` 매핑에도 `type` 필드 복사 없음.
+- **제안 수정:** select에 `type` 추가: `.select('id, title, type, style, items, completeness, created_at, updated_at')`. 매핑에 `type: r.type || DEFAULT_SET_TYPE` 추가.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 385 [lane:SYNC]
+
+---
+
+### [M-525] — `_showAuthGateModal` — `loginHref` 변수 선언 후 미사용 (dead code), 경로 깊이 변경 시 링크 깨짐
+
+- **영역:** 프론트엔드 — Auth Gate Modal
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `loginHref` 변수를 계산하지만 anchor href로 사용하지 않고 방치. 현재는 `/item/` 경로 하드코딩으로 작동하지만 경로 깊이 변경 시 즉시 깨짐.
+- **원인:** [site/app.js](site/app.js) line 150–156 — `loginHref` 선언 후 미참조. prefix는 `/item/` 포함 여부로만 판단해 `../../` 붙임.
+- **제안 수정:** `loginHref` 제거 후 항상 `/account.html` 절대경로 사용.
+- **파일:** [site/app.js](site/app.js) line 150 [lane:CORE]
+
+---
+
+### [M-526] — `renderAccount` — 비로그인+로컬세트 있음 조건에서 CTA와 세트 카드 이중 렌더링 → 레이아웃 시프트
+
+- **영역:** 프론트엔드 — 계정 렌더링
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 비로그인 상태에서 로컬 세트가 1개 이상 있으면 첫 `renderAccount()` 호출 시 CTA를 렌더한 직후 세트 카드로 덮어써 CTA가 순간 깜빡임(레이아웃 시프트).
+- **원인:** [site/app.js](site/app.js) line 3494 — `!isLoggedIn && !setsEl.dataset.loginShown` 블록에 `sets.length === 0` 조건 없어 세트가 있어도 CTA 렌더 후 즉시 덮어씀.
+- **제안 수정:** 조건에 `&& sets.length === 0` 추가.
+- **파일:** [site/app.js](site/app.js) line 3494 [lane:ACCOUNT]
+
+---
+
+### [M-527] — `saveRemoteWishlist` — 멀티탭 환경에서 `_wishWriteChain` 탭 간 공유 안 됨 → 찜 항목 유실
+
+- **영역:** 프론트엔드 — 위시리스트 동기화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 두 탭에서 동시에 찜 추가/삭제 시 나중 저장이 먼저 저장을 덮어써 항목이 유실됨.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 160–175 — `_wishWriteChain`·`_wishPending`은 단일 탭 스코프 변수로 멀티탭 간 직렬화가 안 됨. 각 탭이 독립 upsert를 실행해 마지막 탭 상태가 덮어씀.
+- **제안 수정:** `BroadcastChannel` 또는 `localStorage` 이벤트로 탭 간 변경 공지, 수신 탭은 최신 상태 pull. 단기적으로 upsert 전 `loadRemoteWishlist()`로 서버 상태 merge 후 저장.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 160 [lane:SYNC]
+
+---
+
+### [M-528] — `collect_images.py` — `tot=0` 시 진행률 계산 ZeroDivisionError
+
+- **영역:** 백엔드 — 파이프라인/이미지 수집
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** verified 제품이 없는 신규 DB에서 실행 시 `round(100*done/tot)`에서 ZeroDivisionError로 크래시.
+- **원인:** [pipeline/collect_images.py](pipeline/collect_images.py) line 94 — `tot` 0 가드 없음.
+- **제안 수정:** `round(100*done/tot) if tot else 0`으로 변경.
+- **파일:** [pipeline/collect_images.py](pipeline/collect_images.py) line 94 [lane:BACKEND]
+
+---
+
+### [M-529] — `backend/main.py` — CORS `allow_origins`에 apex `gear-forest.com` 누락 → API 전체 CORS 오류
+
+- **영역:** 백엔드 — CORS 설정
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 실제 서빙 도메인인 `https://gear-forest.com`(apex)에서 `/api/*` 요청 시 CORS 오류로 API 전체 차단. `www`는 301 리다이렉트이므로 apex가 실사용 도메인.
+- **원인:** [backend/main.py](backend/main.py) line 39 — `allow_origins`에 `https://www.gear-forest.com`만 있고 `https://gear-forest.com` 누락.
+- **제안 수정:** `allow_origins` 리스트에 `"https://gear-forest.com"` 추가.
+- **파일:** [backend/main.py](backend/main.py) line 39 [lane:BACKEND]
+
+---
+
+### [M-530] — `graph_full.py` — `enrich_node` 쿼리에 `curation_status` 필터 없어 rejected 제품 보강 시도
+
+- **영역:** 백엔드 — 파이프라인/그래프
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `rejected`·`pending` 상태 제품에도 상세 페이지 fetch 및 스펙 보강 실행 → 불필요한 네트워크 요청 및 rejected 제품에 유효 스펙 삽입.
+- **원인:** [pipeline/graph_full.py](pipeline/graph_full.py) line 111–118 — WHERE 절에 `curation_status` 필터 없음.
+- **제안 수정:** `AND p.curation_status IN ('pending','verified')` 조건 추가.
+- **파일:** [pipeline/graph_full.py](pipeline/graph_full.py) line 111 [lane:BACKEND]
+
+---
+
+### [L-433] — `app.js` — `supabaseClient.js`를 두 가지 버전 쿼리스트링으로 import → 모듈 인스턴스 분리 위험
+
+- **영역:** 프론트엔드 — 모듈 로딩
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 브라우저가 `?v=d33ddd9b`와 `?v=08466c5f` 두 개를 별개 모듈로 처리해 `authSubscription` 등 내부 상태가 분리될 위험.
+- **원인:** [site/app.js](site/app.js) line 111 vs line 2173, 2382, 2490, 2938 — 서로 다른 버전 쿼리스트링 사용.
+- **제안 수정:** `stamp_version.py`로 모든 import를 동일 버전으로 통일.
+- **파일:** [site/app.js](site/app.js) line 111 [lane:CORE]
+
+---
+
+### [L-434] — `sw.js` — SHELL 프리캐시에 `community.html` 포함 → 비활성 페이지 오프라인 캐시 낭비
+
+- **영역:** 프론트엔드 — 서비스 워커
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `COMMUNITY_ENABLED=false`로 노출되지 않는 `community.html`이 매 배포마다 프리캐시됨.
+- **원인:** [site/sw.js](site/sw.js) line 9 — `community.html`이 SHELL 배열에 포함.
+- **제안 수정:** SHELL에서 제거하거나 `stamp_version.py`에서 `COMMUNITY_ENABLED` 값을 읽어 조건부 생성.
+- **파일:** [site/sw.js](site/sw.js) line 9 [lane:SW]
+
+---
+
+### [L-435] — `enrich_details.py` — `have` 집합에 `valid=1` 필터 없어 무효화된 스펙이 재보강 차단
+
+- **영역:** 백엔드 — 파이프라인/enrich
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `valid=0`(검증 실패) 스펙이 있는 제품의 해당 메트릭을 유효 소스에서 다시 채울 수 없게 됨.
+- **원인:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 26–27 — `WHERE psv.product_id=?`에 `AND psv.valid=1` 없음.
+- **제안 수정:** `WHERE psv.product_id=? AND psv.valid=1`로 수정.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py) line 27 [lane:BACKEND]
+
+---
+
+### [L-436] — `multicat.py` — `seen_names`가 카테고리 전역 공유 → 다른 카테고리 동명 모델 오차단
+
+- **영역:** 백엔드 — 파이프라인/multicat
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** "랜턴/Pro 500" 등록 후 "버너/Pro 500"이 dup_name으로 스킵됨. 카테고리가 다르면 동명 모델은 별개 제품.
+- **원인:** [pipeline/multicat.py](pipeline/multicat.py) line 158 — `seen_names` 체크가 카테고리 스코프 없이 전역 모델명으로 비교.
+- **제안 수정:** `seen_names`를 `(cid, model)` 튜플로 관리하거나 카테고리별 별도 set으로 분리.
+- **파일:** [pipeline/multicat.py](pipeline/multicat.py) line 158 [lane:BACKEND]
+
+---
+
+### [L-437] — `backend/store.py` — `load()` 예외 처리 없어 JSON 누락/손상 시 FastAPI 기동 크래시
+
+- **영역:** 백엔드 — store
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `site/data` 미생성 상태에서 서버 기동 시 `FileNotFoundError` / `json.JSONDecodeError`가 lifespan으로 전파되어 FastAPI 기동 실패.
+- **원인:** [backend/store.py](backend/store.py) line 13–30 — `open()` 호출에 try/except 없음.
+- **제안 수정:** `load()` 전체를 try/except로 감싸고 파일 미존재 시 빈 상태로 기동 + 경고 로그 출력.
+- **파일:** [backend/store.py](backend/store.py) line 13 [lane:BACKEND]
+
+---
+
+### [L-438] — `value_metric.py` — 루프 내부에서 반복 `from collections import Counter` (dead import 위치)
+
+- **영역:** 백엔드 — 파이프라인/value_metric
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 카테고리 반복 루프 안에서 매 이터레이션마다 `from collections import Counter` 실행. 스타일/린트 위반, 향후 외부 의존 전환 시 실제 오버헤드.
+- **원인:** [pipeline/value_metric.py](pipeline/value_metric.py) line 270 — 루프 내부 import.
+- **제안 수정:** 파일 상단 `from collections import defaultdict, Counter`로 통합.
+- **파일:** [pipeline/value_metric.py](pipeline/value_metric.py) line 270 [lane:BACKEND]
 
 ---
