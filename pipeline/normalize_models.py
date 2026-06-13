@@ -11,6 +11,7 @@ import argparse
 import os
 import re
 import sqlite3
+import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -124,7 +125,11 @@ def flag_price_outliers(con):
         prices = sorted(r[0] for r in reps)
         if len(prices) < 2:        # 제품 2종 미만이면 중앙값 신뢰불가 → skip(과격리 방지)
             continue
-        med = prices[(len(prices) - 1) // 2]
+        # H-83: 하위 중앙값(prices[(n-1)//2])은 verify_internal.py의 statistics.median(짝수=두 중앙값 평균)과
+        #       달라 동일 데이터에서 두 시스템이 다른 이상가격 경계를 산출했다 → statistics.median으로 통일.
+        # M-329: 부수효과로 해소 — [100, 100000] 2종에서 하위중앙값=100(상한 500)이라 100000을 오플래그하던 것이,
+        #        평균 중앙값=50050으로 바뀌어 정상가가 경계 안에 들어온다.
+        med = statistics.median(prices)
         if med <= 0:
             continue
         for (oid, pr) in con.execute("""SELECT po.id, po.price_krw FROM price_observations po

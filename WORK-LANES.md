@@ -42,7 +42,7 @@
 | **B10** | `.github/workflows/pages.yml` | H-73 | ✅ 2026-06-13 완료 |
 | **B11** | `promote_catalog.py` | H-77 | ✅ 2026-06-13 완료 (NEED_CAPACITY 명시화; capacity 게이트는 정규 정책상 유지) |
 | **B12** | `harvest_tents.py` | H-79 | ✅ 2026-06-13 완료 |
-| **B13** | `normalize_models.py` | H-83 (+M-329 동일파일) | ⬜ 단독 |
+| **B13** | `normalize_models.py` | H-83 (+M-329 함께 해소) | ✅ 2026-06-13 완료 |
 | **B14** | `backfill_capacity.py` | H-84 | ⬜ 단독 |
 
 > 이미 완료(별도 커밋): H-44·H-45(add_value_star/enrich)·H-47(fill_whitelist SQLi)·H-52(export JOIN)·H-53·H-54(crosssource)·H-55(scan_secrets)·H-57(danawa)·H-58(enrich fn).

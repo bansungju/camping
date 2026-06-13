@@ -5878,7 +5878,8 @@
 
 ---
 
-### [H-83] — `normalize_models.py` `flag_price_outliers()` — 수동 중앙값과 `statistics.median` 불일치로 시스템 간 이상가격 판정 불일치
+### [H-83] ✅ 해결완료(2026-06-13, BACKEND) — `normalize_models.py` `flag_price_outliers()` — 수동 중앙값과 `statistics.median` 불일치로 시스템 간 이상가격 판정 불일치
+> `med = statistics.median(prices)`로 verify_internal.py와 통일(하위중앙값 `prices[(n-1)//2]` 폐기). M-329 부수 해소. DB복사본 실행 정상(valid=0: 19→18, 오플래그 감소).
 
 - **영역:** 백엔드 — 가격 정규화
 - **심각도:** 🔴 High
@@ -6649,7 +6650,8 @@
 
 ---
 
-### [M-329] — `normalize_models.py` `flag_price_outliers()` — 2개 상품 그룹에서 하위 중앙값이 저가를 기준으로 고가 정상 상품 오플래그
+### [M-329] ✅ 해결완료(2026-06-13, BACKEND) — `normalize_models.py` `flag_price_outliers()` — 2개 상품 그룹에서 하위 중앙값이 저가를 기준으로 고가 정상 상품 오플래그
+> H-83(statistics.median 통일)으로 함께 해소: [100,100000] 평균중앙값=50050 → 100000이 상한(250250) 안에 들어와 오플래그 안 됨. 짝수 길이 두 중앙값 평균 사용(M-329 제안과 동일).
 
 - **영역:** 백엔드 — 가격 정규화
 - **심각도:** 🟡 Medium
@@ -8450,5 +8452,53 @@
 - **원인:** [site/app.js](site/app.js) line 2126 — `wbtn.innerHTML = BOOKMARK_SVG` 가 toggle 결과 확인 전 실행.
 - **제안 수정:** innerHTML 리셋을 toggle 콜백 내 confirmed 이후로 이동.
 - **파일:** [site/app.js](site/app.js) line 2126 [lane:CORE]
+
+---
+
+### [M-398] — `verify_internal.py` `flag_issue` — `data_quality_flags` 인덱스 없어 플래그 쓰기마다 풀 스캔
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 제품/플래그 수 증가 시 스캐너 전체 실행이 O(n²)으로 느려짐.
+- **원인:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 183–193 — `data_quality_flags(product_id, flag_type, resolved)` 복합 인덱스 없음.
+- **제안 수정:** `CREATE INDEX idx_dqf_lookup ON data_quality_flags(product_id, flag_type, resolved);`
+- **파일:** [pipeline/verify_internal.py](pipeline/verify_internal.py) line 183 [lane:BACKEND]
+
+---
+
+### [L-318] — `build_backpacking_bag.py` `main` — JSON 파일 핸들 미닫힘
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 쓰기 중 예외 시 파일 반쓰기 상태로 핸들 누수.
+- **원인:** [pipeline/build_backpacking_bag.py](pipeline/build_backpacking_bag.py) line 215, 221, 228 — `open()` 직접 사용, `with` 없음.
+- **제안 수정:** 모든 파일 I/O를 `with open(...) as f:` 로 변경.
+- **파일:** [pipeline/build_backpacking_bag.py](pipeline/build_backpacking_bag.py) line 215 [lane:BACKEND]
+
+---
+
+### [L-319] — `limits_map.py` `main` — `encoding="utf-8"` 없이 한국어 Markdown 쓰기
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 비UTF 로케일에서 카테고리명·이모지가 포함된 LIMITS.md 쓰기 오류.
+- **원인:** [pipeline/limits_map.py](pipeline/limits_map.py) line 187 — `open(args.out, "w")` encoding 없음.
+- **제안 수정:** `open(args.out, "w", encoding="utf-8")`
+- **파일:** [pipeline/limits_map.py](pipeline/limits_map.py) line 187 [lane:BACKEND]
+
+---
+
+### [L-320] — `normalize.py` `__main__` — `-O` 최적화 모드에서 `assert` 자동 제거
+
+- **영역:** 백엔드 — 데이터 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `python -O normalize.py` 실행 시 자가 테스트 전체 무음 스킵, exit 0 반환.
+- **원인:** [pipeline/normalize.py](pipeline/normalize.py) line 181–190 — `assert` 구문으로 검증, `-O` 모드에서 제거됨.
+- **제안 수정:** `if actual != expected: raise AssertionError(...)` 명시적 체크 또는 unittest 이동.
+- **파일:** [pipeline/normalize.py](pipeline/normalize.py) line 181 [lane:BACKEND]
 
 ---
