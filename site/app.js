@@ -425,10 +425,16 @@ function _execToggleWish(item) {
   if (i >= 0) a.splice(i, 1); else a.push(item);
   setWish(a);
   // B-1: 첫 찜(추가) 시 가격알림 푸시 구독을 1회 요청(찜 = 가격 추적 대상).
-  //  requestPushSubscription이 권한 거부/기구독을 자체 처리하므로 중복 호출은 무해.
-  if (added && "serviceWorker" in navigator && "PushManager" in window) {
+  //  앱(Capacitor)=네이티브 APNs 토큰 등록 / 웹=Web Push 구독. 둘 다 권한거부·기구독 자체처리.
+  if (added) {
     const u = window.currentUser && window.currentUser();
-    if (u && u.id) requestPushSubscription(u.id);
+    if (u && u.id) {
+      if (window.Capacitor?.isNativePlatform?.()) {
+        import("./supabaseClient.js?v=60a81cf0").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
+      } else if ("serviceWorker" in navigator && "PushManager" in window) {
+        requestPushSubscription(u.id);
+      }
+    }
   }
   return added;
 }
