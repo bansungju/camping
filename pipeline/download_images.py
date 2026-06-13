@@ -94,9 +94,10 @@ def run(db_path, cat, workers, sleep):
         SELECT p.id, p.image_url FROM products p
         JOIN categories c ON c.id=p.category_id
         WHERE p.image_url IS NOT NULL AND p.image_url!='none'
-          AND (p.image_local IS NULL
-               OR NOT EXISTS (SELECT 1 FROM (SELECT 1) WHERE
-                 length(p.image_local)>0))
+          -- H-120: 미다운로드(=image_local 없음/빈문자) 대상 선택. 기존 NOT EXISTS(SELECT 1 FROM
+          --   (SELECT 1) WHERE length>0) 는 상관 서브쿼리라 동작은 맞았지만 오독을 부르는 fragile한
+          --   형태였다 → 동치인 명시 조건으로 단순화(출력 동일 검증).
+          AND (p.image_local IS NULL OR p.image_local='')
           {where}
         ORDER BY p.id
     """, params).fetchall()
