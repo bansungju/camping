@@ -76,6 +76,8 @@
 | 62 | 코드 정밀 탐색 | 2026-06-13 | 4건 (M-136~M-137·L-160~L-161) |
 | 63 | 찜동기화·카테고리정렬·export·아이템페이지·CI | 2026-06-13 | 4건 (M-140·L-165~L-167) |
 | 64 | recently-viewed·flag_price_outliers·account·view-set | 2026-06-13 | 2건 (M-141·L-168) |
+| 65 | 가격슬라이더·XSS·DB스키마·딥링크·SW | 2026-06-13 | 4건 (M-143·M-144·L-172·L-173) |
+| 66 | 모달접근성·세션처리·파이프라인·무한스크롤·리뷰렌더 | 2026-06-13 | 3건 (M-145·L-174·L-175) |
 
 ---
 
@@ -2616,7 +2618,7 @@
 
 ## R-88 — 정렬·PWA·파이프라인·아이템상세 탐색 (2026-06-13)
 
-### [M-142] — `build-item-pages.js` — `ITEM` 객체·`openSetModal` 호출에 `coupang_url` 누락 → 아이템 상세에서 꾸러미 담기 시 구매 링크 소실
+### [M-142] ✅ 해결완료(2026-06-13, CORE) — `build-item-pages.js` — `ITEM` 객체·`openSetModal` 호출에 `coupang_url` 누락 → 아이템 상세에서 꾸러미 담기 시 구매 링크 소실
 - **영역:** 프론트엔드 — 아이템 상세 / 빌드
 - **심각도:** 🟡 Medium
 - **발견일시:** 2026-06-13
@@ -2636,7 +2638,7 @@
 - **제안 수정:** `showBanner()`에서 `requestAnimationFrame` 사용: `banner.style.display = "block"; requestAnimationFrame(() => { document.documentElement.style.setProperty("--banner-h", banner.offsetHeight + "px"); });`
 - **파일:** [site/app.js](site/app.js) line 36–39 [lane:CORE]
 
-### [L-170] — `export_site.py` — `open(..., "w")` 에 `encoding="utf-8"` 미지정 → non-UTF-8 로케일 환경에서 JSON 파일 인코딩 오류
+### [L-170] ✅ 해결완료(2026-06-13, CORE) — `export_site.py` — `open(..., "w")` 에 `encoding="utf-8"` 미지정 → non-UTF-8 로케일 환경에서 JSON 파일 인코딩 오류
 - **영역:** 백엔드 — 빌드 파이프라인
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2646,7 +2648,76 @@
 - **제안 수정:** 3곳 모두 `open(..., "w", encoding="utf-8")` 로 수정.
 - **파일:** [pipeline/export_site.py](pipeline/export_site.py) line 165, 175, 177 [lane:BACKEND]
 
-### [L-171] — `app.js` — `openProduct()` 모달 하단 상세 링크 — `d.models.indexOf(m) === -1`일 때 `item--1.html` 링크 렌더링
+### [M-143] ✅ 해결완료(2026-06-13, CORE) — `openLogDetail` — `p.content` XSS — `esc()` 없이 innerHTML 삽입
+- **영역:** 프론트엔드 — 커뮤니티/소셜 (COMMUNITY_ENABLED=false이나 코드 잔존·복구 시 즉시 재발)
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `openLogDetail()` (line 3401)에서 `const body = (p.content || "").replace(/\n/g, "<br>")` 로 처리한 뒤 `${body}` 를 innerHTML 템플릿에 직접 삽입한다. `p.content`를 `esc()` 없이 사용하므로, 악의적인 사용자가 포스트 본문에 `<script>` 또는 `<img src=x onerror=...>` 를 삽입할 경우 XSS가 실행된다.
+- **재현조건:** COMMUNITY_ENABLED=true 환경에서 `<script>alert(1)</script>` 를 포함한 글 작성 후 상세 열기.
+- **원인:** line 3401 — `p.content`에 `esc()` 적용 누락. 동일 파일 내 리뷰 본문(`esc(r.body)`)이나 닉네임(`esc(nick)`)은 이스케이프하나, 포스트 content만 빠져 있음.
+- **제안 수정:** `const body = esc(p.content || "").replace(/\n/g, "<br>");` 로 수정(`esc` 먼저 적용 후 개행 치환).
+- **파일:** [site/app.js](site/app.js) line 3401 [lane:CORE]
+
+### [M-144] ✅ 해결완료(2026-06-13, CORE) — `buildFilters` 가격 슬라이더 — `totalHi === totalLo`이면 `pct()` division by zero → fill NaN/Infinity
+- **영역:** 프론트엔드 — 카테고리/목록 — 가격 필터 슬라이더
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 한 카테고리에서 모든 제품의 `price_min` 값이 동일할 경우(또는 슬라이더 범위 `lo === hi`), `updateFill()` 내 `pct = v => ((v - totalLo) / (totalHi - totalLo)) * 100` 에서 `totalHi - totalLo === 0` → division by zero 발생 → fill `left/width`에 `NaN%`/`Infinity%` 세팅 → 슬라이더 UI 깨짐. `syncFilterUI()` 내 line 1652 동일 패턴도 해당.
+- **재현조건:** 특정 소규모 카테고리(e.g. 신규 등록 직후 모델 1개)에서 `category.html?cat=...` 접속 후 가격 슬라이더 렌더 확인.
+- **원인:** line 1507, 1652 — `totalHi > totalLo` 방어 없음. 가격 슬라이더는 `prices.length > 0`이면 생성하므로 단일 가격값일 때도 생성됨.
+- **제안 수정:** `const pct = v => totalHi === totalLo ? 0 : ((v - totalLo) / (totalHi - totalLo)) * 100;` 으로 zero-division 방어 추가(line 1507, 1652 두 곳).
+- **파일:** [site/app.js](site/app.js) line 1507, 1652 [lane:CORE]
+
+### [L-172] — `canonical_models` 테이블 — 핵심 컬럼 타입 선언 없음 → SQLite untyped, 정수/실수 강제 없음
+- **영역:** 백엔드 — DB 스키마 (`pipeline/reference.sql` 아닌 런타임 생성)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `canonical_models` 테이블 DDL에서 `rep_product_id`, `variant_count`, `variants`, `pcodes`, `min_price`, `max_price` 컬럼에 타입 선언이 없다. SQLite는 타입 없는 컬럼에 어떤 값도 저장 가능하므로, 파이프라인 스크립트가 문자열을 `min_price`에 삽입해도 오류가 발생하지 않아 `export_site.py`에서 `pr[0]`(price_min) 값이 문자열로 읽혀 프론트 렌더링 및 정렬 이상을 유발할 수 있다.
+- **재현조건:** `INSERT INTO canonical_models VALUES("abc", 1, 3, "브랜드", "모델", NULL, NULL, NULL, NULL, "not_a_number", NULL)` 후 `export_site.py` 실행 시 `price_min="not_a_number"` 가 JSON에 방출됨.
+- **제안 수정:** `canonical_models` 생성 스크립트에서 `rep_product_id INTEGER`, `variant_count INTEGER`, `min_price INTEGER`, `max_price INTEGER` 타입 선언 추가. 또는 `export_site.py`에서 `int(pr[0]) if pr and pr[0] is not None else None` 으로 명시적 캐스팅.
+- **파일:** DB 스키마 (캐노니컬 생성 쿼리), [pipeline/export_site.py](pipeline/export_site.py) line 106 [lane:BACKEND]
+
+### [L-173] — `openLogDetail` — ESC 키 핸들러 `removeEventListener` 미호출 → 이벤트 누적
+- **영역:** 프론트엔드 — 커뮤니티/소셜
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `openLogDetail()` (line 3454) — `const onKey = e => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } }; document.addEventListener("keydown", onKey);` 에서 ESC를 누르지 않고 배경 클릭으로 모달을 닫을 경우 `removeEventListener`가 호출되지 않는다. 모달을 여닫기를 반복할수록 `keydown` 핸들러가 누적되어 ESC 1회 키 입력에 여러 close() 호출이 발생한다.
+- **재현조건:** `openLogDetail()` 모달을 배경 클릭 또는 ✕ 버튼으로 닫기 → 다시 열기 → 반복 10회 → ESC 입력 시 콘솔에 close() 복수 실행 확인.
+- **원인:** line 3428 `const close = () => modal.classList.remove("on");` 에 `document.removeEventListener("keydown", onKey)` 없음.
+- **제안 수정:** `close` 함수에 `document.removeEventListener("keydown", onKey);` 추가. 또는 `modal.onclick` / `pmx.onclick` 핸들러에서 각각 `close()`를 부르는 대신 단일 `closeModal()` 함수로 통합.
+- **파일:** [site/app.js](site/app.js) line 3428, 3454 [lane:CORE]
+
+### [M-145] — `openLogDetail` — `comments` 조회·삽입에 `content` 컬럼 사용 — DB 스키마는 `body` → 댓글 항상 공백 + 작성 실패
+- **영역:** 프론트엔드 — 커뮤니티/소셜 (COMMUNITY_ENABLED=false이나 코드 잔존·복구 시 즉시 재발)
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `openLogDetail()` 안의 `loadComments()` (line 3468)에서 `.select("id, content, created_at, user_id, profiles(nickname)")` 으로 `content` 컬럼을 조회한다. 그러나 DB 스키마(`001_initial_schema.sql` line 141)와 `supabaseClient.js`의 `createComment`/`editComment`(line 160, 169)은 모두 `body` 컬럼을 사용한다. 결과적으로 SELECT 응답의 `c.content`는 항상 `undefined` → 댓글 본문이 빈 문자열로 렌더링된다. INSERT (line 3507)도 `{ post_id, user_id, content }` 로 `content` 필드를 사용하여 DB 제약 `body NOT NULL` 위반 → 삽입 실패(에러 무시됨).
+- **재현조건:** 댓글이 있는 게시글 상세(`openLogDetail`) 열기 → 댓글 본문 공백 확인. 댓글 작성 → 등록 버튼 클릭 → 댓글 미등록 (에러 표시 없음).
+- **원인:** line 3468 `.select("id, content, ...")` 및 line 3484 `c.content` → `body`로 교체 필요. line 3507 `insert({ ..., content })` → `insert({ ..., body: content })` 로 교체 필요.
+- **제안 수정:** line 3468: `"id, body, created_at, user_id, profiles(nickname)"` / line 3484: `${esc(c.body)}` / line 3507: `insert({ post_id: p.id, user_id: window._commUser.id, body: content })`.
+- **파일:** [site/app.js](site/app.js) line 3468, 3484, 3507 [lane:CORE]
+
+### [L-174] — `openSetModal` — Tab 포커스 트랩 없음 → 키보드 사용자 모달 탈출 (WCAG 2.1.2)
+- **영역:** 프론트엔드 — 장비 꾸러미 모달 (접근성)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `openSetModal()` (line 313)에는 ESC 닫기 핸들러(`onKey`)만 등록되어 있고 Tab/Shift+Tab 포커스 트랩이 없다. 키보드 사용자가 Tab을 누르면 포커스가 모달 외부(배경 페이지)로 탈출하여 WCAG 2.1.2(키보드 트랩) 달성 기준 위반 및 모달이 열린 상태에서 배경 요소 조작이 가능해진다. `openProduct` (line 1853)·`openReviewDetail` (line 1929)은 포커스 트랩이 구현되어 있으나 `openSetModal`만 누락되어 있다.
+- **재현조건:** 장비 꾸러미 담기 버튼 클릭 → 모달 열림 → Tab 반복 입력 → 포커스가 배경으로 이동 확인.
+- **원인:** line 339 `const onKey = e => { if (e.key === "Escape") close(); };` — Tab 처리 분기 없음.
+- **제안 수정:** `onKey` 내에 `if (e.key === "Tab") { ... first/last 포커스 순환 ... }` 분기 추가 (openProduct line 1856–1862 패턴 동일 적용).
+- **파일:** [site/app.js](site/app.js) line 339 [lane:CORE]
+
+### [L-175] — `openLogDetail` — `close()` 시 `prevFocus` 복귀 누락 → 접근성 포커스 유실
+- **영역:** 프론트엔드 — 커뮤니티/소셜 (접근성)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `openLogDetail()` (line 3428)의 `close` 함수는 `modal.classList.remove("on")`만 수행하며, 모달 오픈 전 포커스 요소로 복귀시키지 않는다. `openProduct`(line 1836–1840), `openReviewDetail`(line 1917–1921)는 `prevFocus.focus()` 복귀를 구현하고 있으나 `openLogDetail`만 누락. 키보드·스크린리더 사용자는 모달 닫힌 후 포커스가 `<body>`로 이동하여 탐색 위치를 잃는다.
+- **재현조건:** 커뮤니티 카드 Tab 탐색 → Enter로 `openLogDetail` 열기 → ESC 또는 ✕ 버튼으로 닫기 → 포커스가 카드로 복귀하지 않고 body 또는 다른 요소로 이동.
+- **원인:** line 3428 `const close = () => modal.classList.remove("on");` — `prevFocus` 저장 및 복귀 로직 없음.
+- **제안 수정:** `const prevFocus = document.activeElement;` 를 모달 열기 직전에 저장하고, `close` 함수를 `const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus?.focus) prevFocus.focus(); };` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 3428 [lane:CORE]
+
+### [L-171] ✅ 해결완료(2026-06-13, CORE) — `app.js` — `openProduct()` 모달 하단 상세 링크 — `d.models.indexOf(m) === -1`일 때 `item--1.html` 링크 렌더링
 - **영역:** 프론트엔드 — 상품 상세
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
