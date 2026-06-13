@@ -154,11 +154,25 @@ export async function loadRemoteWishlist() {
   return Array.isArray(data?.items) ? data.items : []
 }
 
+// H-59: 동시/연속 호출 시 원격 upsert가 네트워크 순서 뒤바뀌어 이전 상태가 최신을 덮어쓰는 race 방지.
+// 쓰기를 단일 체인으로 직렬화(FIFO)하고, 대기 중에는 최신 payload만 남겨(coalesce) 마지막 상태가 항상 이긴다.
+// (payload는 항상 localStorage 전체 배열의 누적 스냅샷이므로 마지막 write가 곧 정답.)
+let _wishWriteChain = Promise.resolve()
+let _wishPending = undefined
 export async function saveRemoteWishlist(items) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: { message: 'unauthorized' } }
-  return supabase.from('wishlists')
-    .upsert({ user_id: user.id, items }, { onConflict: 'user_id' })
+  _wishPending = items   // 대기 중 이전 payload는 폐기 — 누적 스냅샷이라 최신만 쓰면 충분
+  _wishWriteChain = _wishWriteChain.then(async () => {
+    if (_wishPending === undefined) return            // 더 최신 호출이 이미 flush함
+    const payload = _wishPending
+    _wishPending = undefined
+    const res = await supabase.from('wishlists')
+      .upsert({ user_id: user.id, items: payload }, { onConflict: 'user_id' })
+    if (res?.error) console.error('saveRemoteWishlist', res.error)
+    return res
+  }).catch(e => { console.error('saveRemoteWishlist', e) })
+  return _wishWriteChain
 }
 
 // 로컬·원격 찜을 key 기준 합집합(원격 항목의 가격/이미지 등은 로컬 최신값 우선)
