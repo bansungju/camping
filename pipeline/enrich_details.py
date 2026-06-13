@@ -112,7 +112,8 @@ def main():
         JOIN product_spec_values psv ON psv.product_id=p.id
         JOIN metrics mt ON mt.id=psv.metric_id
         WHERE p.danawa_pcode IN (%s)
-        GROUP BY p.id ORDER BY 2 LIMIT 12""" % ",".join("'%s'" % t[1] for t in targets)):
+        GROUP BY p.id ORDER BY 2 LIMIT 12""" % ",".join("?" * len(targets)),
+        [t[1] for t in targets]):
         print(f"   {name[:34]:36} {w:>5.0f}g | 내수압 {wh or '-'} | 바닥 {fa or '-'}㎡")
     con.close()
 

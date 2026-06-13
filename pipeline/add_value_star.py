@@ -14,7 +14,8 @@ MANIFEST = os.path.join(ROOT, "site", "data", "manifest.json")
 def value_stars(models):
     """원/L 오름차순 랭크 → 별점 5.0(최저원/L)~1.0(최고). 0.5 단위."""
     rated = [(m, m["price_min"] / m["specs"]["capacity_l"]["value"])
-             for m in models if m.get("price_min") and m["specs"]["capacity_l"]["value"]]
+             for m in models
+             if m.get("price_min") and m.get("specs", {}).get("capacity_l", {}).get("value")]
     rated.sort(key=lambda x: x[1])  # 싼 원/L 먼저 = 가성비 good
     n = len(rated)
     out = {}
