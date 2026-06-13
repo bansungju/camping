@@ -97,10 +97,11 @@ def parse_specs(text):
     무게(kg)·크기(이너추정)만 채택. 내수압은 노이즈로 미채택(verify 참고만).
     """
     out = {}
-    # 무게: N.Nkg (가장 큰 값 = 본체/패키지 추정). OCR 신뢰 높음.
+    # 무게: N.Nkg. M-356/M-417: 페그·폴·수납백 등 부속 무게가 함께 OCR되면 가장 작은 값이 부속일 수
+    #   있어 min은 본체 무게를 과소평가한다. 주석 의도(가장 큰 값=본체/패키지)대로 max를 채택한다.
     kgs = [float(x) for x in re.findall(r'(\d+\.?\d*)\s*kg', text) if 0.3 < float(x) < 50]
     if kgs:
-        out["weight_min"] = (round(min(kgs) * 1000), f"{min(kgs)}kg", "medium")
+        out["weight_min"] = (round(max(kgs) * 1000), f"{max(kgs)}kg", "medium")
 
     # 크기: NxN(xN) 후보 추출, '이너'에 가장 가까운 것 = 바닥면적 근거
     sizes = []  # (시작위치, 가로, 세로)
@@ -154,13 +155,22 @@ def verify_price(con, pid, url, mode):
         return
     severe = ratio >= 2.0
     print(f"  [price] DB={dv:,} 쇼핑몰={sp:,} → {'심각불일치' if severe else '불일치'}({ratio:.1f}x)")
-    con.execute("""INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note,resolved,created_at)
-        VALUES(?,NULL,'conflict',?,0,datetime('now'))""",
-        (pid, f"가격: DB={dv:,} vs 쇼핑몰OCR={sp:,} ({ratio:.1f}x)"))
-    if severe and mode == "fill":
-        # 명백 오류 → 가격관측 무효화(노출 차단), 정정 전까지 보류
-        con.execute("UPDATE price_observations SET valid=0 WHERE product_id=?", (pid,))
-        print(f"    → 가격관측 무효화(노출 보류, 정정 필요)")
+    # M-300: conflict flag INSERT와 가격관측 무효화 UPDATE를 SAVEPOINT로 원자화한다. 둘 사이에서
+    #   예외가 나면 'conflict 기록은 됐는데 무효화는 누락'된 불일치 상태가 커밋될 수 있다.
+    con.execute("SAVEPOINT vp")
+    try:
+        con.execute("""INSERT INTO data_quality_flags(product_id,metric_id,flag_type,note,resolved,created_at)
+            VALUES(?,NULL,'conflict',?,0,datetime('now'))""",
+            (pid, f"가격: DB={dv:,} vs 쇼핑몰OCR={sp:,} ({ratio:.1f}x)"))
+        if severe and mode == "fill":
+            # 명백 오류 → 가격관측 무효화(노출 차단), 정정 전까지 보류
+            con.execute("UPDATE price_observations SET valid=0 WHERE product_id=?", (pid,))
+            print(f"    → 가격관측 무효화(노출 보류, 정정 필요)")
+        con.execute("RELEASE vp")
+    except Exception:
+        con.execute("ROLLBACK TO vp")
+        con.execute("RELEASE vp")
+        raise
 
 
 def get_target_url(con, pid):
