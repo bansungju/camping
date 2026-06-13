@@ -3637,7 +3637,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
           <span class="log-date">${dt}</span>
         </div>
         <div class="log-title">${esc(p.title)}</div>
-        <div class="log-preview">${esc(preview)}${p.content.length > 80 ? "…" : ""}</div>
+        <div class="log-preview">${esc(preview)}${(p.content || "").length > 80 ? "…" : ""}</div>
         ${tagHtml ? `<div class="log-tags">${tagHtml}</div>` : ""}
         ${gsBadge}
         <div class="log-card-foot">
@@ -3659,6 +3659,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
     el.querySelectorAll(".log-like-btn").forEach(btn => {
       btn.onclick = async e => {
         e.stopPropagation();
+        if (!window._commUser) { showToast("로그인 후 좋아요를 누를 수 있어요"); return; }
         const pid = btn.dataset.pid;
         const wasLiked = btn.dataset.liked === "1";
         const cntEl = btn.querySelector(".log-like-cnt");
@@ -3765,7 +3766,7 @@ function openLogDetail(p) {
     async function loadComments() {
       const { data: cmts } = await supabase
         .from("comments")
-        .select("id, content, created_at, user_id, profiles(nickname)")
+        .select("id, body, created_at, user_id, profiles(nickname)")
         .eq("post_id", p.id)
         .is("deleted_at", null)
         .order("created_at", { ascending: true })
@@ -3781,7 +3782,7 @@ function openLogDetail(p) {
           const isMine = window._commUser && window._commUser.id === c.user_id;
           return `<div class="cmt-row" data-cid="${esc(c.id)}">
             <div class="cmt-meta"><span class="cmt-nick">${esc(nick)}</span><span class="cmt-date">${dt}</span>${isMine ? `<button type="button" class="cmt-del-btn" data-cid="${esc(c.id)}">✕</button>` : ""}</div>
-            <div class="cmt-body">${esc(c.content)}</div>
+            <div class="cmt-body">${esc(c.body)}</div>
           </div>`;
         }).join("");
         cmtList.querySelectorAll(".cmt-del-btn").forEach(btn => {
@@ -3804,7 +3805,7 @@ function openLogDetail(p) {
         if (!window._commUser) { alert("로그인 후 댓글을 작성할 수 있어요."); return; }
         const submitBtn = cmtForm.querySelector("button[type=submit]");
         if (submitBtn) submitBtn.disabled = true;
-        const { error } = await supabase.from("comments").insert({ post_id: p.id, user_id: window._commUser.id, content });
+        const { error } = await supabase.from("comments").insert({ post_id: p.id, user_id: window._commUser.id, body: content });
         if (submitBtn) submitBtn.disabled = false;
         if (!error) { if (cmtInput) cmtInput.value = ""; await loadComments(); }
       };
