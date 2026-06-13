@@ -357,7 +357,7 @@ function fmtVal(v, unit) {
 
 function stars(n) {
   if (n == null) return '<span class="nd">—</span>';
-  n = Math.min(5, n);
+  n = Math.max(0, Math.min(5, n));  // M-540: 음수 별점 하한 적용
   let h = "", full = Math.floor(n), half = (n - full) >= 0.5;
   for (let i = 0; i < 5; i++) {
     if (i < full) h += "★";
@@ -692,6 +692,7 @@ function openReplaceModal(setId, item, slot) {
     const res = addToSet(setId, item);       // 이제 자리 생김 → 새 항목 담기
     close();
     renderAccount();
+    openSetDetail(setId);  // M-543: 교체 후 세트 상세 재열기 (UI stale 방지)
     if (res.status === "added") showSetConfirm(setId);
   });
   modal.querySelector(".pmx").focus();
@@ -2943,7 +2944,8 @@ async function renderHotSection(categories) {
   // RPC로 최근 7일 클릭 상위 30개 집계 (카테고리별 분류용으로 여유있게)
   try {
     const { supabase } = await import("./supabaseClient.js?v=2fbbf301");
-    const { data } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });
+    const { data, error: hotErr } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });  // M-558: error 구조분해
+    if (hotErr) { console.error("renderHotSection rpc:", hotErr); return; }
     if (data && data.length >= 1) {
       // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
       const catMap = new Map();
@@ -3437,7 +3439,7 @@ function renderAccount() {
             openProduct(prod);
             // H-92: STATE 복원을 모든 close 경로(ESC 포함)에서 보장 — 일회성 close 훅 사용
             const _pm = document.getElementById("pmodal");
-            if (_pm) _pm._onCloseOnce = () => { STATE.slug = prevSlug; STATE.data = prevData; };
+            if (_pm) _pm._onCloseOnce = () => { STATE.slug = prevSlug ?? null; STATE.data = prevData ?? null; };  // M-557: account.html에서 undefined 복원 방지
             return;
           }
         } catch (_) {}
@@ -3511,7 +3513,7 @@ function renderAccount() {
     }
   }
   if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
-  if (setsEl && !sets.length) {
+  if (setsEl && !sets.length && isLoggedIn) {  // M-526: 비로그인 시 CTA가 이미 표시됨, empty msg 중복 방지
     setsEl.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted)">
       <div style="font-size:32px;margin-bottom:10px">🎒</div>
       <div>아직 만든 세트가 없어요</div>
@@ -4322,7 +4324,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const arr = getSets();
         const fingerprint = `${s.name || ""}|${(s.items || []).length}|${(s.items || []).map(x => `${x.b}${x.m}`).join(",")}`;
         const isDup = arr.some(x => `${x.title || x.name || ""}|${(x.items || []).length}|${(x.items || []).map(i => `${i.b}${i.m}`).join(",")}` === fingerprint);
-        if (isDup) { alert("이미 동일한 세트가 있어요."); closeVs(); return; }
+        if (isDup) { showToast("이미 동일한 세트가 있어요."); closeVs(); return; }  // M-539: alert() → showToast() (iOS Safari PWA 차단 방지)
         const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: x.coupang_url || "" })) };
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화

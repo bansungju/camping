@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=8bf19997"></script>
+<script src="app.js?v=7a2ccd9e"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -590,7 +590,7 @@ const authErrorParam = params.get('auth_error')
 let authErrorTimer = null
 if (authErrorParam) {
   const errDetail = params.get('err') || ''
-  if (errDetail) console.error('[auth] exchangeCodeForSession 실패:', decodeURIComponent(errDetail))
+  if (errDetail) { try { console.error('[auth] exchangeCodeForSession 실패:', decodeURIComponent(errDetail)) } catch (_) { console.error('[auth] exchangeCodeForSession 실패 (URI decode 오류):', errDetail) } }  // M-549: malformed URI 예외 처리
   section.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:24px;font-size:14px">로그인 중 오류가 발생했습니다. 다시 시도해주세요.</p>`
   // 유효한 세션이 이미 있으면(닉네임 모달 등) 이 타이머를 취소해 화면을 덮어쓰지 않도록 함.
   authErrorTimer = setTimeout(() => renderLogin(), 2000)
