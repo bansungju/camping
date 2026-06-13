@@ -64,12 +64,18 @@
 
 ---
 
-## 내가 실제로 할 일 (셸 안정화 후, 구현 단계)
-1. G1 푸시 경로 결정 → `send-price-alert`+`push_subscriptions` 네이티브 토큰 확장 (백엔드, 내 단독)
-2. G2 구매링크 Capacitor 분기 (app.js, 락 잡고)
-3. G4 Apple 버튼 환경분기 (account.html, 그 세션과 조율)
-4. G3 라벨은 이미 완료 — Phase 5에 전달만
+## 구현 상태 (2026-06-13 — 세션 단독 인계 후 코드 전부 완료)
+1. ✅ **G1 네이티브 푸시** — APNs 직접 방식 채택(iOS 우선, Firebase 불요). 코드 완료:
+   - migration 025: `push_subscriptions`에 platform·native_token (배포는 사용자가 SQL 실행)
+   - `supabaseClient.js`: savePushToken·registerNativePush(@capacitor/push-notifications)
+   - `app.js`: 찜 시 앱=registerNativePush / 웹=Web Push 분기
+   - `send-price-alert`: platform 분기(web=Web Push, ios=APNs ES256 JWT/HTTP2) — **재배포 완료**, env 미설정이라 네이티브 분기 무동작(웹 무회귀 스모크 확인)
+2. ✅ **G2 외부링크** — `openExternal()` 앱=@capacitor/browser / 웹=window.open. 구매링크 2곳 교체.
+3. ✅ **G4 Apple 버튼** — 그 세션 Phase 3이 내 플래그버튼을 환경분기로 통합(중복 없음, 확인).
+4. ✅ **G3 라벨** — APP-STORE-PRIVACY-AND-AFFILIATE.md 완료.
 
-## 지금은 안 함
-- 셸/딥링크/네이티브플러그인 설치/빌드 = 그 세션
-- 위 G1~G4 구현 = "셸 안정화 후" (사용자 지시: 계획만)
+## 사용자/네이티브 세션이 해야 (물리적으로 내 환경 밖)
+- **네이티브 플러그인 설치+동기화**: `npm i @capacitor/push-notifications @capacitor/browser @capacitor-community/apple-sign-in` → `npx cap sync` → Xcode Capabilities(Push Notifications·Sign in with Apple) 체크. (안 하면 위 JS 네이티브 호출이 no-op)
+- **APNs 설정(G1 활성화)**: Apple Developer에서 APNs Auth Key(.p8) 발급 → Supabase secrets `APNS_KEY_ID·APNS_TEAM_ID·APNS_P8·APNS_BUNDLE_ID(com.gearforest.app)·APNS_PRODUCTION` → `supabase functions deploy send-price-alert` 재배포 → 실기기 검증.
+- **파이프라인 발송 env**: run_all 환경에 `SEND_PRICE_ALERT_URL`+`ALERT_SECRET`(B-1).
+- **Apple provider(Phase 3)·빌드·심사(Phase 5)** = MOBILE-APP-PLAN 그 세션.
