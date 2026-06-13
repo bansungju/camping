@@ -327,7 +327,10 @@ function toggleWishWithHint(item, btn) {
 // 모델·카테고리슬러그 → 위시/최근 항목(공용 형태)
 function wishItem(m, slug) {
   return { key: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
-           cap: m.capacity, s: slug, p: m.price_min, img: m.img };
+           cap: m.capacity, s: slug, p: m.price_min, img: m.img,
+           pcode: wishKey(m.brand, m.model, m.capacity),
+           weight_g: m.specs?.weight?.value ?? null,
+           coupang_url: m.coupang_url ?? null };   // M-146: setItem과 필드 일치
 }
 
 /* ── 장비 세트 빌더 — localStorage 저장 (로그인 없이도 동작) ──
@@ -2021,7 +2024,7 @@ function _reviewCard(r, i) {
   if (r.image_urls.length) {
     const more = r.image_urls.length > 1 ? `<span class="pmrv-more">+${r.image_urls.length - 1}</span>` : "";
     return `<button type="button" class="pmrv-card has-photo" data-i="${i}">
-      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(r.image_urls[0])}" alt="" loading="lazy">${more}</span>
+      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(r.image_urls[0])}" alt="" loading="lazy" onerror="this.style.display='none'">${more}</span>
       ${cap}</button>`;
   }
   return `<button type="button" class="pmrv-card textcard" data-i="${i}">
@@ -2033,7 +2036,7 @@ function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
   if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
-  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy">`).join("");
+  const imgs = (r.image_urls || []).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="lazy" onerror="this.style.display='none'">`).join("");
   ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true" aria-label="${nick}님의 후기">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}
