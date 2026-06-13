@@ -163,11 +163,19 @@ def ingest_one(con, cfg, c, seen_names):
         m = re.search(r"(\d+)인", blob)
         cap = int(m.group(1)) if m else None
     con.execute("INSERT OR IGNORE INTO brands(name_ko) VALUES(?)", (brand,))
-    bid = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()[0]
-    con.execute("""INSERT OR IGNORE INTO products(brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
+    brow = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()
+    if not brow:          # M-183: 브랜드 조회 실패(이름 불일치 등) 시 fetchone()[0] TypeError 방지
+        return "dup_name"
+    bid = brow[0]
+    # M-183/M-290: 신규 삽입 시 lastrowid로 pid 직접 회수. 충돌(rowcount=0)이면 기존 (brand,model)
+    #   상품에 '다른 pcode'의 스펙을 덮어써 오염되므로 경고 후 스킵(IS NULL SELECT 의존 제거).
+    cur = con.execute("""INSERT OR IGNORE INTO products(brand_id,category_id,model_name,capacity,danawa_pcode,curation_status,sale_status)
         VALUES(?,?,?,?,?, 'pending','on_sale')""", (bid, cid, model, cap, c["pcode"]))
-    pid = con.execute("SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL",
-                      (bid, model)).fetchone()[0]
+    if cur.rowcount:
+        pid = cur.lastrowid
+    else:
+        print(f"   ⚠ multicat 모델명 충돌 '{brand} {model}' (pcode={c['pcode']}) → 스킵(기존상품 스펙 오염 방지)", flush=True)
+        return "dup_name"
     got = set()
     for metric, keys, fn in cfg["spec"]:
         raw = P.find_spec(specs, keys, ["수납"] if metric == "floor_area" else None)

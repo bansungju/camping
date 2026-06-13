@@ -94,7 +94,7 @@
 | **C14** | `affiliate_links.py` | M-287·L-188(naver_fallback .get) / M-315(channel= 비추적 명시) | ✅ 2026-06-13 |
 | **C15** | `star_catalog.py` | M-169·M-260 수정(valid=1+양수가드) / L-235 by-design(종합점수 저장됨·지표별은 ratings) | ✅ 2026-06-13 |
 | **C16** | `brand_filter.py` | M-333(플레이스홀더 가드)·L-232(rowcount) 수정 / M-178 비이슈(sub가 카테고리 스코프) | ✅ 2026-06-13 |
-| **C17** | `multicat.py` | M-183·M-256·M-290 | ⬜ |
+| **C17** | `multicat.py` | M-183·M-290 수정(lastrowid·충돌스킵) / M-256 보류(seen_names가 HT.ingest·refresh와 string-set 공유계약 → 크로스파일 조율 필요) | ✅ 2026-06-13 |
 | **C18** | `add_manual_models.py` | M-197·M-225·M-280 | ⬜ |
 | **C19** | `enrich_details.py` | M-215·M-250·M-322 | ⬜ |
 | **C20** | `check_export.py` | M-222·M-294·L-231 | ⬜ |
