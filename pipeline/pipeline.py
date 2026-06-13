@@ -61,8 +61,11 @@ def build_db(db_path):
     if os.path.exists(db_path):
         os.remove(db_path)
     con = sqlite3.connect(db_path)
-    con.executescript(open(os.path.join(ROOT, "schema.sql"), encoding="utf-8").read())
-    con.executescript(open(os.path.join(HERE, "reference.sql"), encoding="utf-8").read())
+    # M-401: with로 핸들 확실히 닫음(executescript 예외 시 핸들 누출 방지).
+    with open(os.path.join(ROOT, "schema.sql"), encoding="utf-8") as f:
+        con.executescript(f.read())
+    with open(os.path.join(HERE, "reference.sql"), encoding="utf-8") as f:
+        con.executescript(f.read())
     con.commit()
     return con
 
