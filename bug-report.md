@@ -2960,7 +2960,7 @@
 
 ---
 
-### [M-155] — `syncFilterUI` — `document.getElementById("filters")` null 체크 없이 `querySelectorAll` 직접 호출 → TypeError
+### [M-155] — `syncFilterUI` — `document.getElementById("filters")` null 체크 없이 `querySelectorAll` 직접 호출 → TypeError — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — category.html 필터 (app.js)
 - **심각도:** 🟡 Medium
@@ -3861,7 +3861,7 @@
 
 ---
 
-### [M-199] — `buildFilters` — "경량 우선" 프리셋 토글 시 사용자의 브랜드 필터 의도치 않게 초기화
+### [M-199] — `buildFilters` — "경량 우선" 프리셋 토글 시 사용자의 브랜드 필터 의도치 않게 초기화 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 카테고리 필터 (app.js)
 - **심각도:** 🟡 Medium
@@ -5839,7 +5839,7 @@
 
 ---
 
-### [M-293] — `renderChips` — 활성 브랜드 칩 CSS 클래스 로직 반전, 선택된 칩 강조 표시 안 됨
+### [M-293] — `renderChips` — 활성 브랜드 칩 CSS 클래스 로직 반전, 선택된 칩 강조 표시 안 됨 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 필터 칩
 - **심각도:** 🟡 Medium
@@ -5968,7 +5968,7 @@
 
 ---
 
-### [M-298] — `buildFilters` / `syncFilterUI` — 드롭다운 선택 브랜드(top-12 외)가 활성 상태 UI에 미반영
+### [M-298] — `buildFilters` / `syncFilterUI` — 드롭다운 선택 브랜드(top-12 외)가 활성 상태 UI에 미반영 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -9438,7 +9438,7 @@
 
 ---
 
-### [H-123] — `pipeline.py` `_assign_gf_code` — COUNT 기반 시퀀스로 동시 실행 시 gf_code 중복 발급
+### ✅ 해결완료(2026-06-13) [H-123] — `pipeline.py` `_assign_gf_code` — COUNT 기반 시퀀스로 동시 실행 시 gf_code 중복 발급
 
 - **영역:** 백엔드 — DB 초기화
 - **심각도:** 🔴 High
