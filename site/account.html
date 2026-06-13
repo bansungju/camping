@@ -516,14 +516,12 @@ if (authErrorParam) {
   section.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:24px;font-size:14px">로그인 중 오류가 발생했습니다. 다시 시도해주세요.</p>`
   // 유효한 세션이 이미 있으면(닉네임 모달 등) 이 타이머를 취소해 화면을 덮어쓰지 않도록 함.
   authErrorTimer = setTimeout(() => renderLogin(), 2000)
+} else {
+  // 로그인 UI를 즉시 표시. 로그인 상태면 initAuth 콜백이 renderProfile()로 교체.
+  renderLogin()
 }
 
-let _authFired = false
-const _authTimeout = setTimeout(() => { if (!_authFired) renderLogin() }, 3000)
-
 await initAuth(async (user, event) => {
-  _authFired = true
-  clearTimeout(_authTimeout)
   window._accUser = user || null
   if (user && authErrorTimer) { clearTimeout(authErrorTimer); authErrorTimer = null }
   if (!user) {
