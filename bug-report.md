@@ -1205,7 +1205,7 @@
 ### [L-43] ✅ 해결완료(2026-06-12) — 데스크톱 footer 불필요한 `padding-bottom: 64px` 잔류
 - **해결(2026-06-12):** `insertBottomNav()`에서 `matchMedia("(max-width:767px)")` 조건 추가 → 모바일에서만 padding 주입. [site/app.js](site/app.js)
 
-### [L-19] ~~계정 삭제/탈퇴 기능 미존재~~ → [H-23]으로 승격
+### [L-19] ✅ 중복(H-23 ✅ 해결완료) — ~~계정 삭제/탈퇴 기능 미존재~~ → [H-23]으로 승격
 - **영역:** 계정/로그인
 - **URL:** https://www.gear-forest.com/account.html
 - **증상:** H-23 참조.
@@ -2490,7 +2490,7 @@
 - **제안 수정:** 좋아요 핸들러 진입 시 `if (!window._commUser) { showToast('로그인 후 좋아요를 누를 수 있어요'); return; }` 추가.
 - **파일:** [site/app.js](site/app.js) line ~3265 [lane:CORE]
 
-### [L-161] — `syncGearSetsOnLogin` — `Date.now().toString(36) + Math.random()...` ID 충돌 가능성 — 원격→로컬 병합 시 동시 로그인 환경에서 id 중복
+### [L-161] ✅ 해결완료(2026-06-13, SOCIAL) — `syncGearSetsOnLogin` — `Date.now().toString(36) + Math.random()...` ID 충돌 가능성 — 원격→로컬 병합 시 동시 로그인 환경에서 id 중복
 - **영역:** 기어 세트 — 원격↔로컬 동기화
 - **심각도:** 🟢 Low
 - **증상:** `syncGearSetsOnLogin`(account.html line 243)에서 원격 세트를 로컬에 추가할 때 `id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6)` 형태로 로컬 id를 생성한다. `Date.now()`는 ms 단위로 원격 세트가 여러 개일 때 동일 밀리초 내에 여러 id가 만들어질 경우 Math.random() 4자리 suffix만으로 구분해야 한다. 충돌 확률은 낮지만 0이 아니며, 충돌 시 `getSets().find(x => x.id === setId)` 가 잘못된 세트를 반환해 수량 편집·삭제 등이 엉뚱한 세트에 적용된다.
@@ -2499,3 +2499,4 @@
 - **제안 수정:** `id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6)` → `id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)` (길이 증가 및 UUID 활용)
 - **파일:** [site/account.html](site/account.html) line ~243 [lane:SOCIAL]
 - **심각도:** 🟡 Medium
+- **해결:** `crypto.randomUUID()` 우선 사용, 미지원 환경은 `Date.now()+random(slice(2))` 폴백. 충돌 가능성 제거.
