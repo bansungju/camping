@@ -77,6 +77,9 @@ def ensure_implausible_flagtype(con):
     try:
         con.execute("SAVEPOINT t")
         pid = con.execute("SELECT id FROM products LIMIT 1").fetchone()
+        if pid is None:        # M-330: 빈 products 테이블 → probe 불가(pid[0] TypeError), 격리할 데이터도 없음
+            con.execute("RELEASE t")
+            return
         con.execute("INSERT INTO data_quality_flags(product_id,flag_type,note) VALUES(?,?,?)",
                     (pid[0], "implausible", "__probe__"))
         con.execute("ROLLBACK TO t")
@@ -117,7 +120,9 @@ def backfill_capacity_l(con):
         for pid, name in rows:
             if "+" in name:           # 다부품 세트(800+400ml 등) → 대표/합산 모호 → skip(추측회피)
                 continue
-            toks = re.findall(r"\d*\.?\d+\s*(?:ml|l|리터|ℓ)\b", name.lower())
+            # L-256: 끝의 `\b`는 한국어 뒤(예 '2리터짜리')에서 오작동(한글이 \w라 경계 판단 어긋남)해
+            #        유효 '2리터'를 놓친다. 라틴문자/숫자 연속만 막는 부정 전방탐색으로 교체(한글 접미사 허용).
+            toks = re.findall(r"\d*\.?\d+\s*(?:ml|l|리터|ℓ)(?![a-z0-9])", name.lower())
             if len(toks) != 1:        # 0개=용량없음, 2개+=세트 합산모호 → skip(추측회피)
                 continue
             cap = parse_capacity_l(name)
@@ -169,9 +174,11 @@ def fill_variant_capacity(con):
     (brand+canonical_model 그룹에 비-NULL capacity가 정확히 1종일 때만 = 색상변형 확실.
     2종+이면 사이즈변형 가능성 → skip=추측회피). canonical 분리·verified누락 차단. 멱등."""
     from collections import defaultdict
+    # M-343: canonical_model IS NULL이면 서로 다른 텐트가 (bid, None) 한 그룹으로 묶여 capacity가
+    #        혼입된다 → NULL은 그룹핑 대상에서 제외(동일성 판단 불가).
     rows = con.execute("""SELECT p.id, p.brand_id, p.canonical_model, p.capacity
         FROM products p JOIN categories c ON c.id=p.category_id
-        WHERE c.name_ko LIKE '%텐트%'""").fetchall()
+        WHERE c.name_ko LIKE '%텐트%' AND p.canonical_model IS NOT NULL""").fetchall()
     groups = defaultdict(list)
     for pid, bid, cm, cap in rows:
         groups[(bid, cm)].append((pid, cap))
@@ -279,7 +286,8 @@ def harmonize_variant_water_head(con):
         mode = cnt[0][0]
         for vid, wh in members:
             if round(wh) != mode:
-                con.execute("UPDATE product_spec_values SET value_normalized=? WHERE id=?", (mode, vid))
+                # L-257: REAL 컬럼이므로 명시적 float로 저장(정수 캐스트로 인한 타입/정밀도 손상 방지).
+                con.execute("UPDATE product_spec_values SET value_normalized=? WHERE id=?", (float(mode), vid))
                 n += 1
     con.commit()
     return n
@@ -413,15 +421,31 @@ def validate_db(con):
     con.execute("""UPDATE products SET capacity=NULL WHERE capacity IS NOT NULL
         AND category_id NOT IN (SELECT id FROM categories WHERE name_ko LIKE '%텐트%')""")
     con.commit()
-    con.execute("UPDATE product_spec_values SET valid=1")
-    # 지속격리 재적용: range검증으론 못 잡는 기준오염/모순(conflict '격리' 플래그)을
-    #   valid=1 리셋 후 다시 valid=0. (수동격리가 매 검증마다 부활하던 버그 차단)
-    #   source_id=4(외부확정)는 보호. 멱등.
-    con.execute("""UPDATE product_spec_values SET valid=0 WHERE id IN (
-        SELECT v.id FROM product_spec_values v
-        JOIN data_quality_flags d ON d.product_id=v.product_id AND d.metric_id=v.metric_id
-        WHERE d.flag_type='conflict' AND IFNULL(d.resolved,0)=0
-          AND d.note LIKE '%격리%' AND IFNULL(v.source_id,1)<>4)""")
+    # M-265: 리셋+재적용을 SAVEPOINT로 원자화. 둘 사이에서 예외가 나면 전체 valid=1 상태가
+    #        그대로 잔류·커밋될 수 있어(rollback 없음), 실패 시 리셋 직전으로 되돌린다.
+    con.execute("SAVEPOINT validate_reset")
+    try:
+        # M-236: source_id=4(외부확정) 보호값은 수동 valid=0이 매 검증마다 복원되면 안 됨.
+        #        (아래 주석은 보호를 명시했지만 정작 리셋문에 조건이 없어 무력했던 버그.)
+        # M-328: star_eligible=0(footprint 등 별점 제외 행)도 리셋 대상서 제외해 무분별 재유효화 방지.
+        con.execute("UPDATE product_spec_values SET valid=1 "
+                    "WHERE IFNULL(source_id,1)<>4 AND IFNULL(star_eligible,1)=1")
+        # 지속격리 재적용: range검증으론 못 잡는 기준오염/모순(conflict '격리' 플래그)을
+        #   valid=1 리셋 후 다시 valid=0. (수동격리가 매 검증마다 부활하던 버그 차단)
+        #   source_id=4(외부확정)는 보호. 멱등.
+        con.execute("""UPDATE product_spec_values SET valid=0 WHERE id IN (
+            SELECT v.id FROM product_spec_values v
+            JOIN data_quality_flags d ON d.product_id=v.product_id AND d.metric_id=v.metric_id
+            WHERE d.flag_type='conflict' AND IFNULL(d.resolved,0)=0
+              AND d.note LIKE '%격리%' AND IFNULL(v.source_id,1)<>4)""")
+        # M-323: value_normalized이 NULL인 행은 유효 데이터가 아니다(rederive_thickness 등이 NULL로
+        #        설정). NULL+valid=1이면 'valid=1 직접조회'에서 유효값으로 오인 → 일괄 valid=0.
+        con.execute("UPDATE product_spec_values SET valid=0 WHERE value_normalized IS NULL AND valid=1")
+    except Exception:
+        con.execute("ROLLBACK TO validate_reset")
+        con.execute("RELEASE validate_reset")
+        raise
+    con.execute("RELEASE validate_reset")
     con.execute("DELETE FROM data_quality_flags WHERE flag_type='implausible'")
     con.execute("DELETE FROM data_quality_flags WHERE flag_type='category_mismatch' AND note LIKE '[재분류]%'")
 
