@@ -60,7 +60,7 @@
 | **C3** | `export_site.py` | M-231·M-242·M-309·M-310·M-331 수정 / M-200·M-279·M-349 기존해결 | ✅ 2026-06-13 |
 | **C4** | `normalize.py` | M-276·M-288·M-319·M-339·L-263 수정 / M-192=H-90 기해결 / L-238 보류(by-design) | ✅ 2026-06-13 |
 | **C5** | `build_backpacking_bag.py` | M-195·M-196·M-223·M-224·M-320·M-321 | ✅ 2026-06-13 |
-| **C6** | `resolve_duplicates.py` | M-230·M-266·M-308·L-189·L-220 | ⬜ |
+| **C6** | `resolve_duplicates.py` | M-308·L-189 수정 / M-230=H-46 기해결 / M-266·L-220 무효 | ✅ 2026-06-13 |
 | **C7** | `graph_full.py` | M-184·M-235·M-269·M-324·L-270 | ⬜ |
 | **C8** | `verify_internal.py` | M-241·M-271·M-295·L-195·L-265 | ⬜ |
 | **C9** | `fill_whitelist_specs.py` | M-177·M-216·M-332·L-223 | ⬜ |

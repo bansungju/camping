@@ -89,7 +89,9 @@ def resolve(db_path: str, dry_run: bool):
             "UPDATE products SET curation_status='pending' WHERE id=?",
             [(pid,) for pid in losers],
         )
-        total_demoted += cur.rowcount
+        # M-308/L-189: executemany 후 cur.rowcount는 DB-API상 마지막 1회분/-1만 반환해 집계가
+        #   부정확하다 → 실제 강등 대상 수(len(losers))를 직접 누산.
+        total_demoted += len(losers)
 
         # canonical_models: rep_product_id가 loser인 행을 winner로 갱신
         for loser_pid in losers:
