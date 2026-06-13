@@ -657,7 +657,8 @@ function openReplaceModal(setId, item, slot) {
   const inSlot = s.items.map((x, ii) => ({ x, ii })).filter(o => slot.slugs.includes(o.x.s));
   let modal = document.getElementById("set-replace-modal");
   if (!modal) { modal = document.createElement("div"); modal.id = "set-replace-modal"; modal.className = "pmodal"; document.body.appendChild(modal); }
-  const rows = inSlot.map(o => `<button type="button" class="srp-item" data-ii="${o.ii}">
+  // M-237/M-297: pcode를 버튼에 저장해 splice 전 동일성 검증 → 스테일 data-ii 오삭제 방지
+  const rows = inSlot.map(o => `<button type="button" class="srp-item" data-ii="${o.ii}" data-pcode="${esc(o.x.pcode || '')}">
       <span class="srp-item-name">${esc(`${o.x.b || ""} ${o.x.m || ""}`.trim())}${(o.x.qty || 1) > 1 ? ` ×${o.x.qty}` : ""}</span>
       <span class="srp-item-act">빼고 담기 ›</span></button>`).join("");
   modal.innerHTML = `<div class="pmbox" role="dialog" aria-modal="true" aria-labelledby="srp-title" style="max-width:380px;width:100%;padding:22px">
@@ -679,7 +680,12 @@ function openReplaceModal(setId, item, slot) {
   modal.querySelector(".srp-cancel").onclick = close;
   modal.querySelectorAll(".srp-item").forEach(btn => btn.onclick = () => {
     const arr = getSets(); const set = arr.find(x => x.id === setId); if (!set) { close(); return; }
-    set.items.splice(+btn.dataset.ii, 1);   // 기존 항목 제거
+    // M-237/M-297: 스테일 data-ii 방지 — pcode로 동일성 검증 후 splice
+    const ii = +btn.dataset.ii;
+    const actual = set.items.findIndex((x, i) => i === ii && (x.pcode || '') === (btn.dataset.pcode || ''));
+    const spliceIdx = actual >= 0 ? actual : set.items.findIndex(x => (x.pcode || '') === (btn.dataset.pcode || '') && slot.slugs.includes(x.s));
+    if (spliceIdx < 0) { close(); return; }
+    set.items.splice(spliceIdx, 1);   // 기존 항목 제거
     saveSets(arr);
     const res = addToSet(setId, item);       // 이제 자리 생김 → 새 항목 담기
     close();
@@ -975,7 +981,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=f063da06").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=a23c6f87").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1192,7 +1198,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=f063da06").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=a23c6f87").catch(() => []);
     return idx;
   };
 
@@ -2750,7 +2756,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=f063da06"); }
+  try { idx = await getJSON("data/search.json?v=a23c6f87"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2981,9 +2987,11 @@ function renderRecent() {
 
 /* ---------- 내 정보 — 섹션 나열(FE-SOC-07) ---------- */
 /* 세트 상세 모달 — 수량 ± 편집 포함 */
-function openSetDetail(si) {
+function openSetDetail(sid) {
+  // M-226/M-338: 배열 인덱스 대신 안정 id로 세트 탐색 — renderAccount 후 인덱스 어긋남 방지
   const sets = getSets();
-  const s = sets[si];
+  const si = sets.findIndex(s => s.id === sid);
+  const s = si >= 0 ? sets[si] : null;
   if (!s) return;
   const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
   const fmtP = p => p ? p.toLocaleString() + "원" : "—";
@@ -3069,7 +3077,7 @@ function openSetDetail(si) {
   // H-87: 타입/수량 변경은 renderAccount()로 계정 세트 목록을 재생성 → 저장된 _prevFocus 노드가 분리됨.
   // 재진입 시 분리된 경우 재생성된 세트 카드로 갱신해 닫을 때 포커스 복귀가 끊기지 않게 함.
   else if (modal._prevFocus && !document.contains(modal._prevFocus)) {
-    modal._prevFocus = document.querySelector(`.acc-set[data-si="${si}"]`) || modal._prevFocus;
+    modal._prevFocus = document.querySelector(`.acc-set[data-sid="${sid}"]`) || modal._prevFocus;
   }
   if (modal._onKey) document.removeEventListener("keydown", modal._onKey);
   modal.classList.add("on");
@@ -3090,21 +3098,26 @@ function openSetDetail(si) {
     detailTypeSel.querySelectorAll(".stp-btn").forEach(b => { b.classList.remove("stp-active"); b.setAttribute("aria-pressed","false"); });
     btn.classList.add("stp-active"); btn.setAttribute("aria-pressed","true");
     detailTypeSel.dataset.value = btn.dataset.val;
-    const arr = getSets(); const set = arr[si]; if (!set) return;
+    // M-226: getSets() 재조회 후 sid로 세트 탐색 — renderAccount 이후 인덱스 어긋남 방지
+    const arr = getSets(); const si2 = arr.findIndex(x => x.id === sid); const set = arr[si2]; if (!set) return;
     set.type = btn.dataset.val; saveSets(arr);
-    renderAccount(); openSetDetail(si);
+    renderAccount(); openSetDetail(sid);
   });
   modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
-    const arr = getSets(); const set = arr[si]; if (!set) return;
+    // M-253/M-318: 더블탭 중 재렌더 방지 — 클릭 즉시 모달 내 qty 버튼 전체 비활성화
+    modal.querySelectorAll(".qty-dec,.qty-inc").forEach(b => { b.disabled = true; });
+    const arr = getSets(); const si2 = arr.findIndex(x => x.id === sid); const set = arr[si2]; if (!set) return;
     const ii = +btn.dataset.ii; const item = set.items[ii]; if (!item) return;
     if ((item.qty || 1) <= 1) set.items.splice(ii, 1);
     else item.qty = (item.qty || 1) - 1;
-    saveSets(arr); renderAccount(); openSetDetail(si);
+    saveSets(arr); renderAccount(); openSetDetail(sid);
   });
   modal.querySelectorAll(".qty-inc").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
-    const arr = getSets(); const set = arr[si]; if (!set) return;
+    // M-253/M-318: 더블탭 중 재렌더 방지 — 클릭 즉시 모달 내 qty 버튼 전체 비활성화
+    modal.querySelectorAll(".qty-dec,.qty-inc").forEach(b => { b.disabled = true; });
+    const arr = getSets(); const si2 = arr.findIndex(x => x.id === sid); const set = arr[si2]; if (!set) return;
     const ii = +btn.dataset.ii; const item = set.items[ii]; if (!item) return;
     // 같은상품 한도 + 슬롯 정원 둘 다 검사(정원 도달 시 증가 무시)
     const slot = slotForSlug(item.s);
@@ -3112,12 +3125,12 @@ function openSetDetail(si) {
     if ((item.qty || 1) >= qtyMax(item.s)) return;
     if (slot && cap > 0 && slotCount(set.items, slot) >= cap) return;
     item.qty = (item.qty || 1) + 1;
-    saveSets(arr); renderAccount(); openSetDetail(si);
+    saveSets(arr); renderAccount(); openSetDetail(sid);
   });
   // FE-WISH-07: 항목별 쿠팡 구매 — 새 탭으로 열고 click_events 집계(상품 상세 pmbuy와 동일 패턴)
   modal.querySelectorAll(".set-buy:not(.is-off)").forEach(btn => btn.onclick = async e => {
     e.stopPropagation();
-    const item = getSets()[si]?.items[+btn.dataset.ii];
+    const item = getSets().find(x => x.id === sid)?.items[+btn.dataset.ii];
     const url = item?.coupang_url;
     if (!url) return;
     openExternal(url);
@@ -3198,7 +3211,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=f063da06")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=a23c6f87")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
@@ -3491,7 +3504,7 @@ function renderAccount() {
       }).join("");
       // FE-WISH-10(B-2-3): 완성도 '필수 n/m'/배지 → 미니 도장판(모달·상세와 동일 컴포넌트).
       const miniBoard = miniStampBoard(s);
-      return `<div class="pli acc-set" role="button" tabindex="0" data-si="${si}" aria-label="${esc(s.title)} 세트 상세 보기">
+      return `<div class="pli acc-set" role="button" tabindex="0" data-sid="${s.id}" aria-label="${esc(s.title)} 세트 상세 보기">
         <div class="pli-info">
           <div class="pli-top">${tdef.icon} ${esc(tdef.label)}</div>
           <div class="pli-name">${esc(s.title)}</div>
@@ -3502,8 +3515,8 @@ function renderAccount() {
         </div>
         <div class="pli-side">
           <div class="pli-price">${priceLabeled(totalPrice(s.items) || null, '<span class="nd">—</span>')}</div>
-          <button type="button" class="acc-set-share" data-si="${si}" aria-label="링크 복사" title="공유 링크 복사">🔗</button>
-          <button type="button" class="acc-set-del" data-si="${si}" aria-label="세트 삭제">✕</button>
+          <button type="button" class="acc-set-share" data-sid="${s.id}" aria-label="링크 복사" title="공유 링크 복사">🔗</button>
+          <button type="button" class="acc-set-del" data-sid="${s.id}" aria-label="세트 삭제">✕</button>
         </div></div>`;
     }).join("");
     // 무게 목표 설정 버튼
@@ -3547,7 +3560,7 @@ function renderAccount() {
     });
     setsEl.querySelectorAll(".acc-set-share").forEach(b => b.onclick = e => {
       e.stopPropagation();
-      const s = getSets()[+b.dataset.si];
+      const s = getSets().find(x => x.id === b.dataset.sid);
       if (!s) return;
       try {
         const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
@@ -3566,7 +3579,9 @@ function renderAccount() {
     setsEl.querySelectorAll(".acc-set-del").forEach(b => b.onclick = e => {
       e.stopPropagation();
       const arr = getSets();
-      const deleted = arr.splice(+b.dataset.si, 1)[0];
+      // M-272: 배열 인덱스 대신 안정 id로 삭제 — renderAccount 후 인덱스 어긋남 방지
+      const delIdx = arr.findIndex(x => x.id === b.dataset.sid);
+      const deleted = delIdx >= 0 ? arr.splice(delIdx, 1)[0] : null;
       if (deleted?.remoteId && typeof window._deleteRemoteGearSet === 'function') {
         window._deleteRemoteGearSet(deleted.remoteId);
       }
@@ -3576,7 +3591,7 @@ function renderAccount() {
 
     // 세트 카드 클릭 → 상세 모달 (수량 ± 편집 포함)
     setsEl.querySelectorAll(".acc-set").forEach(card => {
-      card.onclick = () => openSetDetail(+card.dataset.si);
+      card.onclick = () => openSetDetail(card.dataset.sid);
     });
   }
 
