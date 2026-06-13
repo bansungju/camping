@@ -1,0 +1,20 @@
+[
+  {
+    "brand": "헬리녹스",
+    "category": "오토캠핑텐트",
+    "model": "노나돔 4.0",
+    "capacity": 6,
+    "prices": [
+      {"price": 2150000, "seller": "헬리녹스스토어", "url": "http://helinoxstore.co.kr/shop/shopdetail.html?branduid=3500710"},
+      {"price": 1980000, "seller": "캠핑파파", "url": "https://www.campingpapa.co.kr/m2/goods/view.php?goodsno=40629"},
+      {"price": 2350000, "seller": "캠핑리스트", "url": "https://campinglist.co.kr/product/3414/"}
+    ],
+    "specs": {
+      "weight_min": [9430, "9.43kg (블랙아웃 동일모델)"],
+      "water_head": [1500, "1500mm (블랙아웃 동일모델)"],
+      "floor_area": [16.0, "400x400cm (블랙아웃 동일모델)"]
+    },
+    "image_url": null,
+    "source_note": "다나와 미등재. 노나돔 4.0 블랙아웃 에디션과 동일 텐트(컬러만 상이) — 스펙 재사용. 정식 판매처 3곳 가격 교차."
+  }
+]
