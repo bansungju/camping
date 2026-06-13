@@ -101,7 +101,7 @@
 | **C21** | `stamp_version.py` | M-296(search.json 부재 경고)·L-213(print hs) 수정 / M-248=H-119(B26 fail-fast) 기해결 | ✅ 2026-06-13 |
 | **C22** | `harvest_tents.py` | M-254 수정(valid=1) / M-275·L-241 보류(M-256과 동일 — seen_names 3파일 공유계약, (cid,brand,model)로 동시변경 필요) | ✅ 2026-06-13 |
 | **C23** | `seed_coupang.py` | L-193(encoding 3곳)·L-215(strip)·L-239(str 키 정합) 수정 | ✅ 2026-06-13 |
-| **C24** | `limits_map.py` | L-212·L-251·L-252 | ⬜ |
+| **C24** | `limits_map.py` | L-212(import 상단)·L-251(grade 랭크정렬)·L-252("—" 버킷) 수정 | ✅ 2026-06-13 |
 | **C25** | `backfill_capacity.py` | M-176·L-227 | ⬜ |
 | **C26** | `column_fixes.py` | M-179·M-281 | ⬜ |
 | **C27** | `collect_images.py` | M-217·L-192 | ⬜ |

@@ -13,6 +13,7 @@
 """
 import argparse
 import os
+import re
 import sqlite3
 from datetime import date
 
@@ -85,6 +86,7 @@ def render(con, rows):
     A = [r for r in rows if r["grade"].endswith("A")]
     B = [r for r in rows if r["grade"].endswith("B")]
     L = [r for r in rows if "한계" in r["grade"]]
+    O = [r for r in rows if r["grade"] == "—"]   # L-252: ★지표 미정의 카테고리(어느 버킷에도 안 들던 누락분)
     out = []
     out.append("# 캠핑기어 DB — 한계지도 (Limits Map)")
     out.append(f"\n> **자동생성** `python3 pipeline/limits_map.py` · 기준일 {today} · "
@@ -96,11 +98,19 @@ def render(con, rows):
     out.append(f"| 🟢 A | 모든 ★지표 ≥{GOOD}% — 전 비교축 신뢰 | {', '.join(r['cat'] for r in A) or '—'} |")
     out.append(f"| 🟡 B | 신뢰축(≥{GOOD}%) 2개+ — 다축 비교성립, 일부축 약함 | {', '.join(r['cat'] for r in B) or '—'} |")
     out.append(f"| 🔴 한계 | 신뢰축 ≤1개 — 핵심스펙 미공개로 비교축 부족 | {', '.join(r['cat'] for r in L) or '—'} |")
+    if O:   # L-252: ★지표 미정의 카테고리도 요약에 명시(합산 ≠ 버킷합 불일치 해소)
+        out.append(f"| — | ★지표 미정의 — 비교축 없음 | {', '.join(r['cat'] for r in O)} |")
 
     out.append("\n## 카테고리별 상세\n")
     out.append("| 등급 | 카테고리 | verified | ★별점지표(충전율) | 참고지표 |")
     out.append("|---|---|---:|---|---|")
-    for r in sorted(rows, key=lambda x: (x["grade"], -x["nv"])):
+    # L-251: 이모지 유니코드 정렬(🔴<🟡<🟢)은 최악등급이 먼저 와 가독성 역전 → 명시 랭크로 A→B→한계→미정의.
+    def _grank(g):
+        if g.endswith("A"): return 0
+        if g.endswith("B"): return 1
+        if "한계" in g: return 2
+        return 3
+    for r in sorted(rows, key=lambda x: (_grank(x["grade"]), -x["nv"])):
         cap = f" · 인원 {r['cap_pct']}%" if r["cap_pct"] else ""
         stars = "<br>".join(r["stars"])
         refs = ", ".join(r["refs"]) or "—"
@@ -167,8 +177,7 @@ def _star_rate_pairs(r):
     """행의 ★지표 셀과 충전율 추출(렌더 보조)."""
     pairs = []
     for cell in r["stars"]:
-        # 'label(unit) **NN%**' 형태에서 NN 추출
-        import re
+        # 'label(unit) **NN%**' 형태에서 NN 추출 (re는 모듈 상단 import — L-212)
         m = re.search(r"\*\*(\d+)%\*\*", cell)
         if m:
             pairs.append((cell.replace("**", ""), int(m.group(1))))
