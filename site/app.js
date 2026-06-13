@@ -1878,6 +1878,8 @@ function buildFilters(d, star) {
   // 정렬 적용(셀렉트·빠른칩 공용) — 셀렉트 값도 동기화
   const ssel = bar.querySelector("[data-sort]");
   const applySort = v => {
+    // M-228: 수동 정렬 시 스타일 칩 이중활성 방지 — campStyle 초기화
+    if (STATE.campStyle) { STATE.campStyle = ""; if (STATE.data) renderStyleChips(STATE.data); }
     if (!v) { STATE.sortKey = "spec:" + (star[0] && star[0].key); STATE.sortAsc = defaultAsc(STATE.sortKey); }
     else if (v === "value") { STATE.sortKey = "value"; STATE.sortAsc = false; }
     else { STATE.sortKey = v; STATE.sortAsc = defaultAsc(v); }
@@ -1929,6 +1931,11 @@ function renderActiveFilters() {
   const el = document.getElementById("activefilters");
   if (!el) return;
   const chips = [];
+  // M-243: campStyle 활성 필터 칩 표시 — 개별 해제 지원
+  if (STATE.campStyle) {
+    const sm = (typeof STYLE_META !== "undefined" ? STYLE_META : []).find(s => s.key === STATE.campStyle);
+    chips.push([`스타일 ${sm ? sm.label : STATE.campStyle}`, () => { STATE.campStyle = ""; if (STATE.data) renderStyleChips(STATE.data); }]);
+  }
   if (STATE.cap) chips.push([`인원 ${STATE.cap}인`, () => { STATE.cap = ""; }]);
   STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
   Object.entries(STATE.range).forEach(([k, r]) => {
@@ -2045,11 +2052,15 @@ function passExcept(m, skip, sortK) {
     if (v == null || (r.min != null && v < r.min) || (r.max != null && v > r.max)) return false;
   }
   if (skip !== "qx" && STATE.qExclude && cellVal(m, sortK) == null) return false;
+  // L-269: campStyle 정렬 시 value-null 행 제외 반영 (skip="style"이면 campStyle 필터 무시)
+  if (skip !== "style" && STATE.campStyle && sortK && cellVal(m, sortK) == null) return false;
   return true;
 }
 function diagnoseEmpty(sortK) {
   const d = STATE.data;
   const filters = [];
+  // M-344: campStyle 필터 진단 포함
+  if (STATE.campStyle) filters.push(["style", "스타일 필터"]);
   if (STATE.cap) filters.push(["cap", `인원 ${STATE.cap}인`]);
   if (STATE.brands.size) filters.push(["brands", `브랜드(${[...STATE.brands].join("·")})`]);
   if (STATE.q) filters.push(["q", `검색 "${STATE.q}"`]);
@@ -2681,7 +2692,7 @@ function draw() {
         <span class="pli-chev" aria-hidden="true">›</span>
       </div></a>`;
   }).join("");
-  const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q;
+  const hasFilter = STATE.cap || STATE.brands.size || Object.keys(STATE.range).length || STATE.qExclude || STATE.q || STATE.campStyle;  // M-345
   document.getElementById("list").innerHTML = cards
     ? cards + `<div class="list-end" aria-live="polite" role="status">─ 총 ${rows.length}개 모두 표시됨${valueExcluded ? ` · 가성비 데이터 없는 ${valueExcluded}개 제외됨` : ""} ─</div>`
     : `<div class="pli-empty"><div class="pe-ico">🔍</div>
