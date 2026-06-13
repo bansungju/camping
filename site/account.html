@@ -229,6 +229,9 @@ const localSets = {
   set(a) { try { localStorage.setItem('gear_sets', JSON.stringify(a)) } catch (e) { console.warn('gear_sets 저장 실패:', e) } }  // M-468: QuotaExceededError 처리
 }
 
+// M-517: 세트 내용 지문 (제목+아이템수+아이템명 조합)
+const _setFingerprint = s => `${s.title||''}|${(s.items||[]).length}|${(s.items||[]).map(x=>`${x.b||''}${x.m||''}`).join(',')}`
+
 // 로그인 직후 1회: 로컬↔원격 기어세트 병합
 async function syncGearSetsOnLogin(userId) {
   const remote = await loadRemoteGearSets()
@@ -236,15 +239,26 @@ async function syncGearSetsOnLogin(userId) {
   const local  = localSets.get()
   // 원격에 없는 로컬 세트 → upsert
   const localLinked = new Set(local.map(s => s.remoteId).filter(Boolean))
-  // upsert local-only sets
-  const toUpsert = local.filter(s => !s.remoteId)
+  // M-517: 원격 세트 지문 — 콘텐츠 동일 세트 중복 생성 방지
+  const remoteFp = new Set(remote.map(_setFingerprint))
+  // upsert local-only sets (원격에 동일 내용이 없는 경우만)
+  const toUpsert = local.filter(s => !s.remoteId && !remoteFp.has(_setFingerprint(s)))
   for (const s of toUpsert) {
     const id = await upsertGearSet(s, userId)
     if (id) s.remoteId = id
   }
-  // merge remote sets not yet in local
+  // 로컬에 동일 지문 세트가 있으면 remoteId만 연결
+  const localFp = new Map(local.filter(s => !s.remoteId).map(s => [_setFingerprint(s), s]))
+  for (const r of remote) {
+    const fp = _setFingerprint(r)
+    if (!localLinked.has(r.id) && localFp.has(fp)) {
+      localFp.get(fp).remoteId = r.id  // M-517: 지문 일치 시 remoteId 연결(중복 생성 대신 병합)
+    }
+  }
+  // merge remote sets not yet in local (and not fingerprint-matched)
+  const localFpSet = new Set(local.map(_setFingerprint))
   const newFromRemote = remote
-    .filter(r => !localLinked.has(r.id))
+    .filter(r => !localLinked.has(r.id) && !localFpSet.has(_setFingerprint(r)))
     .map(r => ({ id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
                  remoteId: r.id, title: r.title, style: r.style || '',
                  items: r.items || [], created_at: r.created_at }))
@@ -411,6 +425,7 @@ const _APPLE_SVG = `<svg width="17" height="17" viewBox="0 0 384 512" fill="curr
 
 function renderLogin() {
   window.onWishChange = null   // 로그아웃 상태에선 원격 동기화 안 함
+  _wishSyncedUser = null  // M-571: 재로그인 시 찜 동기화 재실행 보장
   showLoggedInSections(false)
   section.innerHTML = `
     <div style="max-width:360px;margin:0 auto;text-align:center;padding:32px 0">
@@ -521,8 +536,11 @@ function renderProfile(profile) {
         return
       }
       window.onWishChange = null  // M-214: signOut 전 onWishChange 해제 → 빈 배열 원격 저장 방지
+      _wishSyncedUser = null
       await signOut()
-      localStorage.removeItem('wish'); localStorage.removeItem('gear_sets')
+      // M-572: 계정 삭제 시 개인화 localStorage 키 일괄 정리 (공유 기기 데이터 잔류 방지)
+      ;['wish','gear_sets','push-denied','_sid','post_likes','seenIntro','ops',
+        'dark','gear_sets_remote_synced'].forEach(k => localStorage.removeItem(k))
       location.replace('index.html?account_deleted=1')
     }
   }
