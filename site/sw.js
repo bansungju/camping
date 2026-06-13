@@ -1,7 +1,7 @@
 /* 장비의 숲 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-c5ba9ccd";
+const CACHE = "camping-b5d25812";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
@@ -80,7 +80,7 @@ self.addEventListener("fetch", (e) => {
 
 // Web Push 수신 → 알림 표시
 self.addEventListener("push", (e) => {
-  let data = { title: "장비의 숲", body: "새 알림이 있어요", icon: "/icon-192.png", data: { url: "/community.html" } };
+  let data = { title: "장비의 숲", body: "새 알림이 있어요", icon: "/icon-192.png", data: { url: "/" } };
   try { data = { ...data, ...e.data.json() }; } catch {}
   e.waitUntil(self.registration.showNotification(data.title, {
     body: data.body,
@@ -93,7 +93,7 @@ self.addEventListener("push", (e) => {
 // 알림 클릭 → 해당 URL 열기 (L-131/L-152: URL 일치 탭 우선 탐색 + navigate)
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = e.notification.data?.url || "/community.html";
+  const url = e.notification.data?.url || "/";
   const absUrl = new URL(url, location.origin).href;
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
     const exact = list.find((c) => c.url === absUrl);
