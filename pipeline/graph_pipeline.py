@@ -27,11 +27,12 @@ from harvest_tents import TENT_MAP
 
 from langgraph.graph import StateGraph, START, END
 
-DB = None
-FILL = ["weight_min", "water_head", "floor_area", "packed_volume"]  # 채울 수 있는 메트릭
+DB = None  # main() CLI 기본값 전용. 노드는 s["db"]를 단일 진실로 사용.
+FILL = ["weight_min", "water_head", "floor_area", "packed_volume"]  # 기본 채움 메트릭(텐트)
 
 
 class State(TypedDict):
+    db: str
     pid: int
     pcode: Optional[str]
     name: str
@@ -41,11 +42,17 @@ class State(TypedDict):
     specs: dict
     detail: dict
     missing: list
+    fill_metrics: list  # 카테고리별 채울 메트릭. 비면 FILL로 폴백.
+    errors: list
     log: list
 
 
+def _fill(s: State) -> list:
+    return s.get("fill_metrics") or FILL
+
+
 def assess(s: State) -> dict:
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(s["db"])
     cid = P.category_id(con, s["category"])
     have = {}
     for key, val, conf in con.execute("""
@@ -55,13 +62,18 @@ def assess(s: State) -> dict:
         (s["pid"], cid)):
         have[key] = {"value": val, "source_id": 1, "confidence": conf, "valid": 1, "flag": None}
     con.close()
-    missing = [k for k in FILL if k not in have]
+    missing = [k for k in _fill(s) if k not in have]
     return {"specs": have, "missing": missing,
             "log": s["log"] + [f"assess: 보유={sorted(have)} 부족={missing}"]}
 
 
 def route_assess(s: State) -> str:
     return "fetch" if s["missing"] else "enough"
+
+
+def route_after_detail(s: State) -> str:
+    """packed_volume이 아직 부족할 때만 2차추출. 그 외엔 바로 infer."""
+    return "fallback" if "packed_volume" in s["missing"] else "infer"
 
 
 def fetch_detail(s: State) -> dict:
@@ -72,7 +84,8 @@ def fetch_detail(s: State) -> dict:
     try:
         parsed = D.parse(D.fetch(s["pcode"]))
     except Exception as e:
-        return {"log": log + [f"fetch_detail: 실패 {e}"]}
+        return {"errors": s["errors"] + [{"pid": s["pid"], "node": "fetch_detail", "err": str(e)}],
+                "log": log + [f"fetch_detail: 실패 {e}"]}
     dspec = parsed["specs"]
     filled = []
     for spec in TENT_MAP:
@@ -86,7 +99,8 @@ def fetch_detail(s: State) -> dict:
             continue
         specs[spec["metric"]] = {"value": val, "source_id": 3, "confidence": "high", "valid": 1, "flag": None}
         filled.append(spec["metric"])
-    return {"specs": specs, "detail": dspec,
+    missing = [k for k in _fill(s) if k not in specs]
+    return {"specs": specs, "detail": dspec, "missing": missing,
             "log": log + [f"fetch_detail: 상세에서 채움={filled or '없음'}"]}
 
 
@@ -105,7 +119,7 @@ def fetch_fallback(s: State) -> dict:
                                               "valid": 1, "flag": None}
                     filled.append("packed_volume(박힌수납크기)")
                     break
-    missing = [k for k in FILL if k not in specs]
+    missing = [k for k in _fill(s) if k not in specs]
     return {"specs": specs, "missing": missing,
             "log": s["log"] + [f"fetch_fallback: 2차추출={filled or '없음'}; 미보유={missing}(출처에 없음→유지)"]}
 
@@ -144,7 +158,7 @@ def validate(s: State) -> dict:
 
 
 def persist(s: State) -> dict:
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(s["db"], timeout=30)  # 병렬 enrich 시 쓰기 락 대기
     cid = P.category_id(con, s["category"])
     con.execute("DELETE FROM product_spec_values WHERE product_id=? AND source_id IN (3,4)", (s["pid"],))
     for key, d in s["specs"].items():
@@ -172,7 +186,8 @@ def build_graph():
         g.add_node(name, fn)
     g.add_edge(START, "assess")
     g.add_conditional_edges("assess", route_assess, {"fetch": "fetch_detail", "enough": "infer"})
-    g.add_edge("fetch_detail", "fetch_fallback")
+    g.add_conditional_edges("fetch_detail", route_after_detail,
+                            {"fallback": "fetch_fallback", "infer": "infer"})
     g.add_edge("fetch_fallback", "infer")
     g.add_edge("infer", "validate")
     g.add_edge("validate", "persist")
@@ -200,9 +215,9 @@ def main():
     con.close()
     print(f"LangGraph 채우기: {len(targets)}종\n" + "=" * 56)
     for pid, pcode, name, cat, cap in targets:
-        st = graph.invoke({"pid": pid, "pcode": pcode, "name": name, "category": cat,
+        st = graph.invoke({"db": DB, "pid": pid, "pcode": pcode, "name": name, "category": cat,
                            "capacity": cap, "cap_source": None, "specs": {}, "detail": {},
-                           "missing": [], "log": []})
+                           "missing": [], "fill_metrics": [], "errors": [], "log": []})
         print(f"\n▶ {name[:38]} [{cat}]")
         for line in st["log"]:
             print("   · " + line)

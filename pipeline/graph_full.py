@@ -21,6 +21,7 @@ import os
 import sqlite3
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, TypedDict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +40,7 @@ class FullState(TypedDict):
     queries: Optional[str]
     enrich_limit: int
     stats: dict
+    errors: list
     log: list
 
 
@@ -77,10 +79,18 @@ def normalize_node(s: FullState) -> dict:
     return {"log": s["log"] + [f"normalize: {raw}종 → 고유 {uniq}종(변형 {collapsed}그룹 통합)"]}
 
 
+# 카테고리별 채울 메트릭. 비면 graph_pipeline.FILL(텐트 기본)로 폴백.
+FILL_BY_CATEGORY = {
+    "텐트": ["weight_min", "water_head", "floor_area", "packed_volume"],
+    "타프": ["weight_min", "water_head", "packed_volume"],
+    "침낭": ["weight_min", "packed_volume"],
+}
+ENRICH_WORKERS = 4
+
+
 def enrich_node(s: FullState) -> dict:
     if s["enrich_limit"] == 0:
         return {"log": s["log"] + ["enrich_batch: 생략(--enrich-limit 0)"]}
-    GP.DB = s["db"]
     sub = GP.build_graph()
     con = sqlite3.connect(s["db"])
     q = """SELECT p.id, p.danawa_pcode, b.name_ko||' '||p.model_name, c.name_ko, p.capacity
@@ -95,19 +105,30 @@ def enrich_node(s: FullState) -> dict:
         q += f" LIMIT {s['enrich_limit']}"
     targets = con.execute(q).fetchall()
     con.close()
-    done = 0
-    for pid, pcode, name, cat, cap in targets:
+
+    def run_one(row):
+        pid, pcode, name, cat, cap = row
         try:
-            sub.invoke({"pid": pid, "pcode": pcode, "name": name, "category": cat,
-                        "capacity": cap, "cap_source": None, "specs": {}, "detail": {},
-                        "missing": [], "log": []})
+            st = sub.invoke({"db": s["db"], "pid": pid, "pcode": pcode, "name": name,
+                             "category": cat, "capacity": cap, "cap_source": None,
+                             "specs": {}, "detail": {}, "missing": [],
+                             "fill_metrics": FILL_BY_CATEGORY.get(cat, []),
+                             "errors": [], "log": []})
+            return st.get("errors", [])
+        except Exception as e:
+            return [{"pid": pid, "node": "enrich", "err": str(e)}]
+
+    done, errors = 0, []
+    with ThreadPoolExecutor(max_workers=ENRICH_WORKERS) as ex:
+        futs = [ex.submit(run_one, row) for row in targets]
+        for f in as_completed(futs):
+            errors.extend(f.result() or [])
             done += 1
-        except Exception:
-            pass
-        if done % 50 == 0 and done:
-            print(f"   enrich {done}/{len(targets)}...", flush=True)
-        time.sleep(0.3)
-    return {"log": s["log"] + [f"enrich_batch: {done}종 서브그래프 처리"]}
+            if done % 50 == 0:
+                print(f"   enrich {done}/{len(targets)}...", flush=True)
+    fail = len({e["pid"] for e in errors})
+    return {"errors": s.get("errors", []) + errors,
+            "log": s["log"] + [f"enrich_batch: {done}종 처리(병렬 {ENRICH_WORKERS}), 오류 {len(errors)}건/{fail}종"]}
 
 
 def validate_node(s: FullState) -> dict:
@@ -139,8 +160,13 @@ def report_node(s: FullState) -> dict:
              f"  가격 {price} ({price*100//n}%) | 인원 {cap} ({cap*100//n}%)"]
     for k, c in cov.items():
         lines.append(f"  {k:<14} {c:>4} ({c*100//n}%)")
+    errs = s.get("errors", [])
+    if errs:
+        lines.append(f"\n  ⚠ enrich 오류 {len(errs)}건 (상위 5):")
+        for e in errs[:5]:
+            lines.append(f"    · pid={e['pid']} [{e['node']}] {e['err'][:60]}")
     print("\n".join(lines))
-    return {"log": s["log"] + ["report: 출력 완료"]}
+    return {"log": s["log"] + [f"report: 출력 완료(오류 {len(errs)}건)"]}
 
 
 def build_full_graph():
@@ -169,7 +195,7 @@ def main():
     args = ap.parse_args()
     graph = build_full_graph()
     st = graph.invoke({"db": args.db, "queries": args.queries, "enrich_limit": args.enrich_limit,
-                       "stats": {}, "log": []})
+                       "stats": {}, "errors": [], "log": []})
     print("\n[그래프 실행 경로]")
     for line in st["log"]:
         print("   · " + line)
