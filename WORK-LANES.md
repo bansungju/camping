@@ -106,7 +106,7 @@
 | **C26** | `column_fixes.py` | M-179·M-281 | ⬜ |
 | **C27** | `collect_images.py` | M-217·L-192 | ⬜ |
 | **C28** | `reclassify_other_tent.py` | M-234·L-196 | ⬜ |
-| **C29** | `refresh.py` | M-206·M-207 | ⬜ |
+| **C29** | `refresh.py` | M-206(idiom 명료화·동작 기정상)·M-207([:19] 방어) 수정 | ✅ 2026-06-13 |
 | **C30** | `danawa.py` | L-210·L-244 | ⬜ |
 | **C31** | `run_all.py` | M-229·L-219 | ⬜ |
 | **C32** | `detect_price_drops.py` | M-251·M-334 | ⬜ |
@@ -117,6 +117,54 @@
 | **C37** | `scan_secrets.py` | M-314 | ⬜ |
 | **C38** | `download_images.py` | L-191 | ⬜ |
 | **C-FE** | `site/app.js`·`supabaseClient.js` | L-160·M-145·M-154·M-170·M-171·M-172·M-188·M-189·L-190 | ⬜ **CORE/SOCIAL 레인** (DATA 세션 제외, 큐잉) |
+
+### 백엔드 Medium 3차 — 파일별 묶음 (D15~, BACKEND 루프 전용)
+
+사용자 백엔드 M 154건 재조정(2026-06-13): 75 기완료(C-시리즈)·79 미해결 → 39 파일세션. **한 세션=한 파일.**
+⚠️ 다수가 기수정 버그의 재-ID(검증 후 마킹만 유력): M-299=H-116(dv=0), M-414/416≈C2, 등. 착수 전 코드 현재상태 먼저 확인.
+게이트/규칙은 B15~ 표와 동일(.claude/BACKEND-LOOP-ON, pathspec 커밋, 락).
+
+| 세션 | 파일 | open IDs | Tier | 상태 |
+|---|---|---|---|---|
+| **D1** | `check_export.py` | M-354·M-395·M-410·M-441 | 1 게이트 | ⬜ |
+| **D2** | `run_all.py` | M-229·M-373·M-381·M-427 | 1 원자성·SQLi | ⬜ |
+| **D3** | `ocr_specs.py` | M-299·M-300·M-353·M-356·M-417 | 1 부분쓰기 | ⬜ |
+| **D4** | `detect_price_drops.py` | M-251·M-334·M-374·M-385·M-402·M-418 | 1 크래시 | ⬜ |
+| **D5** | `multicat.py` | M-256·M-366·M-367·M-423 | 1 pid오취득 | ⬜ |
+| **D6** | `pipeline.py` | M-205·M-401 | 1 크래시·핸들 | ⬜ |
+| **D7** | `promote_catalog.py` | M-392 | 1 트랜잭션 | ⬜ |
+| **D8** | `crosssource.py` | M-420 | 1 데이터유실 | ⬜ |
+| **D9** | `resolve_duplicates.py` | M-415 | 1 stale노출 | ⬜ |
+| **D10** | `value_metric.py` | M-414·M-416 | 1 ZeroDiv(C2중복?) | ⬜ |
+| **D11** | `star_catalog.py` | M-411 | 1 별점왜곡 | ⬜ |
+| **D12** | `refresh.py` | M-206·M-207·M-383·M-384·M-394·M-429 | 2 집계·UTC | ⬜ |
+| **D13** | `export_site.py` | M-377·M-382·M-388·M-413 | 2 오연결 | ⬜ |
+| **D14** | `graph_pipeline.py` | M-185·M-255·M-268 | 2 (=C10) | ⬜ |
+| **D15** | `column_fixes.py` | M-179·M-281·M-360 | 2 채널가드 | ⬜ |
+| **D16** | `normalize_models.py` | M-359·M-400 | 2 중앙값 | ⬜ |
+| **D17** | `harvest_tents.py` | M-275·M-428 | 2 dedup | ⬜ |
+| **D18** | `verify_internal.py` | M-361·M-398 | 2 | ⬜ |
+| **D19** | `reclassify_other_tent.py` | M-234·M-431 | 2 오분류 | ⬜ |
+| **D20** | `collect_images.py` | M-217·M-422 | 2 | ⬜ |
+| **D21** | `add_value_star.py` | M-252·M-376 | 2 | ⬜ |
+| **D22** | `babysit.py` | M-365·M-378·M-421 | 2 리포트 | ⬜ |
+| **D23** | `validate_ranges.py` | M-387 | 2 | ⬜ |
+| **D24** | `fill_whitelist_specs.py` | M-412 | 2 | ⬜ |
+| **D25** | `graph_full.py` | M-324 | 2 | ⬜ |
+| **D26** | `normalize.py` | M-362 | 2 유니코드 | ⬜ |
+| **D27** | `enrich_details.py` | M-424 | 2 | ⬜ |
+| **D28** | `backfill_capacity.py` | M-176 | 2 ZeroDiv | ⬜ |
+| **D29** | `danawa.py` | M-355 | 2 | ⬜ |
+| **D30** | `seed_coupang.py` | M-393 | 2 | ⬜ |
+| **D31** | `scan_secrets.py` | M-314 | 2 | ⬜ |
+| **D32** | `stamp_version.py` | M-375 | 2 | ⬜ |
+| **D33** | `backend/store.py` | M-432·M-443 | 3 서버 | ⬜ |
+| **D34** | `backend/routers/search.py` | M-438 | 3 DoS | ⬜ |
+| **D35** | `backend/main.py` | M-433 | 3 CORS | ⬜ |
+| **D36** | `backend/db.py` | M-437 | 3 health | ⬜ |
+| **D37** | `dev-harness/devagent/ledger.py` | M-444 | 4 TOCTOU | ⬜ |
+| **D38** | `dev-harness/devagent/progress.py` | M-445 | 4 | ⬜ |
+| **D39** | `dev-harness/devagent/contract_checker.py` | M-446 | 4 | ⬜ |
 
 ## 규칙
 1. 각 세션은 시작 시 자기 레인을 정한다 — cron `args.lane`, 없으면 작업 성격으로 판단(버그수정 기본 = `CORE`).

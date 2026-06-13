@@ -78,7 +78,10 @@ def _group_prices_by_cat(con):
         if cid != cur_cid and cur_cid is not None:
             yield cur_cid, bucket
             bucket = []
-        cur_cid, _ = cid, bucket.append(price)
+        # M-206: `cur_cid, _ = cid, bucket.append(price)` 혼란스러운 idiom을 명시 2문장으로
+        #   (동작 동일 — 경계에서 위 yield+reset이 먼저 실행돼 새 가격은 새 bucket에 정상 적재).
+        bucket.append(price)
+        cur_cid = cid
     if cur_cid is not None:
         yield cur_cid, bucket
 
@@ -127,7 +130,9 @@ def main():
 
     con = sqlite3.connect(args.db)
     M.bootstrap(con)   # 카테고리/메트릭 보장(멱등)
-    now = datetime.strptime(con.execute("SELECT datetime('now')").fetchone()[0], DTFMT)
+    # M-207: datetime('now')는 정수초만 반환하지만, 소수점초(subsec 옵션 등) 유입 시 %f 없는 DTFMT가
+    #   ValueError를 내므로 [:19]로 'YYYY-MM-DD HH:MM:SS'만 취해 방어한다.
+    now = datetime.strptime(con.execute("SELECT datetime('now')").fetchone()[0][:19], DTFMT)
     pcode2pid, latest, on_sale, rejected, cat_median, seen_names = snapshot(con)
     pid2cat = {pid: cid for cid, pid in con.execute(
         "SELECT category_id, id FROM products WHERE danawa_pcode IS NOT NULL")}
