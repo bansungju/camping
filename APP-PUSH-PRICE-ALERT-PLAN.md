@@ -71,8 +71,8 @@ ALTER TABLE price_alert_log ENABLE ROW LEVEL SECURITY;
 
 ## 단계별 실행 (의존순) — 진행 상태 (2026-06-13)
 
-1. ✅ 〔SOCIAL〕 마이그레이션 B(`024_price_alert_log.sql`) + Edge Function A(`send-price-alert`) 작성·커밋·푸시. **사용자 배포 대기**: 마이그레이션 실행 + `functions deploy send-price-alert` + `ALERT_SECRET` 설정.
-2. ✅ 〔DATA〕 감지기 `pipeline/detect_price_drops.py` 작성·커밋. key/url 매핑 확정·dry-run 검증(하락 39건). **남음**: refresh/run_all 사이클에 `--send` 연결 + `SEND_PRICE_ALERT_URL`·`ALERT_SECRET` env.
+1. ✅ 〔SOCIAL〕 마이그레이션 B(`024_price_alert_log.sql`) + Edge Function A(`send-price-alert`). **배포 완료(2026-06-13)**: 마이그레이션 실행됨, `ALERT_SECRET` 등록, `functions deploy --no-verify-jwt` 완료, 스모크+E2E 검증(401/200/sent:0).
+2. ✅ 〔DATA〕 감지기 `pipeline/detect_price_drops.py` + **run_all.py 연결 완료**: 빌드 끝에 env(`SEND_PRICE_ALERT_URL`+`ALERT_SECRET`) 있으면 `detect_price_drops.py --send` 자동 호출(없으면 스킵). dry-run 39건·함수 E2E 검증.
 3. ✅ 〔CORE〕 app.js 구독 트리거를 찜 추가 시점으로 이전(락 잡고 단독 커밋). ⚠️ **캐시버스트 미적용** — DATA item churn 때문에 stamp 보류. 다음 CORE 빌드 사이클의 stamp_version에서 ?v= 전파돼야 재방문자 반영.
 4. ✅ 〔SOCIAL〕 sw.js 알림 URL `/community.html`→`/` 수정·배포.
 5. ⬜ E2E 검증: 찜 → 권한허용 → 가격하락 → 기기 알림 → 클릭 시 상품상세 (Supabase 배포 + 실기기 필요).

@@ -210,6 +210,15 @@ def main():
     print("[캐시버스팅] app.js 해시 → HTML ?v= 스탬프")
     sh("stamp_version.py")
 
+    # 가격 알림(B-1): 가격하락·재입고를 찜한 사용자에게 Web Push.
+    #   env(SEND_PRICE_ALERT_URL + ALERT_SECRET) 설정된 환경에서만 발송 — 없으면 조용히 스킵.
+    #   시크릿은 코드/깃에 두지 않고 크론·실행 env에만 둔다. 발송 실패해도 빌드는 통과(check=False).
+    if os.environ.get("SEND_PRICE_ALERT_URL") and os.environ.get("ALERT_SECRET"):
+        print("[알림] 가격하락·재입고 → send-price-alert")
+        subprocess.run([sys.executable, os.path.join(HERE, "detect_price_drops.py"), "--send"], check=False)
+    else:
+        print("[알림] 가격 알림 스킵(SEND_PRICE_ALERT_URL/ALERT_SECRET 미설정)")
+
     print("\n■ 완료. (채우기=graph_full.py / 크로스소스=crosssource.py 는 별도 단계)")
 
 
