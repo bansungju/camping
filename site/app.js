@@ -146,14 +146,12 @@ function _showAuthGateModal() {
   const m = document.createElement('div');
   m.id = 'auth-gate-modal';
   m.className = 'pmodal on';
-  // account.html 경로: 루트 상대 경로로 어느 뎁스에서도 정상 동작
-  const loginHref = location.pathname.split('/').slice(0, -1).map(() => '..').join('/') || '.';
-  const prefix = location.pathname.includes('/item/') ? '../../' : './';
+  // M-525: 절대경로 사용으로 경로 깊이 무관하게 안전
   m.innerHTML = `<div class="pmbox agm-box" role="dialog" aria-modal="true" aria-labelledby="agm-title">
     <p class="agm-ico">🔒</p>
     <p id="agm-title" class="agm-title">이 기능은 로그인이 필요해요</p>
     <p class="agm-sub">로그인하면 기기 간 동기화돼요</p>
-    <a href="${prefix}account.html" class="agm-btn">로그인하기</a>
+    <a href="/account.html" class="agm-btn">로그인하기</a>
     <button type="button" class="agm-cancel">취소</button>
   </div>`;
   document.body.appendChild(m);
@@ -3411,7 +3409,7 @@ function renderAccount() {
     wishEl.innerHTML = wishes.map((x, i) => {
       const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
       // L-75: role="button" + 내부 <button> 중첩 HTML 위반 → 찜 해제 버튼만 interactive, pli는 click 핸들러만 유지
-      return `<div class="pli" data-href="${esc(href)}" style="cursor:pointer">
+      return `<div class="pli" data-href="${esc(href)}" data-wkey="${esc(x.key)}" style="cursor:pointer">
         <button type="button" class="pli-wish on" data-key="${esc(x.key)}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️")}
         <div class="pli-info">
@@ -3424,11 +3422,11 @@ function renderAccount() {
         </div></div>`;
     }).join("");
     // M-53: 찜 카드 클릭 시 카테고리 이탈 대신 인라인 모달 열기
-    wishEl.querySelectorAll(".pli").forEach((card, ci) => {
-      const wx = wishes[ci];
+    wishEl.querySelectorAll(".pli").forEach((card) => {
       const go = async () => {
         if (card.dataset.loading) return;  // M-404: 중복 클릭 가드
-        if (!wx || !wx.s) { location.href = card.dataset.href; return; }
+        const wx = getWish().find(w => w.key === card.dataset.wkey) || null;  // M-515: 렌더 시점 스냅샷 대신 재조회
+        if (!wx || wx.s == null) { location.href = card.dataset.href; return; }  // M-516: 빈 문자열 wx.s 허용
         card.dataset.loading = "1";
         try {
           const catJson = await fetch(`data/${wx.s}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });  // M-357/M-408: response.ok 체크
