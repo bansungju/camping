@@ -147,7 +147,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmbuy{width:100%;margin-top:16px;padding:13px;border:0;border-radius:11px;
   background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:not-allowed;opacity:.4}
 .pmbuy.pmbuy-active{cursor:pointer;opacity:1}
-.pmbuynote{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+.pmbuynote{text-align:center;font-size:10.5px;color:var(--muted);margin-top:8px;opacity:.7}
 /* 내 세트에 추가 — 보조 액션(아웃라인 accent) */
 .pmset{width:100%;margin-top:10px;padding:12px;border:1.5px solid var(--accent);border-radius:11px;
   background:var(--card);color:var(--accent);font-size:14.5px;font-weight:700;cursor:pointer;transition:.15s}
