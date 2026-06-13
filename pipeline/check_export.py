@@ -53,7 +53,7 @@ def check_file(path):
     cat, models = load_models(path)
     if not models:
         return []
-    mins = [m["price_min"] for m in models if m.get("price_min")]
+    mins = [m["price_min"] for m in models if m.get("price_min") is not None and m["price_min"] > 0]
     if len(mins) < MIN_MODELS:
         return []
     med = statistics.median(mins)
@@ -64,7 +64,9 @@ def check_file(path):
         pmin = m.get("price_min")
         pmax = m.get("price_max") or pmin
         b, mo = m.get("brand", "?"), m.get("model", "?")
-        if pmin and pmin < med * FLOOR_RATIO:
+        if pmin is not None and pmin <= 0:
+            violations.append(("영/음수가격", cat, b, mo, pmin, int(med), 0.0))
+        if pmin is not None and pmin > 0 and pmin < med * FLOOR_RATIO:
             violations.append(("저가이상", cat, b, mo, pmin, int(med), pmin / med))
         if pmax and pmax > med * CEIL_RATIO:
             violations.append(("고가이상", cat, b, mo, pmax, int(med), pmax / med))

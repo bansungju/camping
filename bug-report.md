@@ -1,7 +1,7 @@
 # 장비의 숲 버그 리포트
 
 > 자동 생성 · 매 10분 순회 · 코드 수정 없음  
-> 마지막 업데이트: 2026-06-11
+> 마지막 업데이트: 2026-06-13
 
 ---
 
@@ -78,6 +78,8 @@
 | 64 | recently-viewed·flag_price_outliers·account·view-set | 2026-06-13 | 2건 (M-141·L-168) |
 | 65 | 가격슬라이더·XSS·DB스키마·딥링크·SW | 2026-06-13 | 4건 (M-143·M-144·L-172·L-173) |
 | 66 | 모달접근성·세션처리·파이프라인·무한스크롤·리뷰렌더 | 2026-06-13 | 3건 (M-145·L-174·L-175) |
+| 67 | recommend렌더·별점계산·stamp_version·세트무게·터치슬라이더 | 2026-06-13 | 3건 (M-148·L-178·L-179) |
+| 68 | 자동완성키보드·필터URL직렬화·크롤링파싱·세트localStorage·리뷰모달 | 2026-06-13 | 4건 (M-149·M-150·L-180·L-181) |
 
 ---
 
@@ -2742,7 +2744,7 @@
 
 ## R-89 — 찜UI·가격게이트·닉네임·리뷰이미지 탐색 (2026-06-13)
 
-### [M-146] — `wishItem()` — `pcode`/`weight_g`/`coupang_url` 누락 → 찜 항목을 세트에 담을 때 구매 링크 소실
+### [M-146] ✅ 해결완료(2026-06-13, CORE) — `wishItem()` — `pcode`/`weight_g`/`coupang_url` 누락 → 찜 항목을 세트에 담을 때 구매 링크 소실
 - **영역:** 프론트엔드 — 찜(wishlist) / 세트 빌더
 - **심각도:** 🟠 High
 - **발견일시:** 2026-06-13
@@ -2752,7 +2754,7 @@
 - **제안 수정:** `wishItem` 에 `pcode: wishKey(m.brand, m.model, m.capacity)`, `weight_g: m.specs?.weight?.value ?? null`, `coupang_url: m.coupang_url ?? null` 추가, 또는 `setItem`을 재사용하도록 리팩토링.
 - **파일:** [site/app.js](site/app.js) line 301 [lane:CORE]
 
-### [M-147] — `check_export.py` — `price_min=0` falsy 처리로 0원 모델이 배포 게이트 완전 우회
+### [M-147] ✅ 해결완료(2026-06-13, BACKEND) — `check_export.py` — `price_min=0` falsy 처리로 0원 모델이 배포 게이트 완전 우회
 - **영역:** 백엔드 — 파이프라인 / 가격 sanity check
 - **심각도:** 🟠 High
 - **발견일시:** 2026-06-13
@@ -2772,7 +2774,7 @@
 - **제안 수정:** `renderProfile` 내 닉네임 `<div>`에 `id="profile-nickname"` 추가, line 514를 `document.getElementById('profile-nickname')` 로 교체.
 - **파일:** [site/account.html](site/account.html) line 424, 514 [lane:SOCIAL]
 
-### [L-177] — `app.js` — 리뷰 사진 `<img>`에 `onerror` fallback 없음 → 깨진 이미지 그대로 노출
+### [L-177] ✅ 해결완료(2026-06-13, CORE) — `app.js` — 리뷰 사진 `<img>`에 `onerror` fallback 없음 → 깨진 이미지 그대로 노출
 - **영역:** 프론트엔드 — 상품 상세 / 리뷰
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2791,3 +2793,80 @@
 - **재현:** `renderRecent()`에서 최근 본 상품 클릭 → `openProduct` 모달 하단 "🔗 상세 페이지" href 확인 → `item--1.html` 형태 URL 노출.
 - **제안 수정:** line 1691을 `${STATE.slug && d.models.indexOf(m) >= 0 ? \`<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html"...>\` : ""}` 로 수정.
 - **파일:** [site/app.js](site/app.js) line 1691 [lane:CORE]
+
+
+---
+
+## 🟠 Medium (회차 67)
+
+### [M-148] — `setItem()` — `weight_g: m.specs?.weight?.value` 잘못된 스펙 키 → 세트 무게 합계 항상 0
+- **영역:** 프론트엔드 — 세트 빌더 / 무게 계산
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `setItem(m, slug)` (site/app.js line 374–379)에서 `weight_g: m.specs?.weight?.value ?? null`로 무게를 참조한다. 그러나 전 카테고리(auto-tent, backpacking-tent, sleeping-bag, mat, cookware, burner, chair, table 등 16개 카테고리 전수 확인) 스펙 키는 `weight`가 아닌 `weight_min`이며 `weight` 키는 DB에 존재하지 않는다. 결과적으로 `setItem`으로 생성되는 모든 세트 아이템의 `weight_g`가 `null`로 저장되고, `openSetDetail`·`showSetConfirm`의 `tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + ... : sum, 0)` 합산이 항상 0이 된다. 세트 무게 합계(`"⚖️ 0g"` 또는 `"—"`)가 잘못 표시.
+- **재현조건:** 임의 카테고리 → 상품 카드 꾸러미 담기 → 세트 확인 카드 또는 세트 상세 모달 → 무게 합계 `"—"` 또는 0 표시.
+- **원인:** `site/app.js` line 377 `m.specs?.weight?.value` → 올바른 키는 `m.specs?.weight_min?.value`.
+- **제안 수정:** `setItem` line 377 `weight_g: m.specs?.weight?.value ?? null` → `weight_g: m.specs?.weight_min?.value ?? null` 로 교체. `M-146`의 `wishItem` 동일 패턴도 동시 수정 필요.
+- **파일:** [site/app.js](site/app.js) line 377 [lane:CORE]
+
+## 🟢 Low (회차 67)
+
+### [L-178] — `stamp_version.py` — `hj`(app.js 해시) 계산 후 app.js 재수정 → HTML 스탬프 해시 stale
+- **영역:** 백엔드 — 파이프라인 / 캐시 버스팅
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `stamp_version.py` line 43에서 `hj = _hash("app.js")`로 해시를 계산한다. 이후 line 62–69에서 app.js에 `supabaseClient.js?v=` 버전 문자열을 다시 쓴다(내용 변경). 그런데 HTML `src="app.js?v=..."` 스탬프(line 77)는 재계산 없이 line 43의 구 `hj`를 사용한다. 결과적으로 HTML에 박힌 해시가 실제 app.js 내용 해시와 다를 수 있어, 서비스워커 캐시가 이 불일치를 기반으로 잘못된 캐시 키를 유지할 수 있다.
+- **재현조건:** supabaseClient.js를 처음으로 버전 스탬프하는 상황(기존 `?v=` 없음)에서 `stamp_version.py` 실행 → HTML의 `app.js?v=` 해시와 `md5sum site/app.js` 비교 → 불일치.
+- **원인:** line 43 `hj = _hash("app.js")` 계산 시점이 supabaseClient stamp(line 62–69) 이전.
+- **제안 수정:** line 43의 `hj, hc` 계산을 supabaseClient stamp(line 62–69) 이후로 이동, 또는 supabaseClient stamp 후 `hj = _hash("app.js")`로 재계산 추가.
+- **파일:** [pipeline/stamp_version.py](pipeline/stamp_version.py) line 43, 62–69 [lane:BACKEND]
+
+### [L-179] — `stars(n)` — n > 5 입력 시 aria-label "별점 N / 5" 잘못된 접근성 텍스트
+- **영역:** 프론트엔드 — 공통 유틸 / 접근성
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `stars(n)` (site/app.js line 239–249)에서 n > 5인 경우 별 5개가 모두 채워져 시각적으로는 최고점처럼 보이나, aria-label은 `"별점 6 / 5"` 같은 5 초과 숫자를 그대로 노출한다. 스크린리더 사용자에게 5점 만점 척도를 벗어난 값으로 읽힌다. 현재 DB 데이터에서는 stars>5 실데이터가 없지만, `cellVal` 가성비(value) 계산(`s.stars / (m.price_min / 10000)`)이 이론적으로 5를 초과할 수 있다.
+- **재현조건:** `stars(6)` 직접 호출 또는 price_min이 매우 낮은 상품의 가성비 정렬 → aria-label 확인.
+- **원인:** `stars(n)` 렌더링 로직에 n > 5 클리핑 없음.
+- **제안 수정:** 함수 진입부에 `n = Math.min(5, n)` 또는 aria-label을 `Math.min(n, 5).toFixed(1)` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 239–249 [lane:CORE]
+
+### [M-149] — `setupSearchPage` 찜 추가 시 `pcode`·`weight_g`·`coupang_url` 누락 → 세트 담기 시 구매 링크 소실
+- **영역:** 프론트엔드 — search 페이지 / 찜 직렬화
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `search.html`의 검색 결과에서 찜 버튼을 누르면 `{ key, b, m, cap, s, p, img }` 만 저장되고 `pcode`·`weight_g`·`coupang_url`이 누락된다. 이후 이 찜 항목을 세트에 담을 때 `addToSet`에서 `item.pcode` 기반 중복 체크가 동작하지 않고, 세트 상세의 구매 버튼이 `coupang_url`이 없어 비활성 상태가 된다. M-146(`wishItem()`)과 같은 패턴이지만 search 페이지 전용 코드 경로라 별도 수정이 필요하다.
+- **재현조건:** search.html에서 상품 검색 → 찜 버튼 클릭 → `localStorage.wish` 확인 → `pcode`/`coupang_url` 필드 없음 → 해당 항목을 세트에 담기 → 구매 버튼 비활성.
+- **원인:** `setupSearchPage` 내 찜 push 로직(line 1040)이 `setItem()` 헬퍼를 사용하지 않고 인라인 객체를 직접 구성.
+- **제안 수정:** `arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img })` → `arr.push({ key, b: x.b, m: x.m, cap: x.cap, s: x.s, p: x.p, img: x.img, pcode: x.pcode, weight_g: x.weight_g ?? null, coupang_url: x.coupang_url ?? null })` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 1040 [lane:CORE]
+
+### [M-150] — `openReviewDetail` 이미지 `loading="lazy"` — `display:none` 모달에서 주입 시 이미지 미로딩
+- **영역:** 프론트엔드 — 리뷰 상세 모달 / 이미지 로딩
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `openReviewDetail`에서 이미지를 `loading="lazy"`로 렌더링한 뒤 `.pmodal.on` 클래스를 추가해 모달을 열 때, 이미지가 `display:none` 상태의 DOM에 이미 삽입된 상태다. 이 경우 브라우저(특히 Chromium)는 `display:none` 요소 내 `loading=lazy` 이미지를 즉시 로드하지 않으므로, 클래스가 바뀌어 `display:flex`가 되더라도 IntersectionObserver 재평가 타이밍에 따라 이미지가 지연 또는 미로딩된다. 후기 사진이 있음에도 빈 영역만 보이는 증상이 발생한다.
+- **재현조건:** 후기 사진이 있는 상품에서 후기 카드 클릭 → `openReviewDetail` 모달 열림 → 이미지 영역 확인 → 일부 환경(느린 네트워크·lazy 평가 타이밍)에서 이미지 미표시.
+- **원인:** `openReviewDetail` line 2036에서 `loading="lazy"` 사용. 모달이 `display:none`에서 바뀌는 순간 lazy 이미지를 즉시 로드하지 않는 브라우저 동작.
+- **제안 수정:** `loading="lazy"` → `loading="eager"`로 교체. 리뷰 모달 이미지는 최대 5장이며 사용자가 명시적으로 열었으므로 eager 로딩이 적합하다.
+- **파일:** [site/app.js](site/app.js) line 2036 [lane:CORE]
+
+### [L-180] — `setupHomeSearch` `onblur` — `closeBox()` 미호출로 `opts`·`active` stale 상태 잔존
+- **영역:** 프론트엔드 — 홈 검색 자동완성 / 키보드 내비게이션
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `inp.onblur` 핸들러(line 910)가 `box.style.display = "none"` 만 수행하고 `closeBox()`를 호출하지 않아 `opts` 배열과 `active` 인덱스가 초기화되지 않는다. 이후 포커스가 다시 돌아와 `run()`이 재실행되기 전에 ArrowDown/ArrowUp 키를 누르면 `box.style.display !== "none"` 조건이 방어하지만, 외부에서 `box`를 보이도록 하는 엣지케이스(예: 동일 페이지에서 프로그래밍 방식으로 `display:block` 복원)에서 stale `opts`가 잘못된 요소에 aria-activedescendant를 세팅한다.
+- **재현조건:** 홈 검색창 포커스 → 키 입력으로 드롭다운 열기 → blur 발생 → 150ms 내에 포커스 복귀 + ArrowDown → stale active 상태 확인.
+- **원인:** `inp.onblur`(line 910)에서 `closeBox()` 대신 `box.style.display = "none"`만 직접 호출.
+- **제안 수정:** `inp.onblur = () => { setTimeout(() => closeBox(), 150); }` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 910 [lane:CORE]
+
+### [L-181] — `harvest_tents.py` `ingest()` — `SELECT ... model_year IS NULL AND variant IS NULL` fetchone None → TypeError
+- **영역:** 백엔드 — harvest_tents 크롤링 파이프라인
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `ingest()` line 127–128에서 `INSERT OR IGNORE` 후 `SELECT id FROM products WHERE brand_id=? AND model_name=? AND model_year IS NULL AND variant IS NULL`을 `fetchone()[0]`으로 조회한다. `INSERT OR IGNORE`가 유니크 제약 충돌로 무시된 경우, 실제 row가 `model_year IS NOT NULL` 또는 `variant IS NOT NULL`인 경우(수동 입력 또는 multicat에서 같은 브랜드·모델명을 별도 variant로 삽입한 경우) SELECT 결과가 None이 되어 `TypeError: 'NoneType' object is not subscriptable`이 발생한다. `seen_names` 중복 체크 이전에 데이터가 변경된 상태이면 런타임 크래시로 수확이 중단된다.
+- **재현조건:** 같은 브랜드+모델명의 row가 이미 `variant='2인용'` 등으로 존재하는 DB에서 `harvest_tents.py --append` 실행 → `ingest()` 진입 → line 128 TypeError.
+- **원인:** `AND model_year IS NULL AND variant IS NULL` 조건이 너무 구체적이어서 기존 row가 있어도 None을 반환.
+- **제안 수정:** `SELECT id FROM products WHERE brand_id=? AND model_name=? ORDER BY id LIMIT 1`로 완화하거나, fetchone 결과에 `if pid is None: return "dup_variant"` guard 추가.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 127–128 [lane:BACKEND]
