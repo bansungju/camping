@@ -65,8 +65,8 @@
 | **C8** | `verify_internal.py` | M-241·M-271·M-295·L-195·L-265 | ✅ 2026-06-13 |
 | **C9** | `fill_whitelist_specs.py` | M-216·M-332 수정 / M-177=H-96 기해결 / L-223 무효(격리값 보존 의도설계) | ✅ 2026-06-13 |
 | **C10** | `graph_pipeline.py` | M-185·M-255·M-268·L-258 | ⬜ |
-| **C11** | `crosssource.py` | M-201·M-282·M-348·L-253 | ⬜ |
-| **C12** | `promote_catalog.py` | M-210·M-277·M-311·M-335 | ⬜ |
+| **C11** | `crosssource.py` | (코드무수정) M-201 기해결 / M-348 무효(star_eligible 기본1) / M-282 by-design(confirm=권위교체) / L-253 보류(병합 시 동작변경) | ✅ 2026-06-13 분석완료 |
+| **C12** | `promote_catalog.py` | M-210·M-277·M-311 수정 / M-335 이미 원자적(중간 commit 없음) | ✅ 2026-06-13 |
 | **C13** | `normalize_models.py` | M-249·M-263·M-264 | ⬜ |
 | **C14** | `affiliate_links.py` | M-287·M-315·L-188 | ⬜ |
 | **C15** | `star_catalog.py` | M-169·M-260·L-235 | ⬜ |

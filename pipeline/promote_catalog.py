@@ -32,7 +32,8 @@ def main():
     con.execute("UPDATE metrics SET is_star_metric=0 WHERE key='packed_volume'")
 
     # 2) 완비 제품 판정 → verified, 나머지 pending
-    con.execute("UPDATE products SET curation_status='pending'")
+    # M-277: 매 실행 전체 리셋하면 수동 rejected(노네임 등) 처리가 pending으로 부활해 재노출된다 → 보존.
+    con.execute("UPDATE products SET curation_status='pending' WHERE curation_status != 'rejected'")
     if not CORE:
         con.commit(); return
     capclause = "AND capacity IS NOT NULL" if NEED_CAPACITY else ""
@@ -58,7 +59,7 @@ def main():
         FROM products p JOIN brands b ON b.id=p.brand_id JOIN categories c ON c.id=p.category_id
         LEFT JOIN product_spec_values v ON v.product_id=p.id AND v.valid=1
         LEFT JOIN metrics m ON m.id=v.metric_id
-        WHERE p.curation_status='verified'
+        WHERE p.curation_status='verified' AND c.name_ko LIKE '%텐트%'  -- M-311: 텐트 한정(커버리지 % 왜곡 방지)
         GROUP BY p.id""")
     con.commit()
 
@@ -83,7 +84,11 @@ def main():
         FROM v_verified_catalog WHERE category='백패킹텐트' AND capacity=2
         ORDER BY weight_g LIMIT 8"""):
         ps = f"{pr:,}원" if pr else "-"
-        print(f"   {b} {mn[:22]:24} {w:.0f}g | {wh:.0f}mm | {fa}㎡ | {ps}")
+        # M-210: LEFT JOIN 결과가 None이면 :.0f 포맷이 TypeError → None-safe 표시.
+        ws = f"{w:.0f}g" if w is not None else "-"
+        whs = f"{wh:.0f}mm" if wh is not None else "-"
+        fas = f"{fa}㎡" if fa is not None else "-"
+        print(f"   {b} {mn[:22]:24} {ws} | {whs} | {fas} | {ps}")
     con.close()
 
 
