@@ -30,10 +30,16 @@ def build_query(brand: str, model: str) -> str:
 
 
 def coupang_search(query: str, tag=None) -> str:
-    """쿠팡 검색 딥링크. tag(파트너스 채널 ID) 있으면 추적 파라미터 부착."""
+    """쿠팡 검색 딥링크. tag가 있으면 &channel= 부착.
+
+    M-315 주의: `&channel=`은 쿠팡 파트너스 '공식 추적 파라미터가 아니다'(커미션 추적 효과 없음).
+    실제 추적은 파트너스 API로 생성한 `link.coupang.com/a/...` 단축링크 또는 subId가 필요하며,
+    API는 누적매출 15만원 이후 발급된다(메모리 coupang-partners-monetization). API 확보 전까지
+    이 링크는 '사용자 편의용 검색 진입'일 뿐 수익 추적은 되지 않는다.
+    """
     url = f"https://www.coupang.com/np/search?q={quote_plus(query)}"
     if tag:
-        url += f"&channel={quote_plus(tag)}"
+        url += f"&channel={quote_plus(tag)}"  # 추적 아님(위 주석) — 채널 메모용
     return url
 
 
@@ -71,7 +77,8 @@ def sample(db_path: str, n: int, tag):
         m = (model[:22] + "…") if len(model) > 23 else model
         print(f"{brand:12} {m:24} {cat:10}")
         print(f"   쿠팡: {link['href']}")
-        print(f"   네이버: {link['naver_fallback']}")
+        # M-287/L-188: coupang_url 직접링크 분기는 naver_fallback 키가 없다 → KeyError 방지.
+        print(f"   네이버: {link.get('naver_fallback', '(직접링크)')}")
         print()
 
 

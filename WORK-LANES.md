@@ -48,6 +48,29 @@
 > 이미 완료(별도 커밋): H-44·H-45(add_value_star/enrich)·H-47(fill_whitelist SQLi)·H-52(export JOIN)·H-53·H-54(crosssource)·H-55(scan_secrets)·H-57(danawa)·H-58(enrich fn).
 > **의존성:** B1의 `enrich_details(H-58)` 가드 패턴이 B1 H-91에 미러링됨. B11(promote_catalog)은 B1 source_id 수정 이후 검증 권장.
 
+### 백엔드 High 2차 — 파일별 묶음 (B15~, BACKEND 루프 전용)
+
+`.claude/loop-prompts/backend-loop.md` cron이 이 표를 SSOT로 본다. **한 세션=한 행**(=한 파일, B17만 강결합 2파일). 위(작은 번호)부터 ✅ 아닌 행 1개 선택. 게이트: `.claude/BACKEND-LOOP-ON` 존재 시에만 동작(LOOP-PAUSED는 CORE/SOCIAL용 → 무시). 우선순위: 무결성/오염위험 → 정확성 → 견고성 → 단건.
+
+| 세션 | 파일 | 묶음 항목 | 우선순위 | 상태 |
+|---|---|---|---|---|
+| **B15** | `normalize_models.py` | H-100·H-110 | 무결성(valid 리셋·DROP 트랜잭션) | ✅ 2026-06-13 (H-110 BEGIN 래핑 / H-100은 M-263 manual_invalid로 기해결) |
+| **B16** | `validate_ranges.py` | H-101·H-111 | 무결성(리셋↔재격리 원자성·SAVEPOINT) | ✅ 2026-06-13 (기해결: H-101=M-265 SAVEPOINT, H-111=M-330 None가드) |
+| **B17** | `promote_catalog.py` + `run_all.py` | H-98·H-109·H-112 | 기준 일관성(텐트 CORE·None float·DB 전역) | ✅ 2026-06-13 (H-112 레지스트리 import·H-109 DB기본값 / H-98=M-210 기해결) |
+| **B18** | `export_site.py` | H-117·H-122 | 정확성(뱃지 NULL·ORDER BY 비결정성) | ✅ 2026-06-13 (H-117 NULL→1 정규화·H-122 타이브레이커 추가) |
+| **B19** | `refresh.py` | H-103·H-104 | 이상치 가드(pid2cat 반전·strptime) | ✅ 2026-06-13 (H-104 fromisoformat / H-103 현재코드 올바름·실증) |
+| **B20** | `add_value_star.py` | H-106 | 견고성(파일핸들·JSON 절단) | ⬜ |
+| **B21** | `add_manual_models.py` | H-102 | 크래시(빈 prices min/max) | ⬜ |
+| **B22** | `pipeline.py` | H-123 | 동시성(gf_code COUNT 중복) | ⬜ |
+| **B23** | `backend/db.py` | H-125 | 동시성(WAL read-write 손상) | ⬜ |
+| **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ⬜ |
+| **B25** | `ocr_specs.py` | H-116 | dv=0 오분류 | ⬜ |
+| **B26** | `stamp_version.py` | H-119 | FileNotFoundError 가드 | ⬜ |
+| **B27** | `download_images.py` | H-120 | 재다운로드 누락 | ⬜ |
+| **B28** | `detect_price_drops.py` | H-124 | 색상변형 중복푸시 | ⬜ |
+
+> 출처: 사용자 백엔드 H 29건 목록(2026-06-13). 이미 완료라 제외: H-44·H-45·H-47·H-52·H-53·H-54·H-55·H-57·H-58(코드+버그ID 주석 확인). ⚠️ B17은 `run_all.py`(B4서 H-61/62 완료)를 다시 건드림 → 락 2파일 모두. 각 행 착수 전 **코드 현재상태 먼저 확인**(이미 수정됐으면 마킹만).
+
 ### 백엔드 Medium/Low 139건 — 파일별 묶음 (C-시리즈, DATA 레인)
 
 요청된 백엔드 M/L 139건을 파일 단위로 묶음. **한 세션=한 파일.** 파일 다르면 병렬 가능.
@@ -68,7 +91,7 @@
 | **C11** | `crosssource.py` | (코드무수정) M-201 기해결 / M-348 무효(star_eligible 기본1) / M-282 by-design(confirm=권위교체) / L-253 보류(병합 시 동작변경) | ✅ 2026-06-13 분석완료 |
 | **C12** | `promote_catalog.py` | M-210·M-277·M-311 수정 / M-335 이미 원자적(중간 commit 없음) | ✅ 2026-06-13 |
 | **C13** | `normalize_models.py` | M-249·M-263·M-264 | ✅ 2026-06-13 |
-| **C14** | `affiliate_links.py` | M-287·M-315·L-188 | ⬜ |
+| **C14** | `affiliate_links.py` | M-287·L-188(naver_fallback .get) / M-315(channel= 비추적 명시) | ✅ 2026-06-13 |
 | **C15** | `star_catalog.py` | M-169·M-260·L-235 | ⬜ |
 | **C16** | `brand_filter.py` | M-178·M-333·L-232 | ⬜ |
 | **C17** | `multicat.py` | M-183·M-256·M-290 | ⬜ |
