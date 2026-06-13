@@ -103,7 +103,13 @@ def flag_price_outliers(con):
         con.execute("ALTER TABLE price_observations ADD COLUMN valid INTEGER NOT NULL DEFAULT 1")
     except sqlite3.OperationalError:
         pass
-    con.execute("UPDATE price_observations SET valid=1")
+    # M-263: 외부/수동으로 valid=0 처리한 관측을 보호하는 플래그. 무조건 valid=1 reset이 수동격리를
+    #   매 실행 복원하던 것을 차단(기본 0=하위호환: 기존 행은 종전대로 reset). 수동 격리 시 manual_invalid=1.
+    try:
+        con.execute("ALTER TABLE price_observations ADD COLUMN manual_invalid INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    con.execute("UPDATE price_observations SET valid=1 WHERE IFNULL(manual_invalid,0)=0")
 
     # A. 텐트류 하한: 본품 텐트일 수 없는 저가(펙·폴주머니·스테이크·그늘막 오스크랩) 절대격리.
     #    B(중앙값)는 다수 관측이 오염되면 무너지므로, 물리적 하한으로 먼저 바닥을 친다.
@@ -177,7 +183,8 @@ def normalize_db(con):
     for pid, name, pc in con.execute("SELECT id, model_name, danawa_pcode FROM products").fetchall():
         canon, var = canonicalize(name or "")
         if canon in GENERIC or len(canon) < 2:   # 모델명 사실상 없음 → pcode로 분리(오병합 방지)
-            canon = f"{canon or name}#{pc}"
+            # M-264: canon·name 모두 falsy면 '#pc'(예 '#16247885') 비정상 모델명 → 'unknown' 폴백.
+            canon = f"{canon or name or 'unknown'}#{pc}"
         con.execute("UPDATE products SET canonical_model=?, variant_label=? WHERE id=?",
                     (canon, var or None, pid))
     con.commit()
@@ -206,7 +213,9 @@ def normalize_db(con):
             continue
         if cm.lower().startswith(bn.lower() + " "):
             stripped = cm[len(bn):].strip()
-            if len(stripped) >= 2:
+            # M-249: 제거 결과가 GENERIC 단어('의자'·'테이블' 등)면 같은 브랜드·카테고리 제품이 한
+            #   canonical로 오병합된다 → GENERIC이거나 2자 미만이면 접두 제거 미적용.
+            if len(stripped) >= 2 and stripped not in GENERIC:
                 con.execute("UPDATE products SET canonical_model=? WHERE id=?", (stripped, pid))
     con.commit()
     dedup_price_observations(con)  # 중복 관측 정리(최신1행) → 적재 비대/중앙값 점령 방지
