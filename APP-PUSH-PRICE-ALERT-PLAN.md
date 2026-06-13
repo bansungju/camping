@@ -69,14 +69,23 @@ ALTER TABLE price_alert_log ENABLE ROW LEVEL SECURITY;
 2. **호출 인증 (권장: 공유 시크릿 헤더)**: 파이프라인→`send-price-alert` 호출 시 `X-Alert-Secret`(Edge Function env var와 대조). 서비스롤 키를 파이프라인 환경에 직접 두는 것보다 노출면 작음.
 3. **댓글 알림 webhook**: 커뮤니티 준비중 → 기존 comments webhook는 비활성/보존. `send-price-alert`는 **별도 함수로 신설**(기존 `send-push-notification` 보존, 혼선 방지).
 
-## 단계별 실행 (의존순)
+## 단계별 실행 (의존순) — 진행 상태 (2026-06-13)
 
-1. 〔SOCIAL〕 마이그레이션 B + Edge Function A 작성 → 사용자가 Supabase 배포·webhook/secret 설정
-2. 〔DATA〕 파이프라인 감지 훅 C + key 매핑 확정
-3. 〔CORE〕 app.js 구독 트리거 이전 D (잠금 잡고)
-4. 〔SOCIAL〕 sw.js URL 수정 E
-5. E2E 검증: 찜 → 권한허용 → 가격하락 모의 → 기기 알림 → 클릭 시 상품상세
+1. ✅ 〔SOCIAL〕 마이그레이션 B(`024_price_alert_log.sql`) + Edge Function A(`send-price-alert`) 작성·커밋·푸시. **사용자 배포 대기**: 마이그레이션 실행 + `functions deploy send-price-alert` + `ALERT_SECRET` 설정.
+2. ✅ 〔DATA〕 감지기 `pipeline/detect_price_drops.py` 작성·커밋. key/url 매핑 확정·dry-run 검증(하락 39건). **남음**: refresh/run_all 사이클에 `--send` 연결 + `SEND_PRICE_ALERT_URL`·`ALERT_SECRET` env.
+3. ✅ 〔CORE〕 app.js 구독 트리거를 찜 추가 시점으로 이전(락 잡고 단독 커밋). ⚠️ **캐시버스트 미적용** — DATA item churn 때문에 stamp 보류. 다음 CORE 빌드 사이클의 stamp_version에서 ?v= 전파돼야 재방문자 반영.
+4. ✅ 〔SOCIAL〕 sw.js 알림 URL `/community.html`→`/` 수정·배포.
+5. ⬜ E2E 검증: 찜 → 권한허용 → 가격하락 → 기기 알림 → 클릭 시 상품상세 (Supabase 배포 + 실기기 필요).
 
-## 지금 안전하게 착수 가능 (핫파일 아님)
-- A(Edge Function), B(마이그레이션), E(sw.js) 는 SOCIAL 레인이라 즉시 작성 가능.
-- C(파이프라인)는 DATA 레인, D(app.js)는 CORE 핫파일 → 잠금/조율 후.
+## 사용자 배포 체크리스트 (코드는 다 나감)
+```bash
+# Supabase
+#  1) SQL Editor에 supabase/migrations/024_price_alert_log.sql 실행
+#  2) openssl rand -hex 24  →  supabase secrets set ALERT_SECRET="<값>"
+#  3) supabase functions deploy send-price-alert   (VAPID 키는 이미 등록됨)
+# 파이프라인 (DATA 세션/cron)
+#  4) SEND_PRICE_ALERT_URL=https://<ref>.supabase.co/functions/v1/send-price-alert
+#     ALERT_SECRET=<위 값>  python3 pipeline/detect_price_drops.py --send
+# CORE 빌드
+#  5) item churn 가라앉으면 stamp_version 포함 빌드로 app.js ?v= 전파(재방문자 반영)
+```
