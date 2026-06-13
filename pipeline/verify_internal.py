@@ -1,0 +1,274 @@
+"""
+verify_internal.py — 내부 정합성 스캐너 (A2)
+전체 verified 상품 대상으로 5종 검사를 실행하고
+data_quality_flags(needs_review) + verify_queue.json을 생성한다.
+"""
+import argparse
+import json
+import sqlite3
+import statistics
+from pathlib import Path
+
+DB_DEFAULT = "camping_tents500.db"
+QUEUE_OUT = "verify_queue.json"
+
+
+def get_median(vals):
+    clean = [v for v in vals if v is not None]
+    if not clean:
+        return None
+    return statistics.median(clean)
+
+
+# ── 검사 1: 가격 이상치 ─────────────────────────────────────────────────────
+def check_price_outlier(cur):
+    """카테고리 중앙값 대비 <1.5% or >3000%인 verified 상품"""
+    # 초경량/프리미엄 예외: 최저가 ≥100원 이고 ≤10_000_000원 범위만 검사
+    cur.execute("""
+        SELECT cm.rep_product_id, p.brand_id, p.category_id, cm.min_price,
+               p.model_name, b.name_ko as brand
+        FROM canonical_models cm
+        JOIN products p ON p.id = cm.rep_product_id
+        JOIN brands b ON b.id = p.brand_id
+        WHERE p.curation_status = 'verified'
+          AND cm.min_price IS NOT NULL
+          AND cm.min_price >= 100
+    """)
+    rows = cur.fetchall()
+
+    # 카테고리별 중앙값 계산
+    cat_prices = {}
+    for pid, brand_id, cat_id, price, model, brand in rows:
+        cat_prices.setdefault(cat_id, []).append(price)
+    cat_median = {cat: get_median(prices) for cat, prices in cat_prices.items()}
+
+    flags = []
+    for pid, brand_id, cat_id, price, model, brand in rows:
+        med = cat_median.get(cat_id)
+        if not med:
+            continue
+        ratio = price / med * 100  # %
+        if ratio < 1.5:
+            note = f"가격 이상치(너무 낮음): {price:,}원 (카테고리 중앙값 {med:,.0f}원의 {ratio:.1f}%) — [{brand}] {model}"
+            flags.append((pid, None, "needs_review", note))
+        elif ratio > 3000:
+            note = f"가격 이상치(너무 높음): {price:,}원 (카테고리 중앙값 {med:,.0f}원의 {ratio:.0f}%) — [{brand}] {model}"
+            flags.append((pid, None, "needs_review", note))
+    return flags
+
+
+# ── 검사 2: 무게 단위 의심 ────────────────────────────────────────────────
+def check_weight_unit(cur):
+    """카테고리 중앙값 대비 100배 이상 or 1/100 이하인 weight_min 값"""
+    cur.execute("""
+        SELECT psv.product_id, psv.value_normalized, psv.value_raw, m.id as metric_id,
+               p.category_id, p.model_name, b.name_ko as brand
+        FROM product_spec_values psv
+        JOIN metrics m ON m.id = psv.metric_id AND m.key = 'weight_min'
+        JOIN products p ON p.id = psv.product_id
+        JOIN brands b ON b.id = p.brand_id
+        WHERE p.curation_status = 'verified'
+          AND psv.is_primary = 1 AND psv.valid = 1
+          AND psv.value_normalized IS NOT NULL
+    """)
+    rows = cur.fetchall()
+
+    cat_weights = {}
+    for pid, val, raw, metric_id, cat_id, model, brand in rows:
+        cat_weights.setdefault(cat_id, []).append(val)
+    cat_median = {cat: get_median(vals) for cat, vals in cat_weights.items()}
+
+    flags = []
+    for pid, val, raw, metric_id, cat_id, model, brand in rows:
+        med = cat_median.get(cat_id)
+        if not med or med == 0:
+            continue
+        ratio = val / med
+        if ratio >= 100:
+            note = f"무게 단위 의심(너무 큼): {val:,.0f}g (카테고리 중앙값 {med:,.0f}g의 {ratio:.0f}배) raw='{raw}' — [{brand}] {model}"
+            flags.append((pid, metric_id, "needs_review", note))
+        elif ratio <= 0.01:
+            note = f"무게 단위 의심(너무 작음): {val:,.1f}g (카테고리 중앙값 {med:,.0f}g의 1/{1/ratio:.0f}) raw='{raw}' — [{brand}] {model}"
+            flags.append((pid, metric_id, "needs_review", note))
+    return flags
+
+
+# ── 검사 3: 논리 모순 — capacity vs floor_area ─────────────────────────────
+def check_logic_contradiction(cur):
+    """1인당 floor_area < 0.5㎡ or > 5㎡ (capacity가 있는 텐트류만)"""
+    cur.execute("""
+        SELECT p.id, p.capacity, fa.value_normalized as floor_area,
+               fa.metric_id, p.model_name, b.name_ko as brand
+        FROM products p
+        JOIN brands b ON b.id = p.brand_id
+        JOIN product_spec_values fa ON fa.product_id = p.id
+        JOIN metrics m ON m.id = fa.metric_id AND m.key = 'floor_area'
+        WHERE p.curation_status = 'verified'
+          AND p.capacity IS NOT NULL AND p.capacity > 0
+          AND fa.is_primary = 1 AND fa.valid = 1
+          AND fa.value_normalized IS NOT NULL
+    """)
+    rows = cur.fetchall()
+
+    flags = []
+    for pid, cap, floor_area, metric_id, model, brand in rows:
+        per_person = floor_area / cap
+        if per_person < 0.5:
+            note = f"논리 모순: floor_area {floor_area:.2f}㎡ / {cap}인 = 1인당 {per_person:.2f}㎡ (< 0.5㎡) — [{brand}] {model}"
+            flags.append((pid, metric_id, "needs_review", note))
+        elif per_person > 5.0:
+            note = f"논리 모순: floor_area {floor_area:.2f}㎡ / {cap}인 = 1인당 {per_person:.2f}㎡ (> 5㎡) — [{brand}] {model}"
+            flags.append((pid, metric_id, "needs_review", note))
+    return flags
+
+
+# ── 검사 4: 중복 canonical ─────────────────────────────────────────────────
+def check_duplicate_canonical(cur):
+    """동일 brand_id + canonical_model + capacity로 verified가 2개 이상"""
+    cur.execute("""
+        SELECT brand_id, canonical_model, capacity, COUNT(*) as cnt,
+               GROUP_CONCAT(id) as ids
+        FROM products
+        WHERE curation_status = 'verified'
+          AND canonical_model IS NOT NULL
+        GROUP BY brand_id, canonical_model, capacity
+        HAVING cnt >= 2
+    """)
+    rows = cur.fetchall()
+
+    flags = []
+    for brand_id, canon_model, cap, cnt, ids_str in rows:
+        pid_list = [int(x) for x in ids_str.split(",")]
+        for pid in pid_list:
+            note = f"중복 canonical: brand_id={brand_id} model='{canon_model}' capacity={cap} — {cnt}개 verified 존재 (ids: {ids_str})"
+            flags.append((pid, None, "needs_review", note))
+    return flags
+
+
+# ── 검사 5: 가격 없음 ─────────────────────────────────────────────────────
+def check_price_missing(cur):
+    """verified 상품 중 min_price IS NULL"""
+    cur.execute("""
+        SELECT p.id, p.model_name, b.name_ko as brand
+        FROM products p
+        JOIN brands b ON b.id = p.brand_id
+        LEFT JOIN canonical_models cm ON cm.rep_product_id = p.id
+        WHERE p.curation_status = 'verified'
+          AND (cm.min_price IS NULL OR cm.rep_product_id IS NULL)
+    """)
+    rows = cur.fetchall()
+    flags = []
+    for pid, model, brand in rows:
+        note = f"가격 없음: canonical_models.min_price IS NULL — [{brand}] {model}"
+        flags.append((pid, None, "needs_review", note))
+    return flags
+
+
+# ── DB 저장 ────────────────────────────────────────────────────────────────
+def insert_flags(con, cur, all_flags):
+    inserted = 0
+    skipped = 0
+    for product_id, metric_id, flag_type, note in all_flags:
+        # 동일 (product_id, metric_id, flag_type, note prefix 50자) 기존 미해결 flag 있으면 skip
+        note_prefix = note[:80]
+        if metric_id is not None:
+            cur.execute("""
+                SELECT id FROM data_quality_flags
+                WHERE product_id=? AND metric_id=? AND flag_type=? AND resolved=0
+                  AND note LIKE ?
+            """, (product_id, metric_id, flag_type, note_prefix + "%"))
+        else:
+            cur.execute("""
+                SELECT id FROM data_quality_flags
+                WHERE product_id=? AND metric_id IS NULL AND flag_type=? AND resolved=0
+                  AND note LIKE ?
+            """, (product_id, flag_type, note_prefix + "%"))
+        if cur.fetchone():
+            skipped += 1
+            continue
+        cur.execute("""
+            INSERT INTO data_quality_flags (product_id, metric_id, flag_type, note, resolved)
+            VALUES (?, ?, ?, ?, 0)
+        """, (product_id, metric_id, flag_type, note))
+        inserted += 1
+    con.commit()
+    return inserted, skipped
+
+
+# ── verify_queue.json 출력 ─────────────────────────────────────────────────
+# 우선순위: 오탐률 낮은 순 (price_missing > duplicate > logic > price_outlier > weight_unit)
+CHECK_PRIORITY = {
+    "price_missing": 1,
+    "duplicate": 2,
+    "logic_contradiction": 3,
+    "price_outlier": 4,
+    "weight_unit": 5,
+}
+
+
+def write_queue(all_flags_labeled, out_path):
+    queue = []
+    for check_key, flags in all_flags_labeled:
+        for product_id, metric_id, flag_type, note in flags:
+            queue.append({
+                "check": check_key,
+                "priority": CHECK_PRIORITY[check_key],
+                "product_id": product_id,
+                "metric_id": metric_id,
+                "note": note,
+            })
+    queue.sort(key=lambda x: (x["priority"], x["product_id"]))
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(queue, f, ensure_ascii=False, indent=2)
+    return len(queue)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="내부 정합성 스캐너")
+    parser.add_argument("--db", default=DB_DEFAULT)
+    parser.add_argument("--dry-run", action="store_true", help="DB에 쓰지 않고 결과만 출력")
+    args = parser.parse_args()
+
+    db_path = Path(args.db)
+    if not db_path.exists():
+        print(f"[ERROR] DB 파일 없음: {db_path}")
+        return 1
+
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+
+    print(f"[verify_internal] DB: {db_path}")
+
+    checks = [
+        ("price_missing",       check_price_missing),
+        ("duplicate",           check_duplicate_canonical),
+        ("logic_contradiction", check_logic_contradiction),
+        ("price_outlier",       check_price_outlier),
+        ("weight_unit",         check_weight_unit),
+    ]
+
+    all_flags_labeled = []
+    total = 0
+    for check_key, fn in checks:
+        flags = fn(cur)
+        print(f"  [{check_key}] {len(flags)}건 발견")
+        all_flags_labeled.append((check_key, flags))
+        total += len(flags)
+
+    print(f"\n  합계: {total}건")
+
+    if not args.dry_run:
+        flat_flags = [f for _, flags in all_flags_labeled for f in flags]
+        ins, skp = insert_flags(con, cur, flat_flags)
+        print(f"  DB 저장: {ins}건 신규 INSERT, {skp}건 skip(기존 flag)")
+
+    queue_path = Path(QUEUE_OUT)
+    count = write_queue(all_flags_labeled, queue_path)
+    print(f"  verify_queue.json: {count}건 → {queue_path}")
+
+    con.close()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,3803 @@
+[
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 23,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [모비가든] 코트 야전침대 1인용 텐트"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 107,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카르닉] 오블리크 경량 백패킹 텐트 1-2인용 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 112,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [모비가든] UL2 플러스 텐트 비비드오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 122,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [힐맨] 클라우드 UP SMART 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 124,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [몽돌] 조아캠프 돔형 텐트 1-2인용 브라운"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 128,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 알토 TR2 플러스 UL 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 162,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [아이두젠] 맥스터 V1 백패킹 텐트 경량 A형 쉘터 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 171,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] X 코어 N 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 174,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [몽벨] 문라이트 텐트 1 라이트그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 195,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [MIER] 울트라라이트 초경량 백패킹 1인용 텐트 화이트"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 199,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [MSR] 엘릭서1 2025"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 209,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 텔러스 TR2 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 211,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [사마야] 2.0 텐트 핑크 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 242,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [MIER] 울트라라이트 초경량 백패킹 1인용 텐트 그린카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 252,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카르닉] 오블리크 경량 백패킹 텐트 1-2인용 옐로우"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 256,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [마운틴하이커] A형텐트 5.5m 베이지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 273,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [몽벨] 문라이트 텐트 2 라이트그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 280,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 알토 TR2 UL 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 283,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [모비가든] UL2 플러스 텐트 스카이블루"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 294,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [MSR] 프리라이트 3 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 309,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카르닉] 오블리크 경량 백패킹 텐트 1-2인용 블루그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 313,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [MIER] 울트라라이트 초경량 백패킹 1인용 텐트 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 317,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 알토 TR1 플러스 UL 그레이"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 319,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 알토 TR1 UL 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 334,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [힐레베르그] 에난"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 377,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] 빌리지 8.5 에어텐트 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 439,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 고스트 플러스 브라운 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 480,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 네스트 W 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 500,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [노스피크] 모나 올리브그레이"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 512,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 네스트 W 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 528,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 어메니티돔 M"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 531,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 리빙쉘 롱 Pro"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 533,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 어메니티돔 S 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 541,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 랜드록 R"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 542,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 리빙쉘 롱 Pro 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 547,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 미니트 돔 프로 에어 1 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 550,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 65th 리빙쉘 Pro 이너룸 세트"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 559,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 어메니티돔2"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 561,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 랜드브리즈 Pro.4"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 562,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 리빙쉘 롱 Pro 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 564,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 랜드스테이션 L TP-820"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 591,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [니모이큅먼트] 헥사라이트 에보 6P 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 612,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 네스트 W 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 632,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 고스트 팬텀 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 633,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] X 코어 텐트 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 637,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 고스트 플러스 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 640,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 몬타나 쉘터 2 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 641,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] T 코어 텐트 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 646,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 와일드 델타 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 647,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 네스트 W 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 662,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 몬스터 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 692,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 에버닌 제리 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 698,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 몬스터 딥카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 714,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 GE 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 722,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 G 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 724,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 GE 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 732,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 빅볼R 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 733,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 GHE 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 734,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 알베르게 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 735,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 파프리카 매그넘 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 736,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 올어라운드 알베르게 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 737,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 빅볼R 오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 740,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 G 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 741,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 폼므 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 742,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 보니아또 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 746,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 브이하우스 M 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 750,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 슈퍼포지션 솔로 P 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 751,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 슈퍼포지션 솔로 P 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 752,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 슈퍼포지션 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 754,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 슈퍼포지션 솔로 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 755,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 슈퍼포지션 솔로 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 756,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 투띠 텐트 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 757,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 폼므 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 758,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 그로토 텐트 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 759,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 아고라 쉘터 텐트 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 760,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 쉘터 GH 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 761,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 파프리카 매그넘 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 762,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 파프리카 매그넘 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 763,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 파프리카 매그넘 오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 764,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 브이하우스 M 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 765,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 보니아또 올리브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 766,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 보니아또 퍼플"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 791,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카즈미] 와일드 필드 오스카 하우스 텐트 차콜"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 813,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카즈미] 와일드 필드 오스카 하우스 텐트 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 835,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 패밀리 스크린 쉐이드 다크룸 텐트"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 849,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 인스턴트 업 돔 S 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 857,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 인스턴트 업 돔 240 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 858,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 카 사이드 텐트 3025 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 867,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 투어링 돔 LX 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 871,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 엑스커젼 티피 2/325"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 873,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 포켓 EZ 쉐이드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 972,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] M400 코튼침낭"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1062,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 사각 침낭 구스다운 2000g"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1065,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 1600g 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1072,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [몽벨] 심리스 다운 허거 800 5 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1074,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 2000g 오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1092,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 1000g 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1095,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 2000g 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1096,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 1600g 오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1098,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [듀라맥스] 동계 머미형 침낭 구스다운 1000g 오렌지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1113,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] LD250 초경량 코튼 침낭 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1121,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] PS300 동계 슬리핑백 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1441,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 레이 체어 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1645,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [이글루] 태그 어롱 팬시 쿨러 라일락"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1658,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [이글루] 태그 어롱 팬시 쿨러 파우더 블루"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1788,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] JB-105 메인스토브 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1821,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] 철판 버너"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1891,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 마제스티 렉타 타프 EX 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1935,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카즈미] 와일드 필드 헥사 타프 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 1991,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 블루홀 헥사 타프 베이지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2051,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [반고] 아틀라스 250 잉크 블루"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2100,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [로티캠프] 에어침대 캠핑 자충 에어매트 퀸 카키 22cm (152x203)"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2333,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [헬리녹스] 체어 제로"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2372,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [밴프] 컴포트 캠핑체어 투톤 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2445,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [나이트코어] NU25 UL 헤드랜턴"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2537,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [이글루] 네스팅 아이스박스 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2582,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스탠리] 올데이 줄리엔 쿨러 토트백"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2626,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스탠리] 어드벤쳐 쿨러 화이트"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2689,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 엑스온 스토브 핑크"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2710,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [티에라] 세라믹 원터치 테이블버너 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2722,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] 블레이즈 스토브 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2727,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] GS-355 그릴버너 설봉원"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2729,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] JB-105A 팝 스토브 프로 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2730,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] JB-105 메인스토브 아이보리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2743,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] 블레이즈 스토브 크림"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2764,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] 서브 스토브 한정판 크림"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2771,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] 팝 스토브 플레이 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2805,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 마제스티 렉타 타프 EX 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2846,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [씨투써밋] 나일론 타프 판초 블루"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2849,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] TP-841H 렉타 타프 M 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2882,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 블루홀 헥사 타프 머스타드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2884,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 반 타프"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2885,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 이츠카노 타프 TC 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2897,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 블루홀 헥사 타프 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2898,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] TAKIBI 타프옥타"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2913,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [아이두젠] 맥스터 헥사 타프 그늘막 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2916,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] TP-861H 헥사 타프 M"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2930,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 헥사 타프 EX 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 2931,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 헥사 타프 EX 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3106,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [반고] 나이트스타 알파 250 버리디안 그린"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3280,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] 초경량 자충매트 3.5 싱글 그레이 (55x185)"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3462,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 릴렉스 폴딩 벤치 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3509,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [레드렌서] HF4R 시그니처 헤드랜턴 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3568,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 센서 헤드 랜턴 650LM 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3626,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [시마노] 아이스박스 프로 30L 모카"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3631,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [OtterBox] 벤처 쿨러 61.3L 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3632,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [시마노] 아이스박스 프로 22L 모카"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3652,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카즈미] 큐브 아이스 쿨러 13L"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3669,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [시마노] 아이스박스 프로 22L 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3671,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [시마노] 아이스박스 프로 17L 모카"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3686,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 소프트 쿠라히코 쿨러 박스 카키 15L 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3689,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [CHUMS] 캠퍼 쿨러 18L 레드 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3720,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 엑스온 스토브 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3747,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [스노우피크] GS-1000 강염 스토브"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3776,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] JB-105 메인스토브 탄 + 연장다리"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3781,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [티에라] 세라믹 원터치 테이블버너 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3788,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [제라] 서브 스토브 그레이"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3847,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 렉타 타프 EX 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3893,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 치즈타프 S 카키"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3894,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 치즈타프 S 카키 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3896,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [아이두젠] 맥스터 렉타 타프 그늘막 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3905,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 치즈타프 S 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 3965,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [컬럼비아] 야외 캠핑 침낭 800g 블루 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4152,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [폴라리스] 콤피 자충매트 자충매트 싱글 블랙 (65x190)"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4164,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] NH UL 자충매트 3.5 싱글 스퀘어 그레이 L (65x196)"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4242,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 컴팩트 폴딩 체어"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4314,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] YL11 경량 락킹체어 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4508,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [펠리칸] 엘리트 쿨러 70쿼터 66L 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4514,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [카즈미] 큐브 아이스쿨러 13L 레드"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4522,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [코베아] 엑스온 스토브 스카이블루"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4606,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [미니멀웍스] 망고쉐이드 렉타 타프 EX 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4613,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 치즈타프 S 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 4957,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [소토] 필드 카이트 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5043,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [네이처하이크] XJC05 경량코트 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5045,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [헬리녹스] 코트원 컨버터블 블랙 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5053,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [헬리녹스] 코트원 컨버터블 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5065,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [헬리녹스] 코트 맥스 컨버터블 코요테탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5080,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 트레일 헤드 2 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5102,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [투마운트] 초경량 접이식 야전침대 베이지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5117,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [헬리녹스] 택티컬 코트 컨버터블 블랙 2025"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5126,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [투마운트] 초경량 접이식 야전침대 블랙"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5127,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [투마운트] 초경량 접이식 야전침대 브라운"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5342,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [콜맨] 아웃도어 웨건 해외구매"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5412,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [노르디스크] 코튼 캔버스 웨건"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5414,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [노스피크] 스마트 카트 올리브탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5428,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [도플갱어아웃도어] DOD 알루미늄 캐리 웨건 탄"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 5782,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [유니프레임] 네이처 스토브 L"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 6016,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [UGREEN] PD PPS 300W 대용량 보조배터리 PB770 48000mAh"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 6029,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [글라스락] 멀티 아이스박스 베이지"
+  },
+  {
+    "check": "price_missing",
+    "priority": 1,
+    "product_id": 6073,
+    "metric_id": null,
+    "note": "가격 없음: canonical_models.min_price IS NULL — [오라이트] 오클립 프로 플래시라이트 블랙"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 6,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=5 model='클라우드 UP SMART' capacity=2 — 2개 verified 존재 (ids: 122,6)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 8,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=7 model='코트 야전침대 1인용 텐트' capacity=1 — 2개 verified 존재 (ids: 23,8)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 23,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=7 model='코트 야전침대 1인용 텐트' capacity=1 — 2개 verified 존재 (ids: 23,8)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 29,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=20 model='조아캠프 돔형 텐트 1-2인용' capacity=2 — 2개 verified 존재 (ids: 124,29)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 56,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='X 코어 N' capacity=2 — 2개 verified 존재 (ids: 56,171)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 61,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR2 플러스 UL' capacity=2 — 2개 verified 존재 (ids: 61,128)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 78,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=7 model='UL2 플러스 텐트' capacity=2 — 3개 verified 존재 (ids: 78,112,283)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 91,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=16 model='프리라이트 3' capacity=3 — 2개 verified 존재 (ids: 91,294)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 94,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='문라이트 텐트 1' capacity=1 — 2개 verified 존재 (ids: 174,94)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 96,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=38 model='A형텐트 5.5m' capacity=5 — 2개 verified 존재 (ids: 256,96)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 99,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=39 model='오블리크 경량 백패킹 텐트 1-2인용' capacity=2 — 4개 verified 존재 (ids: 99,107,309,252)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 107,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=39 model='오블리크 경량 백패킹 텐트 1-2인용' capacity=2 — 4개 verified 존재 (ids: 99,107,309,252)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 112,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=7 model='UL2 플러스 텐트' capacity=2 — 3개 verified 존재 (ids: 78,112,283)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 118,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR1 UL' capacity=1 — 2개 verified 존재 (ids: 118,319)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 122,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=5 model='클라우드 UP SMART' capacity=2 — 2개 verified 존재 (ids: 122,6)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 124,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=20 model='조아캠프 돔형 텐트 1-2인용' capacity=2 — 2개 verified 존재 (ids: 124,29)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 127,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=16 model='엘릭서1 2025' capacity=1 — 2개 verified 존재 (ids: 199,127)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 128,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR2 플러스 UL' capacity=2 — 2개 verified 존재 (ids: 61,128)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 152,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 V1 백패킹 텐트 경량 A형 쉘터' capacity=1 — 2개 verified 존재 (ids: 152,162)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 162,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 V1 백패킹 텐트 경량 A형 쉘터' capacity=1 — 2개 verified 존재 (ids: 152,162)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 166,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='텔러스 TR2' capacity=2 — 2개 verified 존재 (ids: 166,209)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 171,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='X 코어 N' capacity=2 — 2개 verified 존재 (ids: 56,171)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 174,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='문라이트 텐트 1' capacity=1 — 2개 verified 존재 (ids: 174,94)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 194,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=61 model='울트라라이트 초경량 백패킹 1인용 텐트' capacity=1 — 4개 verified 존재 (ids: 194,313,242,195)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 195,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=61 model='울트라라이트 초경량 백패킹 1인용 텐트' capacity=1 — 4개 verified 존재 (ids: 194,313,242,195)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 199,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=16 model='엘릭서1 2025' capacity=1 — 2개 verified 존재 (ids: 199,127)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 209,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='텔러스 TR2' capacity=2 — 2개 verified 존재 (ids: 166,209)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 210,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=63 model='2.0 텐트' capacity=2 — 2개 verified 존재 (ids: 210,211)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 211,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=63 model='2.0 텐트' capacity=2 — 2개 verified 존재 (ids: 210,211)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 227,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='문라이트 텐트 2' capacity=1 — 2개 verified 존재 (ids: 273,227)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 242,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=61 model='울트라라이트 초경량 백패킹 1인용 텐트' capacity=1 — 4개 verified 존재 (ids: 194,313,242,195)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 252,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=39 model='오블리크 경량 백패킹 텐트 1-2인용' capacity=2 — 4개 verified 존재 (ids: 99,107,309,252)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 256,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=38 model='A형텐트 5.5m' capacity=5 — 2개 verified 존재 (ids: 256,96)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 273,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='문라이트 텐트 2' capacity=1 — 2개 verified 존재 (ids: 273,227)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 277,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR2 UL' capacity=2 — 2개 verified 존재 (ids: 277,280)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 280,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR2 UL' capacity=2 — 2개 verified 존재 (ids: 277,280)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 283,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=7 model='UL2 플러스 텐트' capacity=2 — 3개 verified 존재 (ids: 78,112,283)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 294,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=16 model='프리라이트 3' capacity=3 — 2개 verified 존재 (ids: 91,294)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 309,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=39 model='오블리크 경량 백패킹 텐트 1-2인용' capacity=2 — 4개 verified 존재 (ids: 99,107,309,252)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 313,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=61 model='울트라라이트 초경량 백패킹 1인용 텐트' capacity=1 — 4개 verified 존재 (ids: 194,313,242,195)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 319,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='알토 TR1 UL' capacity=1 — 2개 verified 존재 (ids: 118,319)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 332,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=15 model='에난' capacity=1 — 2개 verified 존재 (ids: 334,332)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 334,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=15 model='에난' capacity=1 — 2개 verified 존재 (ids: 334,332)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 352,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='네스트 W' capacity=4 — 5개 verified 존재 (ids: 352,512,480,612,647)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 355,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='빌리지 8.5 에어텐트' capacity=5 — 2개 verified 존재 (ids: 355,377)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 357,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='고스트 플러스' capacity=4 — 3개 verified 존재 (ids: 439,637,357)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 363,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=95 model='모나' capacity=8 — 2개 verified 존재 (ids: 363,500)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 377,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='빌리지 8.5 에어텐트' capacity=5 — 2개 verified 존재 (ids: 355,377)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 402,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='패밀리 스크린 쉐이드 다크룸 텐트' capacity=5 — 2개 verified 존재 (ids: 835,402)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 439,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='고스트 플러스' capacity=4 — 3개 verified 존재 (ids: 439,637,357)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 470,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='와일드 필드 오스카 하우스 텐트' capacity=4 — 3개 verified 존재 (ids: 470,813,791)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 471,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='고스트 팬텀' capacity=4 — 2개 verified 존재 (ids: 632,471)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 477,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='인스턴트 업 돔 S' capacity=1 — 2개 verified 존재 (ids: 477,849)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 480,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='네스트 W' capacity=4 — 5개 verified 존재 (ids: 352,512,480,612,647)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 500,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=95 model='모나' capacity=8 — 2개 verified 존재 (ids: 363,500)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 512,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='네스트 W' capacity=4 — 5개 verified 존재 (ids: 352,512,480,612,647)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 521,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드록 R' capacity=6 — 2개 verified 존재 (ids: 541,521)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 522,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='어메니티돔 S' capacity=3 — 2개 verified 존재 (ids: 522,533)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 523,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='리빙쉘 롱 Pro' capacity=6 — 4개 verified 존재 (ids: 531,542,523,562)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 530,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드스테이션 L TP-820' capacity=8 — 2개 verified 존재 (ids: 564,530)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 531,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='리빙쉘 롱 Pro' capacity=6 — 4개 verified 존재 (ids: 531,542,523,562)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 533,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='어메니티돔 S' capacity=3 — 2개 verified 존재 (ids: 522,533)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 535,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='미니트 돔 프로 에어 1' capacity=2 — 2개 verified 존재 (ids: 535,547)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 541,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드록 R' capacity=6 — 2개 verified 존재 (ids: 541,521)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 542,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='리빙쉘 롱 Pro' capacity=6 — 4개 verified 존재 (ids: 531,542,523,562)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 546,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='65th 리빙쉘 Pro 이너룸 세트' capacity=5 — 2개 verified 존재 (ids: 550,546)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 547,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='미니트 돔 프로 에어 1' capacity=2 — 2개 verified 존재 (ids: 535,547)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 549,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드브리즈 Pro.4' capacity=5 — 2개 verified 존재 (ids: 561,549)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 550,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='65th 리빙쉘 Pro 이너룸 세트' capacity=5 — 2개 verified 존재 (ids: 550,546)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 552,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='어메니티돔2' capacity=2 — 2개 verified 존재 (ids: 559,552)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 559,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='어메니티돔2' capacity=2 — 2개 verified 존재 (ids: 559,552)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 561,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드브리즈 Pro.4' capacity=5 — 2개 verified 존재 (ids: 561,549)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 562,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='리빙쉘 롱 Pro' capacity=6 — 4개 verified 존재 (ids: 531,542,523,562)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 564,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='랜드스테이션 L TP-820' capacity=8 — 2개 verified 존재 (ids: 564,530)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 585,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=18 model='헥사라이트 에보 6P' capacity=6 — 2개 verified 존재 (ids: 585,591)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 591,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=18 model='헥사라이트 에보 6P' capacity=6 — 2개 verified 존재 (ids: 585,591)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 612,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='네스트 W' capacity=4 — 5개 verified 존재 (ids: 352,512,480,612,647)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 615,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='몬타나 쉘터 2' capacity=4 — 2개 verified 존재 (ids: 640,615)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 616,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='몬스터' capacity=4 — 3개 verified 존재 (ids: 698,662,616)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 629,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='X 코어 텐트' capacity=2 — 2개 verified 존재 (ids: 633,629)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 632,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='고스트 팬텀' capacity=4 — 2개 verified 존재 (ids: 632,471)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 633,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='X 코어 텐트' capacity=2 — 2개 verified 존재 (ids: 633,629)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 634,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='와일드 델타' capacity=4 — 2개 verified 존재 (ids: 646,634)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 635,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='T 코어 텐트' capacity=2 — 2개 verified 존재 (ids: 641,635)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 637,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='고스트 플러스' capacity=4 — 3개 verified 존재 (ids: 439,637,357)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 640,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='몬타나 쉘터 2' capacity=4 — 2개 verified 존재 (ids: 640,615)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 641,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='T 코어 텐트' capacity=2 — 2개 verified 존재 (ids: 641,635)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 646,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='와일드 델타' capacity=4 — 2개 verified 존재 (ids: 646,634)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 647,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='네스트 W' capacity=4 — 5개 verified 존재 (ids: 352,512,480,612,647)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 662,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='몬스터' capacity=4 — 3개 verified 존재 (ids: 698,662,616)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 674,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='에버닌 제리' capacity=4 — 2개 verified 존재 (ids: 674,692)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 692,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='에버닌 제리' capacity=4 — 2개 verified 존재 (ids: 674,692)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 698,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='몬스터' capacity=4 — 3개 verified 존재 (ids: 698,662,616)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 706,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 GE' capacity=4 — 3개 verified 존재 (ids: 724,714,706)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 708,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 G' capacity=5 — 3개 verified 존재 (ids: 740,708,722)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 712,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션' capacity=5 — 2개 verified 존재 (ids: 752,712)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 714,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 GE' capacity=4 — 3개 verified 존재 (ids: 724,714,706)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 716,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='투띠 텐트' capacity=5 — 2개 verified 존재 (ids: 716,756)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 717,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='올어라운드 알베르게' capacity=5 — 2개 verified 존재 (ids: 717,736)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 718,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='보니아또' capacity=2 — 4개 verified 존재 (ids: 742,718,765,766)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 720,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 GH' capacity=5 — 2개 verified 존재 (ids: 760,720)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 722,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 G' capacity=5 — 3개 verified 존재 (ids: 740,708,722)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 724,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 GE' capacity=4 — 3개 verified 존재 (ids: 724,714,706)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 725,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='빅볼R' capacity=12 — 3개 verified 존재 (ids: 737,732,725)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 727,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='파프리카 매그넘' capacity=3 — 5개 verified 존재 (ids: 727,735,763,762,761)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 728,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='그로토 텐트' capacity=4 — 2개 verified 존재 (ids: 758,728)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 729,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='아고라 쉘터 텐트' capacity=5 — 2개 verified 존재 (ids: 729,759)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 731,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='알베르게' capacity=5 — 2개 verified 존재 (ids: 734,731)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 732,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='빅볼R' capacity=12 — 3개 verified 존재 (ids: 737,732,725)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 734,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='알베르게' capacity=5 — 2개 verified 존재 (ids: 734,731)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 735,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='파프리카 매그넘' capacity=3 — 5개 verified 존재 (ids: 727,735,763,762,761)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 736,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='올어라운드 알베르게' capacity=5 — 2개 verified 존재 (ids: 717,736)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 737,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='빅볼R' capacity=12 — 3개 verified 존재 (ids: 737,732,725)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 739,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='폼므' capacity=2 — 3개 verified 존재 (ids: 739,757,741)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 740,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 G' capacity=5 — 3개 verified 존재 (ids: 740,708,722)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 741,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='폼므' capacity=2 — 3개 verified 존재 (ids: 739,757,741)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 742,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='보니아또' capacity=2 — 4개 verified 존재 (ids: 742,718,765,766)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 745,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='브이하우스 M' capacity=5 — 3개 verified 존재 (ids: 764,746,745)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 746,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='브이하우스 M' capacity=5 — 3개 verified 존재 (ids: 764,746,745)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 749,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로 P' capacity=1 — 3개 verified 존재 (ids: 751,749,750)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 750,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로 P' capacity=1 — 3개 verified 존재 (ids: 751,749,750)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 751,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로 P' capacity=1 — 3개 verified 존재 (ids: 751,749,750)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 752,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션' capacity=5 — 2개 verified 존재 (ids: 752,712)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 753,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로' capacity=5 — 3개 verified 존재 (ids: 754,755,753)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 754,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로' capacity=5 — 3개 verified 존재 (ids: 754,755,753)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 755,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='슈퍼포지션 솔로' capacity=5 — 3개 verified 존재 (ids: 754,755,753)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 756,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='투띠 텐트' capacity=5 — 2개 verified 존재 (ids: 716,756)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 757,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='폼므' capacity=2 — 3개 verified 존재 (ids: 739,757,741)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 758,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='그로토 텐트' capacity=4 — 2개 verified 존재 (ids: 758,728)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 759,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='아고라 쉘터 텐트' capacity=5 — 2개 verified 존재 (ids: 729,759)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 760,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='쉘터 GH' capacity=5 — 2개 verified 존재 (ids: 760,720)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 761,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='파프리카 매그넘' capacity=3 — 5개 verified 존재 (ids: 727,735,763,762,761)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 762,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='파프리카 매그넘' capacity=3 — 5개 verified 존재 (ids: 727,735,763,762,761)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 763,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='파프리카 매그넘' capacity=3 — 5개 verified 존재 (ids: 727,735,763,762,761)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 764,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='브이하우스 M' capacity=5 — 3개 verified 존재 (ids: 764,746,745)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 765,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='보니아또' capacity=2 — 4개 verified 존재 (ids: 742,718,765,766)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 766,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='보니아또' capacity=2 — 4개 verified 존재 (ids: 742,718,765,766)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 791,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='와일드 필드 오스카 하우스 텐트' capacity=4 — 3개 verified 존재 (ids: 470,813,791)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 813,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='와일드 필드 오스카 하우스 텐트' capacity=4 — 3개 verified 존재 (ids: 470,813,791)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 831,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='인스턴트 업 돔 240' capacity=4 — 2개 verified 존재 (ids: 831,857)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 832,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='투어링 돔 LX' capacity=3 — 2개 verified 존재 (ids: 832,867)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 835,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='패밀리 스크린 쉐이드 다크룸 텐트' capacity=5 — 2개 verified 존재 (ids: 835,402)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 840,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='카 사이드 텐트 3025' capacity=5 — 2개 verified 존재 (ids: 840,858)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 849,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='인스턴트 업 돔 S' capacity=1 — 2개 verified 존재 (ids: 477,849)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 855,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='엑스커젼 티피 2/325' capacity=4 — 2개 verified 존재 (ids: 871,855)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 857,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='인스턴트 업 돔 240' capacity=4 — 2개 verified 존재 (ids: 831,857)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 858,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='카 사이드 텐트 3025' capacity=5 — 2개 verified 존재 (ids: 840,858)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 866,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='포켓 EZ 쉐이드' capacity=2 — 2개 verified 존재 (ids: 873,866)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 867,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='투어링 돔 LX' capacity=3 — 2개 verified 존재 (ids: 832,867)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 871,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='엑스커젼 티피 2/325' capacity=4 — 2개 verified 존재 (ids: 871,855)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 873,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='포켓 EZ 쉐이드' capacity=2 — 2개 verified 존재 (ids: 873,866)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 923,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='LD250 초경량 코튼 침낭' capacity=None — 2개 verified 존재 (ids: 923,1113)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 928,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='M400 코튼침낭' capacity=None — 2개 verified 존재 (ids: 972,928)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 936,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='심리스 다운 허거 800 5' capacity=None — 2개 verified 존재 (ids: 936,1072)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 972,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='M400 코튼침낭' capacity=None — 2개 verified 존재 (ids: 972,928)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 984,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=19 model='아틀라스 250' capacity=None — 2개 verified 존재 (ids: 984,2051)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 996,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=158 model='야외 캠핑 침낭 800g' capacity=None — 2개 verified 존재 (ids: 3965,996)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1042,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='PS300 동계 슬리핑백' capacity=None — 2개 verified 존재 (ids: 1042,1121)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1047,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1600g' capacity=None — 3개 verified 존재 (ids: 1047,1065,1096)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1048,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1000g' capacity=None — 3개 verified 존재 (ids: 1048,1092,1098)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1054,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 2000g' capacity=None — 3개 verified 존재 (ids: 1054,1095,1074)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1061,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 사각 침낭 구스다운 2000g' capacity=None — 2개 verified 존재 (ids: 1062,1061)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1062,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 사각 침낭 구스다운 2000g' capacity=None — 2개 verified 존재 (ids: 1062,1061)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1065,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1600g' capacity=None — 3개 verified 존재 (ids: 1047,1065,1096)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1072,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=9 model='심리스 다운 허거 800 5' capacity=None — 2개 verified 존재 (ids: 936,1072)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1074,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 2000g' capacity=None — 3개 verified 존재 (ids: 1054,1095,1074)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1092,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1000g' capacity=None — 3개 verified 존재 (ids: 1048,1092,1098)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1095,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 2000g' capacity=None — 3개 verified 존재 (ids: 1054,1095,1074)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1096,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1600g' capacity=None — 3개 verified 존재 (ids: 1047,1065,1096)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1098,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=148 model='동계 머미형 침낭 구스다운 1000g' capacity=None — 3개 verified 존재 (ids: 1048,1092,1098)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1113,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='LD250 초경량 코튼 침낭' capacity=None — 2개 verified 존재 (ids: 923,1113)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1121,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='PS300 동계 슬리핑백' capacity=None — 2개 verified 존재 (ids: 1042,1121)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1129,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=24 model='에어침대 캠핑 자충 에어매트 퀸 22cm (152x203)' capacity=None — 2개 verified 존재 (ids: 2100,1129)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1164,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='초경량 자충매트 3.5 싱글 (55x185)' capacity=None — 2개 verified 존재 (ids: 3280,1164)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1299,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='레이 체어' capacity=None — 2개 verified 존재 (ids: 1299,1441)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1381,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=97 model='컴포트 캠핑체어 투톤' capacity=None — 2개 verified 존재 (ids: 1381,2372)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1441,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='레이 체어' capacity=None — 2개 verified 존재 (ids: 1299,1441)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1467,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='센서 헤드 랜턴 650LM' capacity=None — 2개 verified 존재 (ids: 3568,1467)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1506,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=319 model='NU25 UL 헤드랜턴' capacity=None — 2개 verified 존재 (ids: 2445,1506)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1590,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=348 model='네스팅 아이스박스' capacity=None — 2개 verified 존재 (ids: 1590,2537)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1621,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=368 model='캠퍼 쿨러 18L' capacity=None — 2개 verified 존재 (ids: 3689,1621)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1643,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=348 model='태그 어롱 팬시 쿨러' capacity=None — 3개 verified 존재 (ids: 1645,1643,1658)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1645,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=348 model='태그 어롱 팬시 쿨러' capacity=None — 3개 verified 존재 (ids: 1645,1643,1658)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1650,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=350 model='올데이 줄리엔 쿨러 토트백' capacity=None — 2개 verified 존재 (ids: 2582,1650)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1658,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=348 model='태그 어롱 팬시 쿨러' capacity=None — 3개 verified 존재 (ids: 1645,1643,1658)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1666,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=350 model='어드벤쳐 쿨러' capacity=None — 2개 verified 존재 (ids: 1666,2626)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1672,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 30L' capacity=None — 2개 verified 존재 (ids: 3626,1672)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1700,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='블레이즈 스토브' capacity=None — 3개 verified 존재 (ids: 2722,1700,2743)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1746,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105 메인스토브' capacity=None — 3개 verified 존재 (ids: 1746,2730,1788)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1754,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='엑스온 스토브' capacity=None — 4개 verified 존재 (ids: 3720,4522,2689,1754)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1773,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='철판 버너' capacity=None — 2개 verified 존재 (ids: 1821,1773)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1788,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105 메인스토브' capacity=None — 3개 verified 존재 (ids: 1746,2730,1788)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1789,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='팝 스토브 플레이' capacity=None — 2개 verified 존재 (ids: 2771,1789)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1804,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='GS-1000 강염 스토브' capacity=None — 2개 verified 존재 (ids: 3747,1804)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1805,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105A 팝 스토브 프로' capacity=None — 2개 verified 존재 (ids: 2729,1805)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1820,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=413 model='세라믹 원터치 테이블버너' capacity=None — 3개 verified 존재 (ids: 1820,2710,3781)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1821,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='철판 버너' capacity=None — 2개 verified 존재 (ids: 1821,1773)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1826,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105 메인스토브 + 연장다리' capacity=None — 2개 verified 존재 (ids: 1826,3776)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1855,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='와일드 필드 헥사 타프' capacity=None — 2개 verified 존재 (ids: 1855,1935)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1863,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 마제스티 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 2805,1863,1891)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1876,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TP-861H 헥사 타프 M' capacity=None — 2개 verified 존재 (ids: 2916,1876)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1891,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 마제스티 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 2805,1863,1891)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1916,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='나일론 타프 판초' capacity=None — 2개 verified 존재 (ids: 1916,2846)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1928,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TP-841H 렉타 타프 M' capacity=None — 2개 verified 존재 (ids: 1928,2849)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1935,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='와일드 필드 헥사 타프' capacity=None — 2개 verified 존재 (ids: 1855,1935)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1964,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TAKIBI 타프옥타' capacity=None — 2개 verified 존재 (ids: 2898,1964)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1977,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 헥사 타프 EX' capacity=None — 3개 verified 존재 (ids: 2931,1977,2930)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1978,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='블루홀 헥사 타프' capacity=None — 4개 verified 존재 (ids: 2882,1991,2897,1978)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1982,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='반 타프' capacity=None — 2개 verified 존재 (ids: 2884,1982)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1991,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='블루홀 헥사 타프' capacity=None — 4개 verified 존재 (ids: 2882,1991,2897,1978)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 1996,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 이츠카노 타프 TC' capacity=None — 2개 verified 존재 (ids: 2885,1996)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2051,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=19 model='아틀라스 250' capacity=None — 2개 verified 존재 (ids: 984,2051)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2091,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=19 model='나이트스타 알파 250' capacity=None — 2개 verified 존재 (ids: 3106,2091)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2100,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=24 model='에어침대 캠핑 자충 에어매트 퀸 22cm (152x203)' capacity=None — 2개 verified 존재 (ids: 2100,1129)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2145,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='NH UL 자충매트 3.5 싱글 스퀘어 L (65x196)' capacity=None — 2개 verified 존재 (ids: 4164,2145)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2329,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='체어 제로' capacity=None — 2개 verified 존재 (ids: 2333,2329)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2333,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='체어 제로' capacity=None — 2개 verified 존재 (ids: 2333,2329)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2357,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='YL11 경량 락킹체어' capacity=None — 2개 verified 존재 (ids: 2357,4314)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2372,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=97 model='컴포트 캠핑체어 투톤' capacity=None — 2개 verified 존재 (ids: 1381,2372)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2406,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='릴렉스 폴딩 벤치' capacity=None — 2개 verified 존재 (ids: 2406,3462)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2445,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=319 model='NU25 UL 헤드랜턴' capacity=None — 2개 verified 존재 (ids: 2445,1506)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2537,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=348 model='네스팅 아이스박스' capacity=None — 2개 verified 존재 (ids: 1590,2537)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2580,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 22L' capacity=None — 3개 verified 존재 (ids: 3632,3669,2580)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2582,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=350 model='올데이 줄리엔 쿨러 토트백' capacity=None — 2개 verified 존재 (ids: 2582,1650)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2598,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='큐브 아이스쿨러 13L' capacity=None — 3개 verified 존재 (ids: 3652,4514,2598)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2603,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=606 model='벤처 쿨러 61.3L' capacity=None — 2개 verified 존재 (ids: 3631,2603)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2626,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=350 model='어드벤쳐 쿨러' capacity=None — 2개 verified 존재 (ids: 1666,2626)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2689,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='엑스온 스토브' capacity=None — 4개 verified 존재 (ids: 3720,4522,2689,1754)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2700,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='서브 스토브 한정판' capacity=None — 2개 verified 존재 (ids: 2700,2764)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2710,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=413 model='세라믹 원터치 테이블버너' capacity=None — 3개 verified 존재 (ids: 1820,2710,3781)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2713,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='GS-355 그릴버너 설봉원' capacity=None — 2개 verified 존재 (ids: 2727,2713)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2722,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='블레이즈 스토브' capacity=None — 3개 verified 존재 (ids: 2722,1700,2743)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2727,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='GS-355 그릴버너 설봉원' capacity=None — 2개 verified 존재 (ids: 2727,2713)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2729,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105A 팝 스토브 프로' capacity=None — 2개 verified 존재 (ids: 2729,1805)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2730,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105 메인스토브' capacity=None — 3개 verified 존재 (ids: 1746,2730,1788)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2743,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='블레이즈 스토브' capacity=None — 3개 verified 존재 (ids: 2722,1700,2743)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2759,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='서브 스토브' capacity=None — 2개 verified 존재 (ids: 3788,2759)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2764,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='서브 스토브 한정판' capacity=None — 2개 verified 존재 (ids: 2700,2764)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2771,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='팝 스토브 플레이' capacity=None — 2개 verified 존재 (ids: 2771,1789)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2805,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 마제스티 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 2805,1863,1891)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2846,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=29 model='나일론 타프 판초' capacity=None — 2개 verified 존재 (ids: 1916,2846)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2849,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TP-841H 렉타 타프 M' capacity=None — 2개 verified 존재 (ids: 1928,2849)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2873,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 3847,2873,4606)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2882,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='블루홀 헥사 타프' capacity=None — 4개 verified 존재 (ids: 2882,1991,2897,1978)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2884,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='반 타프' capacity=None — 2개 verified 존재 (ids: 2884,1982)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2885,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 이츠카노 타프 TC' capacity=None — 2개 verified 존재 (ids: 2885,1996)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2897,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='블루홀 헥사 타프' capacity=None — 4개 verified 존재 (ids: 2882,1991,2897,1978)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2898,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TAKIBI 타프옥타' capacity=None — 2개 verified 존재 (ids: 2898,1964)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2912,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 헥사 타프 그늘막' capacity=None — 2개 verified 존재 (ids: 2912,2913)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2913,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 헥사 타프 그늘막' capacity=None — 2개 verified 존재 (ids: 2912,2913)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2916,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='TP-861H 헥사 타프 M' capacity=None — 2개 verified 존재 (ids: 2916,1876)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2930,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 헥사 타프 EX' capacity=None — 3개 verified 존재 (ids: 2931,1977,2930)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 2931,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 헥사 타프 EX' capacity=None — 3개 verified 존재 (ids: 2931,1977,2930)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3106,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=19 model='나이트스타 알파 250' capacity=None — 2개 verified 존재 (ids: 3106,2091)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3280,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='초경량 자충매트 3.5 싱글 (55x185)' capacity=None — 2개 verified 존재 (ids: 3280,1164)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3462,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='릴렉스 폴딩 벤치' capacity=None — 2개 verified 존재 (ids: 2406,3462)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3505,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1245 model='HF4R 시그니처 헤드랜턴' capacity=None — 2개 verified 존재 (ids: 3505,3509)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3509,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1245 model='HF4R 시그니처 헤드랜턴' capacity=None — 2개 verified 존재 (ids: 3505,3509)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3568,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='센서 헤드 랜턴 650LM' capacity=None — 2개 verified 존재 (ids: 3568,1467)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3625,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 17L' capacity=None — 2개 verified 존재 (ids: 3671,3625)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3626,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 30L' capacity=None — 2개 verified 존재 (ids: 3626,1672)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3631,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=606 model='벤처 쿨러 61.3L' capacity=None — 2개 verified 존재 (ids: 3631,2603)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3632,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 22L' capacity=None — 3개 verified 존재 (ids: 3632,3669,2580)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3652,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='큐브 아이스쿨러 13L' capacity=None — 3개 verified 존재 (ids: 3652,4514,2598)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3669,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 22L' capacity=None — 3개 verified 존재 (ids: 3632,3669,2580)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3671,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=375 model='아이스박스 프로 17L' capacity=None — 2개 verified 존재 (ids: 3671,3625)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3685,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 소프트 쿠라히코 쿨러 박스 15L' capacity=None — 2개 verified 존재 (ids: 3685,3686)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3686,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 소프트 쿠라히코 쿨러 박스 15L' capacity=None — 2개 verified 존재 (ids: 3685,3686)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3689,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=368 model='캠퍼 쿨러 18L' capacity=None — 2개 verified 존재 (ids: 3689,1621)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3720,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='엑스온 스토브' capacity=None — 4개 verified 존재 (ids: 3720,4522,2689,1754)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3747,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=49 model='GS-1000 강염 스토브' capacity=None — 2개 verified 존재 (ids: 3747,1804)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3776,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='JB-105 메인스토브 + 연장다리' capacity=None — 2개 verified 존재 (ids: 1826,3776)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3781,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=413 model='세라믹 원터치 테이블버너' capacity=None — 3개 verified 존재 (ids: 1820,2710,3781)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3788,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=395 model='서브 스토브' capacity=None — 2개 verified 존재 (ids: 3788,2759)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3843,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 렉타 타프 그늘막' capacity=None — 2개 verified 존재 (ids: 3843,3896)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3847,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 3847,2873,4606)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3861,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 치즈타프 S' capacity=None — 5개 verified 존재 (ids: 3861,3893,3894,3905,4613)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3893,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 치즈타프 S' capacity=None — 5개 verified 존재 (ids: 3861,3893,3894,3905,4613)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3894,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 치즈타프 S' capacity=None — 5개 verified 존재 (ids: 3861,3893,3894,3905,4613)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3896,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=54 model='맥스터 렉타 타프 그늘막' capacity=None — 2개 verified 존재 (ids: 3843,3896)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3905,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 치즈타프 S' capacity=None — 5개 verified 존재 (ids: 3861,3893,3894,3905,4613)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 3965,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=158 model='야외 캠핑 침낭 800g' capacity=None — 2개 verified 존재 (ids: 3965,996)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4151,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=93 model='콤피 자충매트 싱글 (65x190)' capacity=None — 2개 verified 존재 (ids: 4152,4151)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4152,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=93 model='콤피 자충매트 싱글 (65x190)' capacity=None — 2개 verified 존재 (ids: 4152,4151)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4164,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='NH UL 자충매트 3.5 싱글 스퀘어 L (65x196)' capacity=None — 2개 verified 존재 (ids: 4164,2145)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4314,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='YL11 경량 락킹체어' capacity=None — 2개 verified 존재 (ids: 2357,4314)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4437,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=327 model='오클립 프로 플래시라이트' capacity=None — 2개 verified 존재 (ids: 4437,6073)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4507,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=377 model='엘리트 쿨러 70쿼터 66L' capacity=None — 2개 verified 존재 (ids: 4508,4507)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4508,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=377 model='엘리트 쿨러 70쿼터 66L' capacity=None — 2개 verified 존재 (ids: 4508,4507)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4514,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=13 model='큐브 아이스쿨러 13L' capacity=None — 3개 verified 존재 (ids: 3652,4514,2598)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4522,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=8 model='엑스온 스토브' capacity=None — 4개 verified 존재 (ids: 3720,4522,2689,1754)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4606,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=37 model='망고쉐이드 렉타 타프 EX' capacity=None — 3개 verified 존재 (ids: 3847,2873,4606)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4613,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 치즈타프 S' capacity=None — 5개 verified 존재 (ids: 3861,3893,3894,3905,4613)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4951,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=403 model='필드 카이트' capacity=None — 2개 verified 존재 (ids: 4951,4957)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4957,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=403 model='필드 카이트' capacity=None — 2개 verified 존재 (ids: 4951,4957)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 4990,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='트레일 헤드 2' capacity=None — 2개 verified 존재 (ids: 4990,5080)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5003,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='XJC05 경량코트' capacity=None — 2개 verified 존재 (ids: 5003,5043)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5007,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1009 model='초경량 접이식 야전침대' capacity=None — 4개 verified 존재 (ids: 5007,5102,5127,5126)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5041,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='코트원 컨버터블' capacity=None — 3개 verified 존재 (ids: 5053,5045,5041)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5043,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=11 model='XJC05 경량코트' capacity=None — 2개 verified 존재 (ids: 5003,5043)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5045,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='코트원 컨버터블' capacity=None — 3개 verified 존재 (ids: 5053,5045,5041)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5050,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='택티컬 코트 컨버터블 2025' capacity=None — 2개 verified 존재 (ids: 5117,5050)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5053,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='코트원 컨버터블' capacity=None — 3개 verified 존재 (ids: 5053,5045,5041)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5063,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='코트 맥스 컨버터블' capacity=None — 2개 verified 존재 (ids: 5063,5065)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5065,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='코트 맥스 컨버터블' capacity=None — 2개 verified 존재 (ids: 5063,5065)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5080,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=46 model='트레일 헤드 2' capacity=None — 2개 verified 존재 (ids: 4990,5080)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5102,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1009 model='초경량 접이식 야전침대' capacity=None — 4개 verified 존재 (ids: 5007,5102,5127,5126)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5117,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=31 model='택티컬 코트 컨버터블 2025' capacity=None — 2개 verified 존재 (ids: 5117,5050)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5126,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1009 model='초경량 접이식 야전침대' capacity=None — 4개 verified 존재 (ids: 5007,5102,5127,5126)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5127,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1009 model='초경량 접이식 야전침대' capacity=None — 4개 verified 존재 (ids: 5007,5102,5127,5126)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5399,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 알루미늄 캐리 웨건' capacity=None — 2개 verified 존재 (ids: 5428,5399)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5400,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=387 model='코튼 캔버스 웨건' capacity=None — 2개 verified 존재 (ids: 5412,5400)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5411,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=95 model='스마트 카트' capacity=None — 2개 verified 존재 (ids: 5411,5414)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5412,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=387 model='코튼 캔버스 웨건' capacity=None — 2개 verified 존재 (ids: 5412,5400)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5414,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=95 model='스마트 카트' capacity=None — 2개 verified 존재 (ids: 5411,5414)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5428,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=108 model='DOD 알루미늄 캐리 웨건' capacity=None — 2개 verified 존재 (ids: 5428,5399)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5781,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=128 model='네이처 스토브 L' capacity=None — 2개 verified 존재 (ids: 5782,5781)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5782,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=128 model='네이처 스토브 L' capacity=None — 2개 verified 존재 (ids: 5782,5781)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 5979,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1215 model='PD PPS 300W 대용량 보조배터리 PB770 48000mAh' capacity=None — 2개 verified 존재 (ids: 6016,5979)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 6016,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=1215 model='PD PPS 300W 대용량 보조배터리 PB770 48000mAh' capacity=None — 2개 verified 존재 (ids: 6016,5979)"
+  },
+  {
+    "check": "duplicate",
+    "priority": 2,
+    "product_id": 6073,
+    "metric_id": null,
+    "note": "중복 canonical: brand_id=327 model='오클립 프로 플래시라이트' capacity=None — 2개 verified 존재 (ids: 4437,6073)"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 386,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 1.06㎡ / 6인 = 1인당 0.18㎡ (< 0.5㎡) — [아이두젠] 패스트캠프 원터치 텐트 마운트프로 S"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 424,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 10.82㎡ / 2인 = 1인당 5.41㎡ (> 5㎡) — [블랙독] 블랙코팅 자동텐트"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 461,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 27.20㎡ / 5인 = 1인당 5.44㎡ (> 5㎡) — [제드코리아] 티맥스 EX 텐트"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 506,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 20.66㎡ / 4인 = 1인당 5.17㎡ (> 5㎡) — [카즈미] 고틀랜드 쉘 하우스 쉘터"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 518,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 5.27㎡ / 1인 = 1인당 5.27㎡ (> 5㎡) — [헬리녹스] 알파인돔 1.5p 블랙아웃 에디션"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 530,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 45.13㎡ / 8인 = 1인당 5.64㎡ (> 5㎡) — [스노우피크] 랜드스테이션 L TP-820 해외구매"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 532,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 7.59㎡ / 1인 = 1인당 7.59㎡ (> 5㎡) — [스노우피크] 65th 트레일트리퍼 Pro.1"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 537,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 44.72㎡ / 7인 = 1인당 6.39㎡ (> 5㎡) — [스노우피크] 그랑베르크 L 쉘터텐트 해외구매"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 544,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 36.96㎡ / 2인 = 1인당 18.48㎡ (> 5㎡) — [스노우피크] 제이즈 프로 해외구매"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 564,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 45.13㎡ / 8인 = 1인당 5.64㎡ (> 5㎡) — [스노우피크] 랜드스테이션 L TP-820"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 616,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 22.40㎡ / 4인 = 1인당 5.60㎡ (> 5㎡) — [코베아] 몬스터 아이보리"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 648,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 22.05㎡ / 4인 = 1인당 5.51㎡ (> 5㎡) — [코베아] 아웃백 시그니처"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 656,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 21.24㎡ / 2인 = 1인당 10.62㎡ (> 5㎡) — [코베아] 와일드 탱고 샌드"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 662,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 22.40㎡ / 4인 = 1인당 5.60㎡ (> 5㎡) — [코베아] 몬스터 블랙"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 670,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 29.68㎡ / 4인 = 1인당 7.42㎡ (> 5㎡) — [코베아] 네스트 T 탄"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 671,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 24.51㎡ / 3인 = 1인당 8.17㎡ (> 5㎡) — [코베아] 트랜스업"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 672,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 14.70㎡ / 2인 = 1인당 7.35㎡ (> 5㎡) — [코베아] 고스트 캐스퍼 탄"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 678,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 28.98㎡ / 4인 = 1인당 7.25㎡ (> 5㎡) — [코베아] 에버캠프 시그니처"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 681,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 28.98㎡ / 4인 = 1인당 7.25㎡ (> 5㎡) — [코베아] 이스턴 시그니처"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 698,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 22.40㎡ / 4인 = 1인당 5.60㎡ (> 5㎡) — [코베아] 몬스터 딥카키"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 716,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 30.40㎡ / 5인 = 1인당 6.08㎡ (> 5㎡) — [미니멀웍스] 투띠 텐트 올리브"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 749,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 14.00㎡ / 1인 = 1인당 14.00㎡ (> 5㎡) — [미니멀웍스] 슈퍼포지션 솔로 P 차콜"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 750,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 14.00㎡ / 1인 = 1인당 14.00㎡ (> 5㎡) — [미니멀웍스] 슈퍼포지션 솔로 P 탄"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 751,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 14.00㎡ / 1인 = 1인당 14.00㎡ (> 5㎡) — [미니멀웍스] 슈퍼포지션 솔로 P 올리브"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 756,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 30.40㎡ / 5인 = 1인당 6.08㎡ (> 5㎡) — [미니멀웍스] 투띠 텐트 차콜"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 770,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 27.20㎡ / 5인 = 1인당 5.44㎡ (> 5㎡) — [제드코리아] 티맥스 EX 리미티드에디션 리빙쉘 텐트"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 799,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 26.00㎡ / 5인 = 1인당 5.20㎡ (> 5㎡) — [카즈미] 알비온 텐트"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 802,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 20.93㎡ / 4인 = 1인당 5.23㎡ (> 5㎡) — [카즈미] 헥사움 쉘터"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 803,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 27.28㎡ / 5인 = 1인당 5.46㎡ (> 5㎡) — [카즈미] 뱅가드 텐트"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 806,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 26.00㎡ / 5인 = 1인당 5.20㎡ (> 5㎡) — [카즈미] 알비온 텐트 V2.0"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 869,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 19.95㎡ / 3인 = 1인당 6.65㎡ (> 5㎡) — [콜맨] 웨더마스터 코쿤 S"
+  },
+  {
+    "check": "logic_contradiction",
+    "priority": 3,
+    "product_id": 892,
+    "metric_id": 17,
+    "note": "논리 모순: floor_area 23.10㎡ / 4인 = 1인당 5.78㎡ (> 5㎡) — [블랙야크] 필드 터널텐트"
+  }
+]
