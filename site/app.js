@@ -488,14 +488,26 @@ function _paintWishBtn(key, on) {
   });
 }
 // toggleWishWithHint: 기존 호출부(카테고리/상세 뷰)용. 힌트 대신 requireLogin 게이트.
+// M-174/M-305/M-372: _gAuthReady 미완료 시 toggleWish와 동일한 authReady() 대기 경로 사용.
 function toggleWishWithHint(item, btn) {
-  if (!window.isLoggedIn()) {
+  function _gate() {
     requireLogin({ action: 'toggleWish', params: item, returnTo: location.href });
-    return inWish(item.key);
   }
-  const added = _execToggleWish(item);
-  if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
-  return added;
+  if (window._gAuthReady) {
+    if (!window.isLoggedIn()) { _gate(); return inWish(item.key); }
+    const added = _execToggleWish(item);
+    if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
+    return added;
+  }
+  // auth 초기화 중 — 완료 후 결정
+  window.authReady().then(() => {
+    if (window.isLoggedIn()) {
+      const added = _execToggleWish(item);
+      _paintWishBtn(item.key, added);
+      if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
+    } else _gate();
+  });
+  return inWish(item.key);
 }
 // 모델·카테고리슬러그 → 위시/최근 항목(공용 형태)
 function wishItem(m, slug) {
