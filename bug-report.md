@@ -3373,7 +3373,7 @@
 
 ---
 
-### [M-176] — `backfill_capacity.py` `main()` — `total=0`일 때 `have*100//total` ZeroDivisionError
+### ✅ 해결완료(2026-06-13) [M-176] — `backfill_capacity.py` `main()` — `total=0`일 때 `have*100//total` ZeroDivisionError
 
 - **영역:** 백엔드 — 파이프라인 / 용량 백필
 - **심각도:** 🟡 Medium
@@ -3517,6 +3517,8 @@
 - **원인:** `site/app.js` line 2367, 2379 — async 함수 호출에 `await` 누락.
 - **제안 수정:** `await removeUploadedImages(uploadedPaths)`
 - **파일:** [site/app.js](site/app.js) line 2367, 2379 [lane:CORE]
+
+- **처리:** wireReviews 폼 submit의 `removeUploadedImages()`에 `await` 추가 — Storage 롤백 보장. (2026-06-14)
 
 ---
 
@@ -4189,6 +4191,8 @@
 - **증상:** `await signOut()` 직후 `localStorage.removeItem('wish')` 삭제 시, `signOut` 내부의 auth 상태 변경 콜백이 비동기로 늦게 오면 `onWishChange`가 아직 살아있는 상태에서 storage 이벤트가 발생해 빈 배열로 `saveRemoteWishlist` 시도가 발생할 수 있다.
 - **원인:** `site/account.html` line 516–518 — signOut 완료 전 localStorage 클리어.
 - **파일:** [site/account.html](site/account.html) line 516–518 [lane:CORE]
+
+- **처리:** 계정 삭제 핸들러에서 `signOut()` 전에 `window.onWishChange = null` 설정 — 빈 배열 원격 저장 방지. (2026-06-14)
 
 ---
 
@@ -7215,7 +7219,7 @@
 
 ---
 
-### [M-355] — `danawa.py` `http_get` — URLError 원인 체인 소실
+### ✅ 해결완료(2026-06-13) [M-355] — `danawa.py` `http_get` — URLError 원인 체인 소실
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8776,6 +8780,8 @@
 - **제안 수정:** `openLogModal` 진입 시 `if (imgThumb?.src?.startsWith('blob:')) URL.revokeObjectURL(imgThumb.src)` 선행 처리.
 - **파일:** [site/app.js](site/app.js) line 4130 [lane:CORE]
 
+- **처리:** openLogModal 진입 시 body.innerHTML 교체 전 이전 `#lf-img-thumb` Blob URL revoke 추가. (2026-06-14)
+
 ---
 
 ### [M-408] ✅ 해결완료(M-357 포함, 2026-06-13) — account.html 찜 카드 fetch — `r.ok` 체크 없어 오류 페이지 JSON 파싱 실패 무음 처리
@@ -10059,6 +10065,8 @@
 - **원인:** [site/app.js](site/app.js) line 388–400 — in-flight 요청 dedup 캐시 없음.
 - **제안 수정:** URL별 Promise 캐시(Map) 관리, 진행 중 요청 동일 Promise 반환.
 - **파일:** [site/app.js](site/app.js) line 388 [lane:CORE]
+
+- **처리:** getJSON에 URL별 in-flight Promise 캐시(Map) 추가 — 동시 동일 URL fetch 중복 제거. (2026-06-14)
 
 ---
 
@@ -11476,6 +11484,8 @@
 - **제안 수정:** 동기화 전 제목+아이템 수+아이템명 지문으로 기존 세트와 대조, 일치 시 병합.
 - **파일:** [site/account.html](site/account.html) line 238 [lane:CORE]
 
+- **처리:** syncGearSetsOnLogin에 제목+아이템수+아이템명 지문 기반 dedup 추가 — 신규 기기에서 동일 내용 세트 중복 생성 방지. (2026-06-14)
+
 ---
 
 ### [L-425] — `renderAccount` 미로그인 CTA — `account.html`에서 `href="account.html"` 자기 자신 리로드
@@ -11739,6 +11749,8 @@
 - **원인:** [site/app.js](site/app.js) line 3494 — `!isLoggedIn && !setsEl.dataset.loginShown` 블록에 `sets.length === 0` 조건 없어 세트가 있어도 CTA 렌더 후 즉시 덮어씀.
 - **제안 수정:** 조건에 `&& sets.length === 0` 추가.
 - **파일:** [site/app.js](site/app.js) line 3494 [lane:ACCOUNT]
+
+- **처리:** renderAccount 세트 empty 메시지에 `&& isLoggedIn` 조건 추가 — 비로그인 시 CTA가 이미 표시되므로 중복 방지. (2026-06-14)
 
 ---
 
@@ -12016,6 +12028,8 @@
 - **제안 수정:** 임포트 전 `await requireLogin(...)` 게이트 추가. `alert()` → `showToast()`로 교체.
 - **파일:** [site/app.js](site/app.js) line 4311 [lane:CORE]
 
+- **처리:** 공유 세트 임포트 중복 확인 `alert()` → `showToast()` 교체 (iOS Safari PWA 차단 방지). (2026-06-14)
+
 ---
 
 ### [M-540] ✅ 해결완료(2026-06-13) — `stars()` — 음수 별점 하한 미적용 → `aria-label="별점 -1 / 5"` 출력 + 빈 별 5개 렌더링
@@ -12027,6 +12041,8 @@
 - **원인:** [site/app.js](site/app.js) line 362 — `Math.min(5, n)` 상한만 적용, `Math.max(0, n)` 하한 없음.
 - **제안 수정:** `n = Math.min(5, Math.max(0, n));` 으로 변경.
 - **파일:** [site/app.js](site/app.js) line 362 [lane:CORE]
+
+- **처리:** `stars()`에 `Math.max(0, ...)` 하한 적용 — 음수 별점 시 빈 별 5개·잘못된 aria-label 방지. (2026-06-14)
 
 ---
 
@@ -12148,6 +12164,8 @@
 - **제안 수정:** 교체 성공 핸들러에서 `renderAccount(); openSetDetail(setId);` 순서로 호출.
 - **파일:** [site/app.js](site/app.js) line 695 [lane:CORE]
 
+- **처리:** openReplaceModal 교체 성공 후 `openSetDetail(setId)` 재호출 추가 — 세트 상세 UI stale 해소. (2026-06-14)
+
 ---
 
 ### [M-544] ✅ 해결완료(2026-06-14) — 후기 신고 사유 입력에 `prompt()` 사용 → iOS Safari PWA에서 차단
@@ -12159,6 +12177,8 @@
 - **원인:** [site/app.js](site/app.js) line 2351 — `const reason = prompt("신고 사유를 적어주세요 (5자 이상)");`
 - **제안 수정:** 커스텀 인라인 textarea 신고 사유 모달로 교체.
 - **파일:** [site/app.js](site/app.js) line 2351 [lane:CORE]
+
+- **처리:** 후기 신고 사유 입력 `prompt()` → 인라인 폼(input+신고/취소 버튼) 교체 — iOS Safari PWA 차단 방지. (2026-06-14)
 
 ---
 
@@ -12303,6 +12323,8 @@
 - **원인:** [site/account.html](site/account.html) line 593 — `try/catch` 없이 `decodeURIComponent(errDetail)` 직접 호출.
 - **제안 수정:** `try { decodeURIComponent(errDetail) } catch(_) { errDetail }` 래핑 또는 `new URL(location.href).searchParams.get('err')` 사용.
 - **파일:** [site/account.html](site/account.html) line 593 [lane:CORE]
+
+- **처리:** account.html `decodeURIComponent(errDetail)`를 try/catch로 감싸 malformed URI 시 페이지 로딩 중단 방지. (2026-06-14)
 
 ---
 
@@ -12496,6 +12518,8 @@
 - **제안 수정:** `prevSlug = STATE.slug ?? null`, `prevData = STATE.data ?? null`로 명시 null 폴백. 복원 시 `STATE.slug = prevSlug ?? null`.
 - **파일:** [site/app.js](site/app.js) line 1437 [lane:CORE]
 
+- **처리:** 찜 카드 `_onCloseOnce` 복원에 `?? null` 추가 — STATE.data undefined 복원 방지(+ M-564 loading 삭제 병합). (2026-06-14)
+
 ---
 
 ### [M-558] ✅ 해결완료(2026-06-13) — `renderHotSection` — `supabase.rpc()` `error` 변수 미구조분해 → RPC 실패 추적 불가
@@ -12507,6 +12531,8 @@
 - **원인:** [site/app.js](site/app.js) line 2948 — `const { data } = await supabase.rpc(...)` — `error` 미구조분해.
 - **제안 수정:** `const { data, error } = await supabase.rpc(...)` + `if (error) console.warn("get_hot_items RPC:", error)` 추가.
 - **파일:** [site/app.js](site/app.js) line 2948 [lane:CORE]
+
+- **처리:** renderHotSection `supabase.rpc()` 반환에 `error` 구조분해 추가 + 에러 로깅·early return. (2026-06-14)
 
 ---
 
@@ -12628,6 +12654,8 @@
 - **제안 수정:** 라인 3440 `return` 앞에 `delete card.dataset.loading;` 추가 또는 `_onCloseOnce`에서 삭제.
 - **파일:** [site/app.js](site/app.js) line 3440 [lane:CORE]
 
+- **처리:** 찜 카드 go() 성공 경로의 `_onCloseOnce`에서 `delete card.dataset.loading` 추가 — 모달 닫은 후 재클릭 정상 동작. (2026-06-14)
+
 ---
 
 ### [M-565] ✅ 해결완료(2026-06-14) — `draw()` 카드 목록 — `a.pli` Enter 키 처리 없어 item 페이지로 이탈
@@ -12640,6 +12668,8 @@
 - **제안 수정:** `if (e.key === " " || e.key === "Enter")` 로 변경.
 - **파일:** [site/app.js](site/app.js) line 2743 [lane:CORE]
 
+- **처리:** draw() 카드 목록 onkeydown에 `e.key === "Enter"` 케이스 추가. (2026-06-14)
+
 ---
 
 ### [M-566] ✅ 해결완료(2026-06-14) — `upsertGearSet()` update 경로 — `user_id` 필터 미적용 → RLS 설정 오류 시 타인 세트 덮어쓰기 가능
@@ -12651,6 +12681,8 @@
 - **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 400 — `.update(payload).eq('id', set.remoteId)` 에서 `.eq('user_id', userId)` 누락.
 - **제안 수정:** `.eq('id', set.remoteId).eq('user_id', userId)` 로 user_id 필터 추가.
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 400 [lane:SYNC]
+
+- **처리:** upsertGearSet update에 `.eq("user_id", userId)` 필터 추가 — RLS 오류 시 타인 세트 덮어쓰기 차단. (2026-06-14)
 
 ---
 
@@ -12724,6 +12756,8 @@
 - **제안 수정:** `signOut()` 시 `_wishWriteChain = Promise.resolve(); _wishPending = undefined;` 초기화. 또는 체인 내부에서 `getUser()` 재확인 후 user_id 일치 시에만 실행.
 - **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 161 [lane:SYNC]
 
+- **처리:** saveRemoteWishlist 체인 실행 시점에 `getUser()` 재확인 후 user_id 일치 시에만 upsert — 사용자 전환 시 데이터 혼입 방지. (2026-06-14)
+
 ---
 
 ### [M-570] ✅ 해결완료(2026-06-14) — `buildFilters` 가격 슬라이더 — `lo===hi===0` 시 슬라이더 범위 0~0 → NaN% 렌더링 및 필터 무력화
@@ -12735,6 +12769,8 @@
 - **원인:** [site/app.js](site/app.js) line 1652–1664 — `prices.length` 체크로 빈 배열은 방어하지만 `lo === hi === 0` 케이스 미처리. `pct()` 분모 0 나눗셈.
 - **제안 수정:** `buildFilters`에서 `if (lo === hi) return;` 스킵 또는 "가격 정보 없음" 텍스트 대체.
 - **파일:** [site/app.js](site/app.js) line 1652 [lane:CORE]
+
+- **처리:** buildFilters 가격 슬라이더 `lo >= hi` 시 렌더 스킵 — NaN% fill·무력 슬라이더 방지. (2026-06-14)
 
 ---
 
@@ -12808,6 +12844,8 @@
 - **제안 수정:** `initAuth` 콜백의 비로그인 분기에서 `_wishSyncedUser = null` 추가.
 - **파일:** [site/account.html](site/account.html) line 412 [lane:AUTH]
 
+- **처리:** renderLogin()에서 `_wishSyncedUser = null` 리셋 — 재로그인 시 찜 동기화 재실행 보장. (2026-06-14)
+
 ---
 
 ### [M-572] ✅ 해결완료(2026-06-14) — `account.html` 계정 삭제 — `push-denied`·`_sid`·`post_likes` 등 개인화 키 미정리 → 공유 기기 데이터 잔류
@@ -12819,6 +12857,8 @@
 - **원인:** [site/account.html](site/account.html) line 524–525 — 계정 삭제 후 `wish`·`gear_sets`만 제거. 나머지 개인화 키 미정리.
 - **제안 수정:** 계정 삭제 성공 후 `localStorage.clear()` 또는 개인화 키 목록 일괄 제거.
 - **파일:** [site/account.html](site/account.html) line 524 [lane:CORE]
+
+- **처리:** 계정 삭제 후 push-denied·_sid·post_likes 등 개인화 localStorage 키 일괄 정리. (2026-06-14)
 
 ---
 
