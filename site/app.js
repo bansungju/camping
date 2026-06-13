@@ -333,7 +333,7 @@ const PERSONAS = [
 ];
 
 const gradeBadge = g => OPS ? `<span class="grade ${GRADE_CLASS[g] || ""}">${g}</span>` : "";
-const won = n => n == null ? "—" : n.toLocaleString("ko-KR") + "원";
+const won = n => { const x = Number(n); return (n == null || !Number.isFinite(x)) ? "—" : x.toLocaleString("ko-KR") + "원"; };  // L-250: NaN/비숫자 가드
 const priceRange = (a, b) => (a == null || a === 0) ? '<span class="nd">가격없음</span>' : won(a);
 // FE-ITEM-05: 표시가는 price_min(최저가) 기준 — 실제 쿠팡가와 다를 수 있어 가격 옆 '최저가 기준' 캡션을 일관 부착.
 const PRICE_BASIS_CAP = '<span class="price-basis">최저가 기준</span>';
@@ -345,9 +345,12 @@ const priceLabeled = (n, nullHtml = '<span class="nd">가격없음</span>') =>
 const _UNIT_DISPLAY = { C: "°C", m2: "m²" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑
 function fmtVal(v, unit) {
   if (v == null) return "—";
-  if (unit === "g" && v >= 1000) return +(v / 1000).toFixed(2) + "kg";
-  if (unit === "cm3" && v >= 1000) return +(v / 1000).toFixed(1) + "L";
-  return (+v.toFixed(2)) + (_UNIT_DISPLAY[unit] || unit || "");
+  const x = Number(v);                                   // M-232/M-292: string·"N/A" 등 비숫자 입력 시 .toFixed 크래시 방어
+  if (!Number.isFinite(x)) return "—";
+  if (unit === "g" && x >= 1000) return +(x / 1000).toFixed(2) + "kg";
+  if (unit === "cm3" && x >= 1000) return +(x / 1000).toFixed(1) + "L";
+  const shown = Number.isInteger(x) ? x : +x.toFixed(2);  // L-240: 정수는 소수점 없이(500g), 소수만 최대 2자리
+  return shown + (_UNIT_DISPLAY[unit] || unit || "");
 }
 
 function stars(n) {
