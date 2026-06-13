@@ -87,6 +87,11 @@ def main():
             WHERE p.danawa_pcode IS NOT NULL
             ORDER BY psv.value_normalized LIMIT ?""", (args.limit,)).fetchall()
 
+    # M-215: targets가 비면 아래 `IN (%s)` 디스플레이 쿼리가 `IN ()`가 돼 OperationalError → 조기 종료.
+    if not targets:
+        print("보강 대상 없음 — 종료")
+        con.close()
+        return
     before = con.execute("SELECT COUNT(*) FROM product_spec_values").fetchone()[0]
     print(f"2단계 보강: 백패킹텐트 경량 상위 {len(targets)}종 상세조회...")
     total = 0
@@ -102,15 +107,17 @@ def main():
         con.commit()
         D.polite_sleep(0.6, 1.0)   # 지터(고정 간격 = 봇 지문)
 
-    P.recompute_ratings(con)
-    con.commit()
-    after = con.execute("SELECT COUNT(*) FROM product_spec_values").fetchone()[0]
-    unresolved = con.execute("SELECT COUNT(*) FROM data_quality_flags WHERE resolved=0").fetchone()[0]
-    print(f"\n보강 완료: 스펙값 {before}→{after} (+{after-before}), 메트릭 {total}개 채움")
-    print(f"미해결 플래그: {unresolved}")
+    # M-250: recompute_ratings/디스플레이 쿼리에서 예외가 나도 커넥션이 닫히도록 try/finally로 감싼다.
+    try:
+        P.recompute_ratings(con)
+        con.commit()
+        after = con.execute("SELECT COUNT(*) FROM product_spec_values").fetchone()[0]
+        unresolved = con.execute("SELECT COUNT(*) FROM data_quality_flags WHERE resolved=0").fetchone()[0]
+        print(f"\n보강 완료: 스펙값 {before}→{after} (+{after-before}), 메트릭 {total}개 채움")
+        print(f"미해결 플래그: {unresolved}")
 
-    print("\n[보강된 경량 백패킹텐트 — 무게/내수압/바닥면적]")
-    for name, w, wh, fa in con.execute("""
+        print("\n[보강된 경량 백패킹텐트 — 무게/내수압/바닥면적]")
+        for name, w, wh, fa in con.execute("""
         SELECT b.name_ko||' '||p.model_name,
           MAX(CASE WHEN mt.key='weight_min' THEN psv.value_normalized END),
           MAX(CASE WHEN mt.key='water_head' THEN psv.value_normalized END),
@@ -121,9 +128,10 @@ def main():
         JOIN metrics mt ON mt.id=psv.metric_id
         WHERE p.danawa_pcode IN (%s)
         GROUP BY p.id ORDER BY 2 LIMIT 12""" % ",".join("?" * len(targets)),
-        [t[1] for t in targets]):
-        print(f"   {name[:34]:36} {w:>5.0f}g | 내수압 {wh or '-'} | 바닥 {fa or '-'}㎡")
-    con.close()
+                [t[1] for t in targets]):
+            print(f"   {name[:34]:36} {w:>5.0f}g | 내수압 {wh or '-'} | 바닥 {fa or '-'}㎡")
+    finally:
+        con.close()
 
 
 if __name__ == "__main__":
