@@ -534,7 +534,7 @@ function showToast(msg, duration) {
   clearTimeout(t._tid);
   t.textContent = msg; t.style.pointerEvents = "none";
   requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
-  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; }, duration || 2400);
+  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; t.style.pointerEvents = "none"; }, duration || 2400);  // M-208/M-327: fade 후 포인터 이벤트 차단 유지
 }
 function newSet(title, type) {
   const s = { id: Date.now().toString(36), title, type: type || DEFAULT_SET_TYPE, style: "", items: [], created_at: new Date().toISOString() };
@@ -606,7 +606,8 @@ async function openSetModal(item) {
     </div></div>`;
   modal.classList.add("on");
   const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
-  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // M-474: 중복 등록 방지
+  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", modal._onKey); modal._onKey = null; if (prevFocus && prevFocus.focus) prevFocus.focus(); };
   const onKey = e => {   // L-174: Tab focus trap + ESC
     if (e.key === "Escape") { close(); return; }
     if (e.key !== "Tab") return;
@@ -617,6 +618,7 @@ async function openSetModal(item) {
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
+  modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
@@ -756,7 +758,7 @@ function showSetConfirm(setId) {
 /* 최근 본 상품 — 상세 모달 열 때 기록. 최신순, 중복 제거, 최대 12개. */
 function getRecent() { try { return JSON.parse(localStorage.getItem("recent") || "[]"); } catch (e) { return []; } }
 function pushRecent(item) {
-  if (!item.s) return;   // 슬러그 없으면(되돌아갈 경로 불명) 기록 생략
+  if (!item.s || !item.key) return;   // M-485: key 없으면 dedup 불가 → 기록 생략
   const a = getRecent().filter(x => x.key !== item.key);
   a.unshift(item);
   try { localStorage.setItem("recent", JSON.stringify(a.slice(0, 12))); } catch (e) { /* 저장공간 부족 시 무시 */ }
@@ -1276,7 +1278,7 @@ async function setupSearchPage() {
     render(hits, q);
   };
 
-  inp.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(run, 120); });
+  inp.addEventListener("input", e => { if (e.isComposing) return; clearTimeout(debounce); debounce = setTimeout(run, 120); });  // M-389: IME 가드
   inp.addEventListener("keydown", e => { if (e.key === "Enter") { clearTimeout(debounce); run(); } });
 
   const initQ = new URLSearchParams(location.search).get("q") || "";
@@ -1338,7 +1340,7 @@ function restoreState(params) {
   STATE.q = params.get("q") || "";  // M-326: 원본 케이스 보존 (비교는 toLowerCase 사용)
   STATE.cap = params.get("cap") || "";
   STATE.brands.clear();  // M-397: 재호출 시 누산 방지
-  const br = params.get("brands"); if (br) br.split("|").forEach(b => STATE.brands.add(b));
+  const br = params.get("brands"); if (br) br.split("|").filter(Boolean).forEach(b => STATE.brands.add(b));  // M-506: 빈 문자열 필터
   STATE.range = {};
   for (const [pk, pv] of params.entries()) {
     const mm = pk.match(/^(.+)__(min|max)$/);
@@ -1476,6 +1478,7 @@ async function renderBrowse() {
   const aside = document.getElementById("cat-aside"); if (aside) aside.style.display = "none";
   // 카테고리 그리드를 #list에 렌더(홈과 동일 카드)
   const list = document.getElementById("list");
+  if (!list) return;  // M-351: null 가드
   list.className = "grid";
   list.innerHTML = m.categories.map(c => `
     <a class="card" href="category.html?cat=${c.slug}">
@@ -1524,7 +1527,7 @@ async function renderCategory() {
   if (_prevCmpBar) _prevCmpBar.style.display = "none";
   renderCatNav(slug);
 
-  document.getElementById("crumbName").textContent = d.name;
+  const _crumb = document.getElementById("crumbName"); if (_crumb) _crumb.textContent = d.name;  // M-352
   const shareUrl = `https://gear-forest.com/category.html?cat=${slug}`;
   const shareTitle = `${d.name} 비교 — 장비의 숲`;
   const shareDesc = `${d.count.toLocaleString()}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다.`;
@@ -2069,7 +2072,7 @@ function defaultAsc(key) {
 function passExcept(m, skip, sortK) {
   if (skip !== "cap" && STATE.cap && String(m.capacity) !== STATE.cap) return false;
   if (skip !== "brands" && STATE.brands.size && !STATE.brands.has(m.brand)) return false;
-  if (skip !== "q" && STATE.q && !(m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) return false;  // M-326
+  if (skip !== "q" && STATE.q) { const t = (m.brand + " " + m.model).toLowerCase(); if (!STATE.q.toLowerCase().split(/\s+/).every(tok => t.includes(tok))) return false; }  // M-326+M-483
   for (const [key, r] of Object.entries(STATE.range)) {
     if (skip === "range:" + key) continue;
     const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
@@ -2660,7 +2663,7 @@ function draw() {
   let rows = d.models.filter(m =>
     (!STATE.cap || String(m.capacity) === STATE.cap) &&
     (!STATE.brands.size || STATE.brands.has(m.brand)) &&
-    (!STATE.q || (m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) &&  // M-326
+    (!STATE.q || STATE.q.toLowerCase().split(/\s+/).every(tok => (m.brand + " " + m.model).toLowerCase().includes(tok))) &&  // M-326+M-483
     passRange(m));
 
   const k = STATE.sortKey, asc = STATE.sortAsc;
@@ -2669,7 +2672,8 @@ function draw() {
   if (STATE.qExclude || k === "value") {
     const before = rows.length;
     // M-316: 검색어 매칭 상품은 qExclude 예외 — 검색 의도 우선
-    const qMatch = STATE.q ? (m => (m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) : null;  // M-326
+    const _qToks = STATE.q ? STATE.q.toLowerCase().split(/\s+/) : null;
+    const qMatch = _qToks ? (m => { const t = (m.brand + " " + m.model).toLowerCase(); return _qToks.every(tok => t.includes(tok)); }) : null;  // M-326+M-483
     rows = rows.filter(m => (qMatch && qMatch(m)) || cellVal(m, k) != null);
     if (k === "value") valueExcluded = before - rows.length;
   }
@@ -2882,7 +2886,7 @@ async function renderRecommend() {
     const lower = mt.direction === "lower_better";
     let rows = d.models.filter(m => {
       const s = m.specs[pick.metric];
-      return s && s.value != null && (pick.filter ? pick.filter(m) : true);
+      return s && s.value != null && (typeof pick.filter === "function" ? pick.filter(m) : true);  // M-399/M-453
     });
     // 순위 점수(클수록 추천 상위). target=목표근접 / rankBy:value=가성비 / 기본=지표 좋은방향
     const score = m => {
@@ -2999,8 +3003,8 @@ function renderRecent() {
   const a = getRecent();
   if (!a.length) { el.innerHTML = ""; return; }
   el.innerHTML = `<h2 class="sec">최근 본 상품</h2><div class="recent-row">` +
-    a.map((x, i) => `<div class="recard-wrap">
-      <a class="recard" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">
+    a.filter(x => x.s && x.b && x.m).map((x, i) => `<div class="recard-wrap">
+      <a class="recard" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">  <!-- M-481: undefined 필드 필터 -->
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
         <div class="recard-b">${esc(x.b)}</div>
         <div class="recard-m">${esc(x.m)}</div>
@@ -4323,7 +4327,13 @@ document.addEventListener("DOMContentLoaded", () => {
         closeVs();
         showToast(window._accUser ? "세트가 추가됐어요! 내 세트에서 확인하세요." : "세트가 추가됐어요! 로그인 후 내 세트에서 확인하세요.");  // M-452: iOS Safari는 history.replaceState 후 alert() 차단 → showToast로 교체
       };
-    } catch { /* 잘못된 파라미터 무시 */ }
+    } catch {
+      // M-497/M-508: atob/JSON.parse 실패 시 숨겨진 섹션 복원
+      ["wish-section","sets-section","logs-section","settings-section","profile-section"].forEach(id => {
+        const el = document.getElementById(id); if (el && el._vsDisplay !== undefined) el.style.display = el._vsDisplay ?? "";
+      });
+      history.replaceState(null, "", location.pathname);
+    }
   }
 
   // 모바일 하단 내비게이션 바 (동적 삽입) — GNB 아카이브: 플래그 켤 때만 노출
