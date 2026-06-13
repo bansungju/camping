@@ -34,8 +34,14 @@ def main():
     # ── 1) 자동수리(멱등) ──────────────────────────────
     NM.normalize_db(con)
     VR.validate_db(con)
-    RA.promote_all(con)
-    con.commit()
+    # M-378: promote_all(전체 pending 리셋→재승격) 도중 예외 시 demote만 남은 상태가 커밋되지 않도록
+    #   rollback 후 재raise. (promote_all 자체도 D7서 SAVEPOINT 원자화 — 이중 안전.)
+    try:
+        RA.promote_all(con)
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
 
     # ── 2) 감지 ────────────────────────────────────────
     n = con.execute("SELECT COUNT(*) FROM products").fetchone()[0]
@@ -110,8 +116,12 @@ def main():
     print(f"\n[할 일(에이전트 처리 대상)] {len(todos)}건")
     for x in todos:
         print(f"   • {x}")
-    for name, pc in near[:10]:
-        print(f"        - {name}  (pcode {pc})")
+    # M-365/M-421: near(완비 근접) 목록을 [할 일] 루프 뒤에 헤더 없이 이어붙이면 리포트 파싱·가독성이
+    #   깨진다 → 별도 헤더 블록으로 분리하고 항목 있을 때만 출력.
+    if near:
+        print(f"\n[완비 근접(크로스소스 1스펙이면 승격)] {len(near)}종")
+        for name, pc in near[:10]:
+            print(f"   - {name}  (pcode {pc})")
 
     has_work = bool(issues or todos)
     print(f"\n→ {'처리할 작업 있음(exit 2)' if has_work else '이상 없음(exit 0)'}")
