@@ -2533,7 +2533,7 @@
 - **제안 수정:** `006_post_likes.sql` → `006b_post_likes.sql` 또는 `007` 이후 재번호화하고 이후 파일 번호를 순차 조정.
 - **파일:** [supabase/migrations/](supabase/migrations/) [lane:BACKEND]
 
-### [L-163] — `search.html` — `autofocus` 속성과 URL `?q=` pre-fill이 경쟁 — 모바일에서 키보드 팝업 오작동
+### [L-163] ✅ 해결완료(2026-06-13, CORE) — `search.html` — `autofocus` 속성과 URL `?q=` pre-fill이 경쟁 — 모바일에서 키보드 팝업 오작동
 - **영역:** 프론트엔드 — 검색 페이지
 - **심각도:** 🟢 Low
 - **증상:** `search.html`의 `<input id="homeq" ... autofocus>`(line 38)는 페이지 로드 즉시 키보드를 팝업한다. 이후 인라인 스크립트(line 51–55)가 URL `?q=` 파라미터를 읽어 `inp.value = initQ; run()` 로 검색창을 채운다. 모바일 iOS/Android에서 `autofocus`가 소프트 키보드를 열면서 뷰포트가 위로 밀리고, 그 상태에서 `run()`이 dropdown을 열어 레이아웃이 겹쳐 보이는 현상이 발생한다. 또한 `?q=` 없는 단순 `/search.html` 진입 시에도 불필요하게 키보드가 열려 UX가 나쁘다.
@@ -2555,7 +2555,7 @@
 
 ## R-87 — 찜동기화·카테고리·export·아이템페이지·CI 탐색 (2026-06-13)
 
-### [M-140] — `build-item-pages.js` — `coupang_url` 없는 상품의 `availability`가 `PreOrder`(예약판매)로 잘못 설정
+### [M-140] ✅ 해결완료(2026-06-13, CORE) — `build-item-pages.js` — `coupang_url` 없는 상품의 `availability`가 `PreOrder`(예약판매)로 잘못 설정
 - **영역:** 프론트엔드 — 빌드 스크립트 / Schema.org JSON-LD
 - **심각도:** 🟡 Medium
 - **증상:** `scripts/build-item-pages.js` line 132에서 `coupang_url`이 없을 때 `"availability": "https://schema.org/PreOrder"` 로 출력한다. 쿠팡 링크 미등록 상품은 단순히 링크가 없는 것이지 예약판매 상품이 아니다. Google 리치결과 검색에 "예약가능" 뱃지가 붙어 사용자를 오도하고, 품질 가이드라인 위반으로 Search Console 페널티 대상이 될 수 있다.
@@ -2564,7 +2564,7 @@
 - **제안 수정:** `coupang_url ? "https://schema.org/InStock" : "https://schema.org/PreOrder"` → `coupang_url ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"`. 또는 쿠팡 링크 없는 경우 `offers` 블록 자체를 생략.
 - **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 132 [lane:CORE]
 
-### [L-165] — `build-item-pages.js` — `aggregateRating.ratingCount` / `reviewCount` 항상 `1` 하드코딩
+### [L-165] ✅ 해결완료(2026-06-13, CORE) — `build-item-pages.js` — `aggregateRating.ratingCount` / `reviewCount` 항상 `1` 하드코딩
 - **영역:** 프론트엔드 — 빌드 스크립트 / Schema.org JSON-LD
 - **심각도:** 🟢 Low
 - **증상:** `scripts/build-item-pages.js` line 139에서 `"ratingCount": 1, "reviewCount": 1` 이 모든 상품 페이지에 고정값으로 출력된다. Google의 `aggregateRating` 가이드라인은 실제 리뷰 수를 요구하며, 허위 리뷰 카운트는 구조화 데이터 정책 위반으로 리치결과 자격 박탈 원인이 된다.
