@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=c6e02b24"></script>
+<script src="app.js?v=2b7e5745"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -317,6 +317,7 @@ function renderNicknameModal() {
   save.addEventListener('click', async () => {
     const v = input.value.trim()
     if (!NICKNAME_RE.test(v)) return
+    if (lastChecked !== v) { setHint('중복 확인을 완료해주세요', false); return }
     clearTimeout(debounce)
     enable(false); save.textContent = '저장 중…'
     const { error } = await setNickname(v)
@@ -507,6 +508,7 @@ function renderProfile(profile) {
   save.addEventListener('click', async () => {
     const v = input.value.trim()
     if (!NICKNAME_RE.test(v)) return
+    if (lastChecked !== v) { setH('중복 확인을 완료해주세요', false); return }
     clearTimeout(debounce); setOk(false); save.textContent = '저장 중…'
     const { error } = await setNickname(v)
     if (error) {
@@ -560,8 +562,9 @@ await initAuth(async (user, event) => {
   const profile = await getProfile()
   if (!profile || !profile.nickname) {
     // 최초 로그인(또는 닉네임 미설정): 닉네임부터 강제(찜 목록은 계속 표시)
+    // L-183: view-set 공유 URL 열람 중에는 닉네임 모달 억제
     setSyncHint(true)
-    renderNicknameModal()
+    if (!_isViewSet) renderNicknameModal()
     if (typeof renderAccount === 'function') renderAccount()
     return
   }
