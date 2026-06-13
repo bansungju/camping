@@ -25,6 +25,15 @@ def main():
     # +supabaseClient.js: 모듈 import도 콘텐츠해시 스탬프(버전쿼리 없으면 SW가 구버전 모듈을
     #  stale 캐싱 → 새 함수 미정의로 페이지 깨짐). HTML의 './supabaseClient.js' import에 ?v= 박음.
 
+    # H-119: 어떤 파일도 쓰기 전에 _hash 대상 필수 파일을 먼저 검증한다(fail-fast). style.css나
+    #   supabaseClient.js가 없으면 뒤의 _hash가 FileNotFoundError로 중단되는데, 그 시점엔 이미 아래
+    #   search.json ?v= 교체가 app.js에 적용돼 'app.js만 갱신·HTML ?v= 미갱신'의 불일치 배포가 된다.
+    #   진입 시점에 막으면 부분 적용 없이 깨끗이 중단된다.
+    required = ["app.js", "style.css", "supabaseClient.js"]
+    missing = [f for f in required if not os.path.exists(os.path.join(SITE, f))]
+    if missing:
+        raise SystemExit(f"stamp_version: 필수 파일 없음 → {', '.join(missing)} (스탬핑 중단, 부분 적용 방지)")
+
     # M-76: search.json 캐시 버스팅 — 상품 데이터 업데이트 후 구 데이터 서빙 방지.
     # app.js 내 "data/search.json?v=..." 패턴을 search.json 내용 해시로 교체.
     # 반드시 app.js 해시 계산(hj) 전에 실행 — 교체 후 해시가 HTML에 스탬프됨.
