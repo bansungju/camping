@@ -116,8 +116,9 @@ def check_logic_contradiction(cur):
         if per_person < 0.5:
             note = f"논리 모순: floor_area {floor_area:.2f}㎡ / {cap}인 = 1인당 {per_person:.2f}㎡ (< 0.5㎡) — [{brand}] {model}"
             flags.append((pid, metric_id, "needs_review", note))
-        elif per_person > 5.0:
-            note = f"논리 모순: floor_area {floor_area:.2f}㎡ / {cap}인 = 1인당 {per_person:.2f}㎡ (> 5㎡) — [{brand}] {model}"
+        elif per_person > 8.0:
+            # 상한 5→8㎡: 대형 리빙쉘터·거실형 텐트 오탐 제거 (2026-06-13 실측확인 기반)
+            note = f"논리 모순: floor_area {floor_area:.2f}㎡ / {cap}인 = 1인당 {per_person:.2f}㎡ (> 8㎡) — [{brand}] {model}"
             flags.append((pid, metric_id, "needs_review", note))
     return flags
 

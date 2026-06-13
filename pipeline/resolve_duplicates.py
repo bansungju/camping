@@ -1,0 +1,110 @@
+"""
+resolve_duplicates.py — 중복 canonical 정리 (A3)
+
+같은 brand_id + canonical_model + capacity로 verified가 2개 이상인 그룹에서
+winner 1개를 남기고 나머지를 'pending'으로 demote.
+
+Winner 선정 기준 (우선순위):
+  1. canonical_models.min_price IS NOT NULL
+  2. product_spec_values valid=1 count 많은 것
+  3. id 낮은 것 (더 오래된 레코드)
+
+canonical_models.rep_product_id도 winner로 갱신.
+"""
+import argparse
+import sqlite3
+from pathlib import Path
+
+DB_DEFAULT = "camping_tents500.db"
+
+
+def resolve(db_path: str, dry_run: bool):
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+
+    # 중복 그룹 전체
+    cur.execute("""
+        SELECT brand_id, canonical_model, capacity, GROUP_CONCAT(id ORDER BY id) as ids
+        FROM products
+        WHERE curation_status = 'verified'
+          AND canonical_model IS NOT NULL
+        GROUP BY brand_id, canonical_model, capacity
+        HAVING COUNT(*) >= 2
+    """)
+    groups = cur.fetchall()
+    print(f"[resolve_duplicates] 중복 그룹: {len(groups)}개")
+
+    total_demoted = 0
+    total_cm_updated = 0
+
+    for brand_id, canon_model, capacity, ids_str in groups:
+        pids = [int(x) for x in ids_str.split(",")]
+
+        # 각 pid의 (min_price, spec_count, id) 수집
+        candidates = []
+        for pid in pids:
+            cur.execute(
+                "SELECT min_price FROM canonical_models WHERE rep_product_id=?", (pid,)
+            )
+            row = cur.fetchone()
+            min_price = row[0] if row else None
+
+            cur.execute(
+                "SELECT COUNT(*) FROM product_spec_values WHERE product_id=? AND valid=1",
+                (pid,),
+            )
+            spec_count = cur.fetchone()[0]
+
+            candidates.append((pid, min_price, spec_count))
+
+        # Winner: 1) min_price 있음 2) spec_count 많음 3) id 낮음
+        def sort_key(c):
+            pid, mp, sc = c
+            has_price = 0 if mp is not None else 1  # 0=있음 우선
+            return (has_price, -sc, pid)
+
+        candidates.sort(key=sort_key)
+        winner_pid = candidates[0][0]
+        losers = [c[0] for c in candidates[1:]]
+
+        if dry_run:
+            print(
+                f"  [DRY] winner={winner_pid} losers={losers} "
+                f"| brand={brand_id} model='{canon_model}' cap={capacity}"
+            )
+            continue
+
+        # losers → pending
+        cur.executemany(
+            "UPDATE products SET curation_status='pending' WHERE id=?",
+            [(pid,) for pid in losers],
+        )
+        total_demoted += cur.rowcount
+
+        # canonical_models: rep_product_id가 loser인 행을 winner로 갱신
+        for loser_pid in losers:
+            cur.execute(
+                "UPDATE canonical_models SET rep_product_id=? WHERE rep_product_id=?",
+                (winner_pid, loser_pid),
+            )
+            total_cm_updated += cur.rowcount
+
+    if not dry_run:
+        con.commit()
+        print(f"  demoted → pending: {total_demoted}건")
+        print(f"  canonical_models rep 갱신: {total_cm_updated}건")
+    con.close()
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", default=DB_DEFAULT)
+    ap.add_argument("--dry-run", action="store_true", help="DB 변경 없이 결과만 출력")
+    args = ap.parse_args()
+
+    print(f"[resolve_duplicates] DB: {args.db}  dry_run={args.dry_run}")
+    resolve(args.db, dry_run=args.dry_run)
+
+
+if __name__ == "__main__":
+    main()
