@@ -179,6 +179,15 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-add:hover{border-color:var(--accent);color:var(--accent)}
 .pmrv-login{font-size:13px;color:var(--muted);padding:10px 12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
 .pmrv-login .pmlink{margin-top:0}
+/* auth-gate 모달 (FE-AUTH-01) */
+.agm-box{padding:32px 24px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.agm-ico{font-size:32px;margin:0 0 4px}
+.agm-title{font-size:16px;font-weight:700;color:var(--txt);margin:0}
+.agm-sub{font-size:13px;color:var(--muted);margin:0 0 12px}
+.agm-btn{display:block;width:100%;padding:13px;background:var(--accent);color:#fff;border-radius:12px;font-size:15px;font-weight:700;text-align:center;text-decoration:none;transition:.15s}
+.agm-btn:hover{opacity:.88}
+.agm-cancel{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;margin-top:6px;padding:4px 8px}
+.agm-cancel:hover{color:var(--txt)}
 .pmrv-formbox{margin-bottom:12px}
 .pmrv-form{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px}
 .pmrv-rate{display:flex;align-items:center;gap:2px}
@@ -800,7 +809,13 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sm-divider{height:1px;background:var(--line);margin:16px 0}
 .set-type-pick{display:flex;flex-direction:column;gap:3px}
 .set-type-label{font-size:11.5px;font-weight:600;color:var(--muted)}
-.set-type-select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--muted);background:var(--card2);cursor:pointer}
+/* 세그먼트 컨트롤: 버튼 3개 가로 배열 */
+.stp-seg{display:flex;gap:6px;width:100%}
+.stp-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1px solid var(--line);border-radius:8px;background:var(--card2);color:var(--txt);font-size:11px;cursor:pointer;transition:border-color .15s,background .15s,color .15s;line-height:1.2}
+.stp-btn:first-child{font-size:16px}
+.stp-btn>span{font-size:11px}
+.stp-btn.stp-active{border:1.5px solid var(--accent);background:#e8f5ee;color:var(--accent)}
+.stp-btn:not(.stp-active):hover{border-color:var(--accent);background:var(--card)}
 .set-type-caption{font-size:11px;color:var(--muted)}
 /* 도장판(상세 모달) */
 .ssb-prog{display:flex;align-items:center;gap:10px;margin-bottom:12px}

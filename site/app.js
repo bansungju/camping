@@ -57,6 +57,84 @@ window.addEventListener("beforeinstallprompt", e => {
 });
 const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
+// ── 전역 Auth 토대 (FE-AUTH-01 §A) ─────────────────────────────────────────
+// 모든 페이지에서 getSession 완료 후 isLoggedIn/currentUser를 신뢰성 있게 제공.
+// account.html 전용 window._accUser 대체(하위호환 유지).
+;(function _setupGlobalAuth() {
+  let _user = undefined;   // undefined=초기화중, null=비로그인, object=로그인
+  let _ready = false;
+  let _readyResolve;
+  const _readyP = new Promise(r => { _readyResolve = r; });
+  const _cbs = [];
+
+  window.authReady   = () => _readyP;
+  window.isLoggedIn  = () => _ready && !!_user;
+  window.currentUser = () => _user ?? null;
+  window.onAuthChange = cb => {
+    _cbs.push(cb);
+    return () => { const i = _cbs.indexOf(cb); if (i >= 0) _cbs.splice(i, 1); };
+  };
+
+  (async () => {
+    try {
+      const { supabase } = await import('./supabaseClient.js?v=3f90c643');
+      const { data: { session } } = await supabase.auth.getSession();
+      _user = session?.user ?? null;
+      window._accUser = _user;   // account.html 등 하위호환
+      _ready = true; window._gAuthReady = true; _readyResolve();
+      supabase.auth.onAuthStateChange((event, sess) => {
+        if (event === 'INITIAL_SESSION') return;
+        _user = sess?.user ?? null;
+        window._accUser = _user;
+        _cbs.forEach(cb => { try { cb(_user, event); } catch (_) {} });
+      });
+    } catch (_) {
+      _ready = true; window._gAuthReady = true; _readyResolve();
+    }
+  })();
+}());
+
+// ── 공용 게이트 노드 requireLogin (FE-AUTH-01 §A) ───────────────────────────
+// 개인화 액션 직전에 호출. false 반환 시 호출부는 즉시 중단(리다이렉트 예약됨).
+async function requireLogin({ action, returnTo, params } = {}) {
+  await window.authReady();
+  if (window.isLoggedIn()) return true;
+  try {
+    sessionStorage.setItem('auth-intent', JSON.stringify({
+      action:   action   ?? null,
+      params:   params   ?? null,
+      returnTo: returnTo ?? location.href
+    }));
+  } catch (_) {}
+  _showAuthGateModal();
+  return false;
+}
+
+function _showAuthGateModal() {
+  document.getElementById('auth-gate-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'auth-gate-modal';
+  m.className = 'pmodal on';
+  // account.html 경로: 루트 상대 경로로 어느 뎁스에서도 정상 동작
+  const loginHref = location.pathname.split('/').slice(0, -1).map(() => '..').join('/') || '.';
+  const prefix = location.pathname.includes('/item/') ? '../../' : './';
+  m.innerHTML = `<div class="pmbox agm-box" role="dialog" aria-modal="true" aria-labelledby="agm-title">
+    <p class="agm-ico">🔒</p>
+    <p id="agm-title" class="agm-title">이 기능은 로그인이 필요해요</p>
+    <p class="agm-sub">로그인하면 기기 간 동기화돼요</p>
+    <a href="${prefix}account.html" class="agm-btn">로그인하기</a>
+    <button type="button" class="agm-cancel">취소</button>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.querySelector('.agm-cancel').onclick = close;
+  m.onclick = e => { if (e.target === m) close(); };
+  // ESC
+  const onKey = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+  m.querySelector('.agm-btn').addEventListener('click', () => document.removeEventListener('keydown', onKey));
+}
+
 /* 운영자 모드: ?ops=1 로 켜면(localStorage 영속) 신뢰등급·값배지·데이터한계가 보인다.
    기본(사용자)은 깔끔하게 별점·스펙만. ?ops=0 으로 끈다. */
 (() => {
@@ -129,16 +207,20 @@ function miniStampBoard(set) {
   }).join("");
   return `<span class="stamp-mini" aria-label="필수 도장 ${c.filled}/${c.total} 채움"><span class="stamp-dots">${dots}</span></span>`;
 }
-/* FE-WISH-10(B-2-2): 세트 타입 선택 — 쉬운 말 <select>(작은 회색) + 선택 따라 바뀌는 회색 캡션 1줄.
-   모달(새 세트 생성)·세트 상세(타입 변경) 공유. 기본값=auto. */
+/* FE-WISH-10(B-2-2): 세트 타입 선택 — 세그먼트 버튼 3개 + 선택 따라 바뀌는 회색 캡션 1줄.
+   모달(새 세트 생성)·세트 상세(타입 변경) 공유. 기본값=auto.
+   선택값은 컨테이너 div의 data-value에 저장. */
 function setTypePickHtml(currentType, selectClass, labelText) {
   const cur = SET_TYPES[currentType] ? currentType : DEFAULT_SET_TYPE;
-  const options = SET_TYPE_ORDER.map(k =>
-    `<option value="${k}"${k === cur ? " selected" : ""}>${esc(SET_TYPES[k].optLabel)}</option>`).join("");
   const lbl = labelText || "세트 유형";
+  const btns = SET_TYPE_ORDER.map(k => {
+    const t = SET_TYPES[k];
+    const active = k === cur ? " stp-active" : "";
+    return `<button type="button" class="stp-btn${active}" data-val="${k}" aria-pressed="${k === cur}">${t.icon}<span>${esc(t.label)}</span></button>`;
+  }).join("");
   return `<div class="set-type-pick">
     <span class="set-type-label">${esc(lbl)}</span>
-    <select class="${selectClass}" aria-label="${esc(lbl)}">${options}</select>
+    <div class="${selectClass} stp-seg" data-value="${cur}" role="group" aria-label="${esc(lbl)}">${btns}</div>
     <span class="set-type-caption">${esc(setTypeCaption(cur))}</span>
   </div>`;
 }
@@ -293,37 +375,62 @@ function thumbFallback(img) {
   img.replaceWith(d);
 }
 
-/* 찜(위시리스트) — localStorage 저장. 로그인 없이도 동작, '내 정보' 탭에서 모아봄.
+/* 찜(위시리스트) — 로그인 필수(FE-AUTH-01 §C). 비로그인 시 requireLogin 게이트.
    항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
 function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
 function setWish(a) {
   try { localStorage.setItem("wish", JSON.stringify(a)); } catch (e) { /* 저장공간 부족 시 로컬 동작만 */ }
-  // 로그인 상태에서 account 페이지가 등록한 훅이 있으면 원격 동기화. 없으면 로컬만(오프라인 우선).
   if (typeof window !== "undefined" && typeof window.onWishChange === "function") {
-    try { window.onWishChange(a); } catch (e) { /* 동기화 실패는 로컬 동작 막지 않음 */ }
+    try { window.onWishChange(a); } catch (e) {}
   }
 }
 function wishKey(b, m, cap) { return [b, m, cap == null ? "" : cap].join("|"); }
-// 찜 버튼 아이콘 — 북마크(채움 여부는 버튼 .on 클래스 + CSS가 처리)
 const BOOKMARK_SVG = '<svg class="wish-ico" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/></svg>';
 const SHARE_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
 function inWish(key) { return getWish().some(x => x.key === key); }
-function toggleWish(item) {   // 반환: 추가됐으면 true, 해제됐으면 false
+// _execToggleWish: 실제 localStorage 토글. requireLogin 통과 후에만 호출.
+function _execToggleWish(item) {
   const a = getWish(), i = a.findIndex(x => x.key === item.key);
   if (i >= 0) a.splice(i, 1); else a.push(item);
-  setWish(a);
-  return i < 0;
+  setWish(a); return i < 0;
 }
-// 비로그인 상태에서 처음 찜 추가 시 1회 로그인 유도 토스트
-function _showWishLoginHint() {
-  if (window._accUser || sessionStorage.getItem("wish-login-hint")) return;
-  sessionStorage.setItem("wish-login-hint", "1");
-  const msg = `🔖 찜 목록은 로그인하면 기기 간 동기화돼요 &nbsp;<a href="account.html" style="color:#fff;text-decoration:underline;font-weight:700">로그인</a>`;
-  showToast(msg, 4000, true);
+// toggleWish: 비로그인이면 게이트 후 현재 상태 반환(토글 없음).
+// auth 완료 전 클릭(드문 케이스)은 완료 후 결정.
+function toggleWish(item) {
+  function _gate() {
+    try { sessionStorage.setItem('auth-intent', JSON.stringify({action:'toggleWish',params:item,returnTo:location.href})); } catch(_){}
+    _showAuthGateModal();
+  }
+  if (window._gAuthReady) {
+    if (!window.isLoggedIn()) { _gate(); return inWish(item.key); }
+    return _execToggleWish(item);
+  }
+  // auth 초기화 중 — 완료 후 결정(버튼은 현재 상태 유지)
+  window.authReady().then(() => {
+    if (window.isLoggedIn()) { const added = _execToggleWish(item); _paintWishBtn(item.key, added); }
+    else _gate();
+  });
+  return inWish(item.key);
 }
+function _paintWishBtn(key, on) {
+  // item 상세 페이지 버튼
+  const b = document.getElementById('item-wish');
+  if (b && (b.dataset.key === key || !b.dataset.key)) {
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+    const l = b.querySelector('.iw-label'); if (l) l.textContent = on ? '찜함' : '찜하기';
+  }
+  // 리스트/카테고리 뷰 버튼
+  document.querySelectorAll(`.wish-btn[data-key="${CSS.escape(key)}"]`).forEach(btn => {
+    btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', String(on));
+  });
+}
+// toggleWishWithHint: 기존 호출부(카테고리/상세 뷰)용. 힌트 대신 requireLogin 게이트.
 function toggleWishWithHint(item, btn) {
-  const added = toggleWish(item);
-  if (added) _showWishLoginHint();
+  if (!window.isLoggedIn()) {
+    requireLogin({ action: 'toggleWish', params: item, returnTo: location.href });
+    return inWish(item.key);
+  }
+  const added = _execToggleWish(item);
   if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
   return added;
 }
@@ -384,7 +491,9 @@ function setItem(m, slug) {
            coupang_url: m.coupang_url ?? null };   // FE-WISH-07: 세트 표 항목별 구매 버튼용
 }
 
-function openSetModal(item) {
+async function openSetModal(item) {
+  const allowed = await requireLogin({ action: 'openSetModal', params: item, returnTo: location.href });
+  if (!allowed) return;
   let modal = document.getElementById("set-modal");
   if (!modal) {
     modal = document.createElement("div"); modal.id = "set-modal"; modal.className = "pmodal";  // L-112: dialog role은 내부 .pmbox에만
@@ -433,10 +542,15 @@ function openSetModal(item) {
   document.addEventListener("keydown", onKey);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
-  // 타입 <select> 변경 시 회색 캡션만 갱신(생성 전이라 세트엔 아직 미적용)
+  // 세그먼트 버튼 클릭 시 캡션 갱신(생성 전이라 세트엔 아직 미적용)
   const typeSel = modal.querySelector(".sm-type-select");
   const typeCap = modal.querySelector(".sm-new .set-type-caption");
-  if (typeSel) typeSel.onchange = () => { if (typeCap) typeCap.textContent = setTypeCaption(typeSel.value); };
+  if (typeSel) typeSel.querySelectorAll(".stp-btn").forEach(btn => btn.onclick = () => {
+    typeSel.querySelectorAll(".stp-btn").forEach(b => { b.classList.remove("stp-active"); b.setAttribute("aria-pressed","false"); });
+    btn.classList.add("stp-active"); btn.setAttribute("aria-pressed","true");
+    typeSel.dataset.value = btn.dataset.val;
+    if (typeCap) typeCap.textContent = setTypeCaption(btn.dataset.val);
+  });
   modal.querySelectorAll(".sm-set-btn").forEach(btn => btn.onclick = () => {
     const res = addToSet(btn.dataset.sid, item);
     if (res.status === "cap") { close(); openReplaceModal(btn.dataset.sid, item, res.slot); return; }
@@ -446,7 +560,7 @@ function openSetModal(item) {
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
     const t = inp.value.trim(); if (!t) { inp.focus(); return; }
-    const type = modal.querySelector(".sm-type-select")?.value || DEFAULT_SET_TYPE;
+    const type = modal.querySelector(".sm-type-select")?.dataset.value || DEFAULT_SET_TYPE;
     const s = newSet(t, type); addToSet(s.id, item);
     close(); showSetConfirm(s.id);
   };
@@ -2118,14 +2232,9 @@ function wireReviews(modal, m, pcode) {
   };
   addBtn.onclick = async () => {
     if (open) { reset(); return; }
-    // 로그인 확인 — reviews_insert_own 정책상 authenticated만 작성 가능
-    let user = null;
-    try { const { supabase } = await import("./supabaseClient.js?v=3f90c643"); ({ data: { user } } = await supabase.auth.getUser()); } catch (_) {}
-    if (!user) {
-      formbox.innerHTML = `<div class="pmrv-login">후기 작성은 로그인 후 이용할 수 있어요. <a class="pmlink" href="account.html">로그인하러 가기 ›</a></div>`;
-      formbox.hidden = false; open = true; addBtn.textContent = "닫기";
-      return;
-    }
+    // 공용 게이트(FE-AUTH-01 §B): 폼 열기 전 로그인 확인
+    const allowed = await requireLogin({ action: 'openReviewForm', returnTo: location.href });
+    if (!allowed) return;
     formbox.innerHTML = `<form class="pmrv-form">
       <div class="pmrv-rate" role="radiogroup" aria-label="별점 선택">
         ${[1,2,3,4,5].map(n => `<button type="button" class="pmrv-star" data-v="${n}" role="radio" aria-checked="false" aria-label="${n}점">★</button>`).join("")}
@@ -2802,14 +2911,17 @@ function openSetDetail(si) {
   modal.querySelector(".pmx").onclick = close;
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").focus();
-  // FE-WISH-09/10: 세트 타입 전환(<select>) → 정원 프리셋 재적용. 초과분은 강제 삭제 안 함(§6 하위호환).
+  // FE-WISH-09/10: 세트 타입 전환(세그먼트) → 정원 프리셋 재적용. 초과분은 강제 삭제 안 함(§6 하위호환).
   const detailTypeSel = modal.querySelector(".set-type-select");
-  if (detailTypeSel) detailTypeSel.onchange = e => {
+  if (detailTypeSel) detailTypeSel.querySelectorAll(".stp-btn").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
+    detailTypeSel.querySelectorAll(".stp-btn").forEach(b => { b.classList.remove("stp-active"); b.setAttribute("aria-pressed","false"); });
+    btn.classList.add("stp-active"); btn.setAttribute("aria-pressed","true");
+    detailTypeSel.dataset.value = btn.dataset.val;
     const arr = getSets(); const set = arr[si]; if (!set) return;
-    set.type = detailTypeSel.value; saveSets(arr);
+    set.type = btn.dataset.val; saveSets(arr);
     renderAccount(); openSetDetail(si);
-  };
+  });
   modal.querySelectorAll(".qty-dec").forEach(btn => btn.onclick = e => {
     e.stopPropagation();
     const arr = getSets(); const set = arr[si]; if (!set) return;
@@ -3863,6 +3975,28 @@ function openLogModal(presetSetIndex) {
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
 }
+
+// ── auth intent 재개 (FE-AUTH-01 §D) ───────────────────────────────────────
+// 로그인 후 returnTo로 복귀 시 저장된 action을 자동 재개(찜 토글 · 세트 담기만).
+document.addEventListener("DOMContentLoaded", async () => {
+  const raw = sessionStorage.getItem('auth-intent');
+  if (!raw) return;
+  try {
+    const intent = JSON.parse(raw);
+    await window.authReady();
+    if (!window.isLoggedIn() || !intent.action) return;
+    // returnTo가 현재 페이지와 일치할 때만 재개(다른 페이지 intent 오염 방지)
+    if (intent.returnTo && new URL(intent.returnTo, location.href).pathname !== location.pathname) return;
+    sessionStorage.removeItem('auth-intent');
+    if (intent.action === 'toggleWish' && intent.params) {
+      const added = _execToggleWish(intent.params);
+      _paintWishBtn(intent.params.key, added);
+    } else if (intent.action === 'openSetModal' && intent.params) {
+      openSetModal(intent.params);
+    }
+    // openReviewForm: 재개 없음(spec §3-3). 사용자가 직접 버튼 재클릭.
+  } catch (_) { sessionStorage.removeItem('auth-intent'); }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("comm-best-list")) renderCommunity();
