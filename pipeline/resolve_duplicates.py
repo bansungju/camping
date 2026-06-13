@@ -101,6 +101,16 @@ def resolve(db_path: str, dry_run: bool):
             )
             total_cm_updated += cur.rowcount
 
+    # M-415: 단독 실행(normalize_db 선행 없이) 시 canonical_models.rep_product_id가 이미 비-verified
+    #   제품을 가리켜 export가 강등 제품의 이미지·가격을 노출할 수 있다. rowcount==0은 정상(모든 loser가
+    #   rep는 아님)이라 오탐이므로, 잔존 stale rep(rep이 비-verified)를 직접 검출해 경고한다.
+    stale = con.execute("""SELECT COUNT(*) FROM canonical_models cm
+        JOIN products p ON p.id=cm.rep_product_id
+        WHERE p.curation_status <> 'verified'""").fetchone()[0]
+    if stale:
+        print(f"  ⚠️  stale rep_product_id {stale}건 — rep이 비-verified 제품을 가리킴. "
+              f"export 전 run_all.py(normalize_db) 선행 필요(강등 제품 노출 위험).")
+
     if not dry_run:
         con.commit()
         print(f"  demoted → pending: {total_demoted}건")
