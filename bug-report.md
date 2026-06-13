@@ -2602,7 +2602,7 @@
 - **제안 수정:** line 3630의 `items` 매핑에서 `setItem(x, x.s || "")` 헬퍼 사용 또는 `pcode: wishKey(x.b, x.m, x.cap ?? null), s: x.s || "", coupang_url: x.coupang_url || ""` 필드 추가.
 - **파일:** [site/app.js](site/app.js) line 3630 [lane:CORE]
 
-### [L-168] — `account.html` — 프로필 카드 로그인 방식 "Google 로그인" 하드코딩 — OAuth 프로바이더 동적 조회 없음
+### [L-168] ✅ 해결완료(2026-06-13, SOCIAL) — `account.html` — 프로필 카드 로그인 방식 "Google 로그인" 하드코딩 — OAuth 프로바이더 동적 조회 없음
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
