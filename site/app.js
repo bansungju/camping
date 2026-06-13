@@ -391,8 +391,16 @@ function inWish(key) { return getWish().some(x => x.key === key); }
 // _execToggleWish: 실제 localStorage 토글. requireLogin 통과 후에만 호출.
 function _execToggleWish(item) {
   const a = getWish(), i = a.findIndex(x => x.key === item.key);
+  const added = i < 0;
   if (i >= 0) a.splice(i, 1); else a.push(item);
-  setWish(a); return i < 0;
+  setWish(a);
+  // B-1: 첫 찜(추가) 시 가격알림 푸시 구독을 1회 요청(찜 = 가격 추적 대상).
+  //  requestPushSubscription이 권한 거부/기구독을 자체 처리하므로 중복 호출은 무해.
+  if (added && "serviceWorker" in navigator && "PushManager" in window) {
+    const u = window.currentUser && window.currentUser();
+    if (u && u.id) requestPushSubscription(u.id);
+  }
+  return added;
 }
 // toggleWish: 비로그인이면 게이트 후 현재 상태 반환(토글 없음).
 // auth 완료 전 클릭(드문 케이스)은 완료 후 결정.
