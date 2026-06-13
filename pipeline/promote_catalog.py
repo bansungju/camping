@@ -29,6 +29,8 @@ def main():
 
     # 2) 완비 제품 판정 → verified, 나머지 pending
     con.execute("UPDATE products SET curation_status='pending'")
+    if not CORE:
+        con.commit(); return
     con.execute(f"""
         UPDATE products SET curation_status='verified'
         WHERE capacity IS NOT NULL          -- 인원도 핵심지표 → 완비 기준 포함
