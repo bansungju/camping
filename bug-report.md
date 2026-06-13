@@ -2973,7 +2973,7 @@
 
 ---
 
-### [M-156] — `renderNicknameModal` / `initNickChange` — 닉네임 중복 확인 결과(`lastChecked`) 미검증으로 미완료 닉네임 저장 가능
+### [M-156] — `renderNicknameModal` / `initNickChange` — 닉네임 중복 확인 결과(`lastChecked`) 미검증으로 미완료 닉네임 저장 가능 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — account.html 닉네임
 - **심각도:** 🟡 Medium
@@ -4277,7 +4277,7 @@
 
 ---
 
-### [M-218] — `getProfile` — `data` null 시 TypeError crash
+### [M-218] — `getProfile` — `data` null 시 TypeError crash — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟡 Medium
@@ -4289,7 +4289,7 @@
 
 ---
 
-### [M-219] — `renderAccount` 공유 URL — `location.origin` 사용으로 localhost URL 노출 가능
+### [M-219] — `renderAccount` 공유 URL — `location.origin` 사용으로 localhost URL 노출 가능 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 공유 기능
 - **심각도:** 🟡 Medium
@@ -9198,7 +9198,7 @@
 
 ---
 
-### [H-119] — `stamp_version.py` — `_hash()` 파일 부재 시 `FileNotFoundError` 미처리로 HTML 버전 스탬핑 중단
+### ✅ 해결완료(2026-06-13) [H-119] — `stamp_version.py` — `_hash()` 파일 부재 시 `FileNotFoundError` 미처리로 HTML 버전 스탬핑 중단
 
 - **영역:** 백엔드 — 빌드/배포
 - **심각도:** 🔴 High
@@ -9534,7 +9534,7 @@
 
 ---
 
-### [M-430] — `supabaseClient.js` `signOut()` — `"sets"` 키 삭제로 `"gear_sets"` 미정리, 다음 사용자에게 노출
+### [M-430] — `supabaseClient.js` `signOut()` — `"sets"` 키 삭제로 `"gear_sets"` 미정리, 다음 사용자에게 노출 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟡 Medium
