@@ -316,7 +316,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
 <script>
 // 찜하기 — app.js의 전역 찜 API(wishKey·inWish·toggleWish) 재사용 (H-07)
 (function(){
-  var ITEM = ${JSON.stringify({ b: brand, m: modelName, cap: capacity == null ? null : capacity, s: catSlug, p: price_min == null ? null : price_min, img: img || null })};
+  var ITEM = ${JSON.stringify({ b: brand, m: modelName, cap: capacity == null ? null : capacity, s: catSlug, p: price_min == null ? null : price_min, img: img || null, cu: coupang_url || null })};
   var btn = document.getElementById('item-wish');
   if (!btn || typeof wishKey !== 'function' || typeof toggleWish !== 'function') return;
   var key = wishKey(ITEM.b, ITEM.m, ITEM.cap);
@@ -328,7 +328,7 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
   });
   var setBtn = document.getElementById('item-set-add');
   if (setBtn && typeof openSetModal === 'function') {
-    setBtn.addEventListener('click', function(){ openSetModal({ pcode: key, b: ITEM.b, m: ITEM.m, cap: ITEM.cap, s: ITEM.s, p: ITEM.p, img: ITEM.img, weight_g: null }); });
+    setBtn.addEventListener('click', function(){ openSetModal({ pcode: key, b: ITEM.b, m: ITEM.m, cap: ITEM.cap, s: ITEM.s, p: ITEM.p, img: ITEM.img, weight_g: null, coupang_url: ITEM.cu || null }); });
   }
 })();
 </script>
