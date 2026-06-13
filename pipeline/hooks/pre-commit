@@ -15,4 +15,54 @@ if [ -n "$has_code" ] && [ -n "$has_pipe" ] && [ -z "$ALLOW_CROSS_LANE" ]; then
   printf '%s\n' "$staged" | head -40 | sed 's/^/     /'
   exit 1
 fi
+
+# --- 핫파일 락 강제 (WORK-LANES "잠금 필수"의 기술적 강제 / 2026-06-13 동시편집 무방비 사고 후 추가) ---
+# CORE 핫파일(app.js/style.css/build-item-pages.js)을 커밋하려면, 그 파일의 '신선한(<45분) 락'을
+# '내 세션'이 쥐고 있어야 한다. 다른 세션 소유이거나 락이 없으면 차단 → 동시 편집/쓸어담기 방지.
+#   · 내 세션 식별: LANE_SESSION 환경변수(락 생성 시 쓴 session 값과 동일해야 함).
+#   · 락 생성:  echo '{"session":"<id>","lane":"CORE","file":"app.js"}' > .claude/locks/app.js.lock
+#   · 커밋:     LANE_SESSION=<id> git commit -m "..." -- site/app.js
+#   · 자동 빌드/스탬프(단일 신뢰 파이프라인)는: ALLOW_NO_LOCK=1 로 우회.
+hot=$(printf '%s\n' "$staged" | grep -E '^(site/app\.js|site/style\.css|scripts/build-item-pages\.js)$')
+if [ -n "$hot" ] && [ -z "$ALLOW_NO_LOCK" ]; then
+  now=$(date +%s)
+  for f in $hot; do
+    base=$(basename "$f")
+    lock=".claude/locks/$base.lock"
+    if [ ! -f "$lock" ]; then
+      echo "✋ WORK-LANES 락 없음: $f 커밋 전 락을 잡으세요."
+      echo "   echo '{\"session\":\"\$LANE_SESSION\",\"lane\":\"CORE\",\"file\":\"$base\"}' > $lock"
+      echo "   그리고: LANE_SESSION=<id> git commit ... -- $f   (우회: ALLOW_NO_LOCK=1)"
+      exit 1
+    fi
+    mtime=$(stat -f %m "$lock" 2>/dev/null || stat -c %Y "$lock" 2>/dev/null)
+    if [ -n "$mtime" ] && [ $((now - mtime)) -gt 2700 ]; then
+      echo "✋ 락 만료(>45분): $lock — 갱신(touch $lock)하거나 재생성 후 커밋하세요."
+      exit 1
+    fi
+    owner=$(sed -n 's/.*"session"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$lock" | head -1)
+    if [ -z "$LANE_SESSION" ] || [ "$LANE_SESSION" != "$owner" ]; then
+      echo "✋ 락 소유자 불일치: $lock 은 세션 '$owner' 소유 (LANE_SESSION='$LANE_SESSION')."
+      echo "   다른 세션이 $base 를 편집 중일 수 있습니다. 끝날 때까지 대기하거나,"
+      echo "   본인 락이면 LANE_SESSION=$owner git commit ... 으로 커밋하세요."
+      exit 1
+    fi
+  done
+fi
+
+# --- 시크릿 스캐너 가드 (2026-06-13: CF 터널 토큰이 과거 git 히스토리에 유출된 사고 후 추가) ---
+# staged 변경의 추가(+) 라인에서 토큰/키 패턴 탐지 → 발견 시 커밋 차단(히스토리 진입 전 차단).
+# 의도적 비탐지: sb_publishable_(Supabase 공개키)·*.supabase.co URL·GitHub Actions ${{ secrets.* }}·__PLACEHOLDER__.
+secret_hits=$(git diff --cached -U0 --diff-filter=ACM -- . ':(exclude)*.db' \
+  | grep -E '^\+' | grep -vE '^\+\+\+' \
+  | grep -vE 'pragma: allowlist secret|gitleaks:allow' \
+  | grep -EnI 'eyJhIjoi[A-Za-z0-9+/=_-]{60,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9]+|ghp_[A-Za-z0-9]{30,}|gho_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|glpat-[A-Za-z0-9_-]{20,}|xox[bpoas]-[A-Za-z0-9-]{10,}|AKIA[A-Z0-9]{16}|AIza[A-Za-z0-9_-]{30,}|sk-[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----')
+if [ -n "$secret_hits" ] && [ -z "$ALLOW_SECRET" ]; then
+  echo "🚨 시크릿 가드: 토큰/키로 보이는 문자열이 staged 변경에 있습니다 — 커밋 차단."
+  printf '%s\n' "$secret_hits" | head -20 | sed 's/^/     /'
+  echo "   - 진짜 시크릿이면: 코드에서 제거하고 env/키체인으로 옮기세요."
+  echo "   - 오탐이면: 해당 줄 끝에 '# pragma: allowlist secret' 추가 후 재커밋."
+  echo "   - 강제 우회(비권장): ALLOW_SECRET=1 git commit ..."
+  exit 1
+fi
 exit 0

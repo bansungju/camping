@@ -18,7 +18,10 @@
    (반대로 CORE 레인 파일도 건드리지 않는다 — account/community/sw/supabaseClient/privacy/terms/auth-callback은 SOCIAL 전용.)
 ⑤ 수정 → preview 서버(.claude/launch.json "site", :8080)로 검증.
    sw.js 변경 또는 캐시 ?v= 영향 시 python3 pipeline/stamp_version.py 실행.
+   ※ stamp_version이 app.js의 ?v= 참조(supabaseClient 등)를 기계적으로 건드릴 수 있음 → ⑥ 참고.
 ⑥ 커밋: 항상 명시적 git add(SOCIAL 파일만 나열). 절대 git add . / -A 금지.
-   커밋 전 git diff --cached --name-only로 app.js/style.css/item/** 등 CORE 파일이 안 섞였는지 확인.
+   커밋 전 git diff --cached --name-only로 item/** 등 CORE 파일이 안 섞였는지 확인.
+   app.js가 stamp로 바뀐 경우: git diff site/app.js가 **?v= 캐시버스트 줄만**이면(시맨틱 변경 없음) SOCIAL 파일과 함께 add하고
+   ALLOW_NO_LOCK=1 git commit 으로 커밋(캐시 정합 유지). ?v= 외 변경이 보이면 CORE 시맨틱 편집물이므로 app.js는 빼고(스킵) CORE에 맡긴다.
 ⑦ bug-report.md 해당 항목 ✅ 해결완료(날짜)+요약 갱신. (타 세션도 편집하므로 Read 직후 즉시 Edit.)
 ```

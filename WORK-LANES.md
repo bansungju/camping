@@ -45,6 +45,7 @@
 - pathspec 커밋은 다른 세션의 staged 파일을 건드리지 않는다(인덱스에 그대로 남김) — 안전.
 - 제외 레인 파일(SOCIAL: account/community/sw/supabaseClient/privacy/terms/auth-callback, DATA: 독립 재생성한 search.json/manifest)이 섞이지 않았는지 확인.
 - **기계적 백스톱:** `.git/hooks/pre-commit`이 코어코드(app.js/style.css)+CI/데이터-파이프라인 파일이 한 커밋에 섞이면 **차단**한다(쓸어담기 시그니처). 재클론 시 `cp pipeline/hooks/pre-commit .git/hooks/ && chmod +x .git/hooks/pre-commit`로 재설치. 의도된 교차레인 커밋이면 `ALLOW_CROSS_LANE=1 git commit …`.
+- **핫파일 락 강제(2026-06-13 추가):** 같은 훅이 핫파일(app.js/style.css/build-item-pages.js) 커밋 시 **신선한(<45분) 락을 내 세션이 소유**하는지 검사한다. 락 없음/타 세션 소유/만료면 **차단**. 워크플로: `echo '{"session":"<SID>","lane":"CORE","file":"app.js"}' > .claude/locks/app.js.lock` → `LANE_SESSION=<SID> git commit … -- site/app.js` → 커밋 후 락 삭제. 순수 stamp_version/build-item-pages 산출만이면 `ALLOW_NO_LOCK=1`로 우회. (commit만 게이트 — working-tree 동시 편집 자체는 못 막으므로 락 관례는 여전히 필요.)
 
 ## 루프 프롬프트 (레인을 프롬프트에 명시 — 기본값 의존 금지)
 
