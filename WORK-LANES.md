@@ -66,7 +66,7 @@
 | **B24** | `harvest_tents.py` | H-80 | 조기종료 불가 | ✅ 2026-06-13 (후보루프+페이지후 target break) |
 | **B25** | `ocr_specs.py` | H-116 | dv=0 오분류 | ✅ 2026-06-13 (dv=0·val=0 일치 판정) |
 | **B26** | `stamp_version.py` | H-119 | FileNotFoundError 가드 | ✅ 2026-06-13 (진입 fail-fast 검증) |
-| **B27** | `download_images.py` | H-120 | 재다운로드 누락 | ⬜ |
+| **B27** | `download_images.py` | H-120 | 재다운로드 누락 | ✅ 2026-06-13 (쿼리 단순화·동작은 기정상) |
 | **B28** | `detect_price_drops.py` | H-124 | 색상변형 중복푸시 | ⬜ |
 
 > 출처: 사용자 백엔드 H 29건 목록(2026-06-13). 이미 완료라 제외: H-44·H-45·H-47·H-52·H-53·H-54·H-55·H-57·H-58(코드+버그ID 주석 확인). ⚠️ B17은 `run_all.py`(B4서 H-61/62 완료)를 다시 건드림 → 락 2파일 모두. 각 행 착수 전 **코드 현재상태 먼저 확인**(이미 수정됐으면 마킹만).
@@ -98,7 +98,7 @@
 | **C18** | `add_manual_models.py` | M-225 수정(with+예외) / M-197=H-102(B21) 기해결 / M-280 by-design(수동=권위 canonical 소유) | ✅ 2026-06-13 |
 | **C19** | `enrich_details.py` | M-215(빈targets 가드)·M-250(try/finally) 수정 / M-322 비이슈(",".join("?"*n)=정상 콤마) | ✅ 2026-06-13 |
 | **C20** | `check_export.py` | M-222·M-294(price_max None/0 구분)·L-231(파싱실패 exit1) 수정 | ✅ 2026-06-13 |
-| **C21** | `stamp_version.py` | M-248·M-296·L-213 | ⬜ |
+| **C21** | `stamp_version.py` | M-296(search.json 부재 경고)·L-213(print hs) 수정 / M-248=H-119(B26 fail-fast) 기해결 | ✅ 2026-06-13 |
 | **C22** | `harvest_tents.py` | M-254·M-275·L-241 | ⬜ |
 | **C23** | `seed_coupang.py` | L-193·L-215·L-239 | ⬜ |
 | **C24** | `limits_map.py` | L-212·L-251·L-252 | ⬜ |

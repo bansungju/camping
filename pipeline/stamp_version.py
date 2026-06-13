@@ -48,6 +48,9 @@ def main():
         if appjs2 != appjs:
             with open(appjs_path, "w", encoding="utf-8") as f:
                 f.write(appjs2)
+    else:
+        # M-296: search.json 부재 시 app.js의 이전 ?v= 스텁이 조용히 유지돼 구 검색 인덱스가 서빙될 위험.
+        print("[WARN] search.json 없음 — app.js의 search ?v= 미갱신(구 캐시 위험). 파이프라인 빌드 후 재실행 필요")
 
     hc = _hash("style.css")
     hs = _hash("supabaseClient.js")
@@ -114,7 +117,8 @@ def main():
             with open(swp, "w", encoding="utf-8") as f:
                 f.write(sw2)
             changed.append(f"sw.js(build={build})")
-    print(f"버전 스탬프 app.js={hj} style.css={hc} → {', '.join(changed) if changed else '변경없음'}")
+    # L-213: supabaseClient.js 해시(hs)도 포함해 캐시버스팅 확인 정보 완비.
+    print(f"버전 스탬프 app.js={hj} style.css={hc} supabaseClient.js={hs} → {', '.join(changed) if changed else '변경없음'}")
 
 
 if __name__ == "__main__":
