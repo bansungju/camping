@@ -2473,18 +2473,21 @@ function openSetDetail(si) {
   const s = sets[si];
   if (!s) return;
   const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
+  const fmtP = p => p ? p.toLocaleString() + "원" : "—";
   const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
+  const tp = s.items.reduce((sum, x) => x.p ? sum + x.p * (x.qty || 1) : sum, 0);
   const rows = s.items.map((x, ii) => {
     const w = x.weight_g != null ? fmtW(x.weight_g * (x.qty || 1)) : "—";
+    const p = x.p ? fmtP(x.p * (x.qty || 1)) : "—";
     const qty = x.qty || 1;
     const max = qtyMax(x.s);
-    // FE-WISH-07: 항목별 구매 버튼. coupang_url 있으면 활성, 없으면 '준비 중' 비활성(상품 상세 pmbuy 패턴)
     const buyCell = x.coupang_url
       ? `<button type="button" class="set-buy" data-ii="${ii}">🛒 구매</button>`
       : `<button type="button" class="set-buy is-off" disabled aria-disabled="true" title="구매 링크 준비 중">준비 중</button>`;
     return `<tr>
       <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px">${esc(x.b || "")} ${esc(x.m || "")}</td>
       <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${w}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;text-align:right;color:var(--muted)">${p}</td>
       <td style="padding:4px 8px;border-bottom:1px solid var(--line)">
         <div class="qty-ctrl">
           <button class="qty-dec" data-ii="${ii}" aria-label="수량 감소">−</button>
@@ -2505,13 +2508,15 @@ function openSetDetail(si) {
       <thead><tr>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">수량</th>
         <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">구매</th>
       </tr></thead>
-      <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">장비가 없어요</td></tr>'}</tbody>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">장비가 없어요</td></tr>'}</tbody>
       <tfoot><tr>
         <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
-        <td style="padding:8px 8px 0;font-size:14px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtW(tw) : "—"}</td>
+        <td style="padding:8px 8px 0;font-size:13px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtW(tw) : "—"}</td>
+        <td style="padding:8px 8px 0;font-size:13px;font-weight:700;text-align:right;color:var(--accent)">${tp ? tp.toLocaleString() + "원~" : "—"}</td>
         <td></td>
         <td></td>
       </tr></tfoot>
