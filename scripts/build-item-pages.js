@@ -129,14 +129,14 @@ function buildPage(catSlug, catLabel, model, metrics, rank, total, idx, allModel
         "@type": "Offer",
         "priceCurrency": "KRW",
         "price": price_min,
-        "availability": coupang_url ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
+        "availability": coupang_url ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
       }
     } : {}),
     "aggregateRating": (() => {
       const starVals = Object.values(specs).map(s => s.stars).filter(v => v != null);
       if (!starVals.length) return undefined;
       const avg = (starVals.reduce((a, b) => a + b, 0) / starVals.length).toFixed(1);
-      return { "@type": "AggregateRating", "ratingValue": avg, "bestRating": "5", "ratingCount": 1, "reviewCount": 1 };
+      return undefined; // 실 리뷰 데이터 없음 — 허위 ratingCount 출력 금지(L-165)
     })()
   };
   Object.keys(jsonLd).forEach(k => jsonLd[k] === undefined && delete jsonLd[k]);
