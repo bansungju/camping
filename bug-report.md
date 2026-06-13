@@ -3216,7 +3216,7 @@
 
 ---
 
-### [M-166] — `value_metric.py` `compute_value_score()` — `weight_min=0` 또는 `value=0` 시 ZeroDivisionError
+### [M-166] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `compute_value_score()` — `weight_min=0` 또는 `value=0` 시 ZeroDivisionError
 
 - **영역:** 백엔드 — 파이프라인 / 가성비 지표
 - **심각도:** 🟡 Medium
@@ -3228,7 +3228,7 @@
 
 ---
 
-### [M-167] — `value_metric.py` `rank_normalize()` — 모델 1개 카테고리에서 항상 ★5.0 반환
+### [M-167] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `rank_normalize()` — 모델 1개 카테고리에서 항상 ★5.0 반환
 
 - **영역:** 백엔드 — 파이프라인 / 가성비 지표
 - **심각도:** 🟡 Medium
@@ -3240,7 +3240,7 @@
 
 ---
 
-### [M-168] — `value_metric.py` — `not price_min` falsy 체크로 `price_min=0` 모델 eligible에서 제외
+### [M-168] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` — `not price_min` falsy 체크로 `price_min=0` 모델 eligible에서 제외
 
 - **영역:** 백엔드 — 파이프라인 / 가성비 지표
 - **심각도:** 🟡 Medium
@@ -3298,7 +3298,7 @@
 
 ---
 
-### [L-189] — `resolve_duplicates.py` `executemany` 후 `rowcount` 누적 — SQLite에서 항상 부정확
+### [L-189] ✅ 해결완료(2026-06-13, C6) — `resolve_duplicates.py` `executemany` 후 `rowcount` 누적 — SQLite에서 항상 부정확
 
 - **영역:** 백엔드 — 파이프라인 / 중복 해소
 - **심각도:** 🟢 Low
@@ -3385,7 +3385,7 @@
 
 ---
 
-### [M-177] — `fill_whitelist_specs.py` `fill_one()` — `fn=None` 케이스 미처리 → KeyError
+### [M-177] ✅ 해결완료(기존확인, C9) — `fill_whitelist_specs.py` `fill_one()` — `fn=None` 케이스 미처리 → KeyError
 
 - **영역:** 백엔드 — 파이프라인 / 스펙 수집
 - **심각도:** 🟡 Medium
@@ -3532,7 +3532,7 @@
 
 ---
 
-### [M-184] — `graph_full.py` `normalize_node`/`validate_node` — `con.commit()` 없이 `con.close()` → 변경사항 롤백 위험
+### [M-184] ✅ 해결완료(2026-06-13, C7) — `graph_full.py` `normalize_node`/`validate_node` — `con.commit()` 없이 `con.close()` → 변경사항 롤백 위험
 
 - **영역:** 백엔드 — 파이프라인 / 그래프 파이프라인
 - **심각도:** 🟡 Medium
@@ -3556,7 +3556,7 @@
 
 ---
 
-### [L-195] — `verify_internal.py` `write_queue()` — `CHECK_PRIORITY` 미등록 키 → KeyError
+### [L-195] ✅ 해결완료(2026-06-13, C8) — `verify_internal.py` `write_queue()` — `CHECK_PRIORITY` 미등록 키 → KeyError
 
 - **영역:** 백엔드 — 파이프라인 / 내부 검증
 - **심각도:** 🟢 Low
@@ -3655,7 +3655,7 @@
 
 ---
 
-### [M-192] — `normalize.py` `parse_lumens()` — 단위 없는 숫자 문자열에서 루멘 오탐
+### [M-192] ✅ 해결완료(기존확인, C4) — `normalize.py` `parse_lumens()` — 단위 없는 숫자 문자열에서 루멘 오탐
 
 - **영역:** 백엔드 — 파이프라인 / 스펙 파싱
 - **심각도:** 🟡 Medium
@@ -3752,7 +3752,7 @@
 
 ---
 
-### [M-195] — `build_backpacking_bag.py` — `models` 빈 리스트 시 `min(caps)` / `max(caps)` `ValueError`
+### [M-195] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` — `models` 빈 리스트 시 `min(caps)` / `max(caps)` `ValueError`
 
 - **영역:** 백엔드 — 파이프라인 / 백패킹 가방 빌드
 - **심각도:** 🟡 Medium
@@ -3764,7 +3764,7 @@
 
 ---
 
-### [M-196] — `build_backpacking_bag.py` — `manifest.json` 쓰기 중 예외 시 파일 손상
+### [M-196] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` — `manifest.json` 쓰기 중 예외 시 파일 손상
 
 - **영역:** 백엔드 — 파이프라인 / 백패킹 가방 빌드
 - **심각도:** 🟡 Medium
@@ -3872,7 +3872,7 @@
 
 ---
 
-### [M-200] — `export_site.py` — `bool(star)` 에서 `star=None` 시 `False`로 무음 처리 → ★ 지표 오분류
+### [M-200] ✅ 해결완료(기존확인, C3) — `export_site.py` — `bool(star)` 에서 `star=None` 시 `False`로 무음 처리 → ★ 지표 오분류
 
 - **영역:** 백엔드 — 파이프라인 / 사이트 빌드
 - **심각도:** 🟡 Medium
@@ -3884,7 +3884,7 @@
 
 ---
 
-### [M-201] — `crosssource.py` `upsert()` — `raw_unit="norm"` 하드코딩으로 단위 메타 정보 손실
+### [M-201] ✅ 해결완료(기존확인, C11) — `crosssource.py` `upsert()` — `raw_unit="norm"` 하드코딩으로 단위 메타 정보 손실
 
 - **영역:** 백엔드 — 파이프라인 / 크로스소스
 - **심각도:** 🟡 Medium
@@ -4025,7 +4025,7 @@
 
 ---
 
-### [L-205] — `value_metric.py` — `--dry-run` `default=True` + `action="store_true"` 조합 → 항상 dry-run 고착
+### [L-205] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` — `--dry-run` `default=True` + `action="store_true"` 조합 → 항상 dry-run 고착
 
 - **영역:** 백엔드 — 파이프라인 / 가성비 지표
 - **심각도:** 🟢 Low
@@ -4075,7 +4075,7 @@
 
 ---
 
-### [M-210] — `promote_catalog.py` 출력 포맷 — `weight_g`/`water_mm`/`floor_m2` None 시 `:.0f` TypeError
+### [M-210] ✅ 해결완료(2026-06-13, C12) — `promote_catalog.py` 출력 포맷 — `weight_g`/`water_mm`/`floor_m2` None 시 `:.0f` TypeError
 
 - **영역:** 백엔드 — 파이프라인 / 카탈로그 승격
 - **심각도:** 🟡 Medium
@@ -4204,7 +4204,7 @@
 
 ---
 
-### [M-216] — `fill_whitelist_specs.py` `main()` — 승격 단계 예외 시 `con.close()` 미호출 → 커넥션 누수·WAL 잠금 잔류
+### [M-216] ✅ 해결완료(2026-06-13, C9) — `fill_whitelist_specs.py` `main()` — 승격 단계 예외 시 `con.close()` 미호출 → 커넥션 누수·WAL 잠금 잔류
 
 - **영역:** 백엔드 — 파이프라인 / 스펙 수집
 - **심각도:** 🟡 Medium
@@ -4377,7 +4377,7 @@
 
 ---
 
-### [M-223] — `build_backpacking_bag.py` `main()` — 빈 모델 리스트에서 `min()`/`max()` ValueError
+### [M-223] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` `main()` — 빈 모델 리스트에서 `min()`/`max()` ValueError
 
 - **영역:** 백엔드 — 데이터 빌드
 - **심각도:** 🟡 Medium
@@ -4389,7 +4389,7 @@
 
 ---
 
-### [M-224] — `build_backpacking_bag.py` `main()` — `manifest.json` 열기 encoding 누락 + 파일핸들 누수
+### [M-224] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` `main()` — `manifest.json` 열기 encoding 누락 + 파일핸들 누수
 
 - **영역:** 백엔드 — 데이터 빌드
 - **심각도:** 🟡 Medium
@@ -4546,7 +4546,7 @@
 
 ---
 
-### [M-230] — `resolve_duplicates.py` `resolve()` — `rep_product_id` 미매칭 시 가격 `None` 처리로 잘못된 위너 선택
+### [M-230] ✅ 해결완료(기존확인, C6) — `resolve_duplicates.py` `resolve()` — `rep_product_id` 미매칭 시 가격 `None` 처리로 잘못된 위너 선택
 
 - **영역:** 백엔드 — 중복 해소
 - **심각도:** 🟡 Medium
@@ -4558,7 +4558,7 @@
 
 ---
 
-### [M-231] — `export_site.py` `export()` — ratings 쿼리에 `comparison_scope` 필터 없어 임의 scope 별점 선택
+### [M-231] ✅ 해결완료(2026-06-13, C3) — `export_site.py` `export()` — ratings 쿼리에 `comparison_scope` 필터 없어 임의 scope 별점 선택
 
 - **영역:** 백엔드 — 데이터 내보내기
 - **심각도:** 🟡 Medium
@@ -4667,7 +4667,7 @@
 
 ---
 
-### [M-235] — `graph_full.py` `enrich_node()` — 예외 발생 시 SQLite 커넥션 누수
+### [M-235] ✅ 해결완료(2026-06-13, C7) — `graph_full.py` `enrich_node()` — 예외 발생 시 SQLite 커넥션 누수
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🟡 Medium
@@ -4679,7 +4679,7 @@
 
 ---
 
-### [M-236] — `validate_ranges.py` `validate_db()` — 전체 `valid=1` 리셋이 `source_id=4` 수동 보정값 덮어씀
+### [M-236] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `validate_db()` — 전체 `valid=1` 리셋이 `source_id=4` 수동 보정값 덮어씀
 
 - **영역:** 백엔드 — 데이터 검증
 - **심각도:** 🟡 Medium
@@ -4776,7 +4776,7 @@
 
 ---
 
-### [M-241] — `verify_internal.py` `main()` — `resolved=1` 전체를 억제 집합으로 사용해 재발 탐지 누락
+### [M-241] ✅ 해결완료(2026-06-13, C8) — `verify_internal.py` `main()` — `resolved=1` 전체를 억제 집합으로 사용해 재발 탐지 누락
 
 - **영역:** 백엔드 — 내부 검증
 - **심각도:** 🟡 Medium
@@ -4788,7 +4788,7 @@
 
 ---
 
-### [M-242] — `export_site.py` `export()` — 스펙 쿼리 `ORDER BY` 없어 복수 valid 행 시 비결정적 반환
+### [M-242] ✅ 해결완료(2026-06-13, C3) — `export_site.py` `export()` — 스펙 쿼리 `ORDER BY` 없어 복수 valid 행 시 비결정적 반환
 
 - **영역:** 백엔드 — 데이터 내보내기
 - **심각도:** 🟡 Medium
@@ -4928,7 +4928,7 @@
 
 ---
 
-### [M-249] — `normalize_models.py` `normalize_db()` — 브랜드 prefix 제거 후 GENERIC 재검사 누락으로 오류 병합
+### [M-249] ✅ 해결완료(2026-06-13, C13) — `normalize_models.py` `normalize_db()` — 브랜드 prefix 제거 후 GENERIC 재검사 누락으로 오류 병합
 
 - **영역:** 백엔드 — 정규화
 - **심각도:** 🟡 Medium
@@ -4990,7 +4990,7 @@
 
 ---
 
-### [L-220] — `resolve_duplicates.py` `resolve()` — 복수 loser가 동일 canonical_models 행 공유 시 두 번째 winner 업데이트 no-op
+### [L-220] ✅ 분석완료(무효, C6) — `resolve_duplicates.py` `resolve()` — 복수 loser가 동일 canonical_models 행 공유 시 두 번째 winner 업데이트 no-op
 
 - **영역:** 백엔드 — 중복 해소
 - **심각도:** 🟢 Low
@@ -5116,7 +5116,7 @@
 
 ---
 
-### [L-223] — `fill_whitelist_specs.py` `fill_one()` — `valid` 필터 없어 invalid 스펙 존재 시 재보강 영구 차단
+### [L-223] ✅ 분석완료(무효, C9) — `fill_whitelist_specs.py` `fill_one()` — `valid` 필터 없어 invalid 스펙 존재 시 재보강 영구 차단
 
 - **영역:** 백엔드 — 스펙 보강
 - **심각도:** 🟢 Low
@@ -5284,7 +5284,7 @@
 
 ## R-111 (백엔드) — 2026-06-13
 
-### [M-263] — `normalize_models.py` `flag_price_outliers()` — `valid=1` 일괄 리셋으로 외부 무효화 행 복원
+### [M-263] ✅ 해결완료(2026-06-13, C13) — `normalize_models.py` `flag_price_outliers()` — `valid=1` 일괄 리셋으로 외부 무효화 행 복원
 
 - **영역:** 백엔드 — 가격 정규화
 - **심각도:** 🟡 Medium
@@ -5296,7 +5296,7 @@
 
 ---
 
-### [M-264] — `normalize_models.py` `normalize_db()` — `canon`/`name` 모두 빈 문자열 시 `"#pcode"` 비정상 모델명
+### [M-264] ✅ 해결완료(2026-06-13, C13) — `normalize_models.py` `normalize_db()` — `canon`/`name` 모두 빈 문자열 시 `"#pcode"` 비정상 모델명
 
 - **영역:** 백엔드 — 모델 정규화
 - **심각도:** 🟡 Medium
@@ -5308,7 +5308,7 @@
 
 ---
 
-### [M-265] — `validate_ranges.py` `validate_db()` — 리셋+재검증 비원자적 실행으로 예외 시 전체 `valid=1` 상태 잔류
+### [M-265] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `validate_db()` — 리셋+재검증 비원자적 실행으로 예외 시 전체 `valid=1` 상태 잔류
 
 - **영역:** 백엔드 — 데이터 검증
 - **심각도:** 🟡 Medium
@@ -5320,7 +5320,7 @@
 
 ---
 
-### [M-266] — `resolve_duplicates.py` `resolve()` — `GROUP BY capacity` (NULL ≠ NULL)로 NULL-capacity 중복 미탐지
+### [M-266] ✅ 분석완료(무효, C6) — `resolve_duplicates.py` `resolve()` — `GROUP BY capacity` (NULL ≠ NULL)로 NULL-capacity 중복 미탐지
 
 - **영역:** 백엔드 — 중복 해소
 - **심각도:** 🟡 Medium
@@ -5386,7 +5386,7 @@
 
 ---
 
-### [M-269] — `graph_full.py` `enrich_node()` — 4개 스레드 동시 SQLite 쓰기로 `OperationalError: database is locked` 무음 실패
+### [M-269] ✅ 해결완료(2026-06-13, C7) — `graph_full.py` `enrich_node()` — 4개 스레드 동시 SQLite 쓰기로 `OperationalError: database is locked` 무음 실패
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🟡 Medium
@@ -5398,7 +5398,7 @@
 
 ---
 
-### [M-270] — `value_metric.py` `rank_normalize()` — 동점 다수 시 모두 `qi=0.5` 배정 (최적 1.0 미달)
+### [M-270] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `rank_normalize()` — 동점 다수 시 모두 `qi=0.5` 배정 (최적 1.0 미달)
 
 - **영역:** 백엔드 — 가치 평가
 - **심각도:** 🟡 Medium
@@ -5410,7 +5410,7 @@
 
 ---
 
-### [M-271] — `verify_internal.py` `check_duplicate_canonical()` — `GROUP_CONCAT(id ORDER BY id)` SQLite <3.44 미지원
+### [M-271] ✅ 해결완료(2026-06-13, C8) — `verify_internal.py` `check_duplicate_canonical()` — `GROUP_CONCAT(id ORDER BY id)` SQLite <3.44 미지원
 
 - **영역:** 백엔드 — 내부 검증
 - **심각도:** 🟡 Medium
@@ -5488,7 +5488,7 @@
 
 ---
 
-### [M-276] — `normalize.py` `parse_water_head()` — OCR/오타로 음수값 입력 시 음수 내수압 그대로 저장
+### [M-276] ✅ 해결완료(2026-06-13, C4) — `normalize.py` `parse_water_head()` — OCR/오타로 음수값 입력 시 음수 내수압 그대로 저장
 
 - **영역:** 백엔드 — 정규화
 - **심각도:** 🟡 Medium
@@ -5500,7 +5500,7 @@
 
 ---
 
-### [M-277] — `promote_catalog.py` `main()` — `UPDATE SET curation_status='pending'` 전체 리셋으로 `rejected` 상품 복원
+### [M-277] ✅ 해결완료(2026-06-13, C12) — `promote_catalog.py` `main()` — `UPDATE SET curation_status='pending'` 전체 리셋으로 `rejected` 상품 복원
 
 - **영역:** 백엔드 — 카탈로그 승격
 - **심각도:** 🟡 Medium
@@ -5591,7 +5591,7 @@
 
 ---
 
-### [M-279] — `export_site.py` `export()` — gf_code 서브쿼리가 `curation_status='verified'` 필터 누락
+### [M-279] ✅ 해결완료(기존확인, C3) — `export_site.py` `export()` — gf_code 서브쿼리가 `curation_status='verified'` 필터 누락
 
 - **영역:** 백엔드 — 사이트 빌드
 - **심각도:** 🟡 Medium
@@ -5627,7 +5627,7 @@
 
 ---
 
-### [M-282] — `crosssource.py` `upsert()` — `overwrite=True` 시 DELETE 범위가 전체 source_id → 연관 데이터 과삭제
+### [M-282] ✅ 분석완료(by-design, C11) — `crosssource.py` `upsert()` — `overwrite=True` 시 DELETE 범위가 전체 source_id → 연관 데이터 과삭제
 
 - **영역:** 백엔드 — 크로스소스
 - **심각도:** 🟡 Medium
@@ -5740,7 +5740,7 @@
 
 ---
 
-### [M-288] — `normalize.py` `parse_weight()` — `g` 정규식이 `mg`(밀리그램) 매칭, 중량 1000배 오계산
+### [M-288] ✅ 해결완료(2026-06-13, C4) — `normalize.py` `parse_weight()` — `g` 정규식이 `mg`(밀리그램) 매칭, 중량 1000배 오계산
 
 - **영역:** 백엔드 — 데이터 정규화
 - **심각도:** 🟡 Medium
@@ -5752,7 +5752,7 @@
 
 ---
 
-### [M-289] — `value_metric.py` `rank_normalize()` — 단일 모델 카테고리에서 자동 5점 부여
+### [M-289] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `rank_normalize()` — 단일 모델 카테고리에서 자동 5점 부여
 
 - **영역:** 백엔드 — 가치 지표
 - **심각도:** 🟡 Medium
@@ -5776,7 +5776,7 @@
 
 ---
 
-### [L-238] — `normalize.py` `packed_volume_cm3()` — 2개 숫자 입력 시 평면 파우치도 원통으로 계산, ~6배 오차
+### [L-238] ⏸ 보류(C4) — `normalize.py` `packed_volume_cm3()` — 2개 숫자 입력 시 평면 파우치도 원통으로 계산, ~6배 오차
 
 - **영역:** 백엔드 — 데이터 정규화
 - **심각도:** 🟢 Low
@@ -5917,7 +5917,7 @@
 
 ---
 
-### [M-295] — `verify_internal.py` `main()` — `resolved=1` 전체 억제로 재발 버그 재탐지 불가
+### [M-295] ✅ 해결완료(2026-06-13, C8) — `verify_internal.py` `main()` — `resolved=1` 전체 억제로 재발 버그 재탐지 불가
 
 - **영역:** 백엔드 — 내부 검증
 - **심각도:** 🟡 Medium
@@ -6194,7 +6194,7 @@
 
 ---
 
-### [M-308] — `resolve_duplicates.py` `resolve()` — `executemany` 후 `rowcount`가 마지막 항목 1건만 반환, 합산 오류
+### [M-308] ✅ 해결완료(2026-06-13, C6) — `resolve_duplicates.py` `resolve()` — `executemany` 후 `rowcount`가 마지막 항목 1건만 반환, 합산 오류
 
 - **영역:** 백엔드 — 중복 해소
 - **심각도:** 🟡 Medium
@@ -6206,7 +6206,7 @@
 
 ---
 
-### [M-309] — `export_site.py` `export()` — 쿠팡 URL 조회 WHERE에 NULL-safe 비교 미사용, canonical_model=NULL 상품 제외
+### [M-309] ✅ 해결완료(2026-06-13, C3) — `export_site.py` `export()` — 쿠팡 URL 조회 WHERE에 NULL-safe 비교 미사용, canonical_model=NULL 상품 제외
 
 - **영역:** 백엔드 — 사이트 빌드
 - **심각도:** 🟡 Medium
@@ -6218,7 +6218,7 @@
 
 ---
 
-### [M-310] — `export_site.py` `export()` — gf_code 서브쿼리도 canonical_model NULL 비교 오류
+### [M-310] ✅ 해결완료(2026-06-13, C3) — `export_site.py` `export()` — gf_code 서브쿼리도 canonical_model NULL 비교 오류
 
 - **영역:** 백엔드 — 사이트 빌드
 - **심각도:** 🟡 Medium
@@ -6230,7 +6230,7 @@
 
 ---
 
-### [M-311] — `promote_catalog.py` `main()` — `v_verified_catalog` 뷰가 전 카테고리 포함, 텐트 전용 커버리지 지표 오도
+### [M-311] ✅ 해결완료(2026-06-13, C12) — `promote_catalog.py` `main()` — `v_verified_catalog` 뷰가 전 카테고리 포함, 텐트 전용 커버리지 지표 오도
 
 - **영역:** 백엔드 — 카탈로그 승격
 - **심각도:** 🟡 Medium
@@ -6332,7 +6332,7 @@
 
 ---
 
-### [L-253] — `crosssource.py` `RECORDS` — `pcode "10429362"` 중복 등재, 향후 오버라이트 위험
+### [L-253] ⏸ 보류(C11) — `crosssource.py` `RECORDS` — `pcode "10429362"` 중복 등재, 향후 오버라이트 위험
 
 - **영역:** 백엔드 — 크로스소스
 - **심각도:** 🟢 Low
@@ -6460,7 +6460,7 @@
 
 ---
 
-### [M-319] — `normalize.py` `parse_temp()` — 범위 온도에서 최저온도 대신 첫 번째(따뜻한) 값 반환
+### [M-319] ✅ 해결완료(2026-06-13, C4) — `normalize.py` `parse_temp()` — 범위 온도에서 최저온도 대신 첫 번째(따뜻한) 값 반환
 
 - **영역:** 백엔드 — 데이터 정규화
 - **심각도:** 🟡 Medium
@@ -6472,7 +6472,7 @@
 
 ---
 
-### [M-320] — `build_backpacking_bag.py` `main()` — 필터 후 모델 없으면 `min()/max()` ValueError 크래시
+### [M-320] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` `main()` — 필터 후 모델 없으면 `min()/max()` ValueError 크래시
 
 - **영역:** 백엔드 — 배낭 빌더
 - **심각도:** 🟡 Medium
@@ -6484,7 +6484,7 @@
 
 ---
 
-### [M-321] — `build_backpacking_bag.py` `main()` — manifest 파일 핸들 미닫힘 + 한국어 인코딩 누락
+### [M-321] ✅ 해결완료(2026-06-13, C5) — `build_backpacking_bag.py` `main()` — manifest 파일 핸들 미닫힘 + 한국어 인코딩 누락
 
 - **영역:** 백엔드 — 배낭 빌더
 - **심각도:** 🟡 Medium
@@ -6524,7 +6524,7 @@
 
 ---
 
-### [M-323] — `validate_ranges.py` `rederive_thickness()` — `value_normalized=None` 설정 후 `valid=0` 미설정, 불일치 행 잔류
+### [M-323] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `rederive_thickness()` — `value_normalized=None` 설정 후 `valid=0` 미설정, 불일치 행 잔류
 
 - **영역:** 백엔드 — 범위 검증
 - **심각도:** 🟡 Medium
@@ -6536,7 +6536,7 @@
 
 ---
 
-### [M-324] — `graph_full.py` `enrich_node()` — SQL이 `water_head`/`floor_area` 고정 체크로 침낭·매트 보강 대상 누락
+### [M-324] ⏸ 보류(C7) — `graph_full.py` `enrich_node()` — SQL이 `water_head`/`floor_area` 고정 체크로 침낭·매트 보강 대상 누락
 
 - **영역:** 백엔드 — 그래프 파이프라인
 - **심각도:** 🟡 Medium
@@ -6548,7 +6548,7 @@
 
 ---
 
-### [L-256] — `validate_ranges.py` `backfill_capacity_l()` — `\b` 가 한국어/유니코드 단위 뒤에서 오동작
+### [L-256] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `backfill_capacity_l()` — `\b` 가 한국어/유니코드 단위 뒤에서 오동작
 
 - **영역:** 백엔드 — 범위 검증
 - **심각도:** 🟢 Low
@@ -6640,7 +6640,7 @@
 
 ---
 
-### [M-328] — `validate_ranges.py` `validate_db()` — 전역 `valid=1` 리셋이 `mark_footprint_floor()` 의 `valid=0` 마크 덮어씀
+### [M-328] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `validate_db()` — 전역 `valid=1` 리셋이 `mark_footprint_floor()` 의 `valid=0` 마크 덮어씀
 
 - **영역:** 백엔드 — 범위 검증
 - **심각도:** 🟡 Medium
@@ -6665,7 +6665,7 @@
 
 ---
 
-### [M-330] — `validate_ranges.py` `ensure_implausible_flagtype()` — 빈 products 테이블에서 `pid[0]` TypeError 크래시
+### [M-330] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `ensure_implausible_flagtype()` — 빈 products 테이블에서 `pid[0]` TypeError 크래시
 
 - **영역:** 백엔드 — 범위 검증
 - **심각도:** 🟡 Medium
@@ -6677,7 +6677,7 @@
 
 ---
 
-### [M-331] — `export_site.py` `export()` — 스펙값 조회 `LIMIT 1` 에 `ORDER BY` 없어 비결정적 반환
+### [M-331] ✅ 해결완료(2026-06-13, C3) — `export_site.py` `export()` — 스펙값 조회 `LIMIT 1` 에 `ORDER BY` 없어 비결정적 반환
 
 - **영역:** 백엔드 — 사이트 빌드
 - **심각도:** 🟡 Medium
@@ -6689,7 +6689,7 @@
 
 ---
 
-### [L-257] — `validate_ranges.py` `harmonize_variant_water_head()` — `round()` 정수 변환 후 REAL 컬럼에 정밀도 손실
+### [L-257] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `harmonize_variant_water_head()` — `round()` 정수 변환 후 REAL 컬럼에 정밀도 손실
 
 - **영역:** 백엔드 — 범위 검증
 - **심각도:** 🟢 Low
@@ -6769,7 +6769,7 @@
 
 ---
 
-### [M-332] — `fill_whitelist_specs.py` `fill_one()` — `raw_unit` 하드코딩 `"norm"` 으로 실제 단위 미저장
+### [M-332] ✅ 해결완료(2026-06-13, C9) — `fill_whitelist_specs.py` `fill_one()` — `raw_unit` 하드코딩 `"norm"` 으로 실제 단위 미저장
 
 - **영역:** 백엔드 — 화이트리스트 스펙 채우기
 - **심각도:** 🟡 Medium
@@ -6805,7 +6805,7 @@
 
 ---
 
-### [M-335] — `promote_catalog.py` `main()` — 전체 `pending` 리셋과 재승격이 비원자적, 동시 export 시 `verified` 빈 상태 노출
+### [M-335] ✅ 분석완료(무효, C12) — `promote_catalog.py` `main()` — 전체 `pending` 리셋과 재승격이 비원자적, 동시 export 시 `verified` 빈 상태 노출
 
 - **영역:** 백엔드 — 카탈로그 승격
 - **심각도:** 🟡 Medium
@@ -6891,7 +6891,7 @@
 - **파일:** [site/app.js](site/app.js) line 1776 [lane:CORE]
 
 
-### [M-339] — `normalize.py` `parse_water_head()` — 음수·비mm 단위 미검증 통과
+### [M-339] ✅ 해결완료(2026-06-13, C4) — `normalize.py` `parse_water_head()` — 음수·비mm 단위 미검증 통과
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -6903,7 +6903,7 @@
 
 ---
 
-### [M-341] — `validate_ranges.py` `backfill_capacity_l` — `valid=0` 행이 재충전 차단
+### [M-341] ✅ 분석완료(무효, C1) — `validate_ranges.py` `backfill_capacity_l` — `valid=0` 행이 재충전 차단
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -6915,7 +6915,7 @@
 
 ---
 
-### [M-343] — `validate_ranges.py` `fill_variant_capacity` — NULL `canonical_model` 텐트 잘못 묶임
+### [M-343] ✅ 해결완료(2026-06-13, C1) — `validate_ranges.py` `fill_variant_capacity` — NULL `canonical_model` 텐트 잘못 묶임
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -6927,7 +6927,7 @@
 
 ---
 
-### [L-263] — `normalize.py` `parse_capacity_l` — 임의 숫자를 리터로 반환
+### [L-263] ✅ 해결완료(2026-06-13, C4) — `normalize.py` `parse_capacity_l` — 임의 숫자를 리터로 반환
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -6939,7 +6939,7 @@
 
 ---
 
-### [L-265] — `verify_internal.py` `write_queue` — `CHECK_PRIORITY` KeyError
+### [L-265] ✅ 해결완료(2026-06-13, C8) — `verify_internal.py` `write_queue` — `CHECK_PRIORITY` KeyError
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -6951,7 +6951,7 @@
 
 ---
 
-### [L-266] — `value_metric.py` `rank_normalize` — 동점 풀에서 0.5 고정(★3) 반환
+### [L-266] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `rank_normalize` — 동점 풀에서 0.5 고정(★3) 반환
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -7059,7 +7059,7 @@
 
 ---
 
-### [M-348] — `crosssource.py` upsert — `star_eligible` 컬럼 누락 → 별점 산정 제외
+### [M-348] ✅ 분석완료(무효, C11) — `crosssource.py` upsert — `star_eligible` 컬럼 누락 → 별점 산정 제외
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7071,7 +7071,7 @@
 
 ---
 
-### [M-349] — `export_site.py` — 쿠팡 URL 서브쿼리에 capacity 조건 누락 → 다른 용량 링크 오연결
+### [M-349] ✅ 해결완료(기존확인, C3) — `export_site.py` — 쿠팡 URL 서브쿼리에 capacity 조건 누락 → 다른 용량 링크 오연결
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7083,7 +7083,7 @@
 
 ---
 
-### [M-350] — `value_metric.py` `compute_value_score` — `weight_min=0` 행 ZeroDivisionError
+### [M-350] ✅ 해결완료(2026-06-13, C2) — `value_metric.py` `compute_value_score` — `weight_min=0` 행 ZeroDivisionError
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7095,7 +7095,7 @@
 
 ---
 
-### [L-270] — `graph_full.py` `enrich_node` — `enrich_limit` 음수값 미검증
+### [L-270] ✅ 해결완료(2026-06-13, C7) — `graph_full.py` `enrich_node` — `enrich_limit` 음수값 미검증
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
