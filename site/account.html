@@ -411,6 +411,8 @@ function renderProfile(profile) {
   const nickname = profile?.nickname ?? '사용자'
   const avatar = profile?.avatar_url
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  const _provMap = { google: 'Google', github: 'GitHub', kakao: '카카오', apple: 'Apple' }
+  const _prov = _provMap[window._accUser?.app_metadata?.provider] ?? '소셜'
   // FE-SOC-06: KREAM식 좌측정렬·컴팩트 헤더(가운데 띄움 제거). 닉네임은 profiles 단일 진실(↔ FE-SOC-04).
   section.innerHTML = `
     <div style="padding:20px 0 8px">
@@ -420,7 +422,7 @@ function renderProfile(profile) {
           : `<div style="width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🙂</div>`}
         <div style="min-width:0;flex:1">
           <div style="font-weight:700;font-size:17px">${esc(nickname)}</div>
-          <div style="color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Google 로그인</div>
+          <div style="color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_prov} 로그인</div>
         </div>
         <button id="btn-signout" type="button" style="flex-shrink:0;font-size:12px;color:var(--muted);background:none;border:1px solid var(--line);border-radius:6px;padding:5px 12px;cursor:pointer">로그아웃</button>
       </div>
