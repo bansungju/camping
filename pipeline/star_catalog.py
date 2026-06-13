@@ -58,8 +58,10 @@ def main():
         FROM product_spec_values psv JOIN metrics m ON m.id=psv.metric_id WHERE psv.valid=1"""):
         if pid in prods and key in DIRECTION:
             prods[pid]["v"][key] = val
-    for pid, pr in con.execute("SELECT product_id, MIN(price_krw) FROM price_observations GROUP BY product_id"):
-        if pid in prods:
+    # M-260: valid=1만 집계(flag_price_outliers 격리분 제외). M-169: MIN이 NULL이거나 0/음수면
+    #   아래 min-max 루프에서 None과 비교해 TypeError → 양수 가격만 채택.
+    for pid, pr in con.execute("SELECT product_id, MIN(price_krw) FROM price_observations WHERE valid=1 GROUP BY product_id"):
+        if pid in prods and pr is not None and pr > 0:
             prods[pid]["v"]["price"] = pr
 
     # 세그먼트별 min-max
@@ -87,7 +89,7 @@ def main():
     print("=" * 60)
     for cat in WEIGHTS:
         rows = con.execute("""SELECT b.name_ko||' '||pr.model_name, cs.score,
-              (SELECT MIN(price_krw) FROM price_observations po WHERE po.product_id=pr.id)
+              (SELECT MIN(price_krw) FROM price_observations po WHERE po.product_id=pr.id AND po.valid=1)  -- M-411: 격리(valid=0) 제외
             FROM catalog_scores cs JOIN products pr ON pr.id=cs.product_id
             JOIN categories c ON c.id=pr.category_id AND c.name_ko=?
             JOIN brands b ON b.id=pr.brand_id
