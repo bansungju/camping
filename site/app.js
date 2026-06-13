@@ -2215,7 +2215,7 @@ function openReviewDetail(r) {
       const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
       if (error) {
         const msg = error.message || "";
-        showToast(msg.includes("duplicate") || msg.includes("unique") ? "이미 신고한 후기예요" : (getErrorMessage ? getErrorMessage(error) : "신고 중 오류가 발생했어요"));
+        showToast(msg === "already_reported" || msg.includes("duplicate") || msg.includes("unique") ? "이미 신고한 후기예요" : (getErrorMessage ? getErrorMessage(error) : "신고 중 오류가 발생했어요"));
         rbtn.disabled = false; rbtn.textContent = "🚩 신고";
       } else {
         rbtn.textContent = "신고됨"; rbtn.disabled = true;
@@ -2820,8 +2820,7 @@ async function renderHotSection(categories) {
               </span>
               <span class="hot-rank-cnt">${h.clicks}회</span>
             </a>`;
-          })
-          ).join("");
+          }).join("");
           return `<div class="hot-cat-block">
             <div class="hot-cat-header">
               <span class="hot-cat-icon" style="background:${tint}">${icon}</span>
