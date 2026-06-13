@@ -35,6 +35,8 @@ export async function signInWithOAuth(provider) {
 }
 
 export async function signOut() {
+  localStorage.removeItem("wish");
+  localStorage.removeItem("sets");
   return supabase.auth.signOut()
 }
 

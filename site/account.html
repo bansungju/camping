@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=0ae3d1a3"></script>
+<script src="app.js?v=d86457cb"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -201,15 +201,13 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=3f90c643'
+} from './supabaseClient.js?v=b262c5cd'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
 const _isViewSet = !!new URLSearchParams(location.search).get('view-set')
 
-// 찜 목록은 로그인 여부와 무관하게 즉시 표시(localStorage 기준).
-// 로그인 상태에 따라 동기화 안내만 토글한다.
-if (!_isViewSet && typeof renderAccount === 'function') renderAccount()
+// H-42: renderAccount()는 initAuth 콜백에서 user 확인 후에만 호출
 function setSyncHint(loggedIn) {
   const h = document.getElementById('wish-synchint')
   if (!h) return
