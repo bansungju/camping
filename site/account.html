@@ -527,8 +527,14 @@ if (authErrorParam) {
   // 유효한 세션이 이미 있으면(닉네임 모달 등) 이 타이머를 취소해 화면을 덮어쓰지 않도록 함.
   authErrorTimer = setTimeout(() => renderLogin(), 2000)
 } else {
-  // 로그인 UI를 즉시 표시. 로그인 상태면 initAuth 콜백이 renderProfile()로 교체.
-  renderLogin()
+  // localStorage에 Supabase 세션 토큰이 있으면 로그인 상태일 가능성 높음 → 로딩 표시로 플래시 방지.
+  // 토큰이 없거나 만료됐으면 initAuth 콜백이 renderLogin()으로 교체.
+  const _hasSess = Object.keys(localStorage).some(k => /^sb-.+-auth-token$/.test(k) && localStorage.getItem(k) !== 'null');
+  if (_hasSess) {
+    section.innerHTML = '<div style="padding:48px 0;text-align:center;color:var(--muted);font-size:13px">불러오는 중…</div>'
+  } else {
+    renderLogin()
+  }
 }
 
 await initAuth(async (user, event) => {
