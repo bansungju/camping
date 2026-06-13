@@ -14,7 +14,21 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 P_ROOT = os.path.dirname(HERE)
 
 
-def cap_from_name(name):
+def _is_tent_category(category):
+    """텐트류(텐트·백패킹텐트·오토캠핑텐트·기타텐트·쉘터)에서만 'P'='인원'."""
+    if not category:
+        return False
+    c = str(category).lower()
+    return ("텐트" in category or "쉘터" in category
+            or "tent" in c or "shelter" in c)
+
+
+def cap_from_name(name, category=None):
+    """모델명에서 적정인원 추출. category가 텐트류일 때만 단독 'P'/'p'를 인원으로 본다.
+
+    H-84: 코펠 '20p'(조각수)·랜턴 'SFL1000P'(모델코드)·의자 '체어볼2 4P' 등에서
+    'P'를 인원으로 오인하던 버그 수정. '인'/'인용'(한국어 인원 표기)은 카테고리 무관 신뢰.
+    """
     if not name:
         return None
     s = name.lower()
@@ -24,9 +38,12 @@ def cap_from_name(name):
     m = re.search(r"(\d+(?:\.\d+)?)\s*인", s)              # '2인용'
     if m:
         return int(float(m.group(1)))
-    m = re.search(r"(\d+(?:\.\d+)?)\s*p\b", s)             # '2P', '1.5p'
-    if m:
-        return int(float(m.group(1)))
+    # 'P'/'p' 접미사: 텐트류에서만 인원. 또한 모델코드·SKU(G1500P, Z-M812P, BR-FC1100P,
+    # WFFL2P9 등 영문/하이픈에 붙은 숫자)는 lookbehind로 제외 — 숫자가 토큰 선두여야 함.
+    if _is_tent_category(category):
+        m = re.search(r"(?<![\w.\-])(\d+(?:\.\d+)?)\s*p\b", s)  # '2P', '1.5p'
+        if m:
+            return int(float(m.group(1)))
     return None
 
 
@@ -35,12 +52,15 @@ def main():
     ap.add_argument("--db", default=os.path.join(P_ROOT, "camping_tents500.db"))
     args = ap.parse_args()
     con = sqlite3.connect(args.db)
-    rows = con.execute("SELECT id, model_name FROM products WHERE capacity IS NULL").fetchall()
+    rows = con.execute("""
+        SELECT p.id, p.model_name, c.name_ko
+        FROM products p JOIN categories c ON c.id = p.category_id
+        WHERE p.capacity IS NULL""").fetchall()
     filled = 0
     examples = []
     out_of_range = []   # H-84: 범위 밖 파싱값 감사용
-    for pid, name in rows:
-        c = cap_from_name(name)
+    for pid, name, cat in rows:
+        c = cap_from_name(name, cat)
         if c and 1 <= c <= 12:
             con.execute("UPDATE products SET capacity=? WHERE id=?", (c, pid))
             filled += 1
@@ -55,7 +75,9 @@ def main():
     total = con.execute("SELECT COUNT(*) FROM products").fetchone()[0]
     have = con.execute("SELECT COUNT(*) FROM products WHERE capacity IS NOT NULL").fetchone()[0]
     print(f"미상 {before}종 중 {filled}종 모델명에서 인원 추출")
-    print(f"적정인원 보유: {have}/{total} ({have*100//total}%)\n")
+    # M-176: 빈 DB·대상 없음으로 total=0이면 have*100//total가 ZeroDivisionError로 전체 크래시 → 가드.
+    pct = (have * 100 // total) if total else 0
+    print(f"적정인원 보유: {have}/{total} ({pct}%)\n")
     for n, c in examples:
         print(f"   {c}인 ← {n[:44]}")
     if out_of_range:
