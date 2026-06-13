@@ -162,7 +162,7 @@ def export(con, outdir):
 
         data = {"name": cat, "slug": slug, "grade": grade_by_cat.get(cat, "—"),
                 "count": len(models), "verified": nv, "metrics": metrics, "models": models}
-        with open(os.path.join(outdir, f"{slug}.json"), "w") as f:
+        with open(os.path.join(outdir, f"{slug}.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
         cat_meta.append({"slug": slug, "name": cat, "grade": grade_by_cat.get(cat, "—"),
                          "count": len(models), "verified": nv,
@@ -172,9 +172,9 @@ def export(con, outdir):
     today = con.execute("SELECT date('now')").fetchone()[0]
     total = con.execute("SELECT COUNT(*) FROM products WHERE curation_status='verified'").fetchone()[0]
     manifest = {"generated": today, "total_verified": total, "categories": cat_meta}
-    with open(os.path.join(outdir, "manifest.json"), "w") as f:
+    with open(os.path.join(outdir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, separators=(",", ":"))
-    with open(os.path.join(outdir, "search.json"), "w") as f:
+    with open(os.path.join(outdir, "search.json"), "w", encoding="utf-8") as f:
         json.dump(search_index, f, ensure_ascii=False, separators=(",", ":"))
     return cat_meta
 
