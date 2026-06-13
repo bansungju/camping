@@ -22,6 +22,7 @@ import json
 import os
 import sqlite3
 import sys
+import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -92,17 +93,22 @@ def detect():
     for gf, series in hist.items():
         if gf not in catalog or len(series) < 2:
             continue
-        (_, prev_min, prev_stock) = series[-2]
-        (_, cur_min, cur_stock) = series[-1]
+        (prev_date, prev_min, prev_stock) = series[-2]
+        (cur_date, cur_min, cur_stock) = series[-1]
         meta = catalog[gf]
 
-        # 재입고: 직전 품절(stock=0) → 최신 판매중(stock=1)
-        if prev_stock == 0 and cur_stock == 1:
-            events.append({**_evt(meta, prev_min, cur_min, "restock")})
+        # M-418: 같은 날 파이프라인 2회 실행 시 series[-2]·[-1]이 동일 날짜 두 행이 돼 허위 변동
+        #   알림이 난다 → 직전·최신 관측 날짜가 다를 때만 비교한다.
+        if prev_date == cur_date:
             continue
 
-        # 하락: 5% 이상 AND 1,000원 이상
-        if prev_min and cur_min < prev_min:
+        # 재입고: 직전 품절(stock=0) → 최신 판매중(stock=1). M-251: drop과 독립 분기(continue 제거)로
+        #   재입고+하락 동시 발생도 모두 잡는다. M-402: old_price=None이면 Edge Function 타입오류 → 가드.
+        if prev_stock == 0 and cur_stock == 1 and prev_min is not None:
+            events.append({**_evt(meta, prev_min, cur_min, "restock")})
+
+        # 하락: 5% 이상 AND 1,000원 이상. M-251: prev_min=0(falsy) 대신 명시 비교. M-334: cur_min None 가드.
+        if prev_min is not None and prev_min > 0 and cur_min is not None and cur_min < prev_min:
             drop = prev_min - cur_min
             if drop >= DROP_ABS and drop >= prev_min * DROP_PCT:
                 events.append({**_evt(meta, prev_min, cur_min, "drop")})
@@ -140,8 +146,14 @@ def send(events):
         url, data=body, method="POST",
         headers={"content-type": "application/json", "x-alert-secret": secret},
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        print(f"  → 응답 {r.status}: {r.read().decode()[:200]}")
+    # M-374: 4xx/5xx·네트워크 오류 시 traceback 크래시로 알림 발송이 통째로 죽지 않게 명확히 처리.
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            print(f"  → 응답 {r.status}: {r.read().decode()[:200]}")
+    except urllib.error.HTTPError as e:
+        sys.exit(f"✋ 알림 전송 실패 HTTP {e.code}: {e.read().decode('utf-8','ignore')[:200]}")
+    except urllib.error.URLError as e:
+        sys.exit(f"✋ 알림 전송 실패(네트워크): {e.reason}")
 
 
 def main():
