@@ -606,8 +606,9 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sm-set-name{font-size:14px;font-weight:600}
 .sm-set-cnt{font-size:12px;color:var(--muted)}
 .sm-empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 0}
-.sm-new{display:flex;gap:8px}
-.sm-input{flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--txt)}
+/* FE-WISH-10 핫픽스 U1: .sm-new는 세로 흐름(라벨→입력행→타입선택). 자식 .sm-new-row만 가로 유지. */
+.sm-new{display:flex;flex-direction:column;gap:10px}
+.sm-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--card);color:var(--txt)}
 .sm-create{padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .pmwish{position:absolute;top:10px;left:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;
   background:rgba(255,255,255,.9);color:var(--faint);font-size:18px;line-height:1;cursor:pointer;
@@ -783,6 +784,46 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .set-goal-label{font-size:10px;white-space:nowrap;font-weight:600}
 .set-goal-set{border:none;background:none;font-size:11px;color:var(--muted);cursor:pointer;padding:3px 0;text-decoration:underline;text-underline-offset:2px}
 .set-goal-set:hover{color:var(--accent)}
+/* FE-WISH-09/10 도장판 세트 구성 */
+/* FE-WISH-10(B-2-3): 미니 도장판(완성도) — 모달·세트상세·계정카드 공통 */
+.set-prog{margin-top:6px}
+.stamp-mini{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
+.stamp-dots{display:inline-flex;gap:4px}
+.stamp-dot{width:9px;height:9px;border-radius:50%;border:1.5px dashed var(--muted);box-sizing:border-box;display:inline-block;flex-shrink:0;opacity:.6}
+.stamp-dot.on{background:var(--accent);border:1.5px solid var(--accent);opacity:1}
+.stamp-done{font-size:11.5px;font-weight:700;color:var(--accent);background:rgba(47,122,78,.13);border-radius:99px;padding:2px 9px}
+/* FE-WISH-10(B-2-2): 세트 타입 선택 — 쉬운 말 <select>(작은 회색) + 회색 캡션 1줄 */
+.sm-new-label{font-size:13px;font-weight:700;color:var(--txt)}
+.sm-new-row{display:flex;gap:8px}
+/* (B-2-5) 기존 세트 ↔ 새 세트 구분 */
+.sm-section-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.sm-divider{height:1px;background:var(--line);margin:16px 0}
+.set-type-pick{display:flex;flex-direction:column;gap:3px}
+.set-type-select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--muted);background:var(--card2);cursor:pointer}
+.set-type-caption{font-size:11px;color:var(--muted)}
+/* 도장판(상세 모달) */
+.ssb-prog{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ssb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.ssb-cell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border:1.5px dashed var(--line);border-radius:10px;text-decoration:none;color:var(--muted);background:var(--card2);transition:border-color .15s,background .15s}
+a.ssb-cell:hover{border-color:var(--accent);color:var(--accent)}
+.ssb-cell.must{border-style:solid}
+.ssb-cell.on{border-style:solid;border-color:var(--accent);background:rgba(47,122,78,.09);color:var(--txt)}
+.ssb-icon{font-size:22px;line-height:1;opacity:.4}
+.ssb-cell.on .ssb-icon{opacity:1}
+.ssb-label{font-size:11.5px;font-weight:600;text-align:center;line-height:1.2}
+.ssb-state{font-size:10.5px;font-weight:700;color:var(--muted)}
+.ssb-state.ok{color:var(--accent)}
+.ssb-state.over{color:#d97706}
+.ssb-cell.over{border-color:#d97706;background:rgba(217,119,6,.08)}
+.ssb-hint{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.4}
+/* 교체 모달 */
+.srp-list{display:flex;flex-direction:column;gap:8px}
+.srp-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--txt);border-radius:9px;padding:11px 13px;cursor:pointer}
+.srp-item:hover{border-color:var(--accent)}
+.srp-item-name{font-size:13.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srp-item-act{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0}
+.srp-cancel{margin-top:12px;width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--muted);font-size:13px;cursor:pointer}
+.srp-cancel:hover{color:var(--txt)}
 /* 비교 버튼 + 플로팅 바 */
 .pli-cmp{border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted);padding:2px 0;line-height:1;flex-shrink:0}
 .pli-cmp.on{color:var(--accent)}

@@ -208,6 +208,23 @@ export async function reportContent({ target_type, target_id, reason }) {
   return supabase.from('reports').insert({ reporter_id: user.id, target_type, target_id, reason })
 }
 
+// FE-SOC-09: 내가 쓴 상품 후기(마이페이지 '내 로그'용). user_id로 필터.
+// RLS reviews_select_public(hidden=false AND deleted_at IS NULL)로 읽기 허용 → 신규 마이그 불필요.
+// image_urls 컬럼은 마이그 020 적용 전이면 없을 수 있어 우아하게 폴백(상품 상세 _fetchReviews와 동일 패턴).
+export async function getMyReviews() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const cols = 'id, product_pcode, rating, body, created_at'
+  let res = await supabase.from('reviews').select(cols + ', image_urls')
+    .eq('user_id', user.id).order('created_at', { ascending: false }).limit(50)
+  if (res.error && /image_urls/i.test(res.error.message || '')) {
+    res = await supabase.from('reviews').select(cols)
+      .eq('user_id', user.id).order('created_at', { ascending: false }).limit(50)
+  }
+  if (res.error) { console.error('getMyReviews', res.error); return [] }
+  return (res.data ?? []).map(r => ({ ...r, image_urls: Array.isArray(r.image_urls) ? r.image_urls : [] }))
+}
+
 // ── 사진 업로드(review-images 버킷 재사용. 경로: {user_id}/{uuid}.{ext}) ────
 const IMG_BUCKET = 'review-images'
 const MAX_IMG_BYTES = 5 * 1024 * 1024
