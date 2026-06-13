@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=72bb94e8"></script>
+<script src="app.js?v=526d844c"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -470,7 +470,7 @@ function renderProfile(profile) {
   showLoggedInSections(true)
   // 닉네임은 profiles 테이블이 단일 진실. 실명/이메일을 표시명으로 쓰지 않는다.
   const nickname = profile?.nickname ?? '사용자'
-  const avatar = profile?.avatar_url
+  const avatar = /^https:\/\//i.test(profile?.avatar_url) ? profile.avatar_url : null  // M-524: javascript: 등 비https URL 차단
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   const _provMap = { google: 'Google', github: 'GitHub', kakao: '카카오', apple: 'Apple' }
   const _prov = _provMap[window._accUser?.app_metadata?.provider] ?? '소셜'

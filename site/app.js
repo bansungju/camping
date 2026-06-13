@@ -1489,7 +1489,9 @@ async function renderBrowse() {
   renderCatNav("");
 }
 
+let _catGen = 0;  // M-370: 빠른 카테고리 전환 레이스 가드
 async function renderCategory() {
+  const gen = ++_catGen;
   renderCategorySkeleton();
   const params = new URLSearchParams(location.search);
   // 클린 URL /category/{slug} 또는 ?cat= 파라미터 두 방식 모두 지원
@@ -1501,6 +1503,7 @@ async function renderCategory() {
   let d;
   try { d = await getJSON(`data/${slug}.json`); }
   catch (e) {
+    if (gen !== _catGen) return;  // M-370: 전환된 카테고리에 에러 기록 방지
     // 데이터 로드 실패 — 스켈레톤 잔존(H-05) 및 오류 메시지·스켈레톤 동시 노출(H-15) 방지.
     // 목록을 비우고 단일 에러 상태 + 복구 경로를 표시한다.
     document.getElementById("title").textContent = "카테고리를 불러오지 못했습니다.";
@@ -1516,6 +1519,7 @@ async function renderCategory() {
     const scEl = document.getElementById("sortchips"); if (scEl) scEl.innerHTML = "";
     return;
   }
+  if (gen !== _catGen) return;  // M-370: 최신 카테고리 전환만 처리
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
   STATE = { data: d, slug: slug, q: rawQ, cap: "", brands: new Set(), range: {}, qExclude: false,  // M-326: 원본 케이스 보존
             sortKey: null, sortAsc: false, campStyle: "",
@@ -3424,7 +3428,7 @@ function renderAccount() {
       const go = async () => {
         if (!wx || !wx.s) { location.href = card.dataset.href; return; }
         try {
-          const catJson = await fetch(`data/${wx.s}.json`).then(r => r.json());
+          const catJson = await fetch(`data/${wx.s}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });  // M-357: response.ok 체크
           const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m);
           if (prod) {
             const prevSlug = STATE.slug, prevData = STATE.data;
@@ -4255,7 +4259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await window.authReady();
     if (!window.isLoggedIn() || !intent.action) return;
     // returnTo가 현재 페이지와 일치할 때만 재개(다른 페이지 intent 오염 방지)
-    if (intent.returnTo && new URL(intent.returnTo, location.href).pathname !== location.pathname) return;
+    if (intent.returnTo) { const u = new URL(intent.returnTo, location.href); if (u.pathname !== location.pathname || u.search !== location.search) return; }  // M-273: search 포함 비교
     sessionStorage.removeItem('auth-intent');
     if (intent.action === 'toggleWish' && intent.params) {
       const added = _execToggleWish(intent.params);
@@ -4292,7 +4296,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h2 style="font-size:18px;font-weight:700;margin:0 0 6px">${esc(s.name || "세트")}</h2>
         ${wTxt ? `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">총 무게 ${wTxt}</div>` : ""}
         <div style="margin-bottom:16px">${itemsHtml || '<div style="color:var(--muted);font-size:13px">장비 없음</div>'}</div>
-        <button type="button" class="achip" id="vs-import-btn" style="width:100%;justify-content:center">내 세트에 추가 (로그인 필요)</button>
+        <button type="button" class="achip" id="vs-import-btn" style="width:100%;justify-content:center">내 세트에 추가</button>
       </div>`;
       document.body.appendChild(modal);
       // L-76: 공유 세트 열람 시 배경 개인 데이터 섹션 숨김
@@ -4308,9 +4312,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.addEventListener("keydown", _vsEsc);
       modal.onclick = e => { if (e.target === modal) closeVs(); };
       modal.querySelector(".pmx").onclick = closeVs;
-      modal.querySelector("#vs-import-btn").onclick = function() {
+      modal.querySelector("#vs-import-btn").onclick = async function() {
         // M-346/L-247: 중복 import 방지 — 버튼 즉시 비활성화 + 제목+아이템 수 지문 비교
         this.disabled = true;
+        await window.authReady();  // M-286: auth 완료 후 _accUser 사용
         const arr = getSets();
         const fingerprint = `${s.name || ""}|${(s.items || []).length}|${(s.items || []).map(x => `${x.b}${x.m}`).join(",")}`;
         const isDup = arr.some(x => `${x.title || x.name || ""}|${(x.items || []).length}|${(x.items || []).map(i => `${i.b}${i.m}`).join(",")}` === fingerprint);
