@@ -1333,8 +1333,9 @@ function serializeState() {
   history.replaceState(null, "", "/category.html?" + p.toString());
 }
 function restoreState(params) {
-  STATE.q = (params.get("q") || "").toLowerCase();
+  STATE.q = params.get("q") || "";  // M-326: 원본 케이스 보존 (비교는 toLowerCase 사용)
   STATE.cap = params.get("cap") || "";
+  STATE.brands.clear();  // M-397: 재호출 시 누산 방지
   const br = params.get("brands"); if (br) br.split("|").forEach(b => STATE.brands.add(b));
   STATE.range = {};
   for (const [pk, pv] of params.entries()) {
@@ -1511,10 +1512,10 @@ async function renderCategory() {
     return;
   }
   const rawQ = params.get("q") || "";   // 홈검색 링크의 q(대문자 포함 가능)
-  STATE = { data: d, slug: slug, q: rawQ.toLowerCase(), cap: "", brands: new Set(), range: {}, qExclude: false,
+  STATE = { data: d, slug: slug, q: rawQ, cap: "", brands: new Set(), range: {}, qExclude: false,  // M-326: 원본 케이스 보존
             sortKey: null, sortAsc: false, campStyle: "",
             dir: Object.fromEntries(d.metrics.map(m => [m.key, m.direction])),
-            unit: Object.fromEntries(d.metrics.map(m => [m.key, m.unit])) };
+            unit: Object.fromEntries([...d.metrics.map(m => [m.key, m.unit]), ...(EXTRA_SPECS[slug]||[]).map(e => [e.key, e.unit||""])]) };  // M-336: EXTRA_SPECS 단위 포함
   // 비교 세트는 카테고리 데이터에 종속 — 카테고리 진입 시 초기화(M-110: 이전 카테고리 잔존 방지)
   _cmpSet = [];
   const _prevCmpBar = document.getElementById("cmp-bar");
@@ -1583,7 +1584,7 @@ async function renderCategory() {
     qInp.setAttribute("aria-label", `${d.name || "카테고리"} 내 모델·브랜드 검색`);
     qInp.setAttribute("role", "searchbox");
     qInp.setAttribute("aria-autocomplete", "list");
-    qInp.oninput = e => { if (e.isComposing) return; STATE.q = e.target.value.trim().toLowerCase(); draw(); };  // L-59
+    qInp.oninput = e => { if (e.isComposing) return; STATE.q = e.target.value.trim(); draw(); };  // L-59, M-326: 원본 케이스 보존
   }
   draw();
   // 최근 본 상품·검색 결과·추천 카드처럼 brands+q로 단일 상품을 특정한 링크면
@@ -1826,6 +1827,8 @@ function buildFilters(d, star) {
   // 인원
   bar.querySelectorAll("[data-cap]").forEach(btn => btn.onclick = () => {
     bar.querySelectorAll("[data-cap]").forEach(b => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); });  // L-132
+    // M-396: 이미 선택된 버튼 재클릭 시 해제
+    if (STATE.cap === btn.dataset.cap) { STATE.cap = ""; draw(); return; }
     btn.classList.add("on"); btn.setAttribute("aria-pressed", "true"); STATE.cap = btn.dataset.cap; draw();
   });
   // 브랜드 멀티(칩 토글)
@@ -1951,8 +1954,9 @@ function renderActiveFilters() {
   if (STATE.cap) chips.push([`인원 ${STATE.cap}인`, () => { STATE.cap = ""; }]);
   STATE.brands.forEach(b => chips.push([`브랜드 ${b}`, () => STATE.brands.delete(b)]));
   Object.entries(STATE.range).forEach(([k, r]) => {
+    if (r.min == null && r.max == null) return;  // M-303: 빈 range 칩 숨김
     const lab = metricLabel(k);   // L-156: EXTRA_SPECS 키도 한글 레이블
-    const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");
+    const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");  // M-336: EXTRA_SPECS 단위 포함
     // 무게(g) 필터는 STATE.range에 g 단위로 저장되지만 사용자에게는 kg으로 표시
     const isWeight = rawUnit === "g";
     const fmt = v => {
@@ -1961,7 +1965,10 @@ function renderActiveFilters() {
       if (isWeight) return (v / 1000).toFixed(1) + "kg";
       return v + rawUnit;
     };
-    const txt = `${lab} ${fmt(r.min)}~${fmt(r.max)}`;
+    // M-313: 단방향 범위는 틸드 없이 ≤/≥ 표시
+    const txt = r.min == null ? `${lab} ≤ ${fmt(r.max)}`
+              : r.max == null ? `${lab} ≥ ${fmt(r.min)}`
+              : `${lab} ${fmt(r.min)}~${fmt(r.max)}`;
     chips.push([txt, () => delete STATE.range[k]]);
   });
   if (STATE.qExclude) chips.push(["스펙값 있는 것만", () => { STATE.qExclude = false; }]);
@@ -1980,6 +1987,8 @@ function renderActiveFilters() {
 function clearAllFilters() {
   STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
   STATE.campStyle = "";   // H-63: 스타일 칩(.on)·URL style 파라미터 잔류 방지(clearPresetFilters와 동일)
+  // M-391: 스타일 해제 후 sortKey를 기본(star 지표)로 복원
+  if (STATE.data) { STATE.sortKey = defaultSortKey(); STATE.sortAsc = defaultAsc(STATE.sortKey); }
   const q = document.getElementById("q"); if (q) q.value = "";
   if (STATE.data) renderStyleChips(STATE.data);   // 스타일 칩 하이라이트 재그리기
   syncFilterUI(); draw(); serializeState();
@@ -2040,6 +2049,7 @@ function cellVal(m, key) {
 // 모델이 범위 필터를 통과하나 (price + 각 스펙)
 function passRange(m) {
   for (const [key, r] of Object.entries(STATE.range)) {
+    if (r.min == null && r.max == null) continue;  // M-325: 빈 range 엔트리 무시
     const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
     if (v == null) return false;                 // 값 없으면 범위 못 만족
     if (r.min != null && v < r.min) return false;
@@ -2057,7 +2067,7 @@ function defaultAsc(key) {
 function passExcept(m, skip, sortK) {
   if (skip !== "cap" && STATE.cap && String(m.capacity) !== STATE.cap) return false;
   if (skip !== "brands" && STATE.brands.size && !STATE.brands.has(m.brand)) return false;
-  if (skip !== "q" && STATE.q && !(m.brand + " " + m.model).toLowerCase().includes(STATE.q)) return false;
+  if (skip !== "q" && STATE.q && !(m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) return false;  // M-326
   for (const [key, r] of Object.entries(STATE.range)) {
     if (skip === "range:" + key) continue;
     const v = key === "price" ? m.price_min : (m.specs[key] && m.specs[key].value);
@@ -2648,7 +2658,7 @@ function draw() {
   let rows = d.models.filter(m =>
     (!STATE.cap || String(m.capacity) === STATE.cap) &&
     (!STATE.brands.size || STATE.brands.has(m.brand)) &&
-    (!STATE.q || (m.brand + " " + m.model).toLowerCase().includes(STATE.q)) &&
+    (!STATE.q || (m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) &&  // M-326
     passRange(m));
 
   const k = STATE.sortKey, asc = STATE.sortAsc;
@@ -2657,7 +2667,7 @@ function draw() {
   if (STATE.qExclude || k === "value") {
     const before = rows.length;
     // M-316: 검색어 매칭 상품은 qExclude 예외 — 검색 의도 우선
-    const qMatch = STATE.q ? (m => (m.brand + " " + m.model).toLowerCase().includes(STATE.q)) : null;
+    const qMatch = STATE.q ? (m => (m.brand + " " + m.model).toLowerCase().includes(STATE.q.toLowerCase())) : null;  // M-326
     rows = rows.filter(m => (qMatch && qMatch(m)) || cellVal(m, k) != null);
     if (k === "value") valueExcluded = before - rows.length;
   }
