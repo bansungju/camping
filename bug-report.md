@@ -3139,7 +3139,7 @@
 
 ---
 
-### [M-163] — `openSetModal` — 400ms 닫힘 딜레이 중 다른 세트 버튼 클릭 가능 → 동일 아이템 중복 담기
+### [M-163] — `openSetModal` — 400ms 닫힘 딜레이 중 다른 세트 버튼 클릭 가능 → 동일 아이템 중복 담기 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 빌더 (app.js)
 - **심각도:** 🟡 Medium
@@ -3361,7 +3361,7 @@
 
 ---
 
-### [M-175] — `openSetModal` 새 세트 만들기 — `addToSet()` 반환값 미검사 → cap 초과 시 "담겼어요" 오표시
+### [M-175] — `openSetModal` 새 세트 만들기 — `addToSet()` 반환값 미검사 → cap 초과 시 "담겼어요" 오표시 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 빌더 (app.js)
 - **심각도:** 🟡 Medium
@@ -6058,7 +6058,7 @@
 
 ---
 
-### [M-302] — `openSetModal` 신규 세트 생성 시 `addToSet` 반환값 무시로 슬롯 오버플로우 무음 처리
+### [M-302] — `openSetModal` 신규 세트 생성 시 `addToSet` 반환값 무시로 슬롯 오버플로우 무음 처리 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟡 Medium
@@ -8838,7 +8838,7 @@
 
 ---
 
-### [H-116] — `ocr_specs.py` — `dv=0` 스펙 값 시 `else 1` 분기로 항상 "불일치" 오분류
+### ✅ 해결완료(2026-06-13) [H-116] — `ocr_specs.py` — `dv=0` 스펙 값 시 `else 1` 분기로 항상 "불일치" 오분류
 
 - **영역:** 백엔드 — OCR 스펙 검증
 - **심각도:** 🔴 High
@@ -11655,5 +11655,41 @@
 - **원인:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 139–141 — argparse에 `--db` 없음.
 - **제안 수정:** `ap.add_argument("--db", default=DB)` 추가.
 - **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py) line 139 [lane:BACKEND]
+
+---
+
+### [H-141] — `sw.js` 푸시 알림 핸들러 — `data.url`에 `javascript:` 스킴 허용 → XSS
+
+- **영역:** 프론트엔드 — 서비스 워커 (보안)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 악의적 푸시 서버가 `{ "url": "javascript:..." }` 전송 시 `clients.openWindow("javascript:...")` 실행 → XSS.
+- **원인:** [site/sw.js](site/sw.js) line 105–112 — `new URL(url, location.origin)` 이후 스킴 화이트리스트 검사 없음.
+- **제안 수정:** `if (!absUrl.startsWith(location.origin + "/")) { clients.openWindow("/"); return; }` 가드 추가.
+- **파일:** [site/sw.js](site/sw.js) line 105 [lane:CORE]
+
+---
+
+### [M-524] — `account.html` `avatar_url` — `esc()`만 적용, `javascript:` URL 스킴 미차단
+
+- **영역:** 프론트엔드 — 계정 (보안)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `profiles`에서 온 `avatar_url`이 `<img src="${esc(avatar)}">` 로 삽입 → `javascript:alert(1)` src 허용. `app.js`의 `safeHttps()` 패턴 미적용.
+- **원인:** [site/account.html](site/account.html) line 473, 482 — `esc()` HTML 엔티티 이스케이프만, URL 스킴 미검증.
+- **제안 수정:** `avatar` 사용 전 `/^https:\/\//i.test(avatar)` 검사, 실패 시 기본 아이콘 사용.
+- **파일:** [site/account.html](site/account.html) line 473 [lane:CORE]
+
+---
+
+### [L-432] — `importSet` — `coupang_url` localStorage 저장 전 `safeHttps()` 검증 누락 → 잠재적 저장 XSS
+
+- **영역:** 프론트엔드 — 세트 공유 (보안)
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** base64 디코딩된 공유 세트의 `coupang_url`이 검증 없이 localStorage에 저장 → 추후 `openExternal()` 가드 완화 시 저장 XSS 벡터.
+- **원인:** [site/app.js](site/app.js) line 4298 — `coupang_url: x.coupang_url || ""` `safeHttps()` 미통과.
+- **제안 수정:** `/^https:\/\//i.test(x.coupang_url) ? x.coupang_url : ""` 로 변경.
+- **파일:** [site/app.js](site/app.js) line 4298 [lane:CORE]
 
 ---
