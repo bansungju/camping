@@ -52,6 +52,12 @@ REQUIRED = {
 
 
 def build_db(db_path):
+    # M-205: 기존 DB를 os.remove로 지운 뒤 schema/reference를 여는데, 그 파일이 없으면 DB는 이미
+    #   삭제된 채 FileNotFoundError로 죽어 '빈 DB만 남는' 데이터 소실이 된다 → 삭제 전에 먼저 검증.
+    required = [os.path.join(ROOT, "schema.sql"), os.path.join(HERE, "reference.sql")]
+    missing = [p for p in required if not os.path.exists(p)]
+    if missing:
+        raise FileNotFoundError(f"build_db 필수 파일 없음 → {missing} (기존 DB 보존, 재생성 중단)")
     if os.path.exists(db_path):
         os.remove(db_path)
     con = sqlite3.connect(db_path)

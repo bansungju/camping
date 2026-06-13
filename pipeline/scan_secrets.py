@@ -29,7 +29,7 @@ PATTERNS = [
     (r"xox[bpoas]-[A-Za-z0-9-]{10,}", "Slack 토큰"),
     (r"AKIA[A-Z0-9]{16}", "AWS access key"),
     (r"AIza[A-Za-z0-9_-]{30,}", "Google API key"),
-    (r"sk-[A-Za-z0-9]{20,}", "OpenAI/sk- 키"),
+    (r"sk-[A-Za-z0-9_-]{20,}", "OpenAI/sk- 키"),  # M-314: 신형 sk-proj-/sk-svcacct-(하이픈·언더스코어) 포착
     (r"-----BEGIN [A-Z ]*PRIVATE KEY-----", "개인키(PEM)"),
 ]
 COMPILED = [(re.compile(p), label) for p, label in PATTERNS]

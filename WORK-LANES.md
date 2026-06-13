@@ -94,28 +94,29 @@
 | **C14** | `affiliate_links.py` | M-287·L-188(naver_fallback .get) / M-315(channel= 비추적 명시) | ✅ 2026-06-13 |
 | **C15** | `star_catalog.py` | M-169·M-260 수정(valid=1+양수가드) / L-235 by-design(종합점수 저장됨·지표별은 ratings) | ✅ 2026-06-13 |
 | **C16** | `brand_filter.py` | M-333(플레이스홀더 가드)·L-232(rowcount) 수정 / M-178 비이슈(sub가 카테고리 스코프) | ✅ 2026-06-13 |
-| **C17** | `multicat.py` | M-183·M-290 수정(lastrowid·충돌스킵) / M-256 보류(seen_names가 HT.ingest·refresh와 string-set 공유계약 → 크로스파일 조율 필요) | ✅ 2026-06-13 |
+| **C17** | `multicat.py` | M-183·M-290 수정(lastrowid·충돌스킵) / M-256 → **C39에서 해결**(seen_names 튜플 키 3파일 동시변경) | ✅ 2026-06-13 |
 | **C18** | `add_manual_models.py` | M-225 수정(with+예외) / M-197=H-102(B21) 기해결 / M-280 by-design(수동=권위 canonical 소유) | ✅ 2026-06-13 |
 | **C19** | `enrich_details.py` | M-215(빈targets 가드)·M-250(try/finally) 수정 / M-322 비이슈(",".join("?"*n)=정상 콤마) | ✅ 2026-06-13 |
 | **C20** | `check_export.py` | M-222·M-294(price_max None/0 구분)·L-231(파싱실패 exit1) 수정 | ✅ 2026-06-13 |
 | **C21** | `stamp_version.py` | M-296(search.json 부재 경고)·L-213(print hs) 수정 / M-248=H-119(B26 fail-fast) 기해결 | ✅ 2026-06-13 |
-| **C22** | `harvest_tents.py` | M-254 수정(valid=1) / M-275·L-241 보류(M-256과 동일 — seen_names 3파일 공유계약, (cid,brand,model)로 동시변경 필요) | ✅ 2026-06-13 |
+| **C22** | `harvest_tents.py` | M-254 수정(valid=1) / M-275·L-241 → **C39에서 해결**(seen_names (cid,brand,model) 튜플 키 3파일 동시변경) | ✅ 2026-06-13 |
 | **C23** | `seed_coupang.py` | L-193(encoding 3곳)·L-215(strip)·L-239(str 키 정합) 수정 | ✅ 2026-06-13 |
 | **C24** | `limits_map.py` | L-212(import 상단)·L-251(grade 랭크정렬)·L-252("—" 버킷) 수정 | ✅ 2026-06-13 |
 | **C25** | `backfill_capacity.py` | M-176·L-227 | ⬜ |
 | **C26** | `column_fixes.py` | M-179·M-281 | ⬜ |
-| **C27** | `collect_images.py` | M-217·L-192 | ⬜ |
-| **C28** | `reclassify_other_tent.py` | M-234·L-196 | ⬜ |
+| **C27** | `collect_images.py` | M-217(예외 로깅)·L-192(tot=0 가드) 수정 | ✅ 2026-06-13 |
+| **C28** | `reclassify_other_tent.py` | M-234(.get(cap))·L-196(w None 경고) 수정 | ✅ 2026-06-13 |
 | **C29** | `refresh.py` | M-206(idiom 명료화·동작 기정상)·M-207([:19] 방어) 수정 | ✅ 2026-06-13 |
 | **C30** | `danawa.py` | L-210 수정(URLError last=e 보존) / L-244 보류(bare토큰=값연속은 docstring 의도설계 '/' 복원, 휴리스틱 변경은 핵심 스펙파싱 회귀위험 → 테스트 픽스처 필요) | ✅ 2026-06-13 |
 | **C31** | `run_all.py` | L-219(데드 total=0 제거) 수정 / M-229 기해결(타 세션 마킹됨) | ✅ 2026-06-13 |
 | **C32** | `detect_price_drops.py` | M-251·M-334 | ⬜ |
 | **C33** | `ocr_specs.py` | M-299·M-300 | ⬜ |
 | **C34** | `make_logo.py` | L-199·L-200 | ⬜ |
-| **C35** | `pipeline.py` | M-205 | ⬜ |
-| **C36** | `add_value_star.py` | M-252 | ⬜ |
-| **C37** | `scan_secrets.py` | M-314 | ⬜ |
-| **C38** | `download_images.py` | L-191 | ⬜ |
+| **C35** | `pipeline.py` | M-205(build_db 필수파일 사전검증) 수정 | ✅ 2026-06-13 |
+| **C36** | `add_value_star.py` | M-252(단일모델 가성비 미평가) 수정 | ✅ 2026-06-13 |
+| **C37** | `scan_secrets.py` | M-314(sk- 신형키 하이픈/언더스코어 포착) 수정 | ✅ 2026-06-13 |
+| **C38** | `download_images.py` | L-191=H-120(B27 NOT EXISTS→명시조건 단순화) 기해결 | ✅ 2026-06-13 |
+| **C39** | `harvest_tents.py`·`multicat.py`·`refresh.py` (크로스파일) | M-256·M-275·L-241 수정 — seen_names 공유 set을 평면 model 문자열→`(category_id, brand=brands.name_ko, model)` 튜플 키로 3파일 동시변경(2 ingest 체크/add + 3 빌더 SQL). 동명 모델 크로스브랜드/크로스카테고리 오차단 제거, 동일 (cat,brand,model) dedup은 유지. 합성테스트 (a)(b)(c)(d) 통과 | ✅ 2026-06-13 |
 | **C-FE** | `site/app.js`·`supabaseClient.js` | L-160·M-145·M-154·M-170·M-171·M-172·M-188·M-189·L-190 | ⬜ **CORE/SOCIAL 레인** (DATA 세션 제외, 큐잉) |
 
 ### 백엔드 Medium 3차 — 파일별 묶음 (D15~, BACKEND 루프 전용)
@@ -128,8 +129,8 @@
 |---|---|---|---|---|
 | **D1** | `check_export.py` | M-354·M-395·M-410·M-441 | 1 게이트 | ✅ 2026-06-13 (M-441 빈디렉토리 차단 / 354·410·395 기수정) |
 | **D2** | `run_all.py` | M-229·M-373·M-381·M-427 | 1 원자성·SQLi | ✅ 2026-06-13 (M-229 경고 / 373원자적·381정적·427부재) |
-| **D3** | `ocr_specs.py` | M-299·M-300·M-353·M-356·M-417 | 1 부분쓰기 | ⬜ |
-| **D4** | `detect_price_drops.py` | M-251·M-334·M-374·M-385·M-402·M-418 | 1 크래시 | ⬜ |
+| **D3** | `ocr_specs.py` | M-299·M-300·M-353·M-356·M-417 | 1 부분쓰기 | ✅ 2026-06-13 (356/417 max·300 SAVEPOINT / 299·353 기해결) |
+| **D4** | `detect_price_drops.py` | M-251·M-334·M-374·M-385·M-402·M-418 | 1 크래시 | 🟡 2026-06-13 5건 완료 (M-385=in_stock→D12 refresh) |
 | **D5** | `multicat.py` | M-256·M-366·M-367·M-423 | 1 pid오취득 | ⬜ |
 | **D6** | `pipeline.py` | M-205·M-401 | 1 크래시·핸들 | ⬜ |
 | **D7** | `promote_catalog.py` | M-392 | 1 트랜잭션 | ⬜ |
@@ -137,7 +138,7 @@
 | **D9** | `resolve_duplicates.py` | M-415 | 1 stale노출 | ⬜ |
 | **D10** | `value_metric.py` | M-414·M-416 | 1 ZeroDiv(C2중복?) | ⬜ |
 | **D11** | `star_catalog.py` | M-411 | 1 별점왜곡 | ⬜ |
-| **D12** | `refresh.py` | M-206·M-207·M-383·M-384·M-394·M-429 | 2 집계·UTC | ⬜ |
+| **D12** | `refresh.py` | M-206·M-207·M-383·M-384·M-394·M-429·**M-385**(in_stock 기록) | 2 집계·UTC | ⬜ |
 | **D13** | `export_site.py` | M-377·M-382·M-388·M-413 | 2 오연결 | ⬜ |
 | **D14** | `graph_pipeline.py` | M-185·M-255·M-268 | 2 (=C10) | ⬜ |
 | **D15** | `column_fixes.py` | M-179·M-281·M-360 | 2 채널가드 | ⬜ |

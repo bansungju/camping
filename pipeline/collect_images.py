@@ -66,8 +66,10 @@ def collect(con, cat, limit, sleep):
             else:
                 con.execute("UPDATE products SET image_url='none' WHERE id=?", (pid,)); none += 1
             con.commit()
-        except Exception:
-            err += 1  # NULL 유지 → 다음 회차 재시도
+        except Exception as e:
+            # M-217: 무음 무시하면 어떤 pid가 왜 실패했는지 추적 불가 → 경고 출력 후 카운트(NULL 유지=다음 회차 재시도).
+            print(f"  ⚠ 이미지 수집 실패 pid={pid}: {type(e).__name__}: {e}", flush=True)
+            err += 1
         danawa.polite_sleep(sleep, sleep)   # sleep ~ 2*sleep 지터(고정 간격 = 봇 지문)
     print(f"[{cat}] 완료: 이미지 {ok} · 없음 {none} · 오류(재시도) {err}")
     return ok, none, err
@@ -91,7 +93,8 @@ def main():
     # 전체 진행률
     done = con.execute("SELECT COUNT(*) FROM products WHERE curation_status='verified' AND image_url IS NOT NULL").fetchone()[0]
     tot = con.execute("SELECT COUNT(*) FROM products WHERE curation_status='verified' AND danawa_pcode IS NOT NULL").fetchone()[0]
-    print(f"전체 이미지 진행: {done}/{tot} ({round(100*done/tot)}%)")
+    pct = round(100 * done / tot) if tot else 0   # L-192: verified 0건이면 ZeroDivision 방지
+    print(f"전체 이미지 진행: {done}/{tot} ({pct}%)")
     con.close()
 
 

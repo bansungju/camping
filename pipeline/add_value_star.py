@@ -33,8 +33,12 @@ def value_stars(models):
     rated.sort(key=lambda x: x[1])  # 싼 원/L 먼저 = 가성비 good
     n = len(rated)
     out = {}
+    # M-252: 비교 대상이 1개뿐이면 frac=0→무조건 ★5가 됐다(가성비 의미없음). 비교 풀<2면 미평가
+    #   (value_metric M-167/M-289와 동일 원칙 — 단일 모델엔 가성비 별점 미표시).
+    if n < 2:
+        return out
     for i, (m, wpl) in enumerate(rated):
-        frac = i / (n - 1) if n > 1 else 0
+        frac = i / (n - 1)
         star = round((5 - 4 * frac) * 2) / 2
         out[id(m)] = (round(wpl), star)
     return out

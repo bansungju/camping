@@ -36,8 +36,12 @@ def bucket(name, cap, w):
     if any(k in name for k in CONV):
         return "auto"
     if w is None:
+        # L-196: 무게 없으면 백패킹 판정 불가 → auto로 두되, 오토캠핑 오배정 가능성을 사후 감지하도록 경고.
+        print(f"  ⚠ reclassify: 무게 없음 '{name[:30]}' → auto 분류(백패킹 오배정 가능)", flush=True)
         return "auto"
-    band = {1: 2500, 2: 3000, 3: 3600}.get(cap or 0)
+    # M-234: `.get(cap or 0)`은 cap=None과 cap=0을 모두 key 0으로 합쳐 구분을 잃는다 → `.get(cap)`로 명시
+    #   (None/0/미등록 cap 모두 band=None → auto, 동작 동일하나 의도 명확).
+    band = {1: 2500, 2: 3000, 3: 3600}.get(cap)
     return "back" if (band and w <= band) else "auto"
 
 
