@@ -1301,7 +1301,11 @@ function defaultSortKey() {
   return "spec:" + (s0 && s0.key);
 }
 function serializeState() {
+  // M-198: category.html 외 페이지에서 URL 덮어쓰기 방지
+  if (!location.pathname.includes("category.html")) return;
   const p = new URLSearchParams();
+  // M-306: cat을 URLSearchParams에 포함 → 수동 문자열 접합 제거로 중복 방지
+  p.set("cat", STATE.slug);
   if (STATE.q) p.set("q", STATE.q);
   if (STATE.cap) p.set("cap", STATE.cap);
   if (STATE.brands.size) p.set("brands", [...STATE.brands].join("|"));
@@ -1315,10 +1319,8 @@ function serializeState() {
   }
   if (STATE.qExclude) p.set("qx", "1");
   if (STATE.campStyle) p.set("style", STATE.campStyle);
-  // 항상 category.html?cat= 형식 유지(클린 경로는 GitHub Pages에서 자산 404 → 사용 안 함)
-  const qs = p.toString();
-  const base = location.pathname.endsWith("/category.html") ? location.pathname : "category.html";
-  history.replaceState(null, "", `${base}?cat=${STATE.slug}${qs ? "&" + qs : ""}`);
+  // M-347: 절대 경로 사용 → 중첩 경로에서 상대 URL 404 방지
+  history.replaceState(null, "", "/category.html?" + p.toString());
 }
 function restoreState(params) {
   STATE.q = (params.get("q") || "").toLowerCase();
