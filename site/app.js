@@ -484,11 +484,12 @@ function addToSet(setId, item) {
   if (slot && cap > 0 && slotCount(s.items, slot) >= cap) return { status: "cap", set: s, slot };
   s.items.push({ ...item, qty: 1 }); saveSets(a); return { status: "added", set: s };
 }
-function setItem(m, slug) {
+function setItem(m, slug, idx) {
   return { pcode: wishKey(m.brand, m.model, m.capacity), b: m.brand, m: m.model,
            cap: m.capacity, s: slug, p: m.price_min, img: m.img,
            weight_g: m.specs?.weight_min?.value ?? null,
-           coupang_url: m.coupang_url ?? null };   // FE-WISH-07: 세트 표 항목별 구매 버튼용
+           coupang_url: m.coupang_url ?? null,
+           item_idx: idx ?? null };   // 핫섹션 직접 링크(/item/${slug}/item-N.html)용
 }
 
 async function openSetModal(item) {
@@ -894,7 +895,7 @@ async function setupHomeSearch() {
   const brandList = () => _brandList || (_brandList = [...new Set((idx || []).map(x => x.b))]);
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=d7364f3e").then(d => (idx = d)).catch(() => (idx = []));
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=7daf8eb2").then(d => (idx = d)).catch(() => (idx = []));
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1107,7 +1108,7 @@ async function setupSearchPage() {
 
   let idx = null;
   const ensureIdx = async () => {
-    if (!idx) idx = await getJSON("data/search.json?v=d7364f3e").catch(() => []);
+    if (!idx) idx = await getJSON("data/search.json?v=7daf8eb2").catch(() => []);
     return idx;
   };
 
@@ -2044,6 +2045,7 @@ function openProduct(m) {
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
         await supabase.from("click_events").insert({
           slug: STATE.slug, brand: m.brand, model: m.model,
+          item_idx: STATE.data?.models ? STATE.data.models.indexOf(m) : null,
           coupang_url: url, session_id: sessionId
         });
       } catch (_) {}
@@ -2055,7 +2057,7 @@ function openProduct(m) {
     toggleWishWithHint(wishItem(m, STATE.slug), wbtn);
   };
   const setBtn = modal.querySelector(".pmset");
-  if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug));
+  if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug, STATE.data?.models?.indexOf(m)));
   const reportLink = modal.querySelector(".pm-report-link");   // M-116: ⚠️ 버튼 제거 → 하단 텍스트 링크
   if (reportLink) reportLink.onclick = () => {
     const subject = encodeURIComponent(`[오류 제보] ${m.brand} ${m.model}`);
@@ -2457,7 +2459,7 @@ function openCmpModal(rows) {
     btn.disabled = true;
     const today = new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
     const setName = `${catLabel} 비교 ${today}`;
-    const setItems = items.map(m => setItem(m, STATE.slug));
+    const setItems = items.map(m => setItem(m, STATE.slug, STATE.data?.models?.indexOf(m)));
     const sets = getSets();
     sets.push({ id: Date.now().toString(36), title: setName, style: "비교", items: setItems, created_at: new Date().toISOString() });
     saveSets(sets);
@@ -2583,7 +2585,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=d7364f3e"); }
+  try { idx = await getJSON("data/search.json?v=7daf8eb2"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -2758,15 +2760,19 @@ async function renderHotSection(categories) {
           const icon = catIcon(catName);
           const tint = catTint(catName);
           const top3 = items.slice(0, 3);
-          const rowsHtml = top3.map((h, i) =>
-            `<a class="hot-rank-row" href="category.html?cat=${cat}&q=${encodeURIComponent(h.brand + ' ' + h.model)}">
+          const rowsHtml = top3.map((h, i) => {
+            const href = (h.item_idx != null && h.item_idx >= 0)
+              ? `/item/${cat}/item-${h.item_idx}.html`
+              : `category.html?cat=${cat}&brands=${encodeURIComponent(h.brand)}`;
+            return `<a class="hot-rank-row" href="${href}">
               <span class="hot-rank-num rank-${i + 1}">${i + 1}</span>
               <span class="hot-rank-info">
                 <span class="hot-rank-brand">${esc(h.brand)}</span>
                 <span class="hot-rank-model">${esc(h.model)}</span>
               </span>
               <span class="hot-rank-cnt">${h.clicks}회</span>
-            </a>`
+            </a>`;
+          })
           ).join("");
           return `<div class="hot-cat-block">
             <div class="hot-cat-header">
@@ -2951,7 +2957,9 @@ function openSetDetail(si) {
       let sessionId = localStorage.getItem("_sid");
       if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
       await supabase.from("click_events").insert({
-        slug: item.s, brand: item.b, model: item.m, coupang_url: url, session_id: sessionId
+        slug: item.s, brand: item.b, model: item.m,
+        item_idx: item.item_idx ?? null,
+        coupang_url: url, session_id: sessionId
       });
     } catch (_) {}
   });
@@ -3019,7 +3027,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=d7364f3e")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=7daf8eb2")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
