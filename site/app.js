@@ -93,7 +93,7 @@ const SET_SLOTS = [
 /* 세트 타입별 정원 프리셋(상한선). cap=0 → 해당 타입에서 슬롯 비노출.
    label=짧은 표시명(카드/배지), optLabel=드롭다운용 쉬운 말(상황어+괄호용어), caption=선택 따라 바뀌는 회색 보조 1줄. */
 const SET_TYPES = {
-  auto:        { label: "오토캠핑", icon: "🚙", optLabel: "가족과 차로 (오토캠핑)",   caption: "4인 가족 기준 · 침낭·의자 최대 4", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
+  auto:        { label: "오토캠핑", icon: "🏕️", optLabel: "가족과 차로 (오토캠핑)",   caption: "4인 가족 기준 · 침낭·의자 최대 4", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
   backpacking: { label: "백패킹",   icon: "🥾", optLabel: "가볍게 배낭 메고 (백패킹)", caption: "1~2인 기준 · 무게 줄이기",        caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0, bag:1 } },
   carcamp:     { label: "차박",     icon: "🚐", optLabel: "차에서 자기 (차박)",       caption: "차량 취침 기준 · 텐트 생략",      caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4, bag:0 } },
 };
@@ -2744,9 +2744,10 @@ function openSetDetail(si) {
     const on = n >= 1;
     const over = on && cap > 0 && n > cap;   // §6 하위호환: 정원 초과는 경고만(강제삭제 안 함)
     const must = sl.tier === "must";
-    const state = on
-      ? `<span class="ssb-state ${over ? "over" : "ok"}">${over ? "⚠️" : "✓"}${n > 1 ? ` ×${n}` : ""}</span>`
-      : `<span class="ssb-state">0/${cap}</span>`;
+    // 숫자(0/cap·×n) 비표시 — 도장 dot만. 채움=● 컬러, 빈칸=○ 점선. 정원 초과만 ⚠️ 경고 유지.
+    const state = over
+      ? `<span class="ssb-state over">⚠️</span>`
+      : `<span class="stamp-dot${on ? " on" : ""}"></span>`;
     const body = `<span class="ssb-icon">${sl.icon}</span><span class="ssb-label">${esc(sl.label)}</span>${state}`;
     return on
       ? `<div class="ssb-cell on${must ? " must" : ""}${over ? " over" : ""}" title="${esc(sl.label)}${over ? ` 정원 초과(최대 ${cap})` : " 완료"}">${body}</div>`
