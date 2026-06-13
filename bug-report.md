@@ -3252,7 +3252,7 @@
 
 ---
 
-### [M-169] — `star_catalog.py` — `price_observations` 쿼리에서 `pr=None` 체크 없이 `prods[pid]["price"]`에 삽입 → 별점 계산 TypeError
+### [M-169] ✅ 해결완료(2026-06-13, C15) — `star_catalog.py` — `price_observations` 쿼리에서 `pr=None` 체크 없이 `prods[pid]["price"]`에 삽입 → 별점 계산 TypeError
 
 - **영역:** 백엔드 — 파이프라인 / 별점 계산
 - **심각도:** 🟡 Medium
@@ -5206,7 +5206,7 @@
 
 ## R-110 (백엔드) — 2026-06-13
 
-### [M-260] — `star_catalog.py` `main()` — `price_observations` 쿼리에 `valid=1` 필터 없어 이상치 가격으로 별점 왜곡
+### [M-260] ✅ 해결완료(2026-06-13, C15) — `star_catalog.py` `main()` — `price_observations` 쿼리에 `valid=1` 필터 없어 이상치 가격으로 별점 왜곡
 
 - **영역:** 백엔드 — 별점 카탈로그
 - **심각도:** 🟡 Medium
@@ -5639,7 +5639,7 @@
 
 ---
 
-### [L-235] — `star_catalog.py` `main()` — `star_of` 딕셔너리 계산 후 DB 미저장, 결과 무시
+### [L-235] ✅ 분석완료(by-design, C15) — `star_catalog.py` `main()` — `star_of` 딕셔너리 계산 후 DB 미저장, 결과 무시
 
 - **영역:** 백엔드 — 별점 집계
 - **심각도:** 🟢 Low
@@ -7443,7 +7443,7 @@
 
 ---
 
-### [H-102] — `add_manual_models.py` `upsert_model` — 빈 prices 리스트 시 `min()`/`max()` ValueError 크래시
+### ✅ 해결완료(2026-06-13) [H-102] — `add_manual_models.py` `upsert_model` — 빈 prices 리스트 시 `min()`/`max()` ValueError 크래시
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -7839,7 +7839,7 @@
 
 ---
 
-### [H-106] — `add_value_star.py` `main` — 파일 핸들 미닫힘 + 쓰기 실패 시 JSON 파일 절단
+### ✅ 해결완료(2026-06-13) [H-106] — `add_value_star.py` `main` — 파일 핸들 미닫힘 + 쓰기 실패 시 JSON 파일 절단
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
