@@ -149,7 +149,8 @@ def upsert(con, pid, cid, key, val, raw, conf, src, overwrite=False):
         return False
     if has and overwrite:   # 기준확정: 다나와 등 기존값을 크로스소스 확정값으로 교체
         con.execute("DELETE FROM product_spec_values WHERE product_id=? AND metric_id=?", (pid, mid))
-    con.execute("DELETE FROM product_spec_values WHERE product_id=? AND metric_id=? AND valid=0", (pid, mid))
+    # H-53: source_id=4(crosssource) 한정 삭제 — 다른 소스의 valid=0 미검증 데이터 보존
+    con.execute("DELETE FROM product_spec_values WHERE product_id=? AND metric_id=? AND valid=0 AND source_id=4", (pid, mid))
     con.execute("""INSERT INTO product_spec_values
         (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
         VALUES(?,?,?,?,?,4,?,1,1)""", (pid, mid, val, f"{raw} [{src}]", "norm", conf))
@@ -164,27 +165,32 @@ def main():
     args = ap.parse_args()
     con = sqlite3.connect(args.db)
     filled = 0
-    for r in RECORDS:
-        row = con.execute("SELECT id, category_id FROM products WHERE danawa_pcode=?", (r["pcode"],)).fetchone()
-        if not row:
-            continue
-        pid, cid = row
-        n = 0
-        ow = r.get("confirm", False)   # True면 기존(다나와)값을 확정값으로 덮어씀
-        if "weight" in r:
-            n += upsert(con, pid, cid, "weight_min", N.parse_weight(r["weight"]), r["weight"], "high", r["src"], ow)
-        if "water" in r:
-            n += upsert(con, pid, cid, "water_head", N.parse_water_head(r["water"]), r["water"], "high", r["src"], ow)
-        if "floor_m2" in r:
-            n += upsert(con, pid, cid, "floor_area", r["floor_m2"], f"{r['floor_m2']}㎡", "high", r["src"], ow)
-        if "packed" in r:
-            n += upsert(con, pid, cid, "packed_volume", N.packed_volume_cm3(r["packed"]), r["packed"], "medium", r["src"], ow)
-        for key, val in r.get("m", {}).items():
-            n += upsert(con, pid, cid, key, val, str(val), "high", r["src"], ow)
-        filled += n
-    con.commit()
-    P.recompute_ratings(con)
-    con.commit()
+    try:
+        for r in RECORDS:
+            row = con.execute("SELECT id, category_id FROM products WHERE danawa_pcode=?", (r["pcode"],)).fetchone()
+            if not row:
+                continue
+            pid, cid = row
+            n = 0
+            ow = r.get("confirm", False)   # True면 기존(다나와)값을 확정값으로 덮어씀
+            if "weight" in r:
+                n += upsert(con, pid, cid, "weight_min", N.parse_weight(r["weight"]), r["weight"], "high", r["src"], ow)
+            if "water" in r:
+                n += upsert(con, pid, cid, "water_head", N.parse_water_head(r["water"]), r["water"], "high", r["src"], ow)
+            if "floor_m2" in r:
+                n += upsert(con, pid, cid, "floor_area", r["floor_m2"], f"{r['floor_m2']}㎡", "high", r["src"], ow)
+            if "packed" in r:
+                n += upsert(con, pid, cid, "packed_volume", N.packed_volume_cm3(r["packed"]), r["packed"], "medium", r["src"], ow)
+            for key, val in r.get("m", {}).items():
+                n += upsert(con, pid, cid, key, val, str(val), "high", r["src"], ow)
+            filled += n
+        con.commit()
+        P.recompute_ratings(con)
+        con.commit()  # H-54: ratings까지 단일 트랜잭션으로 묶어야 하지만, recompute_ratings는 자체 cursor를 사용하므로 ratings commit을 분리 유지. 실패 시 rollback.
+    except Exception as e:
+        con.rollback()
+        print(f"[crosssource] 오류 발생, 롤백 완료: {e}")
+        raise
     print(f"크로스소스 측정값 {filled}개 적재(추정 아님)")
     con.close()
 

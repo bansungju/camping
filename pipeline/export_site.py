@@ -74,12 +74,13 @@ def export(con, outdir):
                    (SELECT p2.gf_code FROM products p2
                     WHERE p2.brand_id=p.brand_id AND p2.canonical_model=p.canonical_model
                     AND IFNULL(p2.capacity,-1)=IFNULL(p.capacity,-1)
-                    AND p2.curation_status='verified' ORDER BY p2.id LIMIT 1) gf_code
+                    AND p2.curation_status='verified' ORDER BY p2.id LIMIT 1) gf_code,
+                   p.brand_id
             FROM products p JOIN brands b ON b.id=p.brand_id
             WHERE p.category_id=? AND p.curation_status='verified'
             GROUP BY p.brand_id, p.canonical_model, IFNULL(p.capacity,-1)
             ORDER BY b.name_ko, p.canonical_model""", (cid,)).fetchall()
-        for rep, brand, cm, cap, variants, gf_code in reps:
+        for rep, brand, cm, cap, variants, gf_code, brand_id in reps:
             specs = {}
             for m in star_metrics:
                 row = con.execute("""SELECT v.value_normalized, v.source_id, v.star_eligible, v.confidence
@@ -97,10 +98,11 @@ def export(con, outdir):
                     "stars": stars[0] if stars else None,
                     "badge": metric_badge(m["key"], src, se, val is not None, conf),
                 }
-            pr = con.execute("""SELECT cm.min_price, cm.max_price FROM canonical_models cm
-                JOIN products p ON p.id=? WHERE cm.brand_id=p.brand_id
-                AND cm.canonical_model=p.canonical_model
-                AND IFNULL(cm.capacity,-1)=IFNULL(p.capacity,-1)""", (rep,)).fetchone()
+            # H-52: JOIN 제거 → brand_id/canonical_model/capacity 직접 조회.
+            # 기존 JOIN은 canonical_models 중복 시 엉뚱한 행 리턴 위험 + NULL canonical_model 비교 오류.
+            pr = con.execute("""SELECT min_price, max_price FROM canonical_models
+                WHERE brand_id=? AND canonical_model IS ? AND IFNULL(capacity,-1)=IFNULL(?,-1)
+                LIMIT 1""", (brand_id, cm, cap)).fetchone()
             # 대표 이미지 — image_local(로컬파일) 우선, 없으면 image_url(CDN) fallback
             imgr = con.execute("""SELECT COALESCE(p2.image_local, p2.image_url)
                 FROM products p2
