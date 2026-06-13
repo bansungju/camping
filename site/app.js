@@ -642,13 +642,8 @@ async function renderHub() {
   renderRecent();   // 최근 본 상품(있으면)
   renderHotSection(m.categories);   // 이번 주 인기
 
-  // 캠핑 스타일 추천 진입 — 클릭 시 카테고리+필터 직접 이동
-  const PERSONA_CAT = {
-    backpacker: { cat: "backpacking-tent", sort: "weight_min", sa: "1", cap: "2" },
-    minimal:    { cat: "tarp",             sort: "weight_min", sa: "1" },
-    auto:       { cat: "auto-tent",        sort: "floor_area", sa: "0", cap: "4" },
-    // family: recommend.html?p=family 로 연결 (PERSONA_CAT에서 제외 시 fallback 사용, M-100)
-  };
+  // 캠핑 스타일 추천 진입 — 모든 스타일 recommend.html?p=KEY 로 연결 (H-40)
+  const PERSONA_CAT = {};
   const pel = document.getElementById("personas");
   if (pel) pel.innerHTML = PERSONAS.map(p => {
     const pc = PERSONA_CAT[p.key];

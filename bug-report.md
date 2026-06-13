@@ -117,6 +117,16 @@
 
 ## 🔴 High (즉시 수정 필요)
 
+### [H-40] — `renderHub` — '내 캠핑 스타일' 백패커·미니멀리스트·오토/맥시멀 클릭 시 스타일 추천 페이지 미이동 — 4인가족만 정상
+- **영역:** 프론트엔드 — 홈/메인 (내 캠핑 스타일 섹션)
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** 홈화면 '내 캠핑 스타일'에서 `family`(4인가족)는 `recommend.html?p=family`로 이동하여 스타일별 추천 장비 전체(picks)를 보여주는 반면, `backpacker`·`minimal`·`auto` 3개는 `PERSONA_CAT` 객체에 단일 카테고리 URL이 하드코딩되어(`site/app.js` line 634–638) 각각 `category.html?cat=backpacking-tent`, `category.html?cat=tarp`, `category.html?cat=auto-tent`로 이동한다. 홈→스타일추천→각 스타일 페이지 내비게이션이 3/4 케이스에서 깨져 있어 핵심 UX 플로우 불일치.
+- **재현조건:** 홈화면 → '내 캠핑 스타일' → 백패커/미니멀리스트/오토·맥시멀 중 하나 클릭 → 스타일 추천 페이지(`recommend.html?p=...`) 대신 단일 카테고리 페이지로 이동.
+- **원인:** `site/app.js` line 634–638 `PERSONA_CAT` 객체에 `backpacker`, `minimal`, `auto` 키가 정의되어 line 648 fallback(`url = recommend.html?p=${p.key}`)이 동작하지 않음. `family`는 `PERSONA_CAT`에 없어 fallback이 적용됨.
+- **제안 수정:** `PERSONA_CAT` 객체에서 `backpacker`, `minimal`, `auto` 3개 키를 제거 → 기존 fallback 로직으로 `recommend.html?p=backpacker`, `recommend.html?p=minimal`, `recommend.html?p=auto` 자동 연결.
+- **파일:** [site/app.js](site/app.js) line 634–649 [lane:CORE]
+
 ### [H-39] ✅ 해결완료(백엔드+코드, 2026-06-11) — Google 로그인 후 비로그인 복귀
 - **해결적용(2026-06-11):** ① (백엔드) `site_url` `http://localhost:3000` → `https://gear-forest.com`, `uri_allow_list`에 `https://gear-forest.com/**` 추가. authorize REST 검증 — `redirect_to=gear-forest.com/auth-callback.html` 정상 통과 확인. ② (코드) `supabaseClient.js`에 `flowType: 'pkce'` 명시적 설정. `auth-callback.html` else 분기 `INITIAL_SESSION(null)` 즉시 이탈 버그 수정(supabase-js v2 첫 이벤트가 INITIAL_SESSION+null인데 바로 unsubscribe → auth_error 이동했음). ③ (코드) M-96 동시 수정: `initAuth(user=null)` 콜백이 에러 메시지를 덮어쓰는 버그 수정.
 - **영역:** 계정/로그인 (Supabase Auth 설정)
@@ -351,6 +361,18 @@
 ---
 
 ## 🟡 Medium
+
+
+### [M-146] ✅ 해결완료(2026-06-13, moot) — `renderHotSection` — '이번 주 인기' 랭킹 행에 직접 상품 링크 없음 → 일부 제품 링크 미노출
+- **영역:** 프론트엔드 — 홈/메인 (이번 주 인기 섹션)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `renderHotSection()` (`site/app.js` line 2620)에서 `get_hot_items` RPC 결과(`brand`, `model`, `cat`, `clicks`)로 랭킹 행을 렌더링할 때 `href="category.html?cat=${cat}&brands=...&q=..."` 카테고리 필터 URL로 연결한다. RPC가 `pcode`나 아이템 인덱스를 반환하지 않아 직접 상품 상세 페이지(`/item/{cat}/item-N.html`) 링크 생성이 불가능하다. 브랜드·모델명이 카테고리 필터 검색과 정확히 일치하지 않으면 클릭 시 빈 결과 페이지로 이동하여 사용자 입장에서 "링크 없음"처럼 보인다 (스크린샷: 헬리녹스 코타2 1회 — 클릭 후 필터 불일치로 빈 페이지 이동 가능).
+- **재현조건:** 홈 화면 '이번 주 인기' 랭킹 항목 클릭 → `category.html?cat=mat&brands=헬리녹스&q=코타2` 로 이동 → 검색 결과 0건 또는 해당 상품 미표시.
+- **원인:** `supabase/migrations/014_hot_items_rpc.sql` — `RETURNS TABLE(brand text, model text, cat text, clicks bigint)` 에 `pcode` 미포함. `click_events` 테이블에 `pcode` 컬럼이 있다면 RPC에 추가해 직접 링크 생성 가능.
+- **제안 수정:** ① `get_hot_items` RPC에 `pcode` 컬럼 추가 (click_events에 pcode 저장 전제) → `href="/item/${cat}/item-${pcode}.html"` 직접 링크 생성. ② 단기 대안: `q` 파라미터 대신 `search.html?q=${encodeURIComponent(h.model)}` 검색 페이지로 연결해 히트율 향상.
+- **파일:** [site/app.js](site/app.js) line 2620, [supabase/migrations/014_hot_items_rpc.sql](supabase/migrations/014_hot_items_rpc.sql) [lane:CORE]
+
 - **해결(2026-06-11, 환경/라우팅 변화로 해소):** 코드가 이미 `category.html?cat=` 방식으로 전환 완료 — `site/app.js`·HTML 어디에도 구 clean URL(`category/{슬러그}`) 링크 잔존 없음(grep 확인). 더 이상 재현되지 않음.
 
 ### [M-68] ✅ 해결완료 — "빠른 설정" 프리셋 전환 시 이전 필터 미초기화 — 필터 누적 AND 적용
@@ -2628,7 +2650,7 @@
 - **제안 수정:** `scripts/build-item-pages.js` line 319를 `JSON.stringify({ b: brand, m: modelName, cap: ..., s: catSlug, p: price_min, img: img || null, cu: coupang_url || null })`로 수정하고 ITEM에 `cu` 키 추가; line 331 `openSetModal` 호출에 `coupang_url: ITEM.cu || null` 추가.
 - **파일:** [scripts/build-item-pages.js](scripts/build-item-pages.js) line 319, 331 [lane:CORE]
 
-### [L-169] — `app.js` — PWA 배너 `showBanner()` — `display:block` 직후 `offsetHeight` 측정 → layout flush 전이면 0 → `--banner-h: 0px` 세팅
+### [L-169] ✅ 해결완료(2026-06-13, CORE) — `app.js` — PWA 배너 `showBanner()` — `display:block` 직후 `offsetHeight` 측정 → layout flush 전이면 0 → `--banner-h: 0px` 세팅
 - **영역:** 프론트엔드 — PWA
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2677,7 +2699,7 @@
 - **제안 수정:** `canonical_models` 생성 스크립트에서 `rep_product_id INTEGER`, `variant_count INTEGER`, `min_price INTEGER`, `max_price INTEGER` 타입 선언 추가. 또는 `export_site.py`에서 `int(pr[0]) if pr and pr[0] is not None else None` 으로 명시적 캐스팅.
 - **파일:** DB 스키마 (캐노니컬 생성 쿼리), [pipeline/export_site.py](pipeline/export_site.py) line 106 [lane:BACKEND]
 
-### [L-173] — `openLogDetail` — ESC 키 핸들러 `removeEventListener` 미호출 → 이벤트 누적
+### [L-173] ✅ 해결완료(2026-06-13, CORE) — `openLogDetail` — ESC 키 핸들러 `removeEventListener` 미호출 → 이벤트 누적
 - **영역:** 프론트엔드 — 커뮤니티/소셜
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2697,7 +2719,7 @@
 - **제안 수정:** line 3468: `"id, body, created_at, user_id, profiles(nickname)"` / line 3484: `${esc(c.body)}` / line 3507: `insert({ post_id: p.id, user_id: window._commUser.id, body: content })`.
 - **파일:** [site/app.js](site/app.js) line 3468, 3484, 3507 [lane:CORE]
 
-### [L-174] — `openSetModal` — Tab 포커스 트랩 없음 → 키보드 사용자 모달 탈출 (WCAG 2.1.2)
+### [L-174] ✅ 해결완료(2026-06-13, CORE) — `openSetModal` — Tab 포커스 트랩 없음 → 키보드 사용자 모달 탈출 (WCAG 2.1.2)
 - **영역:** 프론트엔드 — 장비 꾸러미 모달 (접근성)
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
@@ -2707,7 +2729,7 @@
 - **제안 수정:** `onKey` 내에 `if (e.key === "Tab") { ... first/last 포커스 순환 ... }` 분기 추가 (openProduct line 1856–1862 패턴 동일 적용).
 - **파일:** [site/app.js](site/app.js) line 339 [lane:CORE]
 
-### [L-175] — `openLogDetail` — `close()` 시 `prevFocus` 복귀 누락 → 접근성 포커스 유실
+### [L-175] ✅ 해결완료(2026-06-13, CORE) — `openLogDetail` — `close()` 시 `prevFocus` 복귀 누락 → 접근성 포커스 유실
 - **영역:** 프론트엔드 — 커뮤니티/소셜 (접근성)
 - **심각도:** 🟢 Low
 - **발견일시:** 2026-06-13
