@@ -230,6 +230,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrvd-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .pmrvd-meta .pmrv-date{margin-left:auto}
 .pmrv-fulltext{font-size:14px;line-height:1.7;color:var(--fg);white-space:pre-wrap;word-break:break-word}
+.rv-report{display:block;margin-top:14px;margin-left:auto;color:var(--faint);font-size:12.5px;cursor:pointer;background:none;border:none;padding:0}
 
 /* 운영자 모드 배너 — static(헤더 sticky와 top:0 충돌 방지) */
 .opsbar{background:#fff3d6;border-bottom:1px solid #e8d196;color:#7a5b00;
