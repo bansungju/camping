@@ -4051,7 +4051,7 @@
 
 ---
 
-### [M-208] — `showToast` isHtml 모드 — `pointerEvents="auto"` 복구 없음 → 숨겨진 토스트가 클릭 이벤트 가로채기
+### [M-208] ✅ 해결완료(2026-06-13) — `showToast` isHtml 모드 — `pointerEvents="auto"` 복구 없음 → 숨겨진 토스트가 클릭 이벤트 가로채기
 
 - **영역:** 프론트엔드 — 공통 UI (app.js)
 - **심각도:** 🟡 Medium
@@ -4413,7 +4413,7 @@
 
 ---
 
-### [L-212] — `limits_map.py` `_star_rate_pairs()` — `import re` 함수 내부 반복 실행
+### [L-212] ✅ 해결완료(2026-06-13, C24) — `limits_map.py` `_star_rate_pairs()` — `import re` 함수 내부 반복 실행
 
 - **영역:** 백엔드 — 가치 평가
 - **심각도:** 🟢 Low
@@ -6308,7 +6308,7 @@
 
 ---
 
-### [L-251] — `limits_map.py` `render()` — 등급 정렬이 이모지 코드포인트 순으로 `🔴 한계` 최상단 표시
+### [L-251] ✅ 해결완료(2026-06-13, C24) — `limits_map.py` `render()` — 등급 정렬이 이모지 코드포인트 순으로 `🔴 한계` 최상단 표시
 
 - **영역:** 백엔드 — 한계 지도
 - **심각도:** 🟢 Low
@@ -6320,7 +6320,7 @@
 
 ---
 
-### [L-252] — `limits_map.py` `render()` / `main()` — `"—"` 등급 카테고리(스타 지표 없음)가 집계 버킷에서 제외
+### [L-252] ✅ 해결완료(2026-06-13, C24) — `limits_map.py` `render()` / `main()` — `"—"` 등급 카테고리(스타 지표 없음)가 집계 버킷에서 제외
 
 - **영역:** 백엔드 — 한계 지도
 - **심각도:** 🟢 Low
@@ -6599,7 +6599,7 @@
 
 ---
 
-### [M-327] — `showToast` — `isHtml` 토스트 페이드아웃 후 `pointerEvents` 미복원으로 클릭 데드존 잔류
+### [M-327] ✅ 해결완료(2026-06-13) — `showToast` — `isHtml` 토스트 페이드아웃 후 `pointerEvents` 미복원으로 클릭 데드존 잔류
 
 - **영역:** 프론트엔드 — UI
 - **심각도:** 🟡 Medium
@@ -7119,7 +7119,7 @@
 
 ---
 
-### [M-351] — `renderBrowse` — `#list` 요소 null 체크 누락 TypeError
+### [M-351] ✅ 해결완료(2026-06-13) — `renderBrowse` — `#list` 요소 null 체크 누락 TypeError
 
 - **영역:** 프론트엔드 — 브라우즈 페이지
 - **심각도:** 🟡 Medium
@@ -7131,7 +7131,7 @@
 
 ---
 
-### [M-352] — `renderCategory` — `#crumbName` 성공 경로 null 체크 누락
+### [M-352] ✅ 해결완료(2026-06-13) — `renderCategory` — `#crumbName` 성공 경로 null 체크 누락
 
 - **영역:** 프론트엔드 — 카테고리 페이지
 - **심각도:** 🟡 Medium
@@ -8254,7 +8254,7 @@
 
 ---
 
-### [M-389] — `setupSearchPage` — 한글 IME 조합 중 `isComposing` 가드 없어 미완성 음절로 검색
+### [M-389] ✅ 해결완료(2026-06-13) — `setupSearchPage` — 한글 IME 조합 중 `isComposing` 가드 없어 미완성 음절로 검색
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟡 Medium
@@ -8506,7 +8506,7 @@
 
 ---
 
-### [M-399] — recommend `picks` 필터 — `m.specs.X` 미존재 시 `TypeError` 크래시
+### [M-399] ✅ 해결완료(2026-06-13) — recommend `picks` 필터 — `m.specs.X` 미존재 시 `TypeError` 크래시
 
 - **영역:** 프론트엔드 — 추천
 - **심각도:** 🟡 Medium
@@ -9990,7 +9990,7 @@
 
 ---
 
-### [M-453] — `renderRecommend` — `pick.filter`가 함수 아닐 때 `pick.filter is not a function` TypeError
+### [M-453] ✅ 해결완료(2026-06-13) — `renderRecommend` — `pick.filter`가 함수 아닐 때 `pick.filter is not a function` TypeError
 
 - **영역:** 프론트엔드 — 추천
 - **심각도:** 🟡 Medium
@@ -10446,7 +10446,7 @@
 
 ---
 
-### [M-474] — `openSetModal` — keydown ESC 핸들러 중복 누적 (modal._onKey 가드 없음)
+### [M-474] ✅ 해결완료(2026-06-13) — `openSetModal` — keydown ESC 핸들러 중복 누적 (modal._onKey 가드 없음)
 
 - **영역:** 프론트엔드 — 세트 모달
 - **심각도:** 🟡 Medium
@@ -10650,7 +10650,7 @@
 
 ---
 
-### [M-481] — `renderRecent` — `x.b`/`x.m` undefined 시 `"?brands=undefined"` 브로큰 URL
+### [M-481] ✅ 해결완료(2026-06-13) — `renderRecent` — `x.b`/`x.m` undefined 시 `"?brands=undefined"` 브로큰 URL
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟡 Medium
@@ -10674,7 +10674,7 @@
 
 ---
 
-### [M-483] — `draw()` — `STATE.q` 다중 단어 검색 토큰화 미적용 (홈 검색과 불일치)
+### [M-483] ✅ 해결완료(2026-06-13) — `draw()` — `STATE.q` 다중 단어 검색 토큰화 미적용 (홈 검색과 불일치)
 
 - **영역:** 프론트엔드 — 카테고리 검색
 - **심각도:** 🟡 Medium
@@ -10698,7 +10698,7 @@
 
 ---
 
-### [M-485] — `pushRecent` — `item.key`가 undefined이면 dedup 실패로 recent 목록 오염
+### [M-485] ✅ 해결완료(2026-06-13) — `pushRecent` — `item.key`가 undefined이면 dedup 실패로 recent 목록 오염
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟡 Medium
@@ -10998,7 +10998,7 @@
 
 ---
 
-### [M-497] — `view-set` import — `atob` 실패 시 숨겨진 섹션 미복원 → 빈 화면 잔존
+### [M-497] ✅ 해결완료(2026-06-13) — `view-set` import — `atob` 실패 시 숨겨진 섹션 미복원 → 빈 화면 잔존
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -11238,7 +11238,7 @@
 
 ---
 
-### [M-506] — `restoreState` `?brands=|||...` URL — 빈 문자열 브랜드 Set 대량 추가 → 전체 모델 필터 제거
+### [M-506] ✅ 해결완료(2026-06-13) — `restoreState` `?brands=|||...` URL — 빈 문자열 브랜드 Set 대량 추가 → 전체 모델 필터 제거
 
 - **영역:** 프론트엔드 — URL 상태
 - **심각도:** 🟡 Medium
@@ -11262,7 +11262,7 @@
 
 ---
 
-### [M-508] — `importSet` `?view-set=` — `JSON.parse` 실패 시 섹션 숨김 미복원 → 계정 페이지 빈 화면
+### [M-508] ✅ 해결완료(2026-06-13) — `importSet` `?view-set=` — `JSON.parse` 실패 시 섹션 숨김 미복원 → 계정 페이지 빈 화면
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟡 Medium
@@ -11859,5 +11859,89 @@
 - **원인:** [pipeline/value_metric.py](pipeline/value_metric.py) line 270 — 루프 내부 import.
 - **제안 수정:** 파일 상단 `from collections import defaultdict, Counter`로 통합.
 - **파일:** [pipeline/value_metric.py](pipeline/value_metric.py) line 270 [lane:BACKEND]
+
+---
+
+### [H-144] — `publish.py` — `git add -A`로 워크트리 전체 스테이징 → scope 외 파일 커밋 위험 (TOCTOU)
+
+- **영역:** 백엔드 — dev-harness/devagent
+- **심각도:** 🔴 High
+- **발견일시:** 2026-06-13
+- **증상:** `changed_files`로 scope 게이트를 통과한 후 `add -A`로 워크트리 전체를 스테이징하면 `.env`, 임시 파일 등 scope 외 파일이 커밋에 포함될 수 있음.
+- **원인:** [dev-harness/devagent/nodes/publish.py](dev-harness/devagent/nodes/publish.py) line 56 — `_git(["add", "-A"], cwd=wt)` — `changed_files`에 선언된 경로만 스테이징해야 함.
+- **제안 수정:** `git add -A` → `git add -- <changed_files 경로 목록>`으로 교체. 삭제 파일은 `git rm` 별도 처리.
+- **파일:** [dev-harness/devagent/nodes/publish.py](dev-harness/devagent/nodes/publish.py) line 56 [lane:BACKEND]
+
+---
+
+### [M-531] — `babysit.py` — `near[:10]` 출력 루프가 `if near:` 조건 없이 항상 실행
+
+- **영역:** 백엔드 — 파이프라인/watchdog
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `near`가 비어 있어도 `for name, pc in near[:10]:` 루프가 실행되어 불필요한 pass 반복. `near` 항목이 `todos` 조건과 독립적으로 출력될 수 있음.
+- **원인:** [pipeline/babysit.py](pipeline/babysit.py) line 113 — `for name, pc in near[:10]:` 블록이 `if near:` 조건 없이 최상위 루프에 위치.
+- **제안 수정:** `for name, pc in near[:10]:` 블록을 `if near:` 조건 안으로 이동.
+- **파일:** [pipeline/babysit.py](pipeline/babysit.py) line 113 [lane:BACKEND]
+
+---
+
+### [M-532] — `brand_filter.py` — `name_ko=NULL` 브랜드 처리 시 `None + str` TypeError
+
+- **영역:** 백엔드 — 파이프라인/brand_filter
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** DB에 `name_ko=NULL`인 브랜드가 있으면 `n+'('+str(c)+')'` 에서 `TypeError: can only concatenate str (not "NoneType") to str` 발생.
+- **원인:** [pipeline/brand_filter.py](pipeline/brand_filter.py) line 80–81 — `n`이 `None`인 경우 방어 처리 없음.
+- **제안 수정:** `n = n or ""` 방어 추가 또는 SQL에 `WHERE b.name_ko IS NOT NULL` 조건 추가.
+- **파일:** [pipeline/brand_filter.py](pipeline/brand_filter.py) line 80 [lane:BACKEND]
+
+---
+
+### [M-533] — `seed_coupang.py` — CSV `rep_product_id` 비숫자 행에서 `int()` ValueError 비처리
+
+- **영역:** 백엔드 — 파이프라인/seed_coupang
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 수동 편집 CSV에 공백 행·주석 행이 혼입되면 `int(r["rep_product_id"])` 에서 `ValueError`로 크래시.
+- **원인:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 86 — `int()` 변환에 try/except 없음.
+- **제안 수정:** `rid_str = (r.get("rep_product_id") or "").strip(); if not rid_str.isdigit(): continue` 방어 추가.
+- **파일:** [pipeline/seed_coupang.py](pipeline/seed_coupang.py) line 86 [lane:BACKEND]
+
+---
+
+### [L-439] — `crosssource.py` — `upsert()` INSERT 성공 경로에 `return True` 누락 → `None` 반환 후 `n += None` TypeError
+
+- **영역:** 백엔드 — 파이프라인/crosssource
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** INSERT 성공 후 함수 말단에 `return True`가 없어 암묵적으로 `None` 반환. `n += upsert(...)` 에서 `TypeError: unsupported operand type(s) for +=: 'int' and 'NoneType'` 크래시.
+- **원인:** [pipeline/crosssource.py](pipeline/crosssource.py) line 159–164 — INSERT 이후 명시적 `return True` 누락.
+- **제안 수정:** INSERT 블록 마지막에 `return True` 추가.
+- **파일:** [pipeline/crosssource.py](pipeline/crosssource.py) line 163 [lane:BACKEND]
+
+---
+
+### [L-440] — `openSetDetail` — `modal._onKey = null` 상태에서 `classList.add("on")` 실행 → 빠른 ESC 시 이전 리스너 제거 실패
+
+- **영역:** 프론트엔드 — 세트 상세 모달
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 세트 상세 모달을 빠르게 열고 ESC를 누르면 `removeEventListener(null)` 호출로 이전 keydown 핸들러가 제거되지 않아 누적될 수 있음.
+- **원인:** [site/app.js](site/app.js) line 3110–3118 — `removeEventListener(modal._onKey)` 직후 `modal._onKey`를 새 함수로 교체하기 전에 `classList.add("on")`이 실행되는 순서 문제.
+- **제안 수정:** `modal.classList.add("on")`을 `modal._onKey = onKey; addEventListener(...)` 이후로 이동.
+- **파일:** [site/app.js](site/app.js) line 3110 [lane:CORE]
+
+---
+
+### [L-441] — `syncFilterUI` — `STATE.qExclude` UI 복원 누락 → 공유 링크로 들어온 사용자에게 필터 적용 이유 미표시
+
+- **영역:** 프론트엔드 — 필터 상태 복원
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** URL `?qx=1`로 접속 시 `STATE.qExclude=true`가 복원되어 필터 로직은 작동하지만, qExclude 토글 버튼의 `.on` 클래스·`aria-pressed` 상태가 복원되지 않아 사용자가 모델이 숨겨진 이유를 알 수 없음.
+- **원인:** [site/app.js](site/app.js) `syncFilterUI` 함수 — `STATE.qExclude`에 대응하는 버튼 동기화 코드 누락.
+- **제안 수정:** `syncFilterUI` 내 qExclude 버튼에 `STATE.qExclude`에 따른 `.on` 클래스 및 `aria-pressed` 업데이트 추가.
+- **파일:** [site/app.js](site/app.js) `syncFilterUI` 함수 [lane:CORE]
 
 ---
