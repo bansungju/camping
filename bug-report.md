@@ -4240,7 +4240,7 @@
 
 ---
 
-### [L-210] — `danawa.py` `http_get()` — `URLError` 발생 시 `last` 초기화로 이전 `HTTPError` 정보 소실
+### [L-210] ✅ 해결완료(2026-06-13, C30) — `danawa.py` `http_get()` — `URLError` 발생 시 `last` 초기화로 이전 `HTTPError` 정보 소실
 
 - **영역:** 백엔드 — 파이프라인 / 다나와 크롤링
 - **심각도:** 🟢 Low
@@ -4534,7 +4534,7 @@
 
 ---
 
-### [M-229] — `run_all.py` `main()` — generic 하베스터 카테고리 `--harvest` 시 무음 no-op
+### ✅ 해결완료(2026-06-13) [M-229] — `run_all.py` `main()` — generic 하베스터 카테고리 `--harvest` 시 무음 no-op
 
 - **영역:** 백엔드 — 파이프라인
 - **심각도:** 🟡 Medium
@@ -6031,7 +6031,7 @@
 
 ---
 
-### [L-244] — `danawa.py` `parse_spec_string()` — `seen_kv` 플래그로 key:value 이후 독립 태그가 값 연속으로 오분류
+### [L-244] ⏸ 보류(C30) — `danawa.py` `parse_spec_string()` — `seen_kv` 플래그로 key:value 이후 독립 태그가 값 연속으로 오분류
 
 - **영역:** 백엔드 — 다나와 파싱
 - **심각도:** 🟢 Low
@@ -7203,7 +7203,7 @@
 
 ---
 
-### [M-354] — `check_export.py` `check_file` — `price_max=0` falsy로 `pmin` 폴백 → 이중 보고
+### ✅ 해결완료(2026-06-13) [M-354] — `check_export.py` `check_file` — `price_max=0` falsy로 `pmin` 폴백 → 이중 보고
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7779,7 +7779,7 @@
 
 ---
 
-### [M-373] — `run_all.py` `promote_all` — 트랜잭션 없는 demote→promote 루프, 중단 시 DB 부분 부패
+### ✅ 해결완료(2026-06-13) [M-373] — `run_all.py` `promote_all` — 트랜잭션 없는 demote→promote 루프, 중단 시 DB 부분 부패
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7959,7 +7959,7 @@
 
 ---
 
-### [M-381] — `run_all.py` `promote_all` — `capclause` f-string 직접 삽입으로 향후 SQL 인젝션 벡터
+### ✅ 해결완료(2026-06-13) [M-381] — `run_all.py` `promote_all` — `capclause` f-string 직접 삽입으로 향후 SQL 인젝션 벡터
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -8362,7 +8362,7 @@
 
 ---
 
-### [M-395] — `check_export.py` `load_models` — JSON 파싱 실패 silent 스왈로우로 배포 게이트 무력화
+### ✅ 해결완료(2026-06-13) [M-395] — `check_export.py` `load_models` — JSON 파싱 실패 silent 스왈로우로 배포 게이트 무력화
 
 - **영역:** 백엔드 — 빌드
 - **심각도:** 🟡 Medium
@@ -8850,7 +8850,7 @@
 
 ---
 
-### [M-410] — `check_export.py` — `price_max=0` 시 `영/음수가격` 미탐지
+### ✅ 해결완료(2026-06-13) [M-410] — `check_export.py` — `price_max=0` 시 `영/음수가격` 미탐지
 
 - **영역:** 백엔드 — 배포 검증
 - **심각도:** 🟡 Medium
@@ -9462,7 +9462,7 @@
 
 ---
 
-### [M-427] — `run_all.py` `promote_all` — `total_demoted` 카운터 항상 0 출력으로 강등 건수 미보고
+### ✅ 해결완료(2026-06-13) [M-427] — `run_all.py` `promote_all` — `total_demoted` 카운터 항상 0 출력으로 강등 건수 미보고
 
 - **영역:** 백엔드 — 파이프라인 실행
 - **심각도:** 🟡 Medium
@@ -9786,7 +9786,7 @@
 
 ---
 
-### [M-441] — `check_export.py` — 데이터 디렉토리 비어있을 때 가격 게이트 무조건 통과
+### ✅ 해결완료(2026-06-13) [M-441] — `check_export.py` — 데이터 디렉토리 비어있을 때 가격 게이트 무조건 통과
 
 - **영역:** 백엔드 — 배포 검증
 - **심각도:** 🟡 Medium
@@ -11943,5 +11943,173 @@
 - **원인:** [site/app.js](site/app.js) `syncFilterUI` 함수 — `STATE.qExclude`에 대응하는 버튼 동기화 코드 누락.
 - **제안 수정:** `syncFilterUI` 내 qExclude 버튼에 `STATE.qExclude`에 따른 `.on` 클래스 및 `aria-pressed` 업데이트 추가.
 - **파일:** [site/app.js](site/app.js) `syncFilterUI` 함수 [lane:CORE]
+
+---
+
+### [M-534] — `harvest_tents.py` — `seen_names` 모델명만으로 dedup → 다른 브랜드 동명 모델 누락
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 브랜드 A의 "프로 2" 등록 후 브랜드 B의 "프로 2"가 `dup_name`으로 스킵되어 누락됨.
+- **원인:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118 — `if model in seen_names` 체크가 brand 구분 없이 모델명만 비교.
+- **제안 수정:** `seen_names`를 `(brand, model)` 튜플 또는 `f"{brand}::{model}"` 형태로 변경.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 118 [lane:BACKEND]
+
+---
+
+### [M-535] — `harvest_tents.py` `parse_results()` — `range(1, len(parts)-1, 2)` 오프-바이-원 → 마지막 상품 블록 누락
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** trailing 텍스트 없이 pcode-block이 짝수 개일 때 마지막 상품이 파싱되지 않음.
+- **원인:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 52 — `range(1, len(parts) - 1, 2)` — trailing html 없는 경우 마지막 블록 순회 누락.
+- **제안 수정:** `for i in range(1, len(parts), 2): if i+1 >= len(parts): break` 패턴으로 교체.
+- **파일:** [pipeline/harvest_tents.py](pipeline/harvest_tents.py) line 52 [lane:BACKEND]
+
+---
+
+### [M-536] — `affiliate_links.py` `sample()` — `GROUP BY b.name_ko` 비집계 컬럼 임의 선택 → 스펙 혼용
+
+- **영역:** 백엔드 — 파이프라인/제휴링크
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** SQLite non-deterministic GROUP BY로 `canonical_model`, `cap` 등이 해당 브랜드의 다른 제품 행에서 혼용될 수 있음.
+- **원인:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63–70 — `GROUP BY b.name_ko`만 있고 비집계 컬럼에 집계 함수 없음.
+- **제안 수정:** `GROUP BY` 제거 후 `ORDER BY b.name_ko, RANDOM()`으로 변경하거나 서브쿼리로 ROW_NUMBER() 필터 적용.
+- **파일:** [pipeline/affiliate_links.py](pipeline/affiliate_links.py) line 63 [lane:BACKEND]
+
+---
+
+### [M-537] — `devagent/nodes/apply.py` — `base_ref=""` 시 `HEAD` 폴백으로 cross-round 변화 추적 불가
+
+- **영역:** 백엔드 — dev-harness
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `base_ref`가 빈 문자열로 전달되면 매번 HEAD 기준 diff만 반환되어 라운드 간 누적 변화 추적 불가.
+- **원인:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 83 — `base_ref or "HEAD"` 폴백 — intake에서 base_ref를 현재 HEAD SHA로 명시 기록하지 않음.
+- **제안 수정:** `intake.py`에서 `base_ref = git rev-parse HEAD` 결과를 state에 명시적으로 기록.
+- **파일:** [dev-harness/devagent/nodes/apply.py](dev-harness/devagent/nodes/apply.py) line 83 [lane:BACKEND]
+
+---
+
+### [M-538] — `openReviewDetail` — `close()` 내 `ov._onKey` 참조 불일치 → keydown 리스너 누수
+
+- **영역:** 프론트엔드 — 상품 상세 모달 / 리뷰
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 리뷰 상세 모달을 재오픈 시 이전 keydown 핸들러가 남아 중복 실행될 수 있음.
+- **원인:** [site/app.js](site/app.js) line 2334–2377 — `close()`와 `ov._onKey` 할당 순서가 뒤바뀌어 참조 일관성이 없음. `close()` 내에서 지역 `onKey` 변수 대신 `ov._onKey`로 일관 참조해야 함.
+- **제안 수정:** `close()` 내 `document.removeEventListener("keydown", onKey, true)` → `document.removeEventListener("keydown", ov._onKey, true)` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 2334 [lane:CORE]
+
+---
+
+### [M-539] — `공유 세트 임포트` — `requireLogin` 게이트 없고 중복 확인에 `alert()` 사용 → iOS Safari 차단
+
+- **영역:** 프론트엔드 — account.html 공유세트
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 비로그인 사용자가 "내 세트에 추가" 클릭 시 로그인 검증 없이 localStorage에 저장. 중복 확인 `alert()` 가 iOS Safari에서 history.replaceState 후 차단됨.
+- **원인:** [site/app.js](site/app.js) line 4311–4317 — `requireLogin` 게이트 없음 + `alert()` 사용.
+- **제안 수정:** 임포트 전 `await requireLogin(...)` 게이트 추가. `alert()` → `showToast()`로 교체.
+- **파일:** [site/app.js](site/app.js) line 4311 [lane:CORE]
+
+---
+
+### [M-540] — `stars()` — 음수 별점 하한 미적용 → `aria-label="별점 -1 / 5"` 출력 + 빈 별 5개 렌더링
+
+- **영역:** 프론트엔드 — 공통 유틸 / 접근성
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** DB에서 rating이 음수로 들어오면 `aria-label="별점 -1 / 5"` 출력 및 별 5개가 모두 빈 별로 렌더링됨. 시각 버그 + 스크린리더 오독.
+- **원인:** [site/app.js](site/app.js) line 362 — `Math.min(5, n)` 상한만 적용, `Math.max(0, n)` 하한 없음.
+- **제안 수정:** `n = Math.min(5, Math.max(0, n));` 으로 변경.
+- **파일:** [site/app.js](site/app.js) line 362 [lane:CORE]
+
+---
+
+### [L-442] — `devagent/graph.py` `route_after_contract()` — `needs_human` 항목 미완료 시 publish 블록 여부 불명확
+
+- **영역:** 백엔드 — dev-harness
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `needs_human` 항목이 있고 `needs_llm=0`이면 evaluator 없이 바로 `human_review`로 진입. `pending_human_approvals` 미비 시 publish 블록 여부가 불명확.
+- **원인:** [dev-harness/devagent/graph.py](dev-harness/devagent/graph.py) line 22–32 — `route_after_contract`에서 `needs_human` 미처리 확인 없음.
+- **제안 수정:** `pending_human_approvals`가 비어있지 않으면 무조건 `human_review` 라우팅 전 명시 체크 또는 의도 주석 추가.
+- **파일:** [dev-harness/devagent/graph.py](dev-harness/devagent/graph.py) line 22 [lane:BACKEND]
+
+---
+
+### [L-443] — `devagent/nodes/_util.py` `run_tool()` — timeout `-2` 반환을 게이트에서 실패와 구분 불가
+
+- **영역:** 백엔드 — dev-harness
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** timeout 시 `(-2, "timeout after Ns")` 반환하지만 게이트(`gate_tests`, `gate_lint`)는 `code != 0`으로 일반 실패와 동일 처리. timeout인지 실패인지 구분 불가하고 evaluator LLM이 오인 가능.
+- **원인:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 33 — timeout 반환값 처리 없음.
+- **제안 수정:** `code == -2` 조건으로 게이트에서 `"timeout"` status 별도 반환.
+- **파일:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 33 [lane:BACKEND]
+
+---
+
+### [L-444] — `column_fixes.py` — `channel` 업데이트 시 기존 유효값(`danawa_search` 등) 무차별 overwrite
+
+- **영역:** 백엔드 — 파이프라인/데이터
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `UPDATE price_observations SET channel='국내'`가 `channel`이 이미 `'danawa_search'`, `'쿠팡'` 등으로 설정된 행도 덮어써 채널 정보 소실.
+- **원인:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 36 — WHERE 절에 `channel IS NULL` 조건 없음.
+- **제안 수정:** `WHERE ... AND (channel IS NULL OR channel NOT IN ('국내', '직구'))` 조건 추가.
+- **파일:** [pipeline/column_fixes.py](pipeline/column_fixes.py) line 36 [lane:BACKEND]
+
+---
+
+### [L-445] — `_reviewCard` — `r.body=null`이고 이미지도 없을 때 `esc(null)` 호출 → `"null"` 문자 표시
+
+- **영역:** 프론트엔드 — 상품 상세 모달 / 후기
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** body 없고 이미지도 없는 후기 레코드에서 `esc(null)` 호출 시 `"null"` 문자열이 화면에 그대로 표시됨.
+- **원인:** [site/app.js](site/app.js) line 2312 — `esc(r.body)` null 가드 없음.
+- **제안 수정:** `esc(r.body || "")` 으로 변경.
+- **파일:** [site/app.js](site/app.js) line 2312 [lane:CORE]
+
+---
+
+### [L-446] — `openSetModal` `close()` — `removeEventListener` 전에 `modal._onKey = null` 설정 → 핸들러 해제 실패 가능
+
+- **영역:** 프론트엔드 — 장비 꾸러미 모달
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `close()` 내에서 `modal._onKey = null` 설정 후 `null`로 `removeEventListener` 호출 시 실제 핸들러가 해제되지 않는 패턴 위험.
+- **원인:** [site/app.js](site/app.js) line 609–610 — `close()` 내 `modal._onKey` null 초기화와 `removeEventListener` 호출 순서 문제.
+- **제안 수정:** `const h = modal._onKey; modal._onKey = null; if (h) document.removeEventListener("keydown", h);` 패턴으로 교체.
+- **파일:** [site/app.js](site/app.js) line 609 [lane:CORE]
+
+---
+
+### [L-447] — `openProduct` — `data-url="${esc(coupang_url)}"` innerHTML 이중 인코딩 → `click_events` 저장 URL 불일치 가능
+
+- **영역:** 프론트엔드 — 상품 상세 모달 / 구매 버튼
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** `esc()`로 인코딩된 URL이 `data-url` 속성에 저장되고 `dataset.url`로 읽을 때 브라우저가 디코드하나, 패턴 불일치로 향후 `click_events` insert 시 원본/esc 처리 URL 혼용 가능성.
+- **원인:** [site/app.js](site/app.js) line 2152 — `data-url="${esc(m.coupang_url)}"` innerHTML 내 속성에 esc 적용.
+- **제안 수정:** innerHTML 외부에서 `buyBtn.dataset.url = m.coupang_url` 로 raw URL 직접 설정.
+- **파일:** [site/app.js](site/app.js) line 2152 [lane:CORE]
+
+---
+
+### [L-448] — `account.html` 캠핑 로그 삭제 오류 — `alert()` 사용으로 iOS Safari history 조작 후 차단
+
+- **영역:** 프론트엔드 — account.html / 캠핑 로그
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 캠핑 로그 삭제 오류 시 `alert("삭제 중 오류가 발생했어요.")` 사용. iOS Safari에서 history.replaceState 후 alert() 차단(M-452와 동일 근본 원인).
+- **원인:** [site/app.js](site/app.js) line 3349 — 일관성 없는 `alert()` 사용.
+- **제안 수정:** `alert(...)` → `showToast(...)` 로 교체.
+- **파일:** [site/app.js](site/app.js) line 3349 [lane:CORE]
 
 ---
