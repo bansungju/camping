@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /data/
 Sitemap: https://gear-forest.com/sitemap.xml
+Sitemap: https://gear-forest.com/sitemap-items.xml

@@ -174,7 +174,8 @@
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         deferredPrompt = null;
-        if (row) row.style.display = 'none';
+        // L-209: dismissed 시 버튼 유지 → 세션 내 재시도 가능
+        if (outcome === 'accepted' && row) row.style.display = 'none';
       });
     }
   })();
