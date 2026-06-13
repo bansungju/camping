@@ -4737,7 +4737,7 @@
 
 ---
 
-### [M-239] — `openSetDetail` — qty ± 후 `renderAccount()` DOM 재생성으로 `_prevFocus` 참조 무효화
+### [M-239] — `openSetDetail` — qty ± 후 `renderAccount()` DOM 재생성으로 `_prevFocus` 참조 무효화 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟡 Medium
