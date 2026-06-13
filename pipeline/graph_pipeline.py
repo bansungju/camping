@@ -142,7 +142,7 @@ def infer(s: State) -> dict:
     if s["capacity"] is not None:
         return {"log": s["log"] + ["infer: 인원 이미 있음"]}
     from backfill_capacity import cap_from_name
-    cap = cap_from_name(s["name"])
+    cap = cap_from_name(s["name"], s["category"])
     if cap and 1 <= cap <= 12:
         return {"capacity": cap, "cap_source": "name",
                 "log": s["log"] + [f"infer: 모델명→인원 {cap} (확정)"]}
@@ -160,6 +160,11 @@ def validate(s: State) -> dict:
     for key, d in specs.items():
         if d.get("source_id") == 1:
             continue
+        # M-185: value_normalized가 파싱 실패 등으로 숫자가 아니면(SQLite는 컬럼에 문자열도 허용)
+        #   범위 비교에서 TypeError로 전체 크래시 → 비숫자는 격리(valid=0)하고 건너뛴다.
+        if not isinstance(d["value"], (int, float)):
+            d["valid"], d["flag"] = 0, f"non_numeric:{key}"
+            notes.append(d["flag"]); continue
         hard = V.HARD_RANGES.get(key)
         if hard and not (hard[0] <= d["value"] <= hard[1]):
             d["valid"], d["flag"] = 0, f"implausible:{key}={d['value']:g}"
@@ -174,9 +179,12 @@ def validate(s: State) -> dict:
 def persist(s: State) -> dict:
     con = sqlite3.connect(s["db"], timeout=30)  # 병렬 enrich 시 쓰기 락 대기
     cid = P.category_id(con, s["category"])
-    con.execute("DELETE FROM product_spec_values WHERE product_id=? AND source_id IN (3,4)", (s["pid"],))
+    # M-255: graph는 source_id=3(다나와상세 파생)만 소유한다. 기존 IN (3,4) 삭제는 graph가
+    #   crosssource 이후 실행되면 외부확정값(source_id=4)까지 지워 수작업 보정이 유실됐다 →
+    #   source_id=3만 멱등 삭제·재적재하고 source_id=4는 보존(검증은 validate_ranges가 담당).
+    con.execute("DELETE FROM product_spec_values WHERE product_id=? AND source_id=3", (s["pid"],))
     for key, d in s["specs"].items():
-        if d.get("source_id") in (3, 4):
+        if d.get("source_id") == 3:
             mid = P.metric_id(con, cid, key)
             con.execute("""INSERT INTO product_spec_values
                 (product_id,metric_id,value_normalized,value_raw,raw_unit,source_id,confidence,is_primary,valid)
