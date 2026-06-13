@@ -104,8 +104,11 @@ def prod_label(con, pid):
 
 
 def age_days(now, obs):
+    # H-104: strptime(DTFMT)는 "%Y-%m-%d %H:%M:%S" 고정이라 마이크로초 포함 ISO 타임스탬프
+    #   ("...:37.123456")에서 ValueError → 항상 9e9(오래됨) → 직전기록 무관 중복가격 누적.
+    #   fromisoformat은 가변 정밀도(마이크로초 유/무)를 모두 수용한다(3.7+).
     try:
-        return (now - datetime.strptime(obs, DTFMT)).total_seconds() / 86400.0
+        return (now - datetime.fromisoformat(obs)).total_seconds() / 86400.0
     except (ValueError, TypeError):
         return 9e9   # 파싱불가 → 무조건 오래된 것으로(재확인 유도)
 
