@@ -36,6 +36,8 @@
 |---|---|---|
 | B-4 회원 탈퇴 인앱 경로 | ✅ PASS *(코드완결)* | `account.html` "계정 삭제" 버튼(이중 확인) → `deleteAccount()` → Edge Function `delete-account` → `delete_account_atomic` RPC(프로필 익명화+글 소프트삭제) + `auth.admin.deleteUser` 물리삭제 + 30일 쿨다운. 마이그레이션 `002_functions_triggers.sql`에 RPC 존재. **런타임 확인 1건: Supabase에 `delete-account` 함수 배포 + `push_subscriptions`/RPC 마이그레이션 적용 상태를 대시보드에서 확인 필요** |
 | B-1 네이티브 값어치 | 🟡 부분 *(인프라有·동작不)* | **이미 있는 자산**: PWA standalone manifest+maskable 아이콘, SW 오프라인 캐시(셸+전 카테고리 데이터 precache), 찜/세트 로컬저장, Web Push 인프라 일체(SW `push`/`notificationclick` 수신 + 클라이언트 `pushManager.subscribe` + 백엔드 `send-push-notification` + `push_subscriptions` 테이블). **그러나 현재 사실상 죽어있음 ↓** |
+| B-3 쿠팡 제휴 링크 | ✅ PASS(웹) / ⚠️ 네이티브 | 고지 3중(푸터·구매버튼·terms §5), 구매=`window.open(_blank,noopener)`, 표시가=최저가+캡션. Capacitor에선 외부링크 시스템브라우저 오픈 설정 필요. 상세 [APP-STORE-PRIVACY-AND-AFFILIATE.md](APP-STORE-PRIVACY-AND-AFFILIATE.md) |
+| B-5 개인정보/데이터 신고 | ✅ 라벨 준비완료 | 3rd-party 추적 SDK 0, HTTPS 전수, 탈퇴삭제 가능. click_events=익명(session_id, 신원미연결), 나머지=user_id 연결. Apple/Google 라벨 답안 산출 → 콘솔 입력만 남음. [APP-STORE-PRIVACY-AND-AFFILIATE.md](APP-STORE-PRIVACY-AND-AFFILIATE.md) |
 
 #### B-1 발견 결함 (Apple 4.3 방어 위해 보완 필요)
 1. **❌ VAPID 키가 플레이스홀더** — `app.js:3501` `VAPID_PUBLIC_KEY`가 Google web-push 코드랩 **예제 키**(`BEl62iUYgUivxIkv...gFPRlY`) 그대로. 개인키 짝이 공개돼 있어 운영 푸시가 동작/안전하지 않음 → **실제 VAPID 키쌍 생성·교체 필요**(공개키=app.js, 개인키=Edge Function 환경변수).
