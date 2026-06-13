@@ -59,6 +59,10 @@ def upsert_model(con, m):
             (bid, cid, model, cap, pcode, model, m.get("image_url")))
         pid = cur.lastrowid
 
+    # H-102: 빈 prices면 아래 min()/max()가 'empty sequence' ValueError로 전체 실행을 끊는다.
+    #   DB를 건드리기 전에 어떤 모델이 문제인지 명시해 조기 실패(manual_models.json은 수기 SSOT라 입력교정 유도).
+    if not m.get("prices"):
+        raise ValueError(f"수동모델 가격 없음: {brand} {model} — manual_models.json의 prices 확인")
     # 가격 — 기존 수동 관측 정리 후 재적재(멱등)
     cur.execute("DELETE FROM price_observations WHERE product_id=? AND channel='수동'", (pid,))
     prices = []
