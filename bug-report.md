@@ -7407,7 +7407,7 @@
 
 ---
 
-### [M-364] — `openReplaceModal` srp-item onclick — 렌더 시점 인덱스(`data-ii`) 재사용으로 다른 아이템 splice 위험
+### [M-364] — `openReplaceModal` srp-item onclick — 렌더 시점 인덱스(`data-ii`) 재사용으로 다른 아이템 splice 위험 — ✅ 해결완료(2026-06-13)
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟡 Medium
