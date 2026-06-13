@@ -51,12 +51,13 @@ def build(db_path, csv_path, n, per_cat):
     # 기존 CSV에 채워둔 coupang_url 보존(머지)
     existing = {}
     if os.path.exists(csv_path):
-        with open(csv_path, newline="") as f:
+        with open(csv_path, newline="", encoding="utf-8") as f:   # L-193: 한글 깨짐(cp949) 방지
             for r in csv.DictReader(f):
                 if r.get("coupang_url"):
-                    existing[r["rep_product_id"]] = r["coupang_url"]
+                    # L-215/L-239: 수동편집 공백 제거 + str 키로 정규화(아래 str(rid)와 정합 — miss 방지).
+                    existing[r["rep_product_id"].strip()] = r["coupang_url"]
 
-    with open(csv_path, "w", newline="") as f:
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:   # L-193
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
         for rid, brand, model, cat, cap, var, price in rows:
@@ -79,7 +80,7 @@ def load(db_path, csv_path):
     if "coupang_url" not in cols:
         con.execute("ALTER TABLE products ADD COLUMN coupang_url TEXT"); con.commit()
     applied = 0
-    with open(csv_path, newline="") as f:
+    with open(csv_path, newline="", encoding="utf-8") as f:   # L-193: load도 UTF-8 명시
         for r in csv.DictReader(f):
             url = (r.get("coupang_url") or "").strip()
             if url:
