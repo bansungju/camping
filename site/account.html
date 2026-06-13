@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=7a2ccd9e"></script>
+<script src="app.js?v=c8011e9b"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -520,6 +520,7 @@ function renderProfile(profile) {
         btnDelete.disabled = false; btnDelete.textContent = '계정 삭제'; btnDelete.style.opacity = '.55'
         return
       }
+      window.onWishChange = null  // M-214: signOut 전 onWishChange 해제 → 빈 배열 원격 저장 방지
       await signOut()
       localStorage.removeItem('wish'); localStorage.removeItem('gear_sets')
       location.replace('index.html?account_deleted=1')
