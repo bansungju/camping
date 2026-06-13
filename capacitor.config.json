@@ -1,0 +1,16 @@
+{
+  "appId": "com.gearforest.app",
+  "appName": "장비의 숲",
+  "webDir": "site",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#2f7a4e",
+      "showSpinner": false
+    }
+  }
+}

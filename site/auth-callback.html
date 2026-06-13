@@ -26,10 +26,18 @@
   <p>로그인 처리 중입니다…</p>
 </div>
 <script type="module">
-  import { supabase } from './supabaseClient.js?v=64d3f66b'
+  import { supabase } from './supabaseClient.js?v=6e7cf8d9'
 
   // M-161: iOS 14 Safari는 top-level await 미지원 → async IIFE로 감싸기
   ;(async () => {
+
+  // Capacitor 앱 환경에서 OAuth 콜백 처리 후 인앱 브라우저 닫기
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')
+      await Browser.close()
+    } catch (_) {}
+  }
 
   // L-64: OAuth 전 저장된 hash 복원
   const _retHash = sessionStorage.getItem('acc-return-hash') || ''

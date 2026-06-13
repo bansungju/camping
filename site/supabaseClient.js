@@ -28,6 +28,20 @@ export async function initAuth(onStateChange) {
 }
 
 export async function signInWithOAuth(provider) {
+  const isApp = !!(window.Capacitor?.isNativePlatform?.())
+  if (isApp) {
+    const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: 'com.gearforest.app://auth-callback',
+        skipBrowserRedirect: true
+      }
+    })
+    if (error || !data?.url) return { data, error }
+    await Browser.open({ url: data.url })
+    return { data, error: null }
+  }
   return supabase.auth.signInWithOAuth({
     provider,
     options: { redirectTo: `${SITE_BASE}/auth-callback.html` }
