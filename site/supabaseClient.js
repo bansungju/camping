@@ -48,6 +48,25 @@ export async function signInWithOAuth(provider) {
   })
 }
 
+// B-2: iOS 네이티브 Sign in with Apple — @capacitor-community/apple-sign-in → Supabase nonce 연동
+// Apple Console 설정(Services ID·Key) 완료 전에는 호출되지 않음(account.html 환경 분기로 제어)
+export async function signInWithApple() {
+  const { SignInWithApple } = await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in/dist/esm/index.js')
+  const { response } = await SignInWithApple.authorize({
+    clientId: 'com.gearforest.app',
+    redirectURI: 'com.gearforest.app://auth-callback',
+    scopes: 'email name',
+    state: crypto.randomUUID(),
+    nonce: crypto.randomUUID(),
+  })
+  const { error } = await supabase.auth.signInWithIdToken({
+    provider: 'apple',
+    token: response.identityToken,
+    nonce: response.nonce,
+  })
+  return { error }
+}
+
 export async function signOut() {
   localStorage.removeItem("wish");
   localStorage.removeItem("sets");
