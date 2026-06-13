@@ -27,13 +27,23 @@ def _acquire_lock(timeout: float = 10.0) -> bool:
             os.close(fd)
             return True
         except FileExistsError:
-            # 기존 락이 TTL 지났으면 탈취
+            # 기존 락이 TTL 지났으면 탈취. M-444: getmtime→unlink가 비원자적이라 두 프로세스가 동시에
+            #   stale로 보고 둘 다 unlink하면 한쪽이 상대의 갓-생성된(fresh) 락까지 지운다 → stale 락을
+            #   unique 이름으로 '원자적 rename'해 회수한다(rename은 하나만 성공, 진 쪽은 FileNotFoundError로
+            #   재시도). 이후 위의 O_CREAT|O_EXCL이 단일 승자를 보장.
             try:
                 age = time.time() - os.path.getmtime(paths.LEDGER_LOCK)
-                if age > LOCK_TTL:
-                    os.unlink(paths.LEDGER_LOCK)
-                    continue
+            except FileNotFoundError:
+                continue   # 다른 프로세스가 이미 회수 → 재시도
             except OSError:
+                continue
+            if age > LOCK_TTL:
+                stolen = f"{paths.LEDGER_LOCK}.stale.{os.getpid()}.{time.time_ns()}"
+                try:
+                    os.rename(paths.LEDGER_LOCK, stolen)
+                    os.unlink(stolen)
+                except (FileNotFoundError, OSError):
+                    pass   # 다른 프로세스가 먼저 회수/교체 → 재시도
                 continue
             if time.time() > deadline:
                 return False
