@@ -3544,7 +3544,7 @@
 
 ---
 
-### [M-185] — `graph_pipeline.py` `validate()` — `d["value"]`가 문자열일 때 부등호 비교 → TypeError
+### ✅ 해결완료(2026-06-13) [M-185] — `graph_pipeline.py` `validate()` — `d["value"]`가 문자열일 때 부등호 비교 → TypeError
 
 - **영역:** 백엔드 — 파이프라인 / 그래프 파이프라인
 - **심각도:** 🟡 Medium
@@ -4181,7 +4181,7 @@
 
 ---
 
-### [M-214] — 계정 삭제 핸들러 — `signOut()` 비동기 콜백 지연 중 localStorage 삭제 → `onWishChange` 살아있는 상태에서 빈 배열 원격 저장 시도
+### [M-214] ✅ 해결완료(2026-06-13) — 계정 삭제 핸들러 — `signOut()` 비동기 콜백 지연 중 localStorage 삭제 → `onWishChange` 살아있는 상태에서 빈 배열 원격 저장 시도
 
 - **영역:** 프론트엔드 — account.html 계정 삭제
 - **심각도:** 🟡 Medium
@@ -5092,7 +5092,7 @@
 
 ---
 
-### [M-255] — `graph_pipeline.py` `persist()` — `source_id IN (3,4)` 일괄 삭제로 crosssource 확정값 소실
+### ✅ 해결완료(2026-06-13) [M-255] — `graph_pipeline.py` `persist()` — `source_id IN (3,4)` 일괄 삭제로 crosssource 확정값 소실
 
 - **영역:** 백엔드 — 그래프 파이프라인
 - **심각도:** 🟡 Medium
@@ -5374,7 +5374,7 @@
 
 ## R-112 (백엔드) — 2026-06-13
 
-### [M-268] — `graph_pipeline.py` `fetch_detail()` — `spec["fn"]` KeyError (enrich_details.py 미수정 버전)
+### ✅ 해결완료(2026-06-13) [M-268] — `graph_pipeline.py` `fetch_detail()` — `spec["fn"]` KeyError (enrich_details.py 미수정 버전)
 
 - **영역:** 백엔드 — 그래프 파이프라인
 - **심각도:** 🟡 Medium
@@ -8266,7 +8266,7 @@
 
 ---
 
-### [M-390] — `draw` 필터 — 카테고리 내 브랜드 영문명 검색 0건
+### [M-390] ✅ 해결완료(2026-06-13) — `draw` 필터 — 카테고리 내 브랜드 영문명 검색 0건
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟡 Medium
@@ -10050,7 +10050,7 @@
 
 ---
 
-### [M-455] — `getJSON` — 동시 호출 dedup 없음 → search.json 중복 fetch
+### [M-455] ✅ 해결완료(2026-06-13) — `getJSON` — 동시 호출 dedup 없음 → search.json 중복 fetch
 
 - **영역:** 프론트엔드 — 데이터 로딩
 - **심각도:** 🟡 Medium
@@ -12687,5 +12687,101 @@
 - **원인:** [site/app.js](site/app.js) line 748–751 — `bar.style.transition = "none"` 후 `scaleX(1)` 설정 시 강제 리플로우(`void bar.offsetWidth`) 없어 DOM이 transition 없이 리셋 안 됨.
 - **제안 수정:** `bar.style.transition = "none"; bar.style.transform = "scaleX(1)"; void bar.offsetWidth;` 로 강제 리플로우 추가.
 - **파일:** [site/app.js](site/app.js) line 748 [lane:CORE]
+
+---
+
+### [M-567] — `backend/routers/search.py` — `/api/search` rate limit 데코레이터 미적용 → 무제한 요청 가능
+
+- **영역:** 백엔드 — rate limiting/보안
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** `/api/search`, `/api/category/{slug}` 엔드포인트에 `@limiter.limit()` 데코레이터 없어 전역 rate limit이 적용되지 않음. 무제한 검색 요청 가능.
+- **원인:** [backend/routers/search.py](backend/routers/search.py) line 9, [backend/routers/categories.py](backend/routers/categories.py) line 14 — `@limiter.limit(...)` 데코레이터 부재.
+- **제안 수정:** 각 엔드포인트에 `@limiter.limit("60/minute")` 추가하거나 slowapi 미들웨어(`SlowAPIMiddleware`) 방식으로 전환.
+- **파일:** [backend/routers/search.py](backend/routers/search.py) line 9 [lane:BACKEND]
+
+---
+
+### [M-568] — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 → Linux CI/CD에서 OG 이미지 생성 크래시
+
+- **영역:** 백엔드 — 파이프라인/make_logo
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** GitHub Actions(Linux)에서 실행 시 `OSError: cannot open resource` 크래시 → OG 이미지 생성 실패 → 배포 중단 또는 OG 이미지 누락.
+- **원인:** [pipeline/make_logo.py](pipeline/make_logo.py) line 96 — `FP="/System/Library/Fonts/AppleSDGothicNeo.ttc"` macOS 시스템 폰트 경로 절대 하드코딩. 폰트 부재 시 예외 처리 없음.
+- **제안 수정:** `os.path.exists(FP)` 체크 후 없으면 Noto Sans CJK 등 fallback 폰트 시도. `try/except OSError`로 fallback 처리.
+- **파일:** [pipeline/make_logo.py](pipeline/make_logo.py) line 96 [lane:BACKEND]
+
+---
+
+### [M-569] — `saveRemoteWishlist` — 사용자 전환 시 이전 사용자 체인이 새 사용자 컨텍스트에서 실행 → 찜 데이터 혼입
+
+- **영역:** 프론트엔드 — 찜 동기화 (보안)
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 로그아웃 후 다른 계정으로 로그인 시 직전 사용자의 `saveRemoteWishlist` 체인 대기분이 새 사용자 row에 이전 사용자 찜 목록을 upsert할 수 있음.
+- **원인:** [site/supabaseClient.js](site/supabaseClient.js) line 161–176 — `_wishWriteChain`·`_wishPending`이 모듈 레벨 변수로 사용자 전환을 인식하지 못함. 체인 실행 시점에 이미 다른 사용자로 전환되어 있어도 이전 클로저의 `user`가 사용됨.
+- **제안 수정:** `signOut()` 시 `_wishWriteChain = Promise.resolve(); _wishPending = undefined;` 초기화. 또는 체인 내부에서 `getUser()` 재확인 후 user_id 일치 시에만 실행.
+- **파일:** [site/supabaseClient.js](site/supabaseClient.js) line 161 [lane:SYNC]
+
+---
+
+### [M-570] — `buildFilters` 가격 슬라이더 — `lo===hi===0` 시 슬라이더 범위 0~0 → NaN% 렌더링 및 필터 무력화
+
+- **영역:** 프론트엔드 — 필터/카테고리
+- **심각도:** 🟡 Medium
+- **발견일시:** 2026-06-13
+- **증상:** 전체 모델의 `price_min`이 0 또는 null인 카테고리에서 가격 슬라이더 `fill` width가 NaN%로 렌더링되고 슬라이더 조작이 무의미해짐.
+- **원인:** [site/app.js](site/app.js) line 1652–1664 — `prices.length` 체크로 빈 배열은 방어하지만 `lo === hi === 0` 케이스 미처리. `pct()` 분모 0 나눗셈.
+- **제안 수정:** `buildFilters`에서 `if (lo === hi) return;` 스킵 또는 "가격 정보 없음" 텍스트 대체.
+- **파일:** [site/app.js](site/app.js) line 1652 [lane:CORE]
+
+---
+
+### [L-469] — `_util.py` `run_tool` — 출력 4000자 고정 절단 → 절단 이후 실제 에러 메시지 누락으로 게이트 오판
+
+- **영역:** 백엔드 — dev-harness 공용 헬퍼
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 긴 mypy/pytest 출력에서 4000자 이후의 실제 에러 메시지가 잘려 `contract_checker`/`evaluator`가 "출력에 fail 없음"으로 오판 가능.
+- **원인:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 29 — `(proc.stdout + proc.stderr)[:4000]` 고정 절단.
+- **제안 수정:** stdout/stderr 각각 2000자씩 보존하거나 절단 시 `\n[TRUNCATED ...]` 마커 추가.
+- **파일:** [dev-harness/devagent/nodes/_util.py](dev-harness/devagent/nodes/_util.py) line 29 [lane:BACKEND]
+
+---
+
+### [L-470] — `sw.js` push 핸들러 — `e.data`가 `null`일 때 `e.data.json()` → TypeError
+
+- **영역:** 프론트엔드 — 서비스워커/푸시
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** payload 없는 silent push 수신 시 `null.json()` TypeError로 SW가 죽어 알림 미표시 가능.
+- **원인:** [site/sw.js](site/sw.js) line 91 — `e.data.json()` 호출 전 `e.data` null 체크 없음. `try/catch`가 있으나 `e.data` 자체가 null이면 프로퍼티 접근 전에 TypeError 발생.
+- **제안 수정:** `if (e.data) { try { data = { ...data, ...e.data.json() }; } catch {} }` 로 명시적 null 가드 추가.
+- **파일:** [site/sw.js](site/sw.js) line 91 [lane:SW]
+
+---
+
+### [L-471] — `renderActiveFilters` — 개별 필터 칩 해제 시 `serializeState()` 미호출 → URL과 필터 상태 불일치
+
+- **영역:** 프론트엔드 — 필터/카테고리
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 활성 필터 칩 ✕ 클릭 후 새로고침·뒤로가기 시 해제한 필터가 URL에서 복원됨. `clearAllFilters()`는 `serializeState()` 호출하나 개별 칩 해제 경로만 누락.
+- **원인:** [site/app.js](site/app.js) line 1989 — `chips[+b.dataset.ai][1](); syncFilterUI(); draw();` — `serializeState()` 미호출.
+- **제안 수정:** `draw()` 뒤에 `serializeState()` 추가.
+- **파일:** [site/app.js](site/app.js) line 1989 [lane:CORE]
+
+---
+
+### [L-472] — `account.html` signOut — `localStorage.removeItem('sets')` 누락으로 레거시 `sets` 키 계정 삭제 후 잔류
+
+- **영역:** 프론트엔드 — 계정/로그아웃
+- **심각도:** 🟢 Low
+- **발견일시:** 2026-06-13
+- **증상:** 계정 삭제 후 `sets` 키(레거시)가 localStorage에 잔류. `supabaseClient.signOut()`은 `sets`를 지우지만 account.html 삭제 흐름(라인 524)에서는 `wish`·`gear_sets`만 제거.
+- **원인:** [site/account.html](site/account.html) line 524 — `localStorage.removeItem('sets')` 누락.
+- **제안 수정:** `localStorage.removeItem('sets')` 추가 또는 `signOut()` 단일 호출로 일원화.
+- **파일:** [site/account.html](site/account.html) line 524 [lane:CORE]
 
 ---
