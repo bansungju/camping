@@ -41,9 +41,27 @@ SKIP_EXT = {".db", ".db-wal", ".db-shm", ".png", ".jpg", ".jpeg", ".gif",
 SKIP_NAMES = {"package-lock.json", "yarn.lock"}
 
 
+def git_ls_files(*args):
+    """git ls-files 실행. 실패 시 traceback 대신 명확한 메시지+exit 1(보안 게이트는 fail-closed).
+
+    H-55: subprocess가 실패하면(git 미설치=FileNotFoundError, 비-git/오류=non-zero)
+    check_output이 잡히지 않은 예외로 CI 게이트를 비정상 종료시켰음 → 진단 가능한 차단으로 전환.
+    """
+    try:
+        proc = subprocess.run(["git", "ls-files", *args], cwd=ROOT,
+                              capture_output=True, text=True)
+    except (FileNotFoundError, OSError) as e:
+        print(f"🚨 시크릿 게이트: git 실행 불가({e}) — 스캔 불가, 차단(fail-closed).")
+        sys.exit(1)
+    if proc.returncode != 0:
+        print("🚨 시크릿 게이트: 'git ls-files' 실패 — 스캔 불가, 차단(fail-closed).")
+        print(f"      exit={proc.returncode}  stderr={proc.stderr.strip()[:200]}")
+        sys.exit(1)
+    return proc.stdout.splitlines()
+
+
 def tracked_files():
-    out = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True)
-    for rel in out.splitlines():
+    for rel in git_ls_files():
         if not rel:
             continue
         if os.path.splitext(rel)[1].lower() in SKIP_EXT:

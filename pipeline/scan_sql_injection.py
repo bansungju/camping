@@ -27,8 +27,22 @@ ALLOW_INLINE = ("# sql-ok",)
 
 
 def tracked_py_files():
-    out = subprocess.check_output(["git", "ls-files", "*.py"], cwd=ROOT, text=True)
-    for rel in out.splitlines():
+    """추적 .py 목록. git subprocess 실패 시 traceback 대신 fail-closed 차단(H-55).
+
+    subprocess가 실패하면(git 미설치=FileNotFoundError, 비-git/오류=non-zero)
+    잡히지 않은 예외로 CI 게이트가 비정상 종료되므로, 명확한 메시지+exit 1로 차단한다.
+    """
+    try:
+        proc = subprocess.run(["git", "ls-files", "*.py"], cwd=ROOT,
+                              capture_output=True, text=True)
+    except (FileNotFoundError, OSError) as e:
+        print(f"🛡️  SQL 인젝션 게이트: git 실행 불가({e}) — 스캔 불가, 차단(fail-closed).")
+        sys.exit(1)
+    if proc.returncode != 0:
+        print("🛡️  SQL 인젝션 게이트: 'git ls-files' 실패 — 스캔 불가, 차단(fail-closed).")
+        print(f"      exit={proc.returncode}  stderr={proc.stderr.strip()[:200]}")
+        sys.exit(1)
+    for rel in proc.stdout.splitlines():
         if rel:
             yield rel
 
