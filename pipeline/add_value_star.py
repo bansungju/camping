@@ -11,6 +11,20 @@ PATH = os.path.join(ROOT, "site", "data", "backpacking-bag.json")
 MANIFEST = os.path.join(ROOT, "site", "data", "manifest.json")
 
 
+def _atomic_dump(obj, path, **kw):
+    # H-106: 임시파일에 먼저 쓰고 os.replace로 원자 치환한다. json.dump 도중 예외가 나도
+    #   원본 JSON이 부분쓰기로 절단되지 않는다(rename은 원자적). 핸들은 with로 확실히 닫음.
+    tmp = path + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(obj, f, **kw)
+        os.replace(tmp, path)
+    except Exception:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
 def value_stars(models):
     """원/L 오름차순 랭크 → 별점 5.0(최저원/L)~1.0(최고). 0.5 단위."""
     rated = [(m, m["price_min"] / m["specs"]["capacity_l"]["value"])
@@ -27,7 +41,8 @@ def value_stars(models):
 
 
 def main():
-    d = json.load(open(PATH))
+    with open(PATH, encoding="utf-8") as f:
+        d = json.load(f)
     models = d["models"]
     stars = value_stars(models)
 
@@ -42,14 +57,15 @@ def main():
             "key": "value_per_l", "label": "가성비", "unit": "원/L",
             "direction": "lower_better", "is_star": True, "fill": 100, "limit": False,
         })
-    json.dump(d, open(PATH, "w"), ensure_ascii=False, separators=(",", ":"))
+    _atomic_dump(d, PATH, ensure_ascii=False, separators=(",", ":"))
 
     # manifest star_metrics 갱신
-    man = json.load(open(MANIFEST))
+    with open(MANIFEST, encoding="utf-8") as f:
+        man = json.load(f)
     for c in man["categories"]:
         if c["slug"] == "backpacking-bag":
             c["star_metrics"] = ["용량", "가성비"]
-    json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=2)
+    _atomic_dump(man, MANIFEST, ensure_ascii=False, indent=2)
 
     covered = sum(1 for m in models if "value_per_l" in m["specs"])
     print(f"가성비 별점 추가: {covered}/{len(models)}개")
