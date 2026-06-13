@@ -46,7 +46,10 @@ def load_catalog():
     for path in sorted(glob.glob(os.path.join(DATA_DIR, "*.json"))):
         if os.path.basename(path) in SKIP:
             continue
-        d = json.load(open(path, encoding="utf-8"))
+        # H-66: json.load(open(...))는 핸들을 닫지 않아 카탈로그 JSON이 많으면 macOS 256핸들
+        #       한도를 넘겨 OSError(Errno 24)로 크래시. with로 즉시 닫는다.
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
         slug = d.get("slug")
         cat_name = d.get("name", slug)
         for idx, m in enumerate(d.get("models", [])):
@@ -103,7 +106,16 @@ def detect():
             drop = prev_min - cur_min
             if drop >= DROP_ABS and drop >= prev_min * DROP_PCT:
                 events.append({**_evt(meta, prev_min, cur_min, "drop")})
-    return events
+
+    # H-124: 같은 canonical 모델(brand|model|cap=meta["key"])의 색상·옵션 변형은 gf_code가 각각 달라
+    #   변형마다 별도 이벤트가 생긴다. 찜은 wish_key 단위라 변형 수만큼 동일 제품 중복 푸시가 된다.
+    #   → (key, kind)로 묶어 변형 중 new_price가 가장 낮은(최저가) 1건만 남긴다.
+    best = {}
+    for e in events:
+        k = (e["key"], e["kind"])
+        if k not in best or e["new_price"] < best[k]["new_price"]:
+            best[k] = e
+    return list(best.values())
 
 
 def _evt(meta, old_price, new_price, kind):
