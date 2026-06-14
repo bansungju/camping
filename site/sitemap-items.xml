@@ -198,16 +198,6 @@
   <url><loc>https://gear-forest.com/item/backpacking-tent/item-195.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/backpacking-tent/item-196.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/backpacking-tent/item-197.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-198.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-199.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-200.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-201.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-202.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-203.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-204.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-205.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-206.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gear-forest.com/item/backpacking-tent/item-207.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/backpacking-bag/item-0.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/backpacking-bag/item-1.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/backpacking-bag/item-2.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1369,6 +1359,7 @@
   <url><loc>https://gear-forest.com/item/tarp/item-228.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/tarp/item-229.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/tarp/item-230.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gear-forest.com/item/tarp/item-231.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-0.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-1.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-2.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1613,6 +1604,8 @@
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-241.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-242.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/sleeping-bag/item-243.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gear-forest.com/item/sleeping-bag/item-244.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gear-forest.com/item/sleeping-bag/item-245.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/mat/item-0.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/mat/item-1.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/mat/item-2.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -2797,6 +2790,7 @@
   <url><loc>https://gear-forest.com/item/cooler/item-159.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/cooler/item-160.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/cooler/item-161.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gear-forest.com/item/cooler/item-162.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/firepit/item-0.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/firepit/item-1.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://gear-forest.com/item/firepit/item-2.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
