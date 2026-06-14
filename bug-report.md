@@ -11701,7 +11701,8 @@
 
 ---
 
-### [H-141] — `sw.js` 푸시 알림 핸들러 — `data.url`에 `javascript:` 스킴 허용 → XSS
+### [H-141] ✅ 해결완료(2026-06-14, 보안) — `sw.js` 푸시 알림 핸들러 — `data.url`에 `javascript:` 스킴 허용 → XSS
+> 수정: notificationclick에서 `new URL(raw,origin)` 후 `u.origin===location.origin && protocol∈{http,https}`만 허용, 그 외(javascript:/data:/타출처/protocol-relative)는 루트 폴백(sw.js L105~). node로 7개 케이스 검증.
 
 - **영역:** 프론트엔드 — 서비스 워커 (보안)
 - **심각도:** 🔴 High
@@ -11737,7 +11738,8 @@
 
 ---
 
-### [H-142] — `signInWithApple` — Apple nonce SHA-256 해싱 없이 랜덤 UUID 두 번 생성 → 인증 항상 실패
+### [H-142] ✅ 해결완료(2026-06-14, 보안) — `signInWithApple` — Apple nonce SHA-256 해싱 없이 랜덤 UUID 두 번 생성 → 인증 항상 실패
+> 수정: rawNonce 1개 생성 → `_sha256Hex(rawNonce)` 해시를 Apple `authorize({nonce})`에, 원본 rawNonce를 `signInWithIdToken({nonce})`에 전달(supabaseClient.js L53~). SHA-256 known vector(abc)로 헬퍼 검증.
 
 - **영역:** 프론트엔드 — Auth/OAuth (보안)
 - **심각도:** 🔴 High
