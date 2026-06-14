@@ -4,3 +4,49 @@
 {"date":"2026-06-14","sheetRow":367,"name":"코베아 미니 티피","type":"오매칭/약한겹침","matched":"코베아 코딘 스퀘어 티피 텐트, 브라운","note":"'티피'만 겹치고 '미니' 불일치. 코딘 스퀘어 티피는 다른 상품. 쿠팡에 '미니 티피' 정품 있는지 확인 or x","status":"open"}
 {"date":"2026-06-14","sheetRow":370,"name":"코베아 베이스 허브돔 2P","type":"F.변형토큰","matched":"non-EX 정품 287,050원(pid 9540827104)","note":"v3가 EX 변형 오채택→사용자 확인 후 non-EX 최저가로 교정(link ezonSQj9CS). v4 변형토큰 패널티로 자동화 가능","status":"resolved"}
 {"date":"2026-06-14","sheetRow":372,"name":"코베아 스크린 300","type":"B.모델번호드롭","matched":"(없음)","note":"사용자 확인: 쿠팡 미등록 → x 확정. 단 모델번호 '300' 드롭으로 ok 오통과했던 위험은 v4에서 수정 필요","status":"resolved_x"}
+{"date":"2026-06-14","sheetRow":367,"name":"코베아 미니 티피","type":"D.미등록","matched":"(없음) 상위 raw: 코베아 미니티피블랙이너텐트 단품","note":"v4 재시도: 정품 텐트 없음(단품/이너텐트만)→x 확정. 이전 코딘 스퀘어 오매칭 v4가 정확히 차단","status":"resolved_x"}
+{"date":"2026-06-14","sheetRow":377,"name":"코베아 알파인 3 뉴 큐빅","type":"D.미등록","matched":"(없음) 상위 raw: 코베아 알파인 마스터 3.8","note":"알파인 마스터만 등록, 알파인3 뉴 큐빅 정품 없음→x","status":"resolved_x"}
+{"date":"2026-06-14","sheetRow":384,"name":"코베아 와우","type":"오매칭/충돌","matched":"코베아 와우 쉐이드 M(60270)=row387과 동일","note":"'와우' 단독 SKU인데 쉐이드M으로 수렴. 정품 '코베아 와우' 확인 또는 query_override 필요. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":404,"name":"코베아 투어링 2","type":"B.모델번호드롭/오매칭","matched":"코베아 투어링 카 쉘터 M2(no_link)","note":"'2'드롭→투어링만 겹쳐 카쉘터M2 오매칭, 딥링크 빈값. '투어링 2' 정품 확인 필요. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":406,"name":"코베아 투어링 카 쉘터","type":"C.변형불일치","matched":"투어링 카 쉘터 M2(=408)","note":"base SKU인데 M2로 수렴. 406/407/408 전부 M2화. base 정품 확인 필요. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":407,"name":"코베아 투어링 카 쉘터 M1","type":"C.변형불일치","matched":"투어링 카 쉘터 M2","note":"M1인데 M2 채택(low_conf). M1 정품 쿠팡 등록여부 확인 필요. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":414,"name":"코베아 팝업 텐트","type":"오매칭","matched":"코베아 와우 쉐이드 L(팝업텐트 표기)","note":"plain 팝업텐트가 와우쉐이드L 리스팅으로. 415(탄색)가 정품. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":424,"name":"콜맨 썬돔 3","type":"C.용량불일치","matched":"콜맨 썬돔 2인용","note":"'3'드롭→썬돔 2인용 채택. 썬돔3 정품 확인 필요. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":446,"name":"콜맨 팝업 텐트 2","type":"오매칭","matched":"콜맨 쉐이드 스크린 퀵업 IG","note":"팝업텐트2가 쉐이드스크린퀵업으로. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":441,"name":"콜맨 텐트 투어링돔 LX 플러스","type":"F.변형토큰","matched":"투어링 돔 에어 LX플러스","note":"'에어' 변형 차이. 비-에어 LX플러스 정품 확인. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":438,"name":"콜맨 터프 스크린 2룸 하우스 올리브샌드","type":"C.색/변형불일치","matched":"...LDX플러스(=437)","note":"올리브샌드인데 LDX플러스 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":428,"name":"콜맨 웨더마스터 10","type":"B.모델번호드롭","matched":"웨더마스터 2룸하우스(=429)","note":"'10'드롭→웨더마스터 generic. 웨더마스터10 정품 확인. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":723,"name":"네이처하이크 경량 자충매트 싱글 3cm","type":"C.사이즈불일치","matched":"자충매트 3cm 더블","note":"싱글인데 더블 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":711,"name":"네이처하이크 D시리즈 베개일체형 싱글 3cm","type":"C.사이즈충돌","matched":"D시리즈 베개일체형(=710 더블과 동일링크)","note":"싱글/더블 구분불가 동일링크. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":710,"name":"네이처하이크 D시리즈 베개일체형 더블 3cm","type":"C.사이즈충돌","matched":"D시리즈 베개일체형(=711 싱글과 동일링크)","note":"싱글/더블 구분불가 동일링크. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":714,"name":"네이처하이크 R8.8 에어매트 싱글 머미 M","type":"C.형상불일치","matched":"R8.8 싱글 스퀘어 L","note":"머미인데 스퀘어 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":716,"name":"네이처하이크 R8.8 에어매트 싱글 스퀘어 M","type":"C.사이즈불일치","matched":"R8.8 싱글 스퀘어 L(196x64)","note":"M인데 L 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":712,"name":"네이처하이크 R3.5 에어매트 싱글 스퀘어 L","type":"C.형상불일치","matched":"R3.5 싱글 머미","note":"스퀘어인데 머미 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":758,"name":"니모 텐서 올시즌 레귤러 와이드","type":"C.변형불일치","matched":"올시즌 롱/와이드","note":"레귤러와이드인데 롱/와이드 채택. 759(롱와이드)와 혼동. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":755,"name":"니모 텐서 알파인 롱 와이드","type":"C.서브라인불일치","matched":"올시즌 롱/와이드","note":"알파인인데 올시즌 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":767,"name":"DOD 소토네노 키와미 에어매트 M","type":"C.사이즈불일치","matched":"소토네노키와미 L","note":"M인데 L. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":769,"name":"로티캠프 그레미움 에어매트 싱글","type":"오매칭","matched":"그레미움 프로 펌프내장형","note":"non-pro인데 프로 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":737,"name":"노마드 비비드 자충매트 더블 민트그레이","type":"E.표기차","matched":"(x) 상위 raw: 노마드 VIVID 자충매트 N 민트+그레이","note":"비비드↔VIVID 표기차. override 'VIVID' 시도시 매칭 가능. x기록","status":"open_override"}
+{"date":"2026-06-14","sheetRow":759,"name":"니모 텐서 올시즌 롱 와이드","type":"E.재시도","matched":"(x) but 758이 올시즌 롱/와이드 listing 잡음","note":"759가 올시즌 롱/와이드 정품인데 검색실패. 재시도/override 후보. x기록","status":"open_override"}
+{"date":"2026-06-14","sheetRow":808,"name":"반고 컴포트 더블 허블 매트리스 7.5cm","type":"C.사이즈불명","matched":"반고 컴포트 그란데 7.5cm 허블","note":"더블인데 그란데 채택(그란데=더블 여부 불명). 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":796,"name":"몽돌 밴프 자충매트 8T 외 몽돌밴프 클러스터","type":"A.브랜드접두","matched":"(x) 쿠팡엔 '밴프 자충 에어매트 8T'(몽돌 없음)","note":"몽돌 밴프->밴프 별칭 추가함. 792~796,793,794 등 몽돌밴프 행 후속 재시도시 회복 가능(현재 x)","status":"open_recheck"}
+{"date":"2026-06-14","sheetRow":454,"name":"헬리녹스 노나돔 4.0 블랙아웃 에디션","type":"B.검색어과길이","matched":"사용자제공 link ezDKHF6DTM","note":"풀네임검색이 로화이트만 띄움. 짧은검색 '헬리녹스 노나돔 블랙아웃' 필요. 사용자가 실재 확인. 청크7 후 링크기록","status":"resolving"}
+{"date":"2026-06-14","sheetRow":455,"name":"헬리녹스 알파인돔 1.5p 블랙아웃 에디션","type":"B.검색어과길이","matched":"(recheck) 짧은검색 '헬리녹스 알파인돔 블랙아웃'","note":"454와 동일클래스. 청크7 후 재검색","status":"open_recheck"}
+{"date":"2026-06-14","sheetRow":456,"name":"헬스포츠 김레 패밀리 4 플러스","type":"E.표기차 플러스/+","matched":"사용자제공 link ezD6OrRSBo","note":"쿠팡은 '4+' 표기. '플러스'->'+' 정규화 필요. 링크 기록예정","status":"resolving"}
+{"date":"2026-06-14","sheetRow":460,"name":"헬스포츠 씨커 김레 4 플러스","type":"E.표기차 플러스/+","matched":"(recheck) '헬스포츠 씨커 김레 4+'","note":"플러스->+ 재검색 후보","status":"open_recheck"}
+{"date":"2026-06-14","sheetRow":0,"name":"[규칙] 몽벨 다운허거 SKU코드","type":"B.SKU코드 위치불문","matched":"예: '몽벨 JBEFXUZB171 심리스 다운 허거 WR 900 #1 롱' -> '몽벨 심리스 다운 허거 WR 900 #1 롱'","note":"브랜드뒤 영문4+숫자 SKU코드는 검색에서 제거(핵심토큰 필수 제외). WR/900/#1/롱은 유지. v5 반영","status":"rule"}
+{"date":"2026-06-14","sheetRow":842,"name":"스패로우 어메니티 매트 M","type":"C.사이즈불일치","matched":"어메니티 싱글(=843 S와 동일링크)","note":"M인데 싱글 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":818,"name":"밴프 자충매트 5T 더블","type":"오매칭/서브라인","matched":"밴프 시그니처 자충매트 더블5T","note":"plain인데 시그니처 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":848,"name":"써머레스트 네오에어 엑스라이트 NXT MAX L","type":"브랜드미표기","matched":"(x) 상위 raw가 정품인데 title에 '써머레스트' 없어 brand게이트 거름","note":"brand게이트 완화 or override 필요. recheck","status":"open_recheck"}
+{"date":"2026-06-14","sheetRow":454,"name":"헬리녹스 노나돔 블랙아웃","type":"resolved","matched":"사용자링크 ezDKHF6DTM(가격 미상)","note":"v5 broad가 테이블원 오매칭→사용자링크 채택. v5에 head토큰 필수 추가 예정","status":"resolved_userlink"}
+{"date":"2026-06-14","sheetRow":455,"name":"헬리녹스 알파인돔 블랙아웃","type":"resolved","matched":"사용자링크 ezDNShs5oy(가격 미상)","note":"v5 미발견→사용자링크 채택","status":"resolved_userlink"}
+{"date":"2026-06-14","sheetRow":456,"name":"헬스포츠 김레 패밀리 4+","type":"resolved","matched":"김레 패밀리 4+텐트(1,834,650)","note":"플러스->+ v5 검증성공","status":"resolved"}
+{"date":"2026-06-14","sheetRow":460,"name":"헬스포츠 씨커 김레 4 플러스","type":"C.변형불명","matched":"씨커 김레 4(+ 없음)","note":"4 vs 4+ 불명. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":870,"name":"씨투써밋 캠프 매트 SI RG","type":"오매칭/서브라인","matched":"캠프 플러스 SI RG RT WD","note":"캠프매트 vs 캠프플러스(+RT WD). 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":896,"name":"씨투써밋 퍼수트 플러스 자충 레귤러","type":"오매칭/플러스불일치","matched":"퍼수트 레귤러(플러스없음)","note":"퍼수트플러스인데 퍼수트 채택. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":869,"name":"씨투써밋 캠프 매트 SI RE WD RT L","type":"오매칭","matched":"캠프 플러스 SI LG RT","note":"캠프매트 RE WD vs 캠프플러스 LG. 보류","status":"open"}
+{"date":"2026-06-14","sheetRow":0,"name":"[사고] Access Denied 차단","type":"BLOCK","matched":"청크9 v5b 도중/직후 partners.coupang.com Access Denied(403 추정)","note":"러너는 429/rCode만 중단→403(json=null)은 빈결과로 처리돼 false not_found 양산. 청크9 not_found 전부 미기록(재시도 대상). 실데이터 수신 5건(929/930/931/900/936)만 기록. 당일 전면중단","status":"incident"}
+{"date":"2026-06-14","sheetRow":416,"name":"코베아 허니콤","type":"카테고리오매칭(구분 미사용)","cat":"오토캠핑텐트","matched":"코베아 허니콤 자충매트 R-5(77,670)=매트","correctPriceRef":379990,"note":"허니콤이 텐트·매트 양쪽 존재. 러너가 시트 A열 '구분'을 안 봐 매트로 오매칭. 현재 D416에 틀린 매트링크 기록됨→D1에 '코베아 허니콤 텐트'로 재검색 교정. 가짜링크라 우선 정리 대상","status":"open_fix"}
+{"date":"2026-06-14","sheetRow":0,"name":"[규칙] 구분(A열) 활용","type":"개선","note":"러너가 시트 카테고리(A: 오토캠핑텐트/매트/침낭 등)를 무시 → 동음이의 제품명(허니콤 등)에서 타카테고리 오매칭. 개선: 텐트류 행은 검색어에 '텐트' 보강 or 후보 검증에 카테고리 키워드 반영. D1 전 검토","status":"rule"}
+{"date":"2026-06-14","sheetRow":0,"name":"[규칙] 링크-가격 동반 필수","type":"개선(DONE)","note":"454/455를 링크만 넣고 E가격 비운채 '자동(검토)'로 남긴 결함. coupang_sheet_write.py에 안전장치 추가: 링크 있는데 가격없으면 마커 '·가격필요'+경고. 향후 사용자제공 링크는 가격까지 조회 후 기록. 454/455는 사용자 수정완료","status":"resolved_user"}
+{"date":"2026-06-14","sheetRow":0,"name":"[규칙] 시트 정렬→이름기준 추적","type":"개선","note":"시트가 sort됨→행번호 불안정(보류셋·행897 무효). 향후 보류·예외·재개는 상품명(B) 기준. 봇은 D빈+I빈 행만(D있음 or I='사람'/'자동'/'검토완료'는 스킵) 처리해 사람 수동작업과 충돌 회피. 중복행(예 2875~2884) 존재 주의","status":"rule"}

@@ -3,106 +3,95 @@
 <head>
 <meta charset="utf-8">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { width: 1024px; height: 500px; overflow: hidden; background: #173d27; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    background: radial-gradient(120% 140% at 80% 10%, #1e5234 0%, #173d27 55%, #122e1d 100%);
+    font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    position: relative;
+  }
+  .deco { position: absolute; border-radius: 50%; }
+  .d1 { width: 400px; height: 400px; background: #1e5234; opacity: .45; top: -140px; right: 60px; }
+  .d2 { width: 360px; height: 360px; background: #1a4830; opacity: .4; bottom: -160px; right: -40px; }
+  .d3 { width: 240px; height: 240px; background: #1a4830; opacity: .4; bottom: -120px; left: -60px; }
+
+  .left { position: absolute; left: 64px; top: 96px; width: 560px; }
+  .brandrow { display: flex; align-items: center; gap: 22px; }
+  .icon { width: 104px; height: 104px; border-radius: 26px; flex-shrink: 0; overflow: hidden;
+          box-shadow: 0 10px 28px rgba(0,0,0,.32); }
+  .icon img { width: 104px; height: 104px; display: block; }
+  .name { font-size: 60px; font-weight: 800; color: #fff; letter-spacing: -2px; line-height: 1; }
+  .tagline { font-size: 25px; color: #d6efe0; margin-top: 22px; font-weight: 600; letter-spacing: -0.4px; }
+  .pills { display: flex; gap: 10px; margin-top: 22px; }
+  .pill { background: rgba(255,255,255,.12); border: 1px solid rgba(168,213,187,.35); color: #eafff2;
+          font-size: 15px; font-weight: 600; padding: 9px 16px; border-radius: 20px; }
+  .sub { font-size: 18px; color: #7dc49a; margin-top: 40px; font-weight: 500; }
+  .url { font-size: 17px; color: #4a8f68; margin-top: 14px; font-weight: 600; }
+
+  .cards { position: absolute; right: 56px; top: 50px; width: 380px; display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; gap: 14px; }
+  .card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 36px rgba(0,0,0,.28); }
+  .card.sm { width: 183px; }
+  .card.wide { width: 380px; display: flex; align-items: center; }
+  .thumb { width: 100%; height: 122px; background: #f4f7f5; display: flex; align-items: center; justify-content: center; padding: 9px; }
+  .thumb img { width: 100%; height: 100%; object-fit: contain; }
+  .card.wide .thumb { width: 134px; height: 118px; flex-shrink: 0; }
+  .info { padding: 11px 13px; }
+  .card.wide .info { padding: 12px 16px; }
+  .brand { font-size: 12px; color: #8a8a8a; }
+  .model { font-size: 14px; font-weight: 700; color: #1a1a1a; line-height: 1.25; margin-top: 2px;
+           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .price { font-size: 16px; font-weight: 800; color: #2f7a4e; margin-top: 6px; }
+  .tag { display: inline-block; font-size: 11px; color: #2f7a4e; background: #eaf4ee; border-radius: 8px;
+         padding: 3px 9px; margin-top: 8px; font-weight: 600; }
 </style>
 </head>
 <body>
-<svg width="1024" height="500" viewBox="0 0 1024 500" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="1024" height="500" fill="#173d27"/>
-  <!-- Background texture circles -->
-  <circle cx="820" cy="60" r="200" fill="#1e5234" opacity="0.6"/>
-  <circle cx="950" cy="420" r="180" fill="#1e5234" opacity="0.4"/>
-  <circle cx="100" cy="450" r="120" fill="#1a4830" opacity="0.5"/>
+  <div class="deco d1"></div><div class="deco d2"></div><div class="deco d3"></div>
 
-  <!-- Icon circle -->
-  <circle cx="130" cy="155" r="62" fill="#2f7a4e"/>
-  <!-- trunk -->
-  <rect x="122" y="182" width="16" height="14" rx="2" fill="#8B6914"/>
-  <!-- tree -->
-  <polygon points="130,102 160,155 100,155" fill="#f5f0e8"/>
-  <polygon points="130,118 156,162 104,162" fill="#e8e0cc"/>
-  <polygon points="130,132 152,168 108,168" fill="#f5f0e8"/>
-  <!-- Stars -->
-  <text x="90" y="106" font-size="11" fill="#f5c842" font-family="serif">★ ★ ★ ★ ★</text>
+  <div class="left">
+    <div class="brandrow">
+      <div class="icon"><img src="icon-play-512.png" alt="장비의 숲"></div>
+      <div class="name">장비의 숲</div>
+    </div>
+    <div class="tagline">내 캠핑 스타일에 맞는 장비를 데이터로 찾아드려요</div>
+    <div class="pills">
+      <div class="pill">2,300여 개 모델</div>
+      <div class="pill">16개 카테고리</div>
+      <div class="pill">스펙 기반 별점</div>
+    </div>
+    <div class="sub">측정값만 비교 · 같은 그룹 안 환산 별점 · 가성비 랭킹</div>
+    <div class="url">gear-forest.com</div>
+  </div>
 
-  <!-- App name -->
-  <text x="220" y="142" font-size="64" font-weight="700" fill="#ffffff" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" letter-spacing="-1">장비의 숲</text>
-
-  <!-- Tagline -->
-  <text x="222" y="182" font-size="22" fill="#a8d5bb" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">나에게 맞는 캠핑 장비 찾기</text>
-
-  <!-- Pills -->
-  <rect x="222" y="202" width="122" height="28" rx="14" fill="#2f7a4e"/>
-  <text x="283" y="221" font-size="13" fill="#ffffff" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle" font-weight="500">2,300개 모델</text>
-
-  <rect x="354" y="202" width="112" height="28" rx="14" fill="#2f7a4e"/>
-  <text x="410" y="221" font-size="13" fill="#ffffff" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle" font-weight="500">16개 카테고리</text>
-
-  <rect x="476" y="202" width="122" height="28" rx="14" fill="#2f7a4e"/>
-  <text x="537" y="221" font-size="13" fill="#ffffff" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle" font-weight="500">스펙 기반 별점</text>
-
-  <!-- Divider -->
-  <line x1="64" y1="256" x2="580" y2="256" stroke="#2f7a4e" stroke-width="0.5"/>
-
-  <!-- Subtitle -->
-  <text x="64" y="288" font-size="18" fill="#7dc49a" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">실측값만 · 가성비 장비 비교 · 캠퍼 커뮤니티</text>
-
-  <!-- Card 1 -->
-  <rect x="620" y="52" width="170" height="200" rx="14" fill="#ffffff" opacity="0.96"/>
-  <rect x="636" y="66" width="138" height="98" rx="8" fill="#f0f4f2"/>
-  <polygon points="705,80 760,145 650,145" fill="#9bc4b0" opacity="0.7"/>
-  <polygon points="705,90 750,145 660,145" fill="#6ba889"/>
-  <text x="705" y="185" font-size="11" fill="#666" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">니모이큅먼트</text>
-  <text x="705" y="201" font-size="13" font-weight="600" fill="#1a1a1a" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">호넷 엘리트 1P</text>
-  <text x="705" y="219" font-size="14" font-weight="700" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">592,200원</text>
-  <text x="705" y="235" font-size="11" fill="#f5c842" font-family="serif" text-anchor="middle">★★★★☆</text>
-
-  <!-- Card 2 -->
-  <rect x="806" y="52" width="170" height="200" rx="14" fill="#ffffff" opacity="0.96"/>
-  <rect x="822" y="66" width="138" height="98" rx="8" fill="#f0f4f2"/>
-  <ellipse cx="891" cy="115" rx="45" ry="28" fill="#9bc4b0" opacity="0.7"/>
-  <ellipse cx="891" cy="115" rx="35" ry="20" fill="#6ba889"/>
-  <ellipse cx="891" cy="107" rx="18" ry="12" fill="#5a9878"/>
-  <text x="891" y="185" font-size="11" fill="#666" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">네이처하이크</text>
-  <text x="891" y="201" font-size="13" font-weight="600" fill="#1a1a1a" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">BE400 후드 코튼</text>
-  <text x="891" y="219" font-size="14" font-weight="700" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">65,515원</text>
-  <text x="891" y="235" font-size="11" fill="#f5c842" font-family="serif" text-anchor="middle">★★★★★</text>
-
-  <!-- Card 3 wide -->
-  <rect x="620" y="272" width="356" height="192" rx="14" fill="#ffffff" opacity="0.96"/>
-  <text x="638" y="302" font-size="13" font-weight="600" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">침낭 · 244개 모델</text>
-  <rect x="638" y="310" width="320" height="1" fill="#e0e0e0"/>
-
-  <text x="638" y="332" font-size="11" fill="#888" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">최소무게</text>
-  <rect x="720" y="320" width="160" height="6" rx="3" fill="#e8e8e8"/>
-  <rect x="720" y="320" width="60" height="6" rx="3" fill="#2f7a4e"/>
-  <text x="888" y="332" font-size="11" fill="#333" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="end">0.2 ~ 5.4kg</text>
-
-  <text x="638" y="354" font-size="11" fill="#888" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">내한온도</text>
-  <rect x="720" y="342" width="160" height="6" rx="3" fill="#e8e8e8"/>
-  <rect x="720" y="342" width="100" height="6" rx="3" fill="#2f7a4e"/>
-  <text x="888" y="354" font-size="11" fill="#333" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="end">-45 ~ 13°C</text>
-
-  <text x="638" y="376" font-size="11" fill="#888" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif">충전량</text>
-  <rect x="720" y="364" width="160" height="6" rx="3" fill="#e8e8e8"/>
-  <rect x="720" y="364" width="130" height="6" rx="3" fill="#2f7a4e"/>
-  <text x="888" y="376" font-size="11" fill="#333" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="end">0.1 ~ 3.2kg</text>
-
-  <rect x="638" y="390" width="64" height="20" rx="10" fill="#f0f7f3"/>
-  <text x="670" y="404" font-size="10" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">씨투써밋 36</text>
-  <rect x="710" y="390" width="78" height="20" rx="10" fill="#f0f7f3"/>
-  <text x="749" y="404" font-size="10" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">네이처하이크 34</text>
-  <rect x="796" y="390" width="50" height="20" rx="10" fill="#f0f7f3"/>
-  <text x="821" y="404" font-size="10" fill="#2f7a4e" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">반고 32</text>
-
-  <!-- Bottom -->
-  <text x="512" y="472" font-size="16" fill="#4a8f68" font-family="-apple-system, Apple SD Gothic Neo, Noto Sans KR, sans-serif" text-anchor="middle">gear-forest.com</text>
-
-  <!-- Deco trees -->
-  <polygon points="985,440 1010,490 960,490" fill="#1e5234" opacity="0.5"/>
-  <polygon points="1005,430 1024,475 986,475" fill="#1e5234" opacity="0.4"/>
-</svg>
+  <div class="cards">
+    <div class="row">
+      <div class="card sm">
+        <div class="thumb"><img src="https://gear-forest.com/images/105.jpg"></div>
+        <div class="info">
+          <div class="brand">니모이큅먼트</div>
+          <div class="model">호넷 엘리트 오스모 1P</div>
+          <div class="price">592,200원</div>
+        </div>
+      </div>
+      <div class="card sm">
+        <div class="thumb"><img src="https://gear-forest.com/images/4215.jpg"></div>
+        <div class="info">
+          <div class="brand">헬리녹스</div>
+          <div class="model">15주년 체어원</div>
+          <div class="price">254,430원</div>
+        </div>
+      </div>
+    </div>
+    <div class="card wide">
+      <div class="thumb"><img src="https://gear-forest.com/images/995.jpg"></div>
+      <div class="info">
+        <div class="brand">씨투써밋</div>
+        <div class="model">글로우 GW1 퀼트 침낭</div>
+        <div class="price">197,200원</div>
+        <span class="tag">침낭 · 244개 모델 비교</span>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

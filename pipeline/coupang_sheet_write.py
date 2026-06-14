@@ -34,6 +34,7 @@ def build_updates(results):
         link = (r.get("link") or "").strip()
         if not link:
             continue  # 빈 결과는 건너뜀(다음 실행에서 재시도 가능)
+        marker = r.get("marker") or MARKER
         if link == "x":
             updates.append({"range": f"D{row}", "values": [["x"]]})
         else:
@@ -45,7 +46,11 @@ def build_updates(results):
                 except (ValueError, TypeError):
                     price_str = str(price)
                 updates.append({"range": f"E{row}", "values": [[price_str]]})
-        updates.append({"range": f"I{row}", "values": [[r.get("marker") or MARKER]]})
+            else:
+                # 안전장치: 링크는 있는데 가격 없음 → 조용히 '자동'으로 넘기지 말고 눈에 띄게 표시 + 경고
+                marker = f"{marker}·가격필요"
+                print(f"  ⚠️  D{row}: 링크 있는데 가격(E) 없음 → 마커 '{marker}'. 가격 채우거나 재조회 필요.")
+        updates.append({"range": f"I{row}", "values": [[marker]]})
     return updates
 
 
