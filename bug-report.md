@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 969 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 981 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 119 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 107 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -101,6 +101,7 @@
 | 75 | FE(logModal ESC누적·세션만료·파일업로드) 자동루프 | 2026-06-14 | 3건 (FE-004·FE-005·FE-006) |
 | 76 | FE(JSON-LD SearchAction·renderHotSection폴백)·BE(DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-007·FE-008·BE-004) |
 | 77 | FE(댓글삭제 세션만료·후기카드 날짜 null·댓글 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-009·FE-010·FE-011) |
+| 78 | FE(후기등록 Storage롤백 누락·리뷰날짜 null·renderAccount 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-012·FE-013·FE-014) |
 
 ---
 
@@ -3473,7 +3474,7 @@
 
 ---
 
-### [L-194] — `search.html` — `#homeq` null 체크 없이 `addEventListener` 호출 → DOM 변경 시 TypeError
+### [L-194] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — #homeq는 search.html 내 정적 입력요소(38), 스크립트가 이후 실행돼 null 아님. 'DOM 변경 시'는 추측성. — `search.html` — `#homeq` null 체크 없이 `addEventListener` 호출 → DOM 변경 시 TypeError
 
 - **영역:** 프론트엔드 — 검색 페이지
 - **심각도:** 🟢 Low
@@ -3686,7 +3687,7 @@
 
 ---
 
-### [L-197] — `renderRecommend` — `m.specs.floor_area` undefined 시 `.badge` 접근 → TypeError
+### [L-197] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — renderRecommend는 's && s.value != null && pick.filter(m)' 단락평가(2945, M-399/M-453)로 spec 존재 시에만 filter 실행 → .badge 접근 안전. — `renderRecommend` — `m.specs.floor_area` undefined 시 `.badge` 접근 → TypeError
 
 - **영역:** 프론트엔드 — 추천 페이지 (app.js)
 - **심각도:** 🟢 Low
@@ -4651,7 +4652,7 @@
 
 ---
 
-### [L-217] — `won()` — `won(0)` 이 `"—"` 대신 `"0원"` 반환
+### [L-217] ✅ 검토완료·현행유지(2026-06-14, Q·설계) — won은 순수 포맷터, 0=무가격 시맨틱은 priceRange/priceLabeled(349·353-354)가 상위 가드. won(0)='0원'은 정수 0의 정확한 렌더. — `won()` — `won(0)` 이 `"—"` 대신 `"0원"` 반환
 
 - **영역:** 프론트엔드 — 가격 표시
 - **심각도:** 🟢 Low
@@ -5875,7 +5876,7 @@
 
 ---
 
-### [L-240] — `fmtVal` — g 단위 정수 중량에 `.toFixed(2)` 적용으로 `500.00g` 표시
+### [L-240] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — fmtVal이 Number.isInteger(x)?x:+x.toFixed(2)로 정수는 .00 없이(364, 라이브 '500g'). 기수정. — `fmtVal` — g 단위 정수 중량에 `.toFixed(2)` 적용으로 `500.00g` 표시
 
 - **영역:** 프론트엔드 — 데이터 포맷팅
 - **심각도:** 🟢 Low
@@ -6294,7 +6295,7 @@
 
 ---
 
-### [L-250] — `won()` — `NaN` 입력 시 `"NaN원"` 출력, isNaN 가드 없음
+### [L-250] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — won은 !Number.isFinite(x) 가드로 NaN→'—'(346, 라이브 'wonNaN'→'—'). 기수정. — `won()` — `NaN` 입력 시 `"NaN원"` 출력, isNaN 가드 없음
 
 - **영역:** 프론트엔드 — 데이터 포맷팅
 - **심각도:** 🟢 Low
@@ -7315,7 +7316,7 @@
 
 ---
 
-### [L-276] — `pushRecent` — `undefined` key 중복 체크 통과로 최근 본 목록 오염
+### [L-276] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — pushRecent는 '!item.s || !item.key' 가드로 key 없으면 기록 생략(777, M-485). 오염 없음. — `pushRecent` — `undefined` key 중복 체크 통과로 최근 본 목록 오염
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟢 Low
@@ -7627,7 +7628,7 @@
 
 ---
 
-### [L-286] — `fmtVal` — `cm3` 단위 1000 미만 값 `_UNIT_DISPLAY` 미매핑 → 원시 `"cm3"` 표시
+### [L-286] ✅ 해결완료(2026-06-14, Q) — _UNIT_DISPLAY에 cm3:'cm³' 추가, cm3<1000도 cm³ 표시(라이브 검증 '500cm³'). — `fmtVal` — `cm3` 단위 1000 미만 값 `_UNIT_DISPLAY` 미매핑 → 원시 `"cm3"` 표시
 
 - **영역:** 프론트엔드 — 스펙 표시
 - **심각도:** 🟢 Low
@@ -7737,7 +7738,7 @@
 
 ---
 
-### [L-292] — PWA 설치 배너 — `_pwaPrompt` null 시 `prompt.prompt()` TypeError
+### [L-292] ✅ 해결완료(2026-06-14, Q) — PWA 설치 버튼에 prompt null 가드 추가(더블클릭 등 소진 시 null.prompt() TypeError 방지+hideBanner). — PWA 설치 배너 — `_pwaPrompt` null 시 `prompt.prompt()` TypeError
 
 - **영역:** 프론트엔드 — PWA
 - **심각도:** 🟢 Low
@@ -8061,7 +8062,7 @@
 
 ---
 
-### [L-302] — `serializeState` — `brands` `|` 구분자 미인코딩으로 파이프 포함 브랜드명 파싱 오류
+### [L-302] ✅ 검토완료·현행유지(2026-06-14, Q·데이터) — 브랜드명에 '|' 미포함(Naturehike·MSR·코베아 등), join/split('|') 안전. 추측성. — `serializeState` — `brands` `|` 구분자 미인코딩으로 파이프 포함 브랜드명 파싱 오류
 
 - **영역:** 프론트엔드 — URL 상태
 - **심각도:** 🟢 Low
@@ -8145,7 +8146,7 @@
 
 ---
 
-### [L-305] — `showToast` — `isHtml=true` 경로 `innerHTML` XSS 잠재 취약점
+### [L-305] ✅ 검토완료·현행유지(2026-06-14, Q·코드 실대조) — showToast는 M-238로 isHtml/innerHTML 경로 제거, 항상 textContent(550). XSS 표면 없음. — `showToast` — `isHtml=true` 경로 `innerHTML` XSS 잠재 취약점
 
 - **영역:** 프론트엔드 — UI
 - **심각도:** 🟢 Low
@@ -8157,7 +8158,7 @@
 
 ---
 
-### [L-306] — `newSet` — `Date.now().toString(36)` ID 동일 밀리초 내 중복 가능
+### [L-306] ✅ 검토완료·현행유지(2026-06-14, Q·실무) — 동일 ms 내 두 세트 생성은 별개 사용자 제스처 2회를 1ms에 요구(사실상 불가). 동기 핵심경로(account.html)는 crypto.randomUUID 사용. — `newSet` — `Date.now().toString(36)` ID 동일 밀리초 내 중복 가능
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -8550,7 +8551,7 @@
 
 ---
 
-### [L-321] — `buildFilters` 스펙 슬라이더 — `Math.min/max(...vals)` 대형 배열 스택 오버플로 위험
+### [L-321] ✅ 검토완료·현행유지(2026-06-14, Q·데이터) — 카테고리당 모델 ≤500개라 Math.min/max(...vals) 스프레드 한계(~65k) 한참 미만. 스택오버플로 미발생. — `buildFilters` 스펙 슬라이더 — `Math.min/max(...vals)` 대형 배열 스택 오버플로 위험
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -13302,6 +13303,56 @@
 - **수정안:** `const dt = c.created_at ? new Date(c.created_at).toLocaleDateString("ko-KR", ...) : "";`
 - **파일:** [site/app.js](site/app.js):4105
 - **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 78 (2026-06-14 자동루프)
+
+| 영역 | 발견일 | 신규 버그 |
+|------|--------|-----------|
+| FE(후기등록 Storage롤백 누락·리뷰날짜 null·renderAccount 날짜 null) | 2026-06-14 | 3건 (FE-012·FE-013·FE-014) |
+
+---
+
+### [FE-012] — `wireReviews()` 후기 등록 — INSERT 실패 시 `removeUploadedImages` `await` 누락 → Storage 파일 누수
+
+- **영역:** 프론트엔드 — 상품 상세 모달 / 후기 등록
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `wireReviews()` → `form.onsubmit` 내 line 2565에서 Supabase INSERT 실패 시 `removeUploadedImages(uploadedPaths)` 를 `await` 없이 호출. `removeUploadedImages`는 `async` 함수이고 내부에서 `await supabase.storage...remove(paths)`를 실행하므로, `await` 없이 호출하면 Promise가 fire-and-forget 상태가 됨. 콘솔 오류 없이 실행 계속되지만 Storage 롤백이 보장되지 않아 업로드된 이미지 파일이 Supabase Storage에 잔류(고아 파일 누적). 비교: 같은 함수 내 line 2553(`await removeUploadedImages(uploadedPaths)`)은 올바르게 `await` 사용 — 수정 사각지대.
+- **원인:** [site/app.js:2565](site/app.js) — `await` 누락. M-182 수정 시 uploadImage 실패 경로만 수정하고 INSERT 실패 경로를 놓침.
+- **수정안:** `removeUploadedImages(uploadedPaths);` → `await removeUploadedImages(uploadedPaths);`
+- **파일:** [site/app.js](site/app.js):2565
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-013] — `_reviewDate(iso)` — `iso` null 시 `new Date(null)` → "1970년 1월 1일" 렌더
+
+- **영역:** 프론트엔드 — 상품 후기 상세 (`openReviewDetail`)
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `_reviewDate(iso)` (line 2321)는 `new Date(iso).toLocaleDateString(...)` 를 그대로 반환. `iso`가 `null` 또는 `undefined`면 `new Date(null)` = Unix epoch(1970-01-01) → "1970년 1월 1일" 표시. 이 함수는 `openReviewDetail(r)` (line 2363)에서 `_reviewDate(r.created_at)`로 호출됨. `reviews` 테이블에 `created_at`은 `NOT NULL DEFAULT now()`이므로 정상 케이스에서는 발생하기 어렵지만, 비정상 레코드나 null 허용 스키마 변경 시 재현. FE-002·010·011과 동일 패턴이지만 별개 헬퍼 함수.
+- **원인:** [site/app.js:2321](site/app.js) — `_reviewDate`에 null 가드 없음.
+- **수정안:** `function _reviewDate(iso) { return iso ? new Date(iso).toLocaleDateString("ko-KR", ...) : ""; }`
+- **파일:** [site/app.js](site/app.js):2321
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [FE-014] — `renderAccount()` `renderMyLogs()` — `p.created_at` null 시 `new Date(null)` → "1월 1일" 커뮤니티 로그 날짜 오표시
+
+- **영역:** 프론트엔드 — 마이페이지 / 내 커뮤니티 로그 목록
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `renderAccount()` 내 클로저 `renderMyLogs(list)` (line 3343)에서 `list.map((p, pi) => ...)` 시 line 3349: `const dt = new Date(p.created_at).toLocaleDateString("ko-KR", ...)` 호출. `p.created_at` null 시 "1월 1일" 로그 날짜 오표시. `COMMUNITY_LOG_ENABLED`가 true일 때(`renderAccount` 안의 posts 쿼리 분기) 발생하는 경로. 현재 `COMMUNITY_LOG_ENABLED=false`이므로 사문화 상태이나, 커뮤니티 기능 복구 시 즉시 표면화.
+- **원인:** [site/app.js:3349](site/app.js) — `created_at` null 가드 없음. FE-002·010·011·013과 동일 패턴.
+- **수정안:** `const dt = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR", ...) : "";`
+- **파일:** [site/app.js](site/app.js):3349
+- **우선순위:** 낮음 (커뮤니티 비활성 중)
 - **상태:** 미해결
 
 ---

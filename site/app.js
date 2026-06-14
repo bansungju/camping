@@ -76,6 +76,7 @@ window.addEventListener("beforeinstallprompt", e => {
   banner.querySelector(".pwa-install-btn").onclick = async () => {
     const prompt = _pwaPrompt;
     _pwaPrompt = null;  // H-51: prompt()는 1회만 유효 — null 처리로 InvalidStateError 방지
+    if (!prompt) { hideBanner(); return; }   // L-292: 더블클릭 등으로 prompt 소진 시 null.prompt() TypeError 방지
     prompt.prompt();
     const { outcome } = await prompt.userChoice;
     if (outcome === "accepted") localStorage.setItem("pwa-dismissed", "1");
@@ -354,7 +355,7 @@ const priceLabeled = (n, nullHtml = '<span class="nd">가격없음</span>') =>
   (n == null || n === 0) ? nullHtml : won(n) + PRICE_BASIS_CAP;
 
 /* 값 표시: 무게(g) 1000↑ → kg, 부피(cm3) 1000↑ → L 환산 */
-const _UNIT_DISPLAY = { C: "°C", m2: "m²" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑
+const _UNIT_DISPLAY = { C: "°C", m2: "m²", cm3: "cm³" };  // L-17: JSON 데이터 단위 → 표시 문자 매핑 (L-286: cm3<1000도 cm³)
 function fmtVal(v, unit) {
   if (v == null) return "—";
   const x = Number(v);                                   // M-232/M-292: string·"N/A" 등 비숫자 입력 시 .toFixed 크래시 방어
