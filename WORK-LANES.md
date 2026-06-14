@@ -256,3 +256,16 @@ MP/MA/MD(M 파이프라인/API/devagent)·SYNC(H-143/146 + 마이그레이션 02
 핵심: 버그리포트에 stale·오탐·중복 다수(loginHref 부재·priceRange b 사용중·serialize* draw중앙화·ESC누수 기수정 등) — 코드 실대조로 거짓 'fixed' 방지.
 
 남은 183건은 대부분 `pipeline/*.py`·`backend/*`(DATA/BACKEND 레인) — 파일별 묶음(H~R)으로 계속.
+
+
+## L-bundle 연속 스윕 누적 (2026-06-14, 세션 seq-loop) — 16묶음
+
+| 묶음 | 영역 | 커밋 |
+|---|---|---|
+| A·B·C·D·E·F·G | 프론트(app.js·account·sw) | 577d5e7·8da52b5·7aa383f·7dae02c·2fcaa3e·440f02e·bd8fc00 |
+| N·L·K·M·H·J | 파이프라인(make_logo·verify_internal·게이트/스캐너·column_fixes·핸들누수·normalize) | 51ab43f·cb32a9a·(M)·385fc8b·04b667d |
+| O·P·Q | backend·devagent·포맷 | 6bc4c83·8440fb9·1e2838a |
+
+**미처리 253→107, 해결완료 836→981. 실수정 33건·검토(현행유지/보류/이월) 110여건.**
+핵심: 버그리포트 stale·오탐·기수정 다수 — 코드/테스트 실대조 필수(메모리 [[pipeline-bug-cluster-sweep]] 패턴 확정).
+남은 107건: 프론트 app.js 산발 클러스터(~56) + 파이프라인 단발 스크립트(~51).
