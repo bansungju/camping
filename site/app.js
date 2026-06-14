@@ -992,7 +992,7 @@ async function setupHomeSearch() {
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
     // M-204/M-371/M-435: 실패 시 idx·idxLoading 모두 초기화 → 재시도 가능
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(e => { idxLoading = null; console.warn("search.json load failed", e); return []; });
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=26e37e87").then(d => (idx = d)).catch(e => { idxLoading = null; console.warn("search.json load failed", e); return []; });
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1212,7 +1212,7 @@ async function setupSearchPage() {
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
     // M-369/M-371/M-450: 실패 시 _idxLoading 초기화 → 재시도 가능, in-flight 가드(H-75) 유지
-    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=92bd9d85").then(d => (idx = d)).catch(e => { _idxLoading = null; console.warn("search.json load failed", e); return []; });
+    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=26e37e87").then(d => (idx = d)).catch(e => { _idxLoading = null; console.warn("search.json load failed", e); return []; });
     return _idxLoading;
   };
 
@@ -2812,7 +2812,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=92bd9d85"); }
+  try { idx = await getJSON("data/search.json?v=26e37e87"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -3274,7 +3274,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=92bd9d85")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=26e37e87")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();

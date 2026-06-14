@@ -1,7 +1,7 @@
 /* 장비의 숲 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-064cafd9";
+const CACHE = "camping-6dadde69";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
@@ -102,8 +102,17 @@ self.addEventListener("push", (e) => {
 // 알림 클릭 → 해당 URL 열기 (L-131/L-152: URL 일치 탭 우선 탐색 + navigate)
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = e.notification.data?.url || "/";
-  const absUrl = new URL(url, location.origin).href;
+  const raw = e.notification.data?.url || "/";
+  // H-141: 악의적 푸시가 `{"url":"javascript:..."}`를 보내면 openWindow가 스크립트를 실행할 수 있다(XSS).
+  //   동일 출처 http(s) URL만 허용하고, javascript:/data:/타출처 등은 루트로 폴백.
+  let absUrl;
+  try {
+    const u = new URL(raw, location.origin);
+    absUrl = (u.origin === location.origin && (u.protocol === "https:" || u.protocol === "http:"))
+      ? u.href : location.origin + "/";
+  } catch (_) {
+    absUrl = location.origin + "/";
+  }
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
     const exact = list.find((c) => c.url === absUrl);
     if (exact) return exact.focus();
