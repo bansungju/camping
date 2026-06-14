@@ -61,7 +61,9 @@ def run(state) -> dict:
             _git(["add", "-A", "--"] + paths_to_add, cwd=wt)
         ccode, cout = _git(["commit", "-m", msg], cwd=wt)
         scode, sha = _git(["rev-parse", "HEAD"], cwd=wt)
-        if scode == 0 and sha != "__MISSING__":
+        # M-458: commit 실패(빈 커밋 등 ccode≠0)면 rev-parse HEAD가 직전 커밋 SHA를 줘 "커밋됨"으로
+        #   오인된다 → ccode==0(커밋 성공)도 함께 확인.
+        if ccode == 0 and scode == 0 and sha != "__MISSING__":
             committed_sha = sha.strip()
         if committed_sha:
             # 메인 레포에 브랜치 ref 생성 (같은 .git 공유 → 객체 이미 존재). main 직접이동 금지.
@@ -74,7 +76,8 @@ def run(state) -> dict:
         progress.update_state(area, thread_id=thread_id,
                               last_change=state.get("request", "")[:80],
                               status="active")
-    if thread_id:
+    if committed_sha and thread_id:
+        # M-563: commit 실패 시에도 원장을 무조건 제거하면 재시도 추적이 끊긴다 → 커밋 성공 시에만 제거.
         ledger.remove(thread_id)
 
     return {

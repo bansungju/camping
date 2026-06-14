@@ -47,7 +47,7 @@ def run(state) -> dict:
     if not ok:
         # git 워크트리 불가 — 안전하게 멈추도록 evidence 에 fail 남기고 workspace 비움
         ev = state.get("evidence", [])
-        return {"stage": "apply", "workspace": "",
+        return {"stage": "apply", "workspace": "", "changeset_diff": "",  # M-461: 조기반환에도 changeset_diff 초기화(이전 라운드 stale 잔존 방지)
                 "evidence": ev + [{"gate": "apply", "status": "fail", "cmd": "worktree", "output": msg}]}
 
     # 파일 반영 — new_body 바이트 그대로
@@ -74,12 +74,16 @@ def run(state) -> dict:
             fh.write(f.get("new_body", ""))
     if escaped:
         ev = state.get("evidence", [])
-        return {"stage": "apply", "workspace": "",
+        return {"stage": "apply", "workspace": "", "changeset_diff": "",  # M-461: 조기반환에도 changeset_diff 초기화
                 "evidence": ev + [{"gate": "apply", "status": "fail", "cmd": "path escape",
                                    "output": f"워크트리 밖 경로 거부: {escaped}"}]}
 
-    # [cycle2 H5] 신규 파일까지 인덱스에 — git add -A → --cached diff
-    _git(["add", "-A"], cwd=wt)
+    # [cycle2 H5] 신규 파일까지 인덱스에 — git add → --cached diff
+    # M-562: `git add -A`는 워크트리 전체를 스테이징(H-144와 동일 위험: 게이트/프로세스가 만든 임시파일
+    #   혼입) → 선언된 changed_files path만 `-A --`로 한정(추가/수정/삭제 포함).
+    paths_to_add = [f.get("path") for f in state.get("changed_files", []) if f.get("path")]
+    if paths_to_add:
+        _git(["add", "-A", "--"] + paths_to_add, cwd=wt)
     dcode, diff = _git(["diff", "--cached", base_ref or "HEAD"], cwd=wt)
     changeset_diff = "" if diff == "__MISSING__" else diff[:200_000]
 

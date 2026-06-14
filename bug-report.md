@@ -10126,7 +10126,8 @@
 
 ---
 
-### [M-458] — `publish.py` — `git commit` 종료코드 미검사 → 빈 커밋에도 ledger 완료 처리
+### [M-458] ✅ 해결완료(2026-06-14, MD) — `publish.py` — `git commit` 종료코드 미검사 → 빈 커밋에도 ledger 완료 처리
+> 수정: `ccode==0`(commit 성공) 확인 추가(publish.py L64) — 빈 커밋 등 실패 시 rev-parse가 직전 SHA를 줘 '커밋됨' 오인하던 것 차단.
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -10138,7 +10139,8 @@
 
 ---
 
-### [M-459] — `gate_tests.py` T.2a — frontend feature 시 `.py` 파일만 검사 → JS/TS 추가는 항상 pass
+### [M-459] ✅ 해결완료(2026-06-14, MD) — `gate_tests.py` T.2a — frontend feature 시 `.py` 파일만 검사 → JS/TS 추가는 항상 pass
+> 수정: gate_tests T.2a 코드 확장자를 축별 분기 — frontend는 .js/.ts/.jsx/.tsx로 검사(전엔 .py 고정이라 프론트 코드변경이 무조건 통과).
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -10150,7 +10152,8 @@
 
 ---
 
-### [M-460] — `gate_tests.py` `_TEST_RE` — frontend 테스트 파일 패턴 미매칭 → T.2a 항상 실패
+### [M-460] ✅ 해결완료(2026-06-14, MD) — `gate_tests.py` `_TEST_RE` — frontend 테스트 파일 패턴 미매칭 → T.2a 항상 실패
+> 수정: `_TEST_RE`에 프론트 테스트 패턴(*.test/*.spec.[jt]sx, __tests__/) 추가 → 프론트 테스트 동반 인식. 8케이스 검증.
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -10186,7 +10189,8 @@
 
 ---
 
-### [M-461] — `apply.py` 조기 반환 경로 — `changeset_diff` stale 상태 잔존
+### [M-461] ✅ 해결완료(2026-06-14, MD) — `apply.py` 조기 반환 경로 — `changeset_diff` stale 상태 잔존
+> 수정: apply.py 두 조기반환 dict에 `"changeset_diff": ""` 추가 → 이전 라운드 stale changeset_diff 잔존 방지.
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -10198,7 +10202,8 @@
 
 ---
 
-### [M-462] — `gate_lint.py` / `gate_typecheck.py` — `axis == "multi"` 케이스 미처리 → JS/TS 파일 lint/type 검사 누락
+### [M-462] ✅ 해결완료(2026-06-14, MD) — `gate_lint.py` / `gate_typecheck.py` — `axis == "multi"` 케이스 미처리 → JS/TS 파일 lint/type 검사 누락
+> 수정: gate_lint/gate_typecheck에 `multi` 축 분기 추가 — Python(ruff/mypy)+JS(eslint/tsc) 양쪽 검사 후 단일 엔트리로 합침(어느 한쪽 fail이면 fail). 전엔 .py만 검사돼 JS 무검사 통과.
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -12064,7 +12069,8 @@
 
 ---
 
-### [M-537] — `devagent/nodes/apply.py` — `base_ref=""` 시 `HEAD` 폴백으로 cross-round 변화 추적 불가
+### [M-537] ✅ 해결완료(2026-06-14, MD) — `devagent/nodes/apply.py` — `base_ref=""` 시 `HEAD` 폴백으로 cross-round 변화 추적 불가
+> 확인: intake.py L25 `base_ref = state.get('base_ref') or _head(REPO_ROOT)`로 HEAD SHA를 이미 명시 기록 → apply의 `or 'HEAD'`는 belt-and-suspenders. 기해결.
 
 - **영역:** 백엔드 — dev-harness
 - **심각도:** 🟡 Medium
@@ -12564,7 +12570,8 @@
 
 ---
 
-### [M-555] — `evidence_collector.py` — `git diff --cached --stat base` → staged 없으면 항상 빈 결과
+### [M-555] ✅ 해결완료(2026-06-14, MD) — `evidence_collector.py` — `git diff --cached --stat base` → staged 없으면 항상 빈 결과
+> 확인: apply가 stage만 하고 commit은 publish에서 하므로 evidence_collector 시점은 미커밋(staged). `git diff --cached --stat base`(staged vs base)가 정확하며, 제안된 `base HEAD`는 미커밋 상태서 빈 diff가 됨 → 현행 유지(오탐).
 
 - **영역:** 백엔드 — devagent 증거 수집
 - **심각도:** 🟡 Medium
@@ -12703,7 +12710,8 @@
 
 ---
 
-### [M-562] — `devagent/nodes/apply.py` — `git add -A`로 워크트리 전체 스테이징 → `.env` 등 scope 외 파일 커밋 위험
+### [M-562] ✅ 해결완료(2026-06-14, MD) — `devagent/nodes/apply.py` — `git add -A`로 워크트리 전체 스테이징 → `.env` 등 scope 외 파일 커밋 위험
+> 수정: apply.py `git add -A`→`git add -A -- <changed_files paths>`(H-144와 동일 패턴) — 워크트리 임시파일 혼입 차단.
 
 - **영역:** 백엔드 — devagent apply 노드
 - **심각도:** 🟡 Medium
@@ -12715,7 +12723,8 @@
 
 ---
 
-### [M-563] — `devagent/nodes/publish.py` — commit 실패 시에도 `ledger.remove()` 무조건 호출 → 원장 오염
+### [M-563] ✅ 해결완료(2026-06-14, MD) — `devagent/nodes/publish.py` — commit 실패 시에도 `ledger.remove()` 무조건 호출 → 원장 오염
+> 수정: `if committed_sha and thread_id`로 가드(publish.py L73) — commit 실패 시 원장 보존해 재시도 추적 유지.
 
 - **영역:** 백엔드 — devagent publish 노드
 - **심각도:** 🟡 Medium

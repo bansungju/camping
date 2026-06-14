@@ -9,7 +9,12 @@ import re
 
 from ._util import changed_paths, has_tool, run_tool, workdir
 
-_TEST_RE = re.compile(r"(^|/)(test_[^/]+\.py|[^/]+_test\.py)$|(^|/)tests?/")
+# M-460: 파이썬(pytest) 네이밍에 더해 프론트(JS/TS) 테스트 패턴(*.test/*.spec.[jt]sx, __tests__/)도 인식.
+_TEST_RE = re.compile(
+    r"(^|/)(test_[^/]+\.py|[^/]+_test\.py)$"
+    r"|(^|/)tests?/"
+    r"|[^/]+\.(?:test|spec)\.[jt]sx?$"
+    r"|(^|/)__tests__/")
 
 
 def _is_test_file(p: str) -> bool:
@@ -25,7 +30,10 @@ def run(state) -> dict:
 
     # ---- T.2a: feature 결정론 — 코드 추가 ↔ 테스트 동반 ----
     if kind == "feature":
-        code_files = [p for p in changed if p.endswith(".py") and not _is_test_file(p)]
+        # M-459: frontend feature는 코드가 .js/.ts라 `.py` 고정 필터로는 코드변경을 못 잡아 T.2a가
+        #   무조건 통과했다 → 축별로 코드 확장자를 분기.
+        code_exts = (".js", ".ts", ".jsx", ".tsx") if axis == "frontend" else (".py",)
+        code_files = [p for p in changed if p.endswith(code_exts) and not _is_test_file(p)]
         test_files = [p for p in changed if _is_test_file(p)]
         if code_files and not test_files:
             results.append({"gate": "tests", "status": "fail", "contract_id": "T.2a",
