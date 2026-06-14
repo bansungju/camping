@@ -11908,7 +11908,8 @@
 
 ---
 
-### [H-144] — `publish.py` — `git add -A`로 워크트리 전체 스테이징 → scope 외 파일 커밋 위험 (TOCTOU)
+### [H-144] ✅ 해결완료(2026-06-14, 보안) — `publish.py` — `git add -A`로 워크트리 전체 스테이징 → scope 외 파일 커밋 위험 (TOCTOU)
+> 수정: `git add -A` → `git add -A -- <state.changed_files paths>`로 한정(publish.py L55~). 검증된 scope 파일(추가/수정/삭제)만 스테이징, `.env`·임시파일 제외. 임시 git repo로 스코프 격리 검증.
 
 - **영역:** 백엔드 — dev-harness/devagent
 - **심각도:** 🔴 High

@@ -53,7 +53,12 @@ def run(state) -> dict:
 
     committed_sha = ""
     if wt:
-        _git(["add", "-A"], cwd=wt)
+        # H-144: `git add -A`는 워크트리 전체를 스테이징해 scope 외 파일(.env·임시파일 등)까지 커밋될 수
+        #   있다(scope 게이트 통과 후 TOCTOU) → 검증된 state.changed_files의 path만 `-A --`로 한정
+        #   스테이징(추가/수정/삭제 모두 포함). 선언된 변경이 없으면 스테이징 생략.
+        paths_to_add = [f.get("path") for f in state.get("changed_files", []) if f.get("path")]
+        if paths_to_add:
+            _git(["add", "-A", "--"] + paths_to_add, cwd=wt)
         ccode, cout = _git(["commit", "-m", msg], cwd=wt)
         scode, sha = _git(["rev-parse", "HEAD"], cwd=wt)
         if scode == 0 and sha != "__MISSING__":
