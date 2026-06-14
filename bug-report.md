@@ -8218,6 +8218,7 @@
 ---
 
 ### [H-118] (xcode) — `header.top` — iOS 상태바 safe area 미적용: 앱 아이콘·타이틀 시간 표시와 겹침 + 계정 아이콘 탭 불가
+> 수정: style.css header.top에 `padding-top:max(18px,env(safe-area-inset-top))` 적용(L33). iOS 상태바/Dynamic Island 겹침·계정 아이콘 탭 차단 해소.
 
 - **영역:** 프론트엔드 — iOS Capacitor
 - **심각도:** 🔴 High
@@ -10022,7 +10023,8 @@
 
 ---
 
-### [H-128] — `syncWishlistOnLogin` — `onWishChange` 콜백이 merge 완료 전 설정되어 stale 덮어쓰기
+### [H-128] ✅ 해결완료(2026-06-14, HF) — `syncWishlistOnLogin` — `onWishChange` 콜백이 merge 완료 전 설정되어 stale 덮어쓰기
+> 수정: onWishChange 등록을 merge+save 완료 후로 이동(account.html L292~). merge 전 등록 시 setWish 발화가 병합전 로컬로 원격을 덮어쓰던 stale overwrite 차단.
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🔴 High
@@ -10034,7 +10036,8 @@
 
 ---
 
-### [H-129] — `renderAccount` — `myLogsList.dataset.loaded` 비동기 완료 전 설정 → 오류 시 영구 로딩 스피너
+### [H-129] ✅ 해결완료(2026-06-14, HF) — `renderAccount` — `myLogsList.dataset.loaded` 비동기 완료 전 설정 → 오류 시 영구 로딩 스피너
+> 수정: getMyReviews 실패 `.catch`에 `delete dataset.loaded` 추가(app.js L3388) → 영구 미로드 대신 다음 렌더서 재시도.
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🔴 High
@@ -10636,7 +10639,8 @@
 
 ---
 
-### [H-132] — `updateLeadText` — `STYLE_META.find()` undefined 시 `sm.icon` TypeError
+### [H-132] ✅ 해결완료(2026-06-14, HF) — `updateLeadText` — `STYLE_META.find()` undefined 시 `sm.icon` TypeError
+> 수정: updateLeadText에 `if(!sm){...;return}` 가드(app.js L1444) → STYLE_META 미존재 키에서 sm.icon TypeError 방지.
 
 - **영역:** 프론트엔드 — 카테고리 렌더링
 - **심각도:** 🔴 High
@@ -10648,7 +10652,8 @@
 
 ---
 
-### [H-133] — `renderAccount` 찜 카드 `go()` — `wx.b`/`wx.m` undefined 시 `"?brands=undefined"` 브로큰 URL
+### [H-133] ✅ 해결완료(2026-06-14, HF) — `renderAccount` 찜 카드 `go()` — `wx.b`/`wx.m` undefined 시 `"?brands=undefined"` 브로큰 URL
+> 수정: 찜카드 href를 `(x.b&&x.m)?...:category.html?cat=`로 null-safe화(app.js L3438) → `?brands=undefined` 브로큰 URL 방지.
 
 - **영역:** 프론트엔드 — 계정/찜
 - **심각도:** 🔴 High
@@ -10978,7 +10983,8 @@
 
 ---
 
-### [H-135] — `buildFilters` 스펙 슬라이더 — `NaN` 값 통과 + 대형 배열 spread RangeError
+### [H-135] ✅ 해결완료(2026-06-14, HF) — `buildFilters` 스펙 슬라이더 — `NaN` 값 통과 + 대형 배열 spread RangeError
+> 수정: 슬라이더 num()을 `Number.isFinite` 필터로(app.js L1648) → NaN이 Math.min/max로 전파돼 슬라이더 비기능 되던 것 차단.
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🔴 High
@@ -11247,7 +11253,8 @@
 
 ---
 
-### [H-137] — `renderActiveFilters` — 카테고리 로드 전 호출 시 `STATE.unit` 미정의 TypeError
+### [H-137] ✅ 해결완료(2026-06-14, HF) — `renderActiveFilters` — 카테고리 로드 전 호출 시 `STATE.unit` 미정의 TypeError
+> 수정: renderActiveFilters의 `STATE.unit[k]`를 `(STATE.unit&&STATE.unit[k])||''`로(app.js L1979) → STATE 미초기화 시 TypeError 방지.
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🔴 High
@@ -11758,7 +11765,8 @@
 
 ---
 
-### [H-143] — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
+### [H-143] ⏸ 보류(2026-06-14, 검토필요) — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
+> 보류: SYNC: gear_sets에 `type` 컬럼 없음(별개 `style`만 존재) → 원격 type 영속에 DB 마이그레이션 필요(라이브 수동 적용) + select/upsert/매핑 코드. H-146과 함께 SYNC 전용 세션 권장.
 
 - **영역:** 프론트엔드 — 기어세트 동기화
 - **심각도:** 🔴 High
@@ -12492,7 +12500,8 @@
 
 ---
 
-### [H-145] — `buildFilters` — `filtoggle` 핸들러 최초 1회만 등록 → 카테고리 전환 시 새 aside/backdrop 클로저 갱신 안 됨
+### [H-145] ⏸ 보류(2026-06-14, 검토필요) — `buildFilters` — `filtoggle` 핸들러 최초 1회만 등록 → 카테고리 전환 시 새 aside/backdrop 클로저 갱신 안 됨
+> 보류: 불확실/위험: `aside=bar.parentNode`로 영속 요소를 참조하므로 클로저가 stale인지 불확실. filtoggle 핸들러 재등록 수정이 필터시트를 깨뜨릴 위험 → 재현 확인 후 별도 처리.
 
 - **영역:** 프론트엔드 — 필터 바텀시트
 - **심각도:** 🔴 High
@@ -12504,7 +12513,8 @@
 
 ---
 
-### [H-146] — `upsertGearSet` — `completeness: set.items?.length` 로 저장 → 필수 슬롯 완성도와 불일치
+### [H-146] ⏸ 보류(2026-06-14, 검토필요) — `upsertGearSet` — `completeness: set.items?.length` 로 저장 → 필수 슬롯 완성도와 불일치
+> 보류: SYNC: completeness는 smallint CHECK(0~100). 정상 수정은 setCompletion(app.js).pct를 호출부에서 전달해야 함(cross-file). H-143과 동일 함수(upsertGearSet/loadRemoteGearSets)라 묶어서 SYNC 세션.
 
 - **영역:** 프론트엔드 — 기어 세트 원격 동기화
 - **심각도:** 🔴 High
@@ -12880,7 +12890,8 @@
 
 ---
 
-### [H-147] — `account.html` `syncWishlistOnLogin` — `supabase` 미임포트 → ReferenceError로 찜 동기화 항상 실패
+### [H-147] ✅ 해결완료(2026-06-14, HF) — `account.html` `syncWishlistOnLogin` — `supabase` 미임포트 → ReferenceError로 찜 동기화 항상 실패
+> 수정: import에 `supabase` 추가(account.html L201) → `supabase.auth.getUser()` ReferenceError로 찜 동기화가 항상 실패하던 것 해소.
 
 - **영역:** 프론트엔드 — 계정/인증
 - **심각도:** 🔴 High

@@ -27,7 +27,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
-<link rel="stylesheet" href="style.css?v=cec85dcb">
+<link rel="stylesheet" href="style.css?v=e5617f26">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=b1ee5ca0"></script>
+<script src="app.js?v=53e50801"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -198,7 +198,7 @@
 </script>
 <script type="module">
 import {
-  initAuth, signInWithOAuth, signOut, deleteAccount, getErrorMessage,
+  initAuth, supabase, signInWithOAuth, signOut, deleteAccount, getErrorMessage,
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
@@ -293,12 +293,14 @@ async function syncWishlistOnLogin() {
   const { data: { user: _su } } = await supabase.auth.getUser()
   if (!_su || _wishSyncedUser === _su.id) return
   _wishSyncedUser = _su.id
-  window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   const remote = await loadRemoteWishlist()
-  if (remote === null) { window.onWishChange = null; return }   // M-454: 실패 시 onWishChange 해제(비파괴)
+  if (remote === null) return   // M-454: 실패 시 비파괴(onWishChange 아직 미설정)
   const merged = await backfillGfCodes(mergeWishlists(localWish.get(), remote))   // P0.5 gf_code 주입
   localWish.set(merged)
   if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
+  // H-128: onWishChange를 merge 완료 후 등록 — merge 전에 등록하면 그 사이 setWish 발화가
+  //   병합 전 로컬 목록으로 원격을 덮어써 stale overwrite가 된다.
+  window.onWishChange = (items) => { saveRemoteWishlist(items) }   // app.js setWish가 호출
   if (typeof renderAccount === 'function') renderAccount()        // 병합본으로 다시 그림
 }
 
