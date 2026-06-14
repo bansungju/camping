@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 900 | 수정 + 기해결확인 + 검토·현행유지 포함 |
-| ⏸ 보류 | 11 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 189 | **전원 L(저위험)** — 별도 세션 예정 |
+| ✅ 해결완료 | 905 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
+| ⬜ 미처리 | 183 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -96,6 +96,7 @@
 | 70 | (xcode) iOS 시뮬레이터 — 상품 상세·카테고리 탭·스펙 단위 | 2026-06-13 | 5건 (H-104·M-367·M-368·L-284·L-285) |
 | 71 | (xcode) iOS 시뮬레이터 — 홈·헤더·검색 | 2026-06-13 | 4건 (H-118·M-389·M-390·L-310) |
 | 72 | (xcode) iOS 시뮬레이터 — 필터 모달·침낭 카테고리 | 2026-06-13 | 2건 (L-311·L-312) |
+| 73 | BE(파이프라인)·FE(SW/오프라인) 자동루프 | 2026-06-14 | 3건 (BE-001·BE-002·FE-001) |
 
 ---
 
@@ -4634,7 +4635,7 @@
 
 ---
 
-### [L-216] — `requestPushSubscription` — `push-denied` 플래그 영구화로 권한 재허용 후에도 구독 차단
+### [L-216] ✅ 해결완료(2026-06-14, E) — push-denied 영구차단을 Notification.permission==='granted' 재확인으로 해제 후 진행. — `requestPushSubscription` — `push-denied` 플래그 영구화로 권한 재허용 후에도 구독 차단
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟢 Low
@@ -5196,7 +5197,7 @@
 
 ---
 
-### [L-225] — `requestPushSubscription()` — `push-denied` localStorage 값이 "1" 이외 truthy 값이어도 조기 반환
+### [L-225] ✅ 검토완료·현행유지(2026-06-14, E·코드 실대조) — push-denied는 코드상 '1'만 기록(3769), getItem truthy 체크 정확. 타 truthy 값 미발생. 오탐. — `requestPushSubscription()` — `push-denied` localStorage 값이 "1" 이외 truthy 값이어도 조기 반환
 
 - **영역:** 프론트엔드 — 푸시 구독
 - **심각도:** 🟢 Low
@@ -7034,7 +7035,7 @@
 
 ---
 
-### [L-267] — `requestPushSubscription` — 기존 구독이 다른 사용자 ID로 재덮어쓰기
+### [L-267] ⏸ 보류(2026-06-14, E·백엔드 필요) — onConflict 'user_id,endpoint'라 기기 소유자 변경 시 이전 사용자 행 잔존→알림 누출. 클라이언트는 RLS상 타 사용자 행 삭제 불가. 수정책: push_subscriptions에 UNIQUE(endpoint) + onConflict='endpoint' 마이그레이션 또는 SECURITY DEFINER 정리함수. [lane:BACKEND/SOCIAL] — `requestPushSubscription` — 기존 구독이 다른 사용자 ID로 재덮어쓰기
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟢 Low
@@ -10121,7 +10122,7 @@
 
 ---
 
-### [L-378] — `requestPushSubscription` — `serviceWorker.ready` 무한 대기 가드 없음
+### [L-378] ✅ 해결완료(2026-06-14, E) — serviceWorker.ready를 Promise.race 10s 타임아웃으로 감싸 무한대기 방지(timeout은 외부 try/catch가 흡수). — `requestPushSubscription` — `serviceWorker.ready` 무한 대기 가드 없음
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟢 Low
@@ -10790,7 +10791,7 @@
 
 ---
 
-### [L-400] — `requestPushSubscription` — `pushManager.subscribe` 실패 시 `push-denied` 미설정으로 재시도 반복
+### [L-400] ✅ 검토완료·현행유지(2026-06-14, E·설계) — subscribe 실패는 대개 일시적(네트워크) → 재시도가 옳음. 일시오류에 push-denied 영구기록 시 정상 권한도 영구차단되는 더 큰 버그. — `requestPushSubscription` — `pushManager.subscribe` 실패 시 `push-denied` 미설정으로 재시도 반복
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟢 Low
@@ -11574,7 +11575,7 @@
 
 ---
 
-### [L-426] — `_savePushSub` — Supabase upsert 결과 미확인 → 실패 시 push 등록된 것으로 오인
+### [L-426] ✅ 검토완료·현행유지(2026-06-14, E·코드 실대조) — _savePushSub가 upsert error 체크+showToast 경고(3792-3, M-170/M-440). 무음 아님. — `_savePushSub` — Supabase upsert 결과 미확인 → 실패 시 push 등록된 것으로 오인
 
 - **영역:** 프론트엔드 — 푸시 알림
 - **심각도:** 🟢 Low
@@ -13036,5 +13037,60 @@
 - **수정:** 패스 D 추가 — 제품 내부 max/min>5(내부 모순 실재)인 제품에 한해, 같은 카테고리 '제품대표가(제품당 최저 유효가) 중앙값'의 [0.2×,5×] 밴드 밖 관측을 `valid=0` 격리. 카테고리 분포를 기준틀로 써서 저가·고가 오염을 모두 옳게 가린다(제품 내부 max 앵커는 정상 저가를 오격리 → 회피). 전 카탈로그 6,786 관측 중 1건만 격리(과격리 없음). 멱등.
 - **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) (flag_price_outliers 패스 D) [lane:BACKEND]
 - **데이터 후속:** 코베아 마리나(GF-AT-00068) 가격 398,000원으로 수동 확정, value_score·item-201.html·search.json·모바일 번들 동기 반영.
+
+---
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 73 (2026-06-14 자동루프)
+
+| 영역 | 탐색일시 | 발견 건수 |
+|------|----------|-----------|
+| BE(파이프라인)·FE(SW/오프라인) | 2026-06-14 | 3건 (BE-001·BE-002·FE-001) |
+
+---
+
+### [BE-001] — `coupang_runner.js` `startCoupangRunner()` — `okg` 배열 빈 상태에서 `okg[0].p` 접근 → TypeError 크래시
+
+- **영역:** 백엔드 — 파이프라인 / 쿠팡 파트너스 자동링크
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** 검색 결과에서 `passers`가 존재하지만 이상가(salesPrice < 중앙값×0.4) 상품만 있을 때 `okg` 배열이 비어 `okg[0].p`에서 `TypeError: Cannot read properties of undefined` 발생. 해당 아이템의 runner가 `catch`에 걸려 `status:"error"`로 전체 중단됨.
+- **재현조건:** 쿠팡 검색 결과에서 모든 통과 상품의 가격이 중앙값의 40% 미만일 때 (예: 비정상 할인 상품만 노출되는 경우).
+- **원인:** [pipeline/coupang_runner.js:111-113](pipeline/coupang_runner.js) — `okg` 필터 후 빈 배열 가드 없이 `okg[0]` 직접 접근.
+- **수정안:** `if(!okg.length) continue;` 추가 (line 112 앞).
+- **파일:** [pipeline/coupang_runner.js](pipeline/coupang_runner.js):111-113
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [BE-002] — `detect_price_drops.py` `load_catalog()` — `brand`·`model` None 시 wish_key가 `"None|None|"` 생성 → 찜 매칭 오류
+
+- **영역:** 백엔드 — 파이프라인 / 가격 알림
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `site/data/*.json` 모델 항목에 `brand` 또는 `model` 필드가 누락된 경우 `m.get('brand')`가 `None`을 반환, `wish_key(None, None, ...)` → `"None|None|"` 키 생성. 이 키가 사용자 찜 목록에 우연히 매칭되면 엉뚱한 알림이 발송되거나, `"None|None|"` 키를 가진 이벤트가 중복 억제 로직을 통과할 위험.
+- **재현조건:** 카탈로그 JSON에 brand/model 누락 항목 존재 시.
+- **원인:** [pipeline/detect_price_drops.py:61](pipeline/detect_price_drops.py) — `wish_key(m.get('brand'), m.get('model'), ...)` None 가드 없음.
+- **수정안:** `if not m.get('brand') or not m.get('model'): continue` 조건 추가 (line 57 `if not gf` 블록 아래).
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py):56-62
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [FE-001] — `sw.js` SHELL 프리캐시 — `search.html`·`login.html` 미포함 → 오프라인 시 검색·로그인 페이지 접근 불가
+
+- **영역:** 프론트엔드 — 서비스워커 / 오프라인 지원
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** 오프라인 상태에서 `search.html` 또는 `login.html`로 직접 접근 시 내비게이션 fetch가 실패(캐시 미스)하여 브라우저 오프라인 에러 화면 표시. `account.html`은 SHELL에 포함되어 있지만 검색·로그인은 제외됨.
+- **재현조건:** PWA 설치 후 오프라인 상태에서 `/search.html` 또는 `/login.html` 접근.
+- **원인:** [site/sw.js:7-12](site/sw.js) — SHELL 배열에 `"search.html"`, `"login.html"` 항목 없음. 내비게이션 fetch 핸들러(line 47)는 네트워크 우선으로 시도 후 캐시에 fallback하지만 미프리캐시 페이지는 캐시도 없어 최후 `index.html` fallback도 `navigate` 모드에서만 적용.
+- **수정안:** SHELL 배열에 `"search.html"`, `"login.html"` 추가 후 `stamp_version.py` 재실행(SW 캐시명 자동 갱신).
+- **파일:** [site/sw.js](site/sw.js):8-11
+- **우선순위:** 낮음
+- **상태:** 미해결
 
 ---

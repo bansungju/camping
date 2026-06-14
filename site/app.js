@@ -3756,9 +3756,17 @@ async function renderCommunity() {
 const VAPID_PUBLIC_KEY = "BDj43GvN0UZ1DzeEtjxl_rsj9c5m7BtzuSXgE39e-ixDGELVyU1hbfd-CFxr_cBtLwHI4j8oOi1HhAsUBBt8SOE";
 
 async function requestPushSubscription(userId) {
-  if (localStorage.getItem("push-denied")) return;
+  if (localStorage.getItem("push-denied")) {
+    // L-216: 브라우저 설정에서 권한을 다시 허용했으면 영구 차단 플래그 해제 후 진행
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") localStorage.removeItem("push-denied");
+    else return;
+  }
   try {
-    const reg = await navigator.serviceWorker.ready;
+    // L-378: SW가 끝내 활성화 안 되면 serviceWorker.ready가 무한 대기 → 10s 타임아웃 가드
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, rej) => setTimeout(() => rej(new Error("sw-ready-timeout")), 10000)),
+    ]);
     let sub = await reg.pushManager.getSubscription();
     if (sub) { await _savePushSub(sub, userId); return; }
 
