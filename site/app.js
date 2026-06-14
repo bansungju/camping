@@ -1688,12 +1688,13 @@ function buildFilters(d, star) {
     if (vals.length < 2) return;
     const isWeight = (m.unit || "") === "g";
     const rawLo = Math.min(...vals), rawHi = Math.max(...vals);
+    if (rawLo >= rawHi) return;  // L-409: 전 모델 동일값 시 min===max 퇴화 슬라이더(NaN fill·이동불가) 스킵 — 가격 M-570과 동일
     // 슬라이더는 kg 단위, STATE.range는 g 단위 유지 (passRange가 specs.value와 비교하므로)
     const slo = isWeight ? rawLo / 1000 : rawLo;
     const shi = isWeight ? rawHi / 1000 : rawHi;
-    const displayUnit = isWeight ? "kg" : (m.unit || "");
+    const displayUnit = isWeight ? "kg" : (_UNIT_DISPLAY[m.unit] || m.unit || "");   // L-311(xcode): m2→m² 등 표시 단위 매핑
     const step = isWeight ? 0.1 : Math.max(0.1, +((shi - slo) / 100).toFixed(2));
-    const fmtVal = v => isWeight ? (+v).toFixed(1) + "kg" : (+v).toFixed(1) + displayUnit;
+    const fmtVal = v => isWeight ? (+v).toFixed(1) + "kg" : (+(+v).toFixed(1)) + displayUnit;   // L-312(xcode): 정수 스펙값 불필요한 .0 제거
     parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${m.label}</span>
       <div class="dslider" data-rng="${m.key}" data-lo="${slo}" data-hi="${shi}" data-step="${step}"
            data-unit="${displayUnit}" data-isweight="${isWeight ? 1 : 0}">
@@ -1714,6 +1715,7 @@ function buildFilters(d, star) {
     const vals = num(ms.map(x => x.specs[em.key] && x.specs[em.key].value));
     if (vals.length < 2) return;
     const lo = Math.min(...vals), hi = Math.max(...vals);
+    if (lo >= hi) return;  // L-409: 퇴화 슬라이더(min===max) 스킵
     const step = +((hi - lo) / 100).toFixed(2) || 0.1;
     const fmt = v => (+v).toFixed(step < 1 ? 1 : 0) + (em.unit ? " " + em.unit : "");
     parts.push(`<div class="fgrp fgrp-slider"><span class="flab">${em.label}</span>
@@ -1881,7 +1883,7 @@ function buildFilters(d, star) {
     const fmtLabel = v => {
       if (isPrice) return (+v).toLocaleString() + "원";
       if (isWeight) return (+v).toFixed(1) + "kg";
-      return (+v).toFixed(1) + (sl.dataset.unit || "");
+      return (+(+v).toFixed(1)) + (sl.dataset.unit || "");   // L-312: 정수 스펙값 .0 제거
     };
     const updateFill = () => {
       const lo = parseFloat(minInp.value), hi = parseFloat(maxInp.value);
@@ -1989,7 +1991,7 @@ function renderActiveFilters() {
       if (v == null) return "";
       if (k === "price") return v.toLocaleString("ko-KR");
       if (isWeight) return (v / 1000).toFixed(1) + "kg";
-      return v + rawUnit;
+      return (+(+v).toFixed(2)) + rawUnit;   // L-419: 부동소수점 노이즈(1.5000000000000002) 제거 — 2자리 반올림 후 trailing zero 정리
     };
     // M-313: 단방향 범위는 틸드 없이 ≤/≥ 표시
     const txt = r.min == null ? `${lab} ≤ ${fmt(r.max)}`
@@ -2039,7 +2041,7 @@ function syncFilterUI() {
     const fmtLabel = v => {
       if (isPrice) return (+v).toLocaleString() + "원";
       if (isWeight) return (+v).toFixed(1) + "kg";
-      return (+v).toFixed(1) + (sl.dataset.unit || "");
+      return (+(+v).toFixed(1)) + (sl.dataset.unit || "");   // L-312: 정수 스펙값 .0 제거
     };
     const loVal = (r && r.min != null) ? toDisplay(r.min) : totalLo;
     const hiVal = (r && r.max != null) ? toDisplay(r.max) : totalHi;
