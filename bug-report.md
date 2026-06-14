@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 990 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1002 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 98 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 86 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -103,6 +103,7 @@
 | 77 | FE(댓글삭제 세션만료·후기카드 날짜 null·댓글 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-009·FE-010·FE-011) |
 | 78 | FE(후기등록 Storage롤백 누락·리뷰날짜 null·renderAccount 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-012·FE-013·FE-014) |
 | 79 | FE(로그아웃 찜동기화 누락·CDN 버전미고정)·BE(graph_full DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-015·FE-016·BE-005) |
+| 80 | FE(openLogModal Storage 이미지 누수)·BE(crosssource con.close 미도달·enrich_details con 누수) 자동루프 | 2026-06-14 | 3건 (FE-017·BE-006·BE-007) |
 
 ---
 
@@ -7449,7 +7450,7 @@
 
 ---
 
-### [L-280] — `goalBar` / set list — `data-si` 속성이 배열 인덱스·세트 ID 두 가지 의미로 혼용
+### [L-280] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: data-si는 .pli/.pli-wish(인덱스)와 set-goal-set(세트id)에서 쓰이나 셀렉터·핸들러 스코프가 분리돼 교차 오독 없음=명명 이슈) — `goalBar` / set list — `data-si` 속성이 배열 인덱스·세트 ID 두 가지 의미로 혼용
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -8564,7 +8565,7 @@
 
 ---
 
-### [L-322] — `buildFilters` — `fsheet-head`/`fsheet-foot` DOM 잔류 시 카테고리 재진입에서 중복 삽입
+### [L-322] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: filtoggle·fsheet-head·fsheet-foot가 단일 !getElementById("filtoggle") 가드 아래 함께 삽입 → 중복 방지) — `buildFilters` — `fsheet-head`/`fsheet-foot` DOM 잔류 시 카테고리 재진입에서 중복 삽입
 
 - **영역:** 프론트엔드 — 필터 UI
 - **심각도:** 🟢 Low
@@ -8740,7 +8741,7 @@
 
 ---
 
-### [L-326] — `_reviewCard` — 전체 리뷰 본문(최대 2000자) DOM 삽입으로 레이아웃 오버플로 위험
+### [L-326] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: .pmrv-card.textcard .pmrv-q가 -webkit-line-clamp:6+overflow:hidden로 카드 클램프, 전문은 상세 라이트박스 전용) — `_reviewCard` — 전체 리뷰 본문(최대 2000자) DOM 삽입으로 레이아웃 오버플로 위험
 
 - **영역:** 프론트엔드 — 리뷰
 - **심각도:** 🟢 Low
@@ -8752,7 +8753,7 @@
 
 ---
 
-### [L-327] — `acc-set-del` — 더블클릭 시 재렌더 후 stale `data-si` 인덱스로 엉뚱한 세트 삭제
+### [L-327] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: M-272로 acc-set-del은 data-sid(안정 id) findIndex 삭제 — 인덱스 미사용) — `acc-set-del` — 더블클릭 시 재렌더 후 stale `data-si` 인덱스로 엉뚱한 세트 삭제
 
 - **영역:** 프론트엔드 — 계정/세트
 - **심각도:** 🟢 Low
@@ -8838,7 +8839,7 @@
 
 ---
 
-### [L-328] — `openSetDetail` `qty-dec` 핸들러 — stale `data-ii` 인덱스로 잘못된 아이템 수량 변경
+### [L-328] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: M-253/M-318로 qty-dec 클릭 즉시 qty버튼 전체 disabled → 재렌더 중 stale 더블탭 차단) — `openSetDetail` `qty-dec` 핸들러 — stale `data-ii` 인덱스로 잘못된 아이템 수량 변경
 
 - **영역:** 프론트엔드 — 세트 상세
 - **심각도:** 🟢 Low
@@ -8862,7 +8863,7 @@
 
 ---
 
-### [L-330] — `renderNicknameModal` — 닉네임 저장 버튼 더블클릭 경합으로 `setNickname` 중복 호출 가능
+### [L-330] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: account.html 닉네임 save 핸들러가 동기 enable(false)로 즉시 비활성화 → 중복 setNickname 차단) — `renderNicknameModal` — 닉네임 저장 버튼 더블클릭 경합으로 `setNickname` 중복 호출 가능
 
 - **영역:** 프론트엔드 — 계정/닉네임
 - **심각도:** 🟢 Low
@@ -9198,7 +9199,7 @@
 
 ---
 
-### [L-345] — `openSetModal` — Unicode 비공백(NBSP·ZWS) 세트명 유효성 검사 미통과
+### [L-345] ✅ 해결완료(2026-06-14, L-bundle-S: openSetModal 새 세트명 검증에서 zero-width(ZWSP/ZWNJ/ZWJ/BOM) 제거 후 trim — 보이지 않는 빈 이름 통과 차단. NBSP는 trim이 처리) — `openSetModal` — Unicode 비공백(NBSP·ZWS) 세트명 유효성 검사 미통과
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -9222,7 +9223,7 @@
 
 ---
 
-### [L-347] — `openProduct` `wbtn.onclick` — 찜 토글 전 불필요한 innerHTML 재설정으로 아이콘 순간 깜빡임
+### [L-347] ✅ 해결완료(2026-06-14, L-bundle-S: .pmwish는 생성 시 BOOKMARK_SVG 보유+.on 클래스가 시각상태 담당 → onclick의 중복 innerHTML 재설정 제거로 아이콘 깜빡임 해소) — `openProduct` `wbtn.onclick` — 찜 토글 전 불필요한 innerHTML 재설정으로 아이콘 순간 깜빡임
 
 - **영역:** 프론트엔드 — 상품 모달/찜
 - **심각도:** 🟢 Low
@@ -9690,7 +9691,7 @@
 
 ---
 
-### [L-364] — `openSetModal` — set-btn `setTimeout` ID 미저장으로 모달 조기 닫기 시 이중 close·confirm 오작동
+### [L-364] ✅ 해결완료(2026-06-14, L-bundle-S: openSetModal add-후-닫기 setTimeout id를 modal._addTid로 저장하고 close()에서 clearTimeout → 조기닫기/재오픈 시 새 모달 오닫힘·중복 confirm 방지) — `openSetModal` — set-btn `setTimeout` ID 미저장으로 모달 조기 닫기 시 이중 close·confirm 오작동
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -12347,7 +12348,7 @@
 
 ---
 
-### [L-454] — `showSetConfirm` — `weight_g` 비숫자 문자열 시 NaN 전파 → `"NaNg"` 표시
+### [L-454] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: showSetConfirm은 tw가 NaN이면 tw>0/>=1000 모두 false → wStr=null로 누락, "NaNg" 미발생) — `showSetConfirm` — `weight_g` 비숫자 문자열 시 NaN 전파 → `"NaNg"` 표시
 
 - **영역:** 프론트엔드 — 세트 확인 카드
 - **심각도:** 🟢 Low
@@ -12829,7 +12830,7 @@
 
 ---
 
-### [L-468] — `showSetConfirm()` — `sac-bar` 연속 담기 시 `bar.offsetWidth` 강제 리플로우 누락 → 프로그레스 바 재시작 불완전
+### [L-468] ✅ 해결완료(2026-06-14, L-bundle-S: sac-bar 진행바 재시작 시 scaleX(1) 후 void offsetWidth 강제 리플로우 추가 → 신규 요소도 1→0 애니메이션 보장) — `showSetConfirm()` — `sac-bar` 연속 담기 시 `bar.offsetWidth` 강제 리플로우 누락 → 프로그레스 바 재시작 불완전
 
 - **영역:** 프론트엔드 — 세트 담기 확인 카드
 - **심각도:** 🟢 Low
@@ -13020,7 +13021,7 @@
 
 ---
 
-### [L-476] — `_paintWishBtn` — `data-key` 없는 `#item-wish` 버튼이 모든 찜 토글 시 오갱신
+### [L-476] ✅ 검토완료·현행유지(2026-06-14, L-bundle-S: #item-wish는 단일상품 item-N.html에만 존재 → data-key 없는 폴백이 항상 그 유일 상품을 가리켜 안전. 정식화는 build-item-pages 재생성 필요라 범위 외) — `_paintWishBtn` — `data-key` 없는 `#item-wish` 버튼이 모든 찜 토글 시 오갱신
 
 - **영역:** 프론트엔드 — 찜/위시리스트
 - **심각도:** 🟢 Low
@@ -13403,6 +13404,50 @@
 - **원인:** [pipeline/graph_full.py:90](pipeline/graph_full.py) — `try/finally` 블록 없이 `con.close()` 단순 호출.
 - **수정안:** `try: ... finally: con.close()` 패턴으로 감싸거나 `with sqlite3.connect(...) as con:` 사용.
 - **파일:** [pipeline/graph_full.py](pipeline/graph_full.py):86-91
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 80 (2026-06-14 자동루프)
+
+### [FE-017] — `openLogModal()` — 이미지 업로드 성공 후 `posts.insert()` 실패 시 Storage 파일 미삭제(고아 파일 누수)
+
+- **영역:** 프론트엔드 — 커뮤니티 로그 등록 / Supabase Storage
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `openLogModal()` form.onsubmit에서 이미지 업로드 성공(`supabase.storage.upload`) 후 `supabase.from("posts").insert()` 에서 에러가 반환되면, catch 블록(line 4306)이 Storage 파일을 삭제하지 않아 `post-images` 버킷에 고아 파일이 영구 잔류. `wireReviews()`(FE-012)는 적어도 `removeUploadedImages` 호출이 있으나 `openLogModal`은 호출 자체가 없음.
+- **원인:** [site/app.js:4299-4309](site/app.js) — `catch(err)` 블록에서 `removeUploadedImages([path])` 누락. `path` 변수(line 4283)는 try 블록 내부라 catch에서 접근 불가 — path 선언을 try 바깥으로 끌어올린 뒤 catch에서 정리해야 함.
+- **수정안:** `let path = null;` 을 try 바깥에 선언 → try 안에서 `path = \`${uid}/${Date.now()}.${ext}\`` 할당 → catch 블록에 `if (path) await removeUploadedImages([path]);` 추가.
+- **파일:** [site/app.js](site/app.js):4281-4309
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [BE-006] — `crosssource.py` — 외부 예외 시 `con.close()` 미도달·`print` 도달 불가
+
+- **영역:** 백엔드 파이프라인 — crosssource / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `crosssource.py:216` 의 `raise` 가 실행되면 line 217 `print`와 line 218 `con.close()` 모두 건너뛰어진다. 예외 전파 중 SQLite 연결이 닫히지 않아 WAL 파일이 잔류할 수 있음(BE-004·BE-005와 동일 패턴).
+- **원인:** [pipeline/crosssource.py:213-218](pipeline/crosssource.py) — `except` 블록에서 `raise` 후 말미 `con.close()`가 도달 불가.
+- **수정안:** `finally: con.close()` 추가, 또는 `except` 블록 내 `raise` 전에 `con.close()` 호출.
+- **파일:** [pipeline/crosssource.py](pipeline/crosssource.py):213-218
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [BE-007] — `enrich_details.py` `main()` — DB 쿼리·루프 구간에서 예외 시 `con.close()` 미실행
+
+- **영역:** 백엔드 파이프라인 — enrich_details / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `main()`에서 `con = sqlite3.connect(...)` 후 `try/finally` 없이 targets 쿼리(line 71-88)·루프(line 98-108)를 실행. 해당 구간에서 예외 발생 시 `con.close()`가 불리지 않는다. line 133 `finally: con.close()`는 line 111 이후의 try 블록만 보호하며, 조기 `return` 경로(line 93)에서만 명시적 `con.close()` 호출이 있어 비일관성이 있음.
+- **원인:** [pipeline/enrich_details.py:67-108](pipeline/enrich_details.py) — targets 쿼리·루프 구간 전체가 `try/finally` 바깥.
+- **수정안:** `con = sqlite3.connect(...)` 직후부터 전체를 `try: ... finally: con.close()` 로 감싸거나 `with sqlite3.connect(...) as con:` 사용.
+- **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py):67-134
 - **우선순위:** 낮음
 - **상태:** 미해결
 
