@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 867 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 882 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 11 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 222 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 207 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -5184,7 +5184,7 @@
 
 ---
 
-### [L-224] — `openProduct()` — 동일 모달 재사용 시 이전 `spec-tip-bubble` 이벤트 핸들러 미정리
+### [L-224] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — openProduct는 매 호출 modal.innerHTML 재생성(2156)으로 구 .spec-tip-btn 리스너 폐기, 버블은 싱글톤 hide(M-186). 누적 없음. — `openProduct()` — 동일 모달 재사용 시 이전 `spec-tip-bubble` 이벤트 핸들러 미정리
 
 - **영역:** 프론트엔드 — 상품 상세 모달
 - **심각도:** 🟢 Low
@@ -6011,7 +6011,7 @@
 
 ---
 
-### [L-243] — `openReplaceModal` — 재호출 시 이전 ESC keydown 리스너 누적
+### [L-243] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — line 693 onKey 재등록 가드 존재(주석 L-243). 기수정. — `openReplaceModal` — 재호출 시 이전 ESC keydown 리스너 누적
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -6102,7 +6102,7 @@
 
 ---
 
-### [L-245] — `openReplaceModal` — Tab 포커스 트랩 없어 키보드 사용자가 모달 밖으로 포커스 이탈
+### [L-245] ✅ 해결완료(2026-06-14, D) — _trapTab 공유 헬퍼로 openReplaceModal·openLogModal onKey에 Tab 트랩 추가. — `openReplaceModal` — Tab 포커스 트랩 없어 키보드 사용자가 모달 밖으로 포커스 이탈
 
 - **영역:** 프론트엔드 — 접근성
 - **심각도:** 🟢 Low
@@ -6188,7 +6188,7 @@
 
 ---
 
-### [L-249] — `_showAuthGateModal` — ESC 리스너가 모달 `remove()` 후에도 document에 잔류
+### [L-249] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — close()가 onKey 제거(160) + 재오픈 가드(159, 주석 L-249). 기수정. — `_showAuthGateModal` — ESC 리스너가 모달 `remove()` 후에도 document에 잔류
 
 - **발견일시:** 2026-06-13
 - **증상:** `_showAuthGateModal`(app.js line 163~165)에서 ESC 키 리스너는 ESC를 눌렀을 때 `close()`를 호출하고 자신을 제거한다. 그런데 "로그인하기" 링크를 클릭해 페이지를 이동하면 line 165의 `agm-btn` click 핸들러만 `removeEventListener`를 호출하는데, 이 시점에 SPA 탐색 없이 실제 `<a>` 클릭이면 페이지 언로드로 자동 정리되므로 무해하다. 그러나 `requireLogin`이 여러 번 연속 호출되면(`_showAuthGateModal` 반복 호출) 직전 모달 인스턴스의 `onKey` 참조는 `document.getElementById('auth-gate-modal')?.remove()`로 DOM은 지워지지만 `document`의 keydown에서는 제거되지 않은 채로 남아 ESC를 누를 때마다 이미 제거된 모달의 `close()`가 no-op로 계속 실행된다(리스너 누적).
@@ -6441,7 +6441,7 @@
 
 ---
 
-### [L-255] — `openReviewDetail` — 반복 호출 시 capture keydown 리스너 누적
+### [L-255] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — capture onKey 재등록 가드(2414, 주석 L-255). 기수정. — `openReviewDetail` — 반복 호출 시 capture keydown 리스너 누적
 
 - **영역:** 프론트엔드 — 리뷰 상세
 - **심각도:** 🟢 Low
@@ -6903,7 +6903,7 @@
 
 ---
 
-### [L-262] — `buildFilters` — 필터 시트 ESC 리스너 전역 등록 후 미제거, SPA 전환 시 detached DOM 참조
+### [L-262] ✅ 검토완료·현행유지(2026-06-14, D·설계) — _filterSheetKeyHandler 재등록 가드(1850), 핸들러가 aside.open 체크라 detached 시 no-op, 전면 페이지 네비로 리스너 폐기. — `buildFilters` — 필터 시트 ESC 리스너 전역 등록 후 미제거, SPA 전환 시 detached DOM 참조
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -7634,7 +7634,7 @@
 
 ---
 
-### [L-287] — `_showAuthGateModal` — 배경 클릭 `close()` 시 `keydown` 리스너 미제거
+### [L-287] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — 백드롭 클릭(163)→close()→onKey 제거(160). 기수정. — `_showAuthGateModal` — 배경 클릭 `close()` 시 `keydown` 리스너 미제거
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟢 Low
@@ -8341,7 +8341,7 @@
 
 ---
 
-### [L-312] — `openSetDetail` — Tab 포커스 트랩 미구현 (WCAG 2.1.2 위반)
+### [L-312] ✅ 해결완료(2026-06-14, D) — openSetDetail _onKey에 _trapTab Tab 트랩 추가. — `openSetDetail` — Tab 포커스 트랩 미구현 (WCAG 2.1.2 위반)
 
 - **영역:** 프론트엔드 — 접근성
 - **심각도:** 🟢 Low
@@ -9179,7 +9179,7 @@
 
 ---
 
-### [L-344] — `_showAuthGateModal` ESC 리스너 — SPA 라우팅 전환 시 cleanup 미실행
+### [L-344] ✅ 검토완료·현행유지(2026-06-14, D·설계) — 재오픈 가드(159)+SPA 라우터 부재(account.html 전면 이동), close 미경유 누수 경로 없음. — `_showAuthGateModal` ESC 리스너 — SPA 라우팅 전환 시 cleanup 미실행
 
 - **영역:** 프론트엔드 — 인증 게이트
 - **심각도:** 🟢 Low
@@ -9203,7 +9203,7 @@
 
 ---
 
-### [L-346] — `_filterSheetKeyHandler` — 카테고리 페이지 이탈 후 ESC 핸들러 미제거로 CPU 낭비
+### [L-346] ✅ 검토완료·현행유지(2026-06-14, D·설계) — L-262와 동일(필터시트 핸들러 재등록 가드+페이지 네비 폐기). — `_filterSheetKeyHandler` — 카테고리 페이지 이탈 후 ESC 핸들러 미제거로 CPU 낭비
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -9407,7 +9407,7 @@
 
 ---
 
-### [L-353] — `openReviewDetail` `close()` — 부모 모달 스펙 툴팁 잔류
+### [L-353] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — 상품모달 close가 spec-tip 버블 hide(2259, M-425), 버블 싱글톤이라 잔류 없음. — `openReviewDetail` `close()` — 부모 모달 스펙 툴팁 잔류
 
 - **영역:** 프론트엔드 — 리뷰 상세
 - **심각도:** 🟢 Low
@@ -9443,7 +9443,7 @@
 
 ---
 
-### [L-356] — `view-set` 공유 세트 모달 — Tab 포커스 트랩 미구현
+### [L-356] ✅ 해결완료(2026-06-14, D) — view-set 모달 _vsEsc에 _trapTab 적용. — `view-set` 공유 세트 모달 — Tab 포커스 트랩 미구현
 
 - **영역:** 프론트엔드 — 세트 공유
 - **심각도:** 🟢 Low
@@ -12026,7 +12026,7 @@
 
 ---
 
-### [L-440] — `openSetDetail` — `modal._onKey = null` 상태에서 `classList.add("on")` 실행 → 빠른 ESC 시 이전 리스너 제거 실패
+### [L-440] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — openSetDetail에 modal._onKey=null 설정 경로 없음(3157 remove-only), close 후 재오픈도 remove 무해. 오탐. — `openSetDetail` — `modal._onKey = null` 상태에서 `classList.add("on")` 실행 → 빠른 ESC 시 이전 리스너 제거 실패
 
 - **영역:** 프론트엔드 — 세트 상세 모달
 - **심각도:** 🟢 Low
@@ -12190,7 +12190,7 @@
 
 ---
 
-### [L-446] — `openSetModal` `close()` — `removeEventListener` 전에 `modal._onKey = null` 설정 → 핸들러 해제 실패 가능
+### [L-446] ✅ 검토완료·현행유지(2026-06-14, D·코드 실대조) — openSetModal close()는 removeEventListener(modal._onKey) 후 null 설정(615), 순서 정확. 오탐. — `openSetModal` `close()` — `removeEventListener` 전에 `modal._onKey = null` 설정 → 핸들러 해제 실패 가능
 
 - **영역:** 프론트엔드 — 장비 꾸러미 모달
 - **심각도:** 🟢 Low
@@ -12352,7 +12352,7 @@
 
 ---
 
-### [L-455] — `_showAuthGateModal` — Tab 키 focus trap 미구현 → 모달 열린 상태에서 포커스 배경 요소로 이탈
+### [L-455] ✅ 해결완료(2026-06-14, D) — _showAuthGateModal onKey에 _trapTab 적용(라이브 검증: Tab/Shift+Tab 순환·ESC). — `_showAuthGateModal` — Tab 키 focus trap 미구현 → 모달 열린 상태에서 포커스 배경 요소로 이탈
 
 - **영역:** 프론트엔드 — 인증 게이트 모달 / 접근성
 - **심각도:** 🟢 Low

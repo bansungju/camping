@@ -141,6 +141,16 @@ async function requireLogin({ action, returnTo, params } = {}) {
   return false;
 }
 
+// L-245/356/455/312: 모달 Tab 포커스 트랩 — 컨테이너 내 포커스 가능 요소를 순환(WCAG 2.1.2)
+function _trapTab(e, container) {
+  if (e.key !== "Tab" || !container) return;
+  const f = container.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
 function _showAuthGateModal() {
   document.getElementById('auth-gate-modal')?.remove();
   const m = document.createElement('div');
@@ -158,7 +168,7 @@ function _showAuthGateModal() {
   // M-247/M-259/L-249: 취소·백드롭·ESC 등 모든 닫기에서 keydown 리스너 제거 + 재오픈 시 이전 리스너 정리(누적 방지)
   if (window._authGateOnKey) document.removeEventListener('keydown', window._authGateOnKey);
   const close = () => { m.remove(); document.removeEventListener('keydown', onKey); window._authGateOnKey = null; };
-  const onKey = e => { if (e.key === 'Escape') close(); };
+  const onKey = e => { if (e.key === 'Escape') { close(); return; } _trapTab(e, m); };   // L-455: Tab 포커스 트랩
   m.querySelector('.agm-cancel').onclick = close;
   m.onclick = e => { if (e.target === m) close(); };
   window._authGateOnKey = onKey;
@@ -680,7 +690,7 @@ function openReplaceModal(setId, item, slot) {
   modal.classList.add("on");
   const prevFocus = document.activeElement;
   const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
-  const onKey = e => { if (e.key === "Escape") close(); };
+  const onKey = e => { if (e.key === "Escape") { close(); return; } _trapTab(e, modal); };   // L-245: Tab 포커스 트랩
   if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // L-243: 재호출 시 onKey 누적 방지
   modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
@@ -3161,7 +3171,7 @@ function openSetDetail(sid) {
     document.removeEventListener("keydown", modal._onKey);
     if (modal._prevFocus && modal._prevFocus.focus) modal._prevFocus.focus();
   };
-  modal._onKey = e => { if (e.key === "Escape") close(); };
+  modal._onKey = e => { if (e.key === "Escape") { close(); return; } _trapTab(e, modal); };   // L-312: Tab 포커스 트랩
   document.addEventListener("keydown", modal._onKey);
   modal.querySelector(".pmx").onclick = close;
   modal.onclick = e => { if (e.target === modal) close(); };
@@ -4056,7 +4066,7 @@ function openLogDetail(p) {
       }
     };
   }
-  const onKey = e => { if (e.key === "Escape") close(); };
+  const onKey = e => { if (e.key === "Escape") { close(); return; } _trapTab(e, modal); };   // L-245: Tab 포커스 트랩
   if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // M-193: 로그 연속 클릭 시 onKey 누적 → ESC 중복 close 방지
   modal._onKey = onKey;
   document.addEventListener("keydown", onKey);
@@ -4356,7 +4366,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // L-76: 공유 세트 열람 시 배경 개인 데이터 섹션 숨김
       const hiddenSections = ["wish-section","sets-section","logs-section","settings-section","profile-section"].map(id => document.getElementById(id)).filter(Boolean);
       hiddenSections.forEach(el => { el._vsDisplay = el.style.display; el.style.display = "none"; });
-      const _vsEsc = e => { if (e.key === "Escape") closeVs(); };
+      const _vsEsc = e => { if (e.key === "Escape") { closeVs(); return; } _trapTab(e, modal); };   // L-356: Tab 포커스 트랩
       const closeVs = () => {
         document.removeEventListener("keydown", _vsEsc);
         modal.remove();
