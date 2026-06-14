@@ -2810,7 +2810,8 @@ function draw() {
        ${hasFilter ? `<button type="button" class="achip clear" id="emptyclear">필터 전체 해제</button>` : ""}
        ${STATE.q ? `<a href="/?q=${encodeURIComponent(STATE.q)}" class="achip" style="text-decoration:none;display:inline-block;margin-top:6px">전체 카테고리에서 "${esc(STATE.q)}" 검색 →</a>` : ""}</div>`;
   document.querySelectorAll("#list .pli").forEach(el => {
-    el.onclick = e => { e.preventDefault(); openProduct(rows[+el.dataset.mi]); };
+    // L-234: Ctrl/Cmd/Shift+클릭(또는 새 탭 의도)은 막지 않고 <a href>의 기본 동작(정적 상세 페이지 새 탭)을 허용
+    el.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); openProduct(rows[+el.dataset.mi]); };
     el.onkeydown = e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); openProduct(rows[+el.dataset.mi]); } };  // M-565: Enter 키 처리 추가
   });
   // 찜 토글(카드 클릭=모달과 분리 → stopPropagation)
