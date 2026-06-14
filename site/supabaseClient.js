@@ -394,7 +394,7 @@ export async function loadRemoteGearSets() {
   if (!user) return null
   const { data, error } = await supabase
     .from('gear_sets')
-    .select('id, title, style, items, completeness, created_at, updated_at')
+    .select('id, title, type, style, items, completeness, created_at, updated_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
@@ -406,9 +406,16 @@ export async function upsertGearSet(set, userId) {
   const payload = {
     user_id: userId,
     title: set.title || '새 세트',
+    // H-143: 세트 type(auto/backpacking/carcamp) 영속화 — 슬롯·완성도 기준. 미지정 시 'auto'.
+    type: set.type || 'auto',
     style: set.style || null,
     items: set.items || [],
-    completeness: set.items?.length || 0,
+    // H-146: completeness는 0~100 퍼센트(DB CHECK). 총 아이템 수를 그대로 넣으면 의미 불일치 +
+    //   100 초과 시 CHECK 위반으로 upsert 실패 → 호출부가 계산한 set.completeness(pct)를 우선 사용,
+    //   없으면 0~100으로 클램프(크래시 방지).
+    completeness: (typeof set.completeness === 'number' && set.completeness >= 0 && set.completeness <= 100)
+      ? Math.round(set.completeness)
+      : Math.min(100, set.items?.length || 0),
   }
   if (set.remoteId) {
     const { error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId).eq('user_id', userId)  // M-566: user_id 필터 추가 — RLS 오류 시 타인 세트 덮어쓰기 방지
