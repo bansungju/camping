@@ -6,7 +6,7 @@ VALUE-METRIC-DESIGN.md (커밋 79a342d5e) 기반.
 단일지표 카테고리(firepit): V = price / weight_min (원/g, 낮을수록 좋음) → 별점.
 """
 import argparse, os, sqlite3
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -271,8 +271,7 @@ def dry_run(db_path: str):
         covered = sum(1 for r in results if r["stars"] is not None)
         pct = covered / total * 100 if total else 0
 
-        # 별점 분포
-        from collections import Counter
+        # 별점 분포 (L-438: Counter import는 모듈 상단으로 이동 — 루프 내 반복 import 제거)
         dist = Counter(r["stars"] for r in results if r["stars"] is not None)
 
         print(f"\n[{slug}] 전체={total} 커버리지={covered}({pct:.0f}%)")

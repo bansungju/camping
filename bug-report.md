@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 1032 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1037 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 56 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 51 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -7525,7 +7525,7 @@
 
 ---
 
-### [L-282] — `affiliate_links.py` `sample` — `kind='product'` 시 `naver_fallback` KeyError
+### [L-282] ✅ 검토완료·현행유지(2026-06-14, L-bundle-X: M-287/L-188로 sample 출력이 link.get("naver_fallback","(직접링크)")로 KeyError 방지. resolve_buy_link product 분기에 키 없어도 안전) — `affiliate_links.py` `sample` — `kind='product'` 시 `naver_fallback` KeyError
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8127,7 +8127,7 @@
 
 ---
 
-### [L-304] — `affiliate_links.py` `sample` — `GROUP BY b.name_ko` 비집계 컬럼 비결정적 선택
+### [L-304] ✅ 검토완료·현행유지(2026-06-14, L-bundle-X: M-536으로 GROUP BY 비결정 선택을 ROW_NUMBER() OVER(PARTITION BY b.name_ko ORDER BY p.id) WHERE rn=1로 대체 → 브랜드 대표행 결정화) — `affiliate_links.py` `sample` — `GROUP BY b.name_ko` 비집계 컬럼 비결정적 선택
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -9358,7 +9358,7 @@
 
 ---
 
-### [L-351] — `affiliate_links.py` `sample()` — 쿠팡 제품 링크 행에서 `naver_fallback` 키 없어 `KeyError`
+### [L-351] ✅ 검토완료·현행유지(2026-06-14, L-bundle-X: L-282와 동일 — sample()의 naver_fallback 접근이 .get 기본값으로 가드(M-287/L-188), 쿠팡 직접링크 행에서도 KeyError 미발생) — `affiliate_links.py` `sample()` — 쿠팡 제품 링크 행에서 `naver_fallback` 키 없어 `KeyError`
 
 - **영역:** 백엔드 — 제휴 링크
 - **심각도:** 🟢 Low
@@ -11014,7 +11014,7 @@
 
 ---
 
-### [L-408] — `value_metric.py` `dry_run()` — 스펙 쿼리 `ORDER BY` 없어 export와 다른 값 반환
+### [L-408] ✅ 검토완료·현행유지(2026-06-14, L-bundle-Y: compute_value_score는 값 기반 백분위(동점 평균처리)+rep=MIN(p.id) 결정적이라 입력 순서 무관 → ORDER BY 부재가 모델별 stars/display 값에 영향 없음(진단 출력 순서만 비결정)) — `value_metric.py` `dry_run()` — 스펙 쿼리 `ORDER BY` 없어 export와 다른 값 반환
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -11961,7 +11961,7 @@
 
 ---
 
-### [L-438] — `value_metric.py` — 루프 내부에서 반복 `from collections import Counter` (dead import 위치)
+### [L-438] ✅ 해결완료(2026-06-14, L-bundle-Y: dry_run 카테고리 루프 내 "from collections import Counter"를 모듈 상단(defaultdict와 함께)으로 이동 — 반복 import/dead 위치 제거) — `value_metric.py` — 루프 내부에서 반복 `from collections import Counter` (dead import 위치)
 
 - **영역:** 백엔드 — 파이프라인/value_metric
 - **심각도:** 🟢 Low
