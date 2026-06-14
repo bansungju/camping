@@ -11,7 +11,8 @@
 | ⏸ 보류 | 11 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
 | ⬜ 미처리 | 253 | **전원 L(저위험)** — 별도 세션 예정 |
 
-> **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146, 마이그레이션 024 별도적용 필요) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
+> **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
+> **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
 > 각 ✅ 항목 헤더에 수정/확인 요약 1줄 동봉. 마킹 규칙: ✅ 해결완료 · ✅ 검토완료·현행유지(변경 시 회귀) · ⏸ 보류(사유).
 
 ---
@@ -575,7 +576,7 @@
 - **증상:** 비로그인 상태에서 `#sets-section`이 표시되지만 찜 섹션(`#wish-synchint`)과 달리 "로그인하면 세트가 동기화됩니다" 류의 안내 문구가 없음. 세트가 로컬스토리지에만 저장되고 로그인 후 동기화되지 않음을 사용자가 모름.
 - **재현:** 비로그인 → account.html → 세트 섹션 확인 → 동기화 힌트 없음 확인
 - **백엔드 근본 차단요인 발견·수정(2026-06-11):** 로그인해도 **세트 원격 동기화가 실제로 동작 불가** 상태였음 — 앱은 `upsertGearSet`/`deleteRemoteGearSet`/fetchGearSets로 `gear_sets` 테이블에 동기화하는데, ① `gear_sets` 테이블이 **라이브 미적용**(REST 404 PGRST205), ② 게다가 `006_gear_sets.sql`이 테이블·RLS 정책만 있고 **GRANT 문이 전무** = 적용해도 004와 동일한 함정으로 모든 작업이 `42501`로 막힘. → `006`에 `GRANT SELECT TO anon,authenticated` + `GRANT INSERT,UPDATE,DELETE TO authenticated` 추가(grant 누락 보정). [supabase/migrations/006_gear_sets.sql](supabase/migrations/006_gear_sets.sql)
-- **⚠️ 남은 작업:** 세트 동기화를 켜려면 대시보드에서 `006`(grant 포함) 1회 적용(APPLY.md "7. 세트 동기화"). 적용 후엔 동기화가 실작동하므로 M-71/M-63의 "동기화 안내" 프론트 문구도 사실과 일치하게 됨(프론트 문구 추가는 별도).
+- **✅ 적용완료(2026-06-14, 사용자 대시보드 RUN):** `006`(grant 포함) + `024_gear_sets_type` 적용 → 세트 동기화 실작동. M-71/M-63 "동기화 안내" 문구도 사실과 일치(프론트 문구 추가는 별도).
 
 ### [M-72] ✅ 해결완료 — 세트 자동 생성 이름에 날짜만 포함 — 같은 날 복수 저장 시 이름 중복
 - **해결(2026-06-11):** 찜→세트 저장 시 동일 날짜 기존 세트 수 카운트 후 ` (2)`, ` (3)` 접미사 자동 부여. [site/app.js](site/app.js)
@@ -11800,7 +11801,7 @@
 ---
 
 ### [H-143] ✅ 해결완료(2026-06-14, SYNC) — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
-> 수정: 마이그레이션 024_gear_sets_type.sql(type 컬럼 추가) + loadRemoteGearSets select에 type + upsertGearSet payload에 type + account.html newFromRemote 매핑에 `type: r.type||'auto'`. ⚠️ 라이브 적용: Supabase SQL Editor에 024 실행 필요.
+> 수정: 마이그레이션 024_gear_sets_type.sql(type 컬럼 추가) + loadRemoteGearSets select에 type + upsertGearSet payload에 type + account.html newFromRemote 매핑에 `type: r.type||'auto'`. ✅ 라이브 적용완료(2026-06-14, 사용자 대시보드 RUN).
 
 - **영역:** 프론트엔드 — 기어세트 동기화
 - **심각도:** 🔴 High
