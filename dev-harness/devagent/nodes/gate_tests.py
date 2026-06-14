@@ -77,7 +77,10 @@ def run(state) -> dict:
 
 def _no_tests_collected(out: str) -> bool:
     o = out.lower()
-    return "no tests ran" in o or "collected 0 items" in o
+    # pytest + jest/npm 무테스트 신호 모두 인식(L-466: 프론트 무테스트가 fail→skip로 정정)
+    return ("no tests ran" in o or "collected 0 items" in o            # pytest
+            or "no tests found" in o or "no test files found" in o      # jest
+            or "no test specified" in o)                                # npm 기본 스크립트
 
 
 def _pytest_importable() -> bool:

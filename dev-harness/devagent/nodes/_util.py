@@ -26,7 +26,12 @@ def run_tool(cmd: "list[str]", cwd: str, timeout: int = 120) -> "tuple[int, str]
     """도구 실행 → (exit_code, output). 도구 미설치(FileNotFoundError) → (-1, '__MISSING__')."""
     try:
         proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
-        return proc.returncode, (proc.stdout + proc.stderr)[:4000]
+        out = proc.stdout + proc.stderr
+        # L-469: 단순 [:4000] head 절단은 테스트/린트 에러 summary(보통 출력 끝)를 날려 게이트 오판 →
+        #   head+tail 보존으로 시작과 마지막 에러 메시지를 모두 남긴다.
+        if len(out) > 4000:
+            out = out[:2000] + "\n…(중략)…\n" + out[-2000:]
+        return proc.returncode, out
     except FileNotFoundError:
         return -1, "__MISSING__"
     except subprocess.TimeoutExpired:

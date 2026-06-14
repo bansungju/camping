@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 955 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 969 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 133 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 119 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -100,6 +100,7 @@
 | 74 | BE(coupang_runner)·FE(logFeed·bestGear) 자동루프 | 2026-06-14 | 3건 (BE-003·FE-002·FE-003) |
 | 75 | FE(logModal ESC누적·세션만료·파일업로드) 자동루프 | 2026-06-14 | 3건 (FE-004·FE-005·FE-006) |
 | 76 | FE(JSON-LD SearchAction·renderHotSection폴백)·BE(DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-007·FE-008·BE-004) |
+| 77 | FE(댓글삭제 세션만료·후기카드 날짜 null·댓글 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-009·FE-010·FE-011) |
 
 ---
 
@@ -9940,7 +9941,7 @@
 
 ---
 
-### [L-374] — `dev-harness/devagent/nodes/apply.py` — 경로 탈출 검사 전 정상 파일 쓰기 완료 (부분 적용 상태)
+### [L-374] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — 경로탈출 체크(62)가 파일별 쓰기(65-74) 전에 위치, 탈출 파일은 미기록. 워크트리는 라운드마다 reset --hard(30) + escaped 시 fail로 publish 차단. — `dev-harness/devagent/nodes/apply.py` — 경로 탈출 검사 전 정상 파일 쓰기 완료 (부분 적용 상태)
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟢 Low
@@ -9952,7 +9953,7 @@
 
 ---
 
-### [L-375] — `dev-harness/devagent/__main__.py` — docstring에 `--validate` 옵션 언급되나 argparse에 미정의
+### [L-375] ✅ 해결완료(2026-06-14, P) — __main__ docstring의 미정의 --validate를 실제 인자 --gc로 정정. — `dev-harness/devagent/__main__.py` — docstring에 `--validate` 옵션 언급되나 argparse에 미정의
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟢 Low
@@ -9964,7 +9965,7 @@
 
 ---
 
-### [L-376] — `dev-harness/devagent/nodes/evidence_collector.py` — 워크트리 cwd와 스크립트 경로 기준 불일치
+### [L-376] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — 존재체크는 REPO_ROOT 프록시, 실행은 cwd=wt. 파이프라인 스크립트는 양쪽 존재, 부재 시 python3 에러로 fail 가시화(무음 아님). — `dev-harness/devagent/nodes/evidence_collector.py` — 워크트리 cwd와 스크립트 경로 기준 불일치
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟢 Low
@@ -10264,7 +10265,7 @@
 
 ---
 
-### [L-382] — `graph.py` `contract_checker` — `approved_human` 매 pass 초기화 → LLM 평가 루프 시 사전 주입 승인 소실
+### [L-382] ✅ 검토완료·현행유지(2026-06-14, P·보안) — approved_human=[] 리셋은 cycle2 M4 사전승인 주입 우회 차단 보안조치(주석 명시). 의도된 동작. — `graph.py` `contract_checker` — `approved_human` 매 pass 초기화 → LLM 평가 루프 시 사전 주입 승인 소실
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟢 Low
@@ -12146,7 +12147,7 @@
 
 ---
 
-### [L-442] — `devagent/graph.py` `route_after_contract()` — `needs_human` 항목 미완료 시 publish 블록 여부 불명확
+### [L-442] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — needs_human은 route_after_contract 마지막 else로 human_review 라우팅(22-31), 거기서 승인돼야 publish. 블록 흐름 명확. — `devagent/graph.py` `route_after_contract()` — `needs_human` 항목 미완료 시 publish 블록 여부 불명확
 
 - **영역:** 백엔드 — dev-harness
 - **심각도:** 🟢 Low
@@ -12158,7 +12159,7 @@
 
 ---
 
-### [L-443] — `devagent/nodes/_util.py` `run_tool()` — timeout `-2` 반환을 게이트에서 실패와 구분 불가
+### [L-443] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — -1(missing)·-2(timeout)·양수가 distinct sentinel. timeout=비0=실패로 게이트 정상 처리, 출력에 'timeout' 명시. — `devagent/nodes/_util.py` `run_tool()` — timeout `-2` 반환을 게이트에서 실패와 구분 불가
 
 - **영역:** 백엔드 — dev-harness
 - **심각도:** 🟢 Low
@@ -12284,7 +12285,7 @@
 
 ---
 
-### [L-449] — `ledger.py` `_acquire_lock()` — 만료 락 삭제와 재생성 사이 TOCTOU 레이스 컨디션
+### [L-449] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — M-444가 원자적 rename(43)으로 stale 락 회수, 두 프로세스 동시 unlink TOCTOU 해결(rename 단일 승자). 기수정. — `ledger.py` `_acquire_lock()` — 만료 락 삭제와 재생성 사이 TOCTOU 레이스 컨디션
 
 - **영역:** 백엔드 — devagent 원장
 - **심각도:** 🟢 Low
@@ -12296,7 +12297,7 @@
 
 ---
 
-### [L-450] — `progress.py` `append_progress()` — 첫 번째 `find("\n\n")`가 -1이면 두 번째 find가 0부터 탐색 → 헤더 경계 오계산
+### [L-450] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — find('\n\n')가 -1이면 두 번째 find(…,0)도 -1(\n\n 자체 부재) → idx=-1로 M-445 폴백 정상. 오계산 미발생. — `progress.py` `append_progress()` — 첫 번째 `find("\n\n")`가 -1이면 두 번째 find가 0부터 탐색 → 헤더 경계 오계산
 
 - **영역:** 백엔드 — devagent 진행상황 기록
 - **심각도:** 🟢 Low
@@ -12470,7 +12471,7 @@
 
 ---
 
-### [L-456] — `gate_tests.py` — `kind != "feature"` 시 T.2a 결과 항목 누락 → 묵시적 pass 처리
+### [L-456] ✅ 검토완료·현행유지(2026-06-14, P·설계) — T.2a는 feature 결정론 계약, 비-feature(refactor/fix) kind엔 부적용이라 생략이 정확. 묵시적 pass 아닌 inapplicable. — `gate_tests.py` — `kind != "feature"` 시 T.2a 결과 항목 누락 → 묵시적 pass 처리
 
 - **영역:** 백엔드 — dev-harness
 - **심각도:** 🟢 Low
@@ -12672,7 +12673,7 @@
 
 ---
 
-### [L-463] — `gate_lint.py` — `changed_paths` 경로 정규화 없어 "no files found"로 lint skip 가능
+### [L-463] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — changed_paths가 apply.py와 동일 repo-상대 path 반환(_util.py:21), cwd=wt에서 ruff/eslint 정상 해석. git prefix 없음. — `gate_lint.py` — `changed_paths` 경로 정규화 없어 "no files found"로 lint skip 가능
 
 - **영역:** 백엔드 — devagent lint 게이트
 - **심각도:** 🟢 Low
@@ -12802,7 +12803,7 @@
 
 ---
 
-### [L-466] — `gate_tests.py` — npm test "no tests found" 등 Jest 패턴 미매칭 → 0건 결과가 fail 처리
+### [L-466] ✅ 해결완료(2026-06-14, P) — _no_tests_collected에 Jest/npm 무테스트 패턴(no tests found·no test files found·no test specified) 추가, 프론트 무테스트가 fail→skip로 정정. 6케이스 검증. — `gate_tests.py` — npm test "no tests found" 등 Jest 패턴 미매칭 → 0건 결과가 fail 처리
 
 - **영역:** 백엔드 — devagent 게이트
 - **심각도:** 🟢 Low
@@ -12892,7 +12893,7 @@
 
 ---
 
-### [L-469] — `_util.py` `run_tool` — 출력 4000자 고정 절단 → 절단 이후 실제 에러 메시지 누락으로 게이트 오판
+### [L-469] ✅ 해결완료(2026-06-14, P) — run_tool 출력 절단을 head[:4000]→head+tail(2000+2000)로 변경, 테스트/린트 에러 summary(출력 끝) 보존. — `_util.py` `run_tool` — 출력 4000자 고정 절단 → 절단 이후 실제 에러 메시지 누락으로 게이트 오판
 
 - **영역:** 백엔드 — dev-harness 공용 헬퍼
 - **심각도:** 🟢 Low
@@ -12993,7 +12994,7 @@
 
 ---
 
-### [L-474] — `devagent/nodes/apply.py` — `is_binary` 체크가 `status==deleted` 이전에 오면 바이너리 파일 삭제 묵살 위험
+### [L-474] ✅ 검토완료·현행유지(2026-06-14, P·코드 실대조) — status=='deleted' 체크(65)가 is_binary(69)보다 먼저 → 바이너리 삭제 os.remove 정상 수행. 버그 전제(순서 반대)와 불일치. — `devagent/nodes/apply.py` — `is_binary` 체크가 `status==deleted` 이전에 오면 바이너리 파일 삭제 묵살 위험
 
 - **영역:** 백엔드 — devagent apply 노드
 - **심각도:** 🟢 Low
@@ -13005,7 +13006,7 @@
 
 ---
 
-### [L-475] — `evidence_collector.py` — data 축 스크립트 실패가 `gate_results`에 미반영 → 계약 체크 누락
+### [L-475] ✅ 검토완료·현행유지(2026-06-14, P·설계) — data축 도구는 '게이트 외 증거'(DESIGN §17.2), evidence에 fail 기록돼 리뷰어 가시. 하드게이트화는 계약 의미 변경이라 의도적 분리. — `evidence_collector.py` — data 축 스크립트 실패가 `gate_results`에 미반영 → 계약 체크 누락
 
 - **영역:** 백엔드 — devagent evidence 노드
 - **심각도:** 🟢 Low
@@ -13250,6 +13251,56 @@
 - **원인:** [pipeline/resolve_duplicates.py](pipeline/resolve_duplicates.py):118, [pipeline/normalize_models.py](pipeline/normalize_models.py):336 — `try/finally con.close()` 패턴 미사용.
 - **수정안:** `try: ... finally: con.close()` 패턴 또는 `with sqlite3.connect(...) as con:` context manager 사용.
 - **파일:** [pipeline/resolve_duplicates.py](pipeline/resolve_duplicates.py):118, [pipeline/normalize_models.py](pipeline/normalize_models.py):336
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 77 (2026-06-14 자동루프)
+
+| 영역 | 발견일 | 신규 버그 |
+|------|--------|-----------|
+| FE(댓글삭제 세션만료·후기카드 날짜 null·댓글 날짜 null) | 2026-06-14 | 3건 (FE-009·FE-010·FE-011) |
+
+---
+
+### [FE-009] — `openLogDetail()` 댓글 삭제 핸들러 — `window._commUser` null 체크 없이 `.id` 접근 → 세션 만료 시 TypeError
+
+- **영역:** 프론트엔드 — 로그 상세 모달 / 댓글
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `openLogDetail()` 내 `loadComments()` 함수(line 4115)에서 댓글 삭제 시 `.eq("user_id", window._commUser.id)` 를 호출. 로그 상세 모달을 열 때는 로그인 상태였지만, 이후 세션이 만료되거나 다른 탭에서 로그아웃되면 `window._commUser === null` → `null.id` → `TypeError: Cannot read properties of null`. `btn.onclick` 핸들러에는 별도 null 체크가 없어 에러가 catch되지 않고 Supabase 쿼리 직전에 크래시.
+- **원인:** [site/app.js:4115](site/app.js) — `window._commUser.id` 직접 접근 시 세션 만료 시나리오 미처리.
+- **수정안:** `if (!window._commUser) { showToast("로그인이 필요해요."); return; }` 선제 체크 후 `.id` 사용.
+- **파일:** [site/app.js](site/app.js):4115
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-010] — `_myReviewCard()` — `r.created_at` null 시 `new Date(null)` → "1970년 1월 1일" 노출
+
+- **영역:** 프론트엔드 — 마이페이지 / 내 후기 카드
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `_myReviewCard(r, prodMap)` 함수 line 3248에서 `new Date(r.created_at).toLocaleDateString(...)` 호출. `r.created_at` 이 `null`이면 `new Date(null)` = Unix epoch(1970-01-01) → "1월 1일" 표시. FE-002(renderLogFeed 동일 패턴)·FE-008(openLogDetail 동일 패턴)과 같은 유형이지만 별개 함수. Supabase `posts` 테이블에 삽입 즉시 트리거가 `created_at` 을 채우므로 정상 케이스에서는 발생하기 어렵지만, 서버 오류나 비정상 데이터 시 재현 가능.
+- **원인:** [site/app.js:3248](site/app.js) — `created_at` null 가드 없음.
+- **수정안:** `const dt = r.created_at ? new Date(r.created_at).toLocaleDateString("ko-KR", ...) : "날짜 없음";`
+- **파일:** [site/app.js](site/app.js):3248
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [FE-011] — `openLogDetail()` `loadComments()` — `c.created_at` null 시 `new Date(null)` → "1월 1일" 댓글 날짜 노출
+
+- **영역:** 프론트엔드 — 로그 상세 모달 / 댓글 목록
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `openLogDetail()` 내 `loadComments()` → `cmts.map(c => ...)` 에서 line 4105: `new Date(c.created_at).toLocaleDateString(...)` 호출. `c.created_at`이 `null`이면 epoch 날짜 노출. FE-002·FE-010과 동일 패턴의 반복이며, `comments` 테이블 레코드가 비정상 삽입되거나 DB null 컬럼 설정 변경 시 발생.
+- **원인:** [site/app.js:4105](site/app.js) — `created_at` null 가드 없음.
+- **수정안:** `const dt = c.created_at ? new Date(c.created_at).toLocaleDateString("ko-KR", ...) : "";`
+- **파일:** [site/app.js](site/app.js):4105
 - **우선순위:** 낮음
 - **상태:** 미해결
 

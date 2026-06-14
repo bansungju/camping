@@ -2,7 +2,7 @@
 
 흐름: --request → (drafter interrupt) → --inspect/--get-prompt → [Task subagent] → --inject
 → (evaluator interrupt) → --inject → human_review 멈춤 → --resume.
-langgraph 없이도 --dry/--status/--progress/--ssot/--sessions/--conflicts/--reap/--validate 동작.
+langgraph 없이도 --dry/--status/--progress/--ssot/--sessions/--conflicts/--reap/--gc 동작.
 """
 from __future__ import annotations
 
