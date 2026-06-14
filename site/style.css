@@ -30,7 +30,7 @@ body{margin:0;background:var(--bg);color:var(--txt);
   line-height:1.5}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
-header.top{border-bottom:1px solid var(--line);padding:18px 0;position:sticky;top:var(--banner-h,0px);
+header.top{border-bottom:1px solid var(--line);padding:max(18px,env(safe-area-inset-top)) 0 18px 0;position:sticky;top:var(--banner-h,0px);
   background:var(--header-bg);backdrop-filter:blur(10px);z-index:10}
 header.top .wrap{display:flex;align-items:center;gap:14px;flex-wrap:nowrap}
 header.top .wrap .sub{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;pointer-events:none}

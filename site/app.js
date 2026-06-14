@@ -1442,6 +1442,8 @@ function updateLeadText(d) {
   if (!leadEl) return;
   if (STATE.campStyle) {
     const sm = STYLE_META.find(s => s.key === STATE.campStyle);
+    // H-132: campStyle이 STYLE_META에 없는 키면 sm=undefined → sm.icon TypeError 크래시 → 스타일 표기 생략.
+    if (!sm) { leadEl.textContent = `${d.count.toLocaleString()}개 모델`; return; }
     leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · <span style="color:var(--accent);font-weight:700">${sm.icon} ${sm.label} 기준</span> — 관련 스펙 슬라이더를 활용해보세요`;
   } else {
     leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
@@ -1643,7 +1645,7 @@ function metricLabel(key) {
 function buildFilters(d, star) {
   const bar = document.getElementById("filters");
   const ms = d.models;
-  const num = (arr) => arr.filter(v => v != null);
+  const num = (arr) => arr.filter(v => v != null && Number.isFinite(v));  // H-135: NaN이 통과하면 Math.min/max가 NaN→슬라이더 min=NaN 비기능 → 유한수만
   const parts = [];
 
   // 인원 (단일 선택)
@@ -1974,7 +1976,7 @@ function renderActiveFilters() {
   Object.entries(STATE.range).forEach(([k, r]) => {
     if (r.min == null && r.max == null) return;  // M-303: 빈 range 칩 숨김
     const lab = metricLabel(k);   // L-156: EXTRA_SPECS 키도 한글 레이블
-    const rawUnit = k === "price" ? "원" : (STATE.unit[k] || "");  // M-336: EXTRA_SPECS 단위 포함
+    const rawUnit = k === "price" ? "원" : ((STATE.unit && STATE.unit[k]) || "");  // M-336/H-137: STATE.unit 미초기화(STATE={}) 시 TypeError 가드
     // 무게(g) 필터는 STATE.range에 g 단위로 저장되지만 사용자에게는 kg으로 표시
     const isWeight = rawUnit === "g";
     const fmt = v => {
@@ -3383,7 +3385,7 @@ function renderAccount() {
             });
           };
           renderMyLogs(posts);
-        }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; });
+        }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; delete myLogsList.dataset.loaded; });  // H-129: 실패 시 loaded 리셋 → 다음 렌더서 재시도(영구 미로드 방지)
       }
     } else {
       // L-39: 비로그인 시 섹션 숨김 대신 로그인 안내 표시
@@ -3433,7 +3435,11 @@ function renderAccount() {
   if (wishEl && !wishes.length) { const bb = document.getElementById("wish-bulk-add"); if (bb) bb.style.display = "none"; }
   if (wishEl && wishes.length) {
     wishEl.innerHTML = wishes.map((x, i) => {
-      const href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
+      // H-133: x.b/x.m 누락 시 encodeURIComponent(undefined)="undefined"로 "?brands=undefined&q=undefined"
+      //   브로큰 URL·0건 검색이 된다 → 둘 다 있을 때만 brands/q 부착, 없으면 카테고리 페이지로 폴백.
+      const href = (x.b && x.m)
+        ? `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`
+        : `category.html?cat=${x.s}`;
       // L-75: role="button" + 내부 <button> 중첩 HTML 위반 → 찜 해제 버튼만 interactive, pli는 click 핸들러만 유지
       return `<div class="pli" data-href="${esc(href)}" data-wkey="${esc(x.key)}" style="cursor:pointer">
         <button type="button" class="pli-wish on" data-key="${esc(x.key)}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
