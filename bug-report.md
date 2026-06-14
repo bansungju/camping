@@ -4305,7 +4305,8 @@
 
 ---
 
-### [M-220] — `_meta_description` — `re.S` DOTALL 플래그로 다중 태그 걸침
+### [M-220] ✅ 해결완료(2026-06-14, MP) — `_meta_description` — `re.S` DOTALL 플래그로 다중 태그 걸침
+> 확인: _meta_description를 M-541에서 순서무관 2단계 매칭으로 재작성하며 단일라인 re.S 의존 해소(danawa.py L141).
 
 - **영역:** 백엔드 — 다나와 크롤링
 - **심각도:** 🟡 Medium
@@ -4317,7 +4318,8 @@
 
 ---
 
-### [M-221] — `packed_volume_cm3` — 2-숫자 스펙을 무조건 원통으로 계산
+### [M-221] ⏸ 보류(2026-06-14, MP) — `packed_volume_cm3` — 2-숫자 스펙을 무조건 원통으로 계산
+> 보류: 2-숫자=원통 가정은 스터프색용 문서화 휴리스틱. 박스/skip 변경은 기존 stuff-sack 부피 회귀 위험 → 별도 검토.
 
 - **영역:** 백엔드 — 정규화
 - **심각도:** 🟡 Medium
@@ -9807,7 +9809,8 @@
 
 ---
 
-### [M-442] — `check_export.py` `load_models` — 손상된 JSON 무음 스킵으로 배포 게이트 오통과
+### [M-442] ✅ 해결완료(2026-06-14, MP) — `check_export.py` `load_models` — 손상된 JSON 무음 스킵으로 배포 게이트 오통과
+> 확인: load_models가 파싱 실패 시 `(None,[],False)` 반환으로 게이트 실패 신호(L-231, check_export.py L43).
 
 - **영역:** 백엔드 — 배포 검증
 - **심각도:** 🟡 Medium
@@ -10528,7 +10531,8 @@
 
 ---
 
-### [M-476] — `fill_whitelist_specs.py` — `FN[fn]` KeyError 포함 모든 예외 silent 무시
+### [M-476] ✅ 해결완료(2026-06-14, MP) — `fill_whitelist_specs.py` — `FN[fn]` KeyError 포함 모든 예외 silent 무시
+> 수정: 예외 범위를 `(ValueError,TypeError)`로 좁혀 KeyError(미등록 fn=설정오류) 전파(fill_whitelist_specs.py L89).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10822,7 +10826,8 @@
 
 ---
 
-### [M-486] — `run_all.py` — `check_export.py` 호출 시 `--data` 미전달 → 잘못된 경로 검사
+### [M-486] ✅ 해결완료(2026-06-14, MP) — `run_all.py` — `check_export.py` 호출 시 `--data` 미전달 → 잘못된 경로 검사
+> 확인: check_export `--data` 기본값=site/data, export_site도 site/data 출력 → 경로 일치(비이슈). run_all 미전달은 기본값으로 정상.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10834,7 +10839,8 @@
 
 ---
 
-### [M-487] — `run_all.py` 다중 포장 거부 정규식 — `N개세트`(공백 없음) 정상 번들 오거부
+### [M-487] ✅ 해결완료(2026-06-14, MP) — `run_all.py` 다중 포장 거부 정규식 — `N개세트`(공백 없음) 정상 번들 오거부
+> 수정: 다중팩 거부 정규식 ` ?세트`→`\\s*세트`(run_all.py L199) — 'N개  세트' 다중공백 정상번들 오거부 방지. 6케이스 테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11145,7 +11151,8 @@
 
 ---
 
-### [M-503] — `check_export.py` — `price_max=0` 시 `or pmin` 폴백으로 제로 최대가 마스킹
+### [M-503] ✅ 해결완료(2026-06-14, MP) — `check_export.py` — `price_max=0` 시 `or pmin` 폴백으로 제로 최대가 마스킹
+> 확인: `pmax = raw_pmax if raw_pmax is not None else pmin` 명시 None 비교 이미 적용(M-222, check_export.py L70).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11841,7 +11848,8 @@
 
 ---
 
-### [M-530] — `graph_full.py` — `enrich_node` 쿼리에 `curation_status` 필터 없어 rejected 제품 보강 시도
+### [M-530] ✅ 해결완료(2026-06-14, MP) — `graph_full.py` — `enrich_node` 쿼리에 `curation_status` 필터 없어 rejected 제품 보강 시도
+> 수정: enrich 쿼리에 `AND p.curation_status IN ('pending','verified')`(graph_full.py L113) — rejected 제품 불필요 다나와 호출 차단.
 
 - **영역:** 백엔드 — 파이프라인/그래프
 - **심각도:** 🟡 Medium
@@ -12538,7 +12546,8 @@
 
 ---
 
-### [M-554] — `download_images.py` — `ThreadPoolExecutor` 내 `sqlite3` 연결 `check_same_thread=False` 미설정 → ProgrammingError 위험
+### [M-554] ✅ 해결완료(2026-06-14, MP) — `download_images.py` — `ThreadPoolExecutor` 내 `sqlite3` 연결 `check_same_thread=False` 미설정 → ProgrammingError 위험
+> 확인: `con`은 메인 스레드(as_completed 루프)에서만 사용하고 워커(download_one)는 파일 다운로드만 → cross-thread 접근 없음, check_same_thread 불필요(오탐).
 
 - **영역:** 백엔드 — 파이프라인/이미지 다운로드
 - **심각도:** 🟡 Medium

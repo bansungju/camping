@@ -108,9 +108,11 @@ def enrich_node(s: FullState) -> dict:
         #   쓰기 락 경합이 심하다. WAL로 전환(다중 reader + 단일 writer 직렬화, 영속 설정)해 경합 완화.
         #   (persist의 timeout=30 + run_one의 예외 캡처가 잔여 경합을 흡수.)
         con.execute("PRAGMA journal_mode=WAL")
+        # M-530: rejected(노네임·정크) 제품까지 상세 enrich를 시도하면 다나와 호출만 낭비 → pending/verified만.
         q = """SELECT p.id, p.danawa_pcode, b.name_ko||' '||p.model_name, c.name_ko, p.capacity
                FROM products p JOIN brands b ON b.id=p.brand_id JOIN categories c ON c.id=p.category_id
                WHERE p.danawa_pcode IS NOT NULL
+                 AND p.curation_status IN ('pending','verified')
                  AND ( NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id
                                    AND m.key='water_head' WHERE v.product_id=p.id)
                     OR NOT EXISTS (SELECT 1 FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id

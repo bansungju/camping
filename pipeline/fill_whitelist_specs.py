@@ -86,7 +86,7 @@ def fill_one(con, pid, pcode, cid, cat_name):
             continue
         try:
             val = P.derive_floor(raw) if derive == "floor" else FN[fn](raw)
-        except Exception:
+        except (ValueError, TypeError):   # M-476: 파싱 실패만 무음. KeyError(미등록 fn=multicat 설정오류)는 전파해 표면화
             val = None
         if val is None:
             continue

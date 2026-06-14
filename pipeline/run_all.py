@@ -196,7 +196,7 @@ def main():
     import re as _re
     for pid, mn in con.execute("""SELECT p.id, p.model_name FROM products p JOIN categories c ON c.id=p.category_id
             WHERE c.name_ko IN ('의자','테이블') AND p.curation_status<>'rejected'""").fetchall():
-        if _re.search(r"(?<!\d)[2-9]\s*개(?!월| ?세트)", mn or "") or _re.search(r"(?<!\d)[2-9]\s*팩", mn or ""):
+        if _re.search(r"(?<!\d)[2-9]\s*개(?!월|\s*세트)", mn or "") or _re.search(r"(?<!\d)[2-9]\s*팩", mn or ""):  # M-487: ` ?세트`→`\s*세트`(다중 공백 'N개  세트' 정상 번들 오거부 방지)
             con.execute("UPDATE products SET curation_status='rejected' WHERE id=?", (pid,))
             # 멀티팩 묶음가는 단품과 비교축이 달라 오염원 → 가격관측도 무효화(적대루프1 보완)
             con.execute("UPDATE price_observations SET valid=0 WHERE product_id=? AND valid=1", (pid,))
