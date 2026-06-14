@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=e12b031b"></script>
+<script src="app.js?v=e1e5eeb0"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -202,7 +202,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=db1a1016'
+} from './supabaseClient.js?v=f1b440ea'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -260,7 +260,7 @@ async function syncGearSetsOnLogin(userId) {
   const newFromRemote = remote
     .filter(r => !localLinked.has(r.id) && !localFpSet.has(_setFingerprint(r)))
     .map(r => ({ id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
-                 remoteId: r.id, title: r.title, style: r.style || '',
+                 remoteId: r.id, title: r.title, type: r.type || 'auto', style: r.style || '',  // H-143: 원격 세트 type 보존(미지정 시 auto)
                  items: r.items || [], created_at: r.created_at }))
   const merged = [...local, ...newFromRemote]
   localSets.set(merged)
@@ -475,7 +475,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=db1a1016')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=f1b440ea')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)

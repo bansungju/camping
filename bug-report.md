@@ -11783,8 +11783,8 @@
 
 ---
 
-### [H-143] ⏸ 보류(2026-06-14, 검토필요) — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
-> 보류: SYNC: gear_sets에 `type` 컬럼 없음(별개 `style`만 존재) → 원격 type 영속에 DB 마이그레이션 필요(라이브 수동 적용) + select/upsert/매핑 코드. H-146과 함께 SYNC 전용 세션 권장.
+### [H-143] ✅ 해결완료(2026-06-14, SYNC) — `syncGearSetsOnLogin` — 원격 세트 `type` 필드 SELECT 누락 → 세트 타입 항상 undefined
+> 수정: 마이그레이션 024_gear_sets_type.sql(type 컬럼 추가) + loadRemoteGearSets select에 type + upsertGearSet payload에 type + account.html newFromRemote 매핑에 `type: r.type||'auto'`. ⚠️ 라이브 적용: Supabase SQL Editor에 024 실행 필요.
 
 - **영역:** 프론트엔드 — 기어세트 동기화
 - **심각도:** 🔴 High
@@ -12534,8 +12534,8 @@
 
 ---
 
-### [H-146] ⏸ 보류(2026-06-14, 검토필요) — `upsertGearSet` — `completeness: set.items?.length` 로 저장 → 필수 슬롯 완성도와 불일치
-> 보류: SYNC: completeness는 smallint CHECK(0~100). 정상 수정은 setCompletion(app.js).pct를 호출부에서 전달해야 함(cross-file). H-143과 동일 함수(upsertGearSet/loadRemoteGearSets)라 묶어서 SYNC 세션.
+### [H-146] ✅ 해결완료(2026-06-14, SYNC) — `upsertGearSet` — `completeness: set.items?.length` 로 저장 → 필수 슬롯 완성도와 불일치
+> 수정: upsertGearSet completeness를 `set.completeness`(pct, 0~100) 우선 사용·없으면 0~100 클램프로 변경(items.length 직접 저장 시 CHECK 위반·의미불일치 제거). app.js 호출부에서 `setCompletion(newSet).pct` 계산해 전달.
 
 - **영역:** 프론트엔드 — 기어 세트 원격 동기화
 - **심각도:** 🔴 High
