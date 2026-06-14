@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 1022 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1029 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 66 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 59 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -105,6 +105,7 @@
 | 79 | FE(로그아웃 찜동기화 누락·CDN 버전미고정)·BE(graph_full DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-015·FE-016·BE-005) |
 | 80 | FE(openLogModal Storage 이미지 누수)·BE(crosssource con.close 미도달·enrich_details con 누수) 자동루프 | 2026-06-14 | 3건 (FE-017·BE-006·BE-007) |
 | 81 | FE(renderLogFeed 레이스조건)·BE(run_all 두번째 con 미보호·다중파일 con.close 누락) 자동루프 | 2026-06-14 | 3건 (FE-018·BE-008·BE-009) |
+| 82 | FE(로그등록 성공 시 close() 미호출·onEsc 누수)·BE(detect_price_drops/column_fixes/backfill_capacity con.close 미보호) 자동루프 | 2026-06-14 | 3건 (FE-019·BE-010·BE-011) |
 
 ---
 
@@ -5578,7 +5579,7 @@
 
 ---
 
-### [L-234] — `draw()` 상품 카드 — Ctrl+클릭/가운데 클릭 시 새 탭 열기 차단
+### [L-234] ✅ 해결완료(2026-06-14, L-bundle-V: draw() 상품카드 onclick에 metaKey/ctrlKey/shiftKey 시 early-return 추가 → <a href> 정적 상세페이지를 새 탭으로 여는 기본동작 허용) — `draw()` 상품 카드 — Ctrl+클릭/가운데 클릭 시 새 탭 열기 차단
 
 - **영역:** 프론트엔드 — 상품 목록
 - **심각도:** 🟢 Low
@@ -5728,7 +5729,7 @@
 
 ---
 
-### [L-236] — `renderAccount` — 지역 `isLoggedIn` 변수가 전역 함수 섀도잉, 일관성 저하
+### [L-236] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: renderAccount 내 isLoggedIn은 boolean const로 일관 사용·함수 호출 없음(전역은 window.isLoggedIn 접근 가능) → 섀도잉 기능 영향 없음) — `renderAccount` — 지역 `isLoggedIn` 변수가 전역 함수 섀도잉, 일관성 저하
 
 - **영역:** 프론트엔드 — 계정 페이지
 - **심각도:** 🟢 Low
@@ -7175,7 +7176,7 @@
 
 ---
 
-### [L-271] — `bulkBtn.onclick` — 위시 일괄 저장 토스트 중량 `qty` 미반영
+### [L-271] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: 찜 항목은 각 qty:1로 변환(line 3560)되어 qty>1 개념 부재 → 중량 합산 정확, "qty 미반영" 해당 없음) — `bulkBtn.onclick` — 위시 일괄 저장 토스트 중량 `qty` 미반영
 
 - **영역:** 프론트엔드 — 위시리스트
 - **심각도:** 🟢 Low
@@ -7187,7 +7188,7 @@
 
 ---
 
-### [L-272] — `saveSets` — `localStorage.setItem` QuotaExceededError 미처리
+### [L-272] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: saveSets는 H-115로 QuotaExceeded catch+console.error+showToast("저장 공간 부족") 이미 처리) — `saveSets` — `localStorage.setItem` QuotaExceededError 미처리
 
 - **영역:** 프론트엔드 — 세트 관리
 - **심각도:** 🟢 Low
@@ -7463,7 +7464,7 @@
 
 ---
 
-### [L-281] — `openLogDetail` — `p.created_at` null 시 `new Date(null)` → 1970-01-01 묵시적 반환
+### [L-281] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: posts.created_at은 DB DEFAULT now() NOT NULL → new Date(null) 미발생. openLogDetail은 커뮤니티 로그(아카이브) 경로) — `openLogDetail` — `p.created_at` null 시 `new Date(null)` → 1970-01-01 묵시적 반환
 
 - **영역:** 프론트엔드 — 로그
 - **심각도:** 🟢 Low
@@ -7619,7 +7620,7 @@
 
 ---
 
-### [L-285] — DOMContentLoaded — 하단 네비 패딩 최초 1회만 적용, 뷰포트 회전/리사이즈 미대응
+### [L-285] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: 하단 내비는 GNB_ENABLED=false로 insertBottomNav 조기 반환 → 패딩 코드 비활성(dead). GNB 복구 시에만 유효) — DOMContentLoaded — 하단 네비 패딩 최초 1회만 적용, 뷰포트 회전/리사이즈 미대응
 
 - **영역:** 프론트엔드 — 레이아웃
 - **심각도:** 🟢 Low
@@ -8338,7 +8339,7 @@
 
 ---
 
-### [L-311] — `diagnoseEmpty` / `passExcept` — 가성비순 정렬 암묵적 제외 진단 미지원
+### [L-311] ✅ 검토완료·현행유지(2026-06-14, L-bundle-V: 가성비 칩은 hasValue(line 1951)일 때만 노출 → value 정렬이 전부 제외 불가, value-null 제외는 list-end 캡션 고지(2807), 0건은 타 필터 기인이라 diagnoseEmpty가 진단) — `diagnoseEmpty` / `passExcept` — 가성비순 정렬 암묵적 제외 진단 미지원
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -13497,6 +13498,52 @@
 - **원인:** 각 파일의 `main()` 함수에서 `sqlite3.connect()` 이후 전체 로직을 `try/finally`로 감싸지 않음.
 - **수정안:** 각 파일에서 `con = sqlite3.connect(...)` 직후부터 `try: ... finally: con.close()` 패턴 적용, 또는 `with sqlite3.connect(...) as con:` 컨텍스트 매니저 사용.
 - **파일:** [pipeline/star_catalog.py](pipeline/star_catalog.py):109, [pipeline/harvest_tents.py](pipeline/harvest_tents.py):237, [pipeline/download_images.py](pipeline/download_images.py):135, [pipeline/export_site.py](pipeline/export_site.py):243
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 82 (2026-06-14 자동루프)
+
+### [FE-019] — `openLogModal()` — 로그 등록 성공 시 `close()` 미호출 → `onEsc` 리스너 누수 + blob URL 미해제
+
+- **영역:** 프론트엔드 — 커뮤니티 / 캠핑 로그 모달
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `openLogModal()` form.onsubmit 성공 경로(line 4328)에서 `close()` 함수를 호출하지 않고 `modal.classList.remove("on")`을 직접 호출. 이로 인해 ① `document.addEventListener("keydown", onEsc)`로 등록된 리스너가 제거되지 않아 이후 키 이벤트마다 불필요하게 발화하고, ② `imgThumb.src`에 설정된 `blob:` URL이 `URL.revokeObjectURL()`로 해제되지 않아 메모리가 잔류. `close()`는 line 4338-4342에 정의되어 두 작업을 모두 수행하지만 성공 경로에서 호출되지 않음.
+- **원인:** [site/app.js:4328](site/app.js) — `modal.classList.remove("on")` 직접 호출, `close()` 미호출.
+- **수정안:** 성공 시 `modal.classList.remove("on"); renderLogFeed();` → `close(); renderLogFeed();` 로 교체. `close()` 내에서 `modal.classList.remove("on")`과 리스너 제거·blob 해제 모두 처리됨.
+- **파일:** [site/app.js](site/app.js):4328
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [BE-010] — `detect_price_drops.py` `detect()` — `price_history(con)` 예외 시 `con.close()` 미실행
+
+- **영역:** 백엔드 파이프라인 — detect_price_drops / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `detect()` 함수(line 85)에서 `con = sqlite3.connect(db)` 후 `price_history(con)` 호출(line 88). `price_history` 내에서 예외 발생 시 line 89 `con.close()` 에 도달하지 못해 SQLite 연결이 열린 채로 전파. BE-004~BE-009와 동일한 패턴.
+- **원인:** [pipeline/detect_price_drops.py:88-90](pipeline/detect_price_drops.py) — `con.close()` 가 `try/finally` 바깥.
+- **수정안:** `con = sqlite3.connect(db)` 이후를 `try: ... finally: con.close()` 로 감싸기.
+- **파일:** [pipeline/detect_price_drops.py](pipeline/detect_price_drops.py):85-90
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [BE-011] — `column_fixes.py`·`backfill_capacity.py` — `con.close()` `try/finally` 미적용(2건 일괄)
+
+- **영역:** 백엔드 파이프라인 — column_fixes / backfill_capacity / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** BE-004~BE-010과 동일한 `con.close()` 미보호 패턴이 2개 파일에 추가 확인됨.
+  - `column_fixes.py:26` — `con = sqlite3.connect(args.db)` 후 다수의 `con.execute()` 및 `con.commit()`, 예외 시 line 100 `con.close()` 미도달
+  - `backfill_capacity.py:54` — `con = sqlite3.connect(args.db)` 후 루프·쿼리 실행, 예외 시 line 89 `con.close()` 미도달
+- **원인:** 각 파일의 `main()` 함수에서 `sqlite3.connect()` 이후 전체 실행 블록을 `try/finally`로 감싸지 않음.
+- **수정안:** 각 파일에서 `con = sqlite3.connect(...)` 직후부터 `try: ... finally: con.close()` 패턴 적용.
+- **파일:** [pipeline/column_fixes.py](pipeline/column_fixes.py):26-100, [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py):54-89
 - **우선순위:** 낮음
 - **상태:** 미해결
 
