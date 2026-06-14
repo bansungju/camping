@@ -60,7 +60,9 @@ def main():
             prods[pid]["v"][key] = val
     # M-260: valid=1만 집계(flag_price_outliers 격리분 제외). M-169: MIN이 NULL이거나 0/음수면
     #   아래 min-max 루프에서 None과 비교해 TypeError → 양수 가격만 채택.
-    for pid, pr in con.execute("SELECT product_id, MIN(price_krw) FROM price_observations WHERE valid=1 GROUP BY product_id"):
+    # H-131: MIN()에 price_krw=0이 섞이면 그 상품 MIN=0 → 아래 `pr>0` 가드로 드롭돼 가격 누락된다.
+    #   WHERE에서 0/음수를 먼저 제외해 0 관측치가 있어도 실제 양수 최소가가 채택되게 한다.
+    for pid, pr in con.execute("SELECT product_id, MIN(price_krw) FROM price_observations WHERE valid=1 AND price_krw > 0 GROUP BY product_id"):
         if pid in prods and pr is not None and pr > 0:
             prods[pid]["v"]["price"] = pr
 

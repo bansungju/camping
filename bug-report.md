@@ -10325,7 +10325,8 @@
 
 ---
 
-### [H-130] — `refresh.py` `ingest`/`ingest_one` — 예외 발생 시 refresh 중단 + 부분 커밋 불일치
+### [H-130] ✅ 해결완료(2026-06-14, HB) — `refresh.py` `ingest`/`ingest_one` — 예외 발생 시 refresh 중단 + 부분 커밋 불일치
+> 수정: ingest 호출을 레코드별 `SAVEPOINT ingest_one`으로 격리 — 예외 시 ROLLBACK TO+로그+skip 후 continue(refresh.py L177~). 전체 refresh 중단·부분삽입 방지. sqlite 격리 테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -10498,7 +10499,8 @@
 
 ---
 
-### [H-131] — `star_catalog.py` — `price_observations`에 `price_krw=0` 미필터 → 가격-star 정규화 왜곡
+### [H-131] ✅ 해결완료(2026-06-14, HB) — `star_catalog.py` — `price_observations`에 `price_krw=0` 미필터 → 가격-star
+> 수정: MIN 집계 WHERE에 `AND price_krw > 0` 추가(star_catalog.py L63). (왜곡 자체는 L64 `pr>0` 가드로 기차단됐으나) 0 관측치 섞인 상품이 드롭되지 않고 실제 양수 최소가를 채택하도록 개선. 정규화 왜곡
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -10802,7 +10804,8 @@
 
 ---
 
-### [H-134] — `run_all.py` — 예외 시 DB 커넥션 누수 (try/finally 없음)
+### [H-134] ✅ 해결완료(2026-06-14, HB) — `run_all.py` — 예외 시 DB 커넥션 누수 (try/finally 없음)
+> 수정: normalize_db/validate_db를 try/finally로 감싸 예외 시에도 `con.close()` 보장(run_all.py L177~). WAL 쓰기 락 점유로 다음 실행 차단되던 것 방지.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -11327,7 +11330,8 @@
 
 ---
 
-### [H-138] — `download_images.py` — `image_local=''` 빈 문자열 재다운로드 미실행 (WHERE 절 논리 오류)
+### [H-138] ✅ 해결완료(기해결 H-120 확인, HB) — `download_images.py` — `image_local=''` 빈 문자열 재다운로드 미실행 (WHERE 절 논리 오류
+> 확인: 상수 서브쿼리를 `(p.image_local IS NULL OR p.image_local='')` 명시 조건으로 이미 교체됨(H-120, download_images.py L98). 빈 문자열도 재다운로드 대상 포함.)
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High
@@ -11563,7 +11567,8 @@
 
 ---
 
-### [H-139] — `run_all.py` → `detect_price_drops.py` — `--db` 인수 미전달로 기본 DB 고정 가격 알림
+### [H-139] ✅ 해결완료(2026-06-14, HB) — `run_all.py` → `detect_price_drops.py` — `--db` 인수 미전달로 기본 DB 고정 가격 알림
+> 수정: detect_price_drops에 `--db` argparse 추가 + `detect(db)` 인자화(L86·160~), run_all이 호출 시 `--db DB` 전달(run_all.py L234). 커스텀 DB 실행 시 엉뚱한 기본 DB 알림 방지. --help 노출·배선 확인.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🔴 High

@@ -174,14 +174,18 @@ def main():
                       f"수동 보강은 add_manual_models.py / multicat.py 사용. (쿼리={q})")
         print()
 
+    # H-134: normalize_db/validate_db 예외 시에도 con.close()가 보장돼야 WAL 쓰기 락이 풀려
+    #   다음 파이프라인 실행이 차단되지 않는다 → try/finally로 종료.
     con = sqlite3.connect(DB)
-    print("[정규화] 변형 통합")
-    raw, uniq, _ = NM.normalize_db(con)
-    print(f"   {raw} → 고유 {uniq}")
-    print("[검증] 타당범위/이상치")
-    hard, soft = VR.validate_db(con)
-    print(f"   격리 {len(hard)} / 재분류 {len(soft)}")
-    con.close()
+    try:
+        print("[정규화] 변형 통합")
+        raw, uniq, _ = NM.normalize_db(con)
+        print(f"   {raw} → 고유 {uniq}")
+        print("[검증] 타당범위/이상치")
+        hard, soft = VR.validate_db(con)
+        print(f"   격리 {len(hard)} / 재분류 {len(soft)}")
+    finally:
+        con.close()
 
     print("[컬럼교정] 가격channel·무게/내수압 기준의심")
     sh("column_fixes.py")
@@ -232,7 +236,7 @@ def main():
     #   시크릿은 코드/깃에 두지 않고 크론·실행 env에만 둔다. 발송 실패해도 빌드는 통과(check=False).
     if os.environ.get("SEND_PRICE_ALERT_URL") and os.environ.get("ALERT_SECRET"):
         print("[알림] 가격하락·재입고 → send-price-alert")
-        subprocess.run([sys.executable, os.path.join(HERE, "detect_price_drops.py"), "--send"], check=False)
+        subprocess.run([sys.executable, os.path.join(HERE, "detect_price_drops.py"), "--db", DB, "--send"], check=False)  # H-139: 커스텀 DB 전달
     else:
         print("[알림] 가격 알림 스킵(SEND_PRICE_ALERT_URL/ALERT_SECRET 미설정)")
 

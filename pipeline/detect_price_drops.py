@@ -83,9 +83,9 @@ def price_history(con):
     return hist
 
 
-def detect():
+def detect(db=DB):
     catalog = load_catalog()
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(db)   # H-139: run_all이 커스텀 --db로 돌 때 엉뚱한 기본 DB를 읽지 않도록 인자화
     hist = price_history(con)
     con.close()
 
@@ -159,9 +159,10 @@ def send(events):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--send", action="store_true", help="실제 전송(미지정 시 dry-run)")
+    ap.add_argument("--db", default=DB, help="대상 DB 경로(run_all과 일치시켜 엉뚱한 DB 알림 방지)")  # H-139
     args = ap.parse_args()
 
-    events = detect()
+    events = detect(args.db)
     drops = [e for e in events if e["kind"] == "drop"]
     restocks = [e for e in events if e["kind"] == "restock"]
     print(f"감지: 하락 {len(drops)}건 · 재입고 {len(restocks)}건 (임계 ≥{int(DROP_PCT*100)}% AND ≥{DROP_ABS}원)")

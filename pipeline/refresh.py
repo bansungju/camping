@@ -173,8 +173,20 @@ def main():
                         refresh_price(con, c, pcode2pid[pc], latest, now, args.stale_days,
                                       rejected, cat_median, pid2cat, R)
                     else:
-                        status = (HT.ingest(con, c, seen_names) if cfg is None
-                                  else M.ingest_one(con, cfg, c, seen_names))
+                        # H-130: ingest 예외(IntegrityError·KeyError 등)가 전체 refresh를 중단시켜
+                        #   이전 페이지는 커밋되고 현재 페이지는 롤백 없이 남는 불일치를 막는다 →
+                        #   단건 실패는 로그+스킵하고 계속(부분삽입 방지 위해 savepoint로 격리).
+                        con.execute("SAVEPOINT ingest_one")
+                        try:
+                            status = (HT.ingest(con, c, seen_names) if cfg is None
+                                      else M.ingest_one(con, cfg, c, seen_names))
+                            con.execute("RELEASE ingest_one")
+                        except Exception as e:
+                            con.execute("ROLLBACK TO ingest_one")
+                            con.execute("RELEASE ingest_one")
+                            print(f"  ! ingest 실패 pcode={pc}: {e}")
+                            R["skipped"] += 1
+                            continue
                         if status == "ok":
                             R["new"].append((label, c["name"], c["price"]))
                         else:
