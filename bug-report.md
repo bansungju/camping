@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 1014 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1022 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 74 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 66 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -104,6 +104,7 @@
 | 78 | FE(후기등록 Storage롤백 누락·리뷰날짜 null·renderAccount 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-012·FE-013·FE-014) |
 | 79 | FE(로그아웃 찜동기화 누락·CDN 버전미고정)·BE(graph_full DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-015·FE-016·BE-005) |
 | 80 | FE(openLogModal Storage 이미지 누수)·BE(crosssource con.close 미도달·enrich_details con 누수) 자동루프 | 2026-06-14 | 3건 (FE-017·BE-006·BE-007) |
+| 81 | FE(renderLogFeed 레이스조건)·BE(run_all 두번째 con 미보호·다중파일 con.close 누락) 자동루프 | 2026-06-14 | 3건 (FE-018·BE-008·BE-009) |
 
 ---
 
@@ -4351,7 +4352,7 @@
 
 ---
 
-### [L-211] — `grade` — 단일 ★-metric 카테고리는 B 등급 수학적 불가능
+### [L-211] ✅ 검토완료·현행유지(2026-06-14, L-bundle-U: 등급은 파이프라인 산출 c.grade를 표시만(app.js는 gradeBadge 렌더). 단일 ★-metric 카테고리의 B 미도달은 B정의=다축 부분충족이라 의미상 정상 — 등급 룰 재정의는 파이프라인 과제) — `grade` — 단일 ★-metric 카테고리는 B 등급 수학적 불가능
 
 - **영역:** 백엔드 — 가치 평가
 - **심각도:** 🟢 Low
@@ -4533,7 +4534,7 @@
 
 ---
 
-### [L-214] — `addToSet` — `pcode === undefined` 비교로 구 찜 항목 중복 오탐
+### [L-214] ✅ 해결완료(2026-06-14, L-bundle-U: addToSet findIndex를 x.pcode!=null && x.pcode===item.pcode로 — pcode 없는 구 항목끼리 undefined===undefined 오매칭(중복 오탐) 방지) — `addToSet` — `pcode === undefined` 비교로 구 찜 항목 중복 오탐
 
 - **영역:** 프론트엔드 — 장비 세트
 - **심각도:** 🟢 Low
@@ -7330,7 +7331,7 @@
 
 ---
 
-### [L-277] — `buildFilters` 정렬 칩 — spec 정렬 시 활성 칩 없음
+### [L-277] ✅ 해결완료(2026-06-14, L-bundle-U: _syncSortChips로 정렬칩 활성표시 동기화. 비기본 spec 헤더정렬 시 일치 칩 부재로 모두 비활성=정상) — `buildFilters` 정렬 칩 — spec 정렬 시 활성 칩 없음
 
 - **영역:** 프론트엔드 — 정렬 UI
 - **심각도:** 🟢 Low
@@ -7654,7 +7655,7 @@
 
 ---
 
-### [L-288] — 검색 결과 가격 표시 — `"원~"` 고정 접미사로 range 없는 가격에 혼란 야기
+### [L-288] ✅ 검토완료·현행유지(2026-06-14, L-bundle-U: 가격은 price_min(최저가) 기준이라 "원~"="X원부터"의 일관 관례 표기 — range 부재가 아닌 의도된 최저가 접미) — 검색 결과 가격 표시 — `"원~"` 고정 접미사로 range 없는 가격에 혼란 야기
 
 - **영역:** 프론트엔드 — 검색
 - **심각도:** 🟢 Low
@@ -7728,7 +7729,7 @@
 
 ---
 
-### [L-291] — `buildSortChips` — `aria-pressed` 정적 `"false"` 고정, 정렬 변경 후 미갱신
+### [L-291] ✅ 해결완료(2026-06-14, L-bundle-U: applySort/init에서 _syncSortChips() 호출 → schip .on·aria-pressed가 STATE.sortKey 따라 갱신(기존 정적 "false" 고정 해소)) — `buildSortChips` — `aria-pressed` 정적 `"false"` 고정, 정렬 변경 후 미갱신
 
 - **영역:** 프론트엔드 — 접근성
 - **심각도:** 🟢 Low
@@ -9439,7 +9440,7 @@
 
 ---
 
-### [L-355] — `renderRecent`·`renderAccount` — `x.s` 카테고리 슬러그 `encodeURIComponent` 없이 href 삽입
+### [L-355] ✅ 해결완료(2026-06-14, L-bundle-U: renderRecent·renderAccount의 category.html?cat=${x.s} 슬러그를 encodeURIComponent로 인코딩(방어 일관)) — `renderRecent`·`renderAccount` — `x.s` 카테고리 슬러그 `encodeURIComponent` 없이 href 삽입
 
 - **영역:** 프론트엔드 — 최근 본 상품/계정
 - **심각도:** 🟢 Low
@@ -9583,7 +9584,7 @@
 
 ---
 
-### [L-360] — `stars(n)` — 음수 별점 시 `aria-label="별점 -X / 5"` 스크린리더 노출
+### [L-360] ✅ 검토완료·현행유지(2026-06-14, L-bundle-U: stars(n)이 M-540로 n=Math.max(0,min(5,n)) 클램프 → 음수는 0으로, aria-label "별점 -X" 미발생) — `stars(n)` — 음수 별점 시 `aria-label="별점 -X / 5"` 스크린리더 노출
 
 - **영역:** 프론트엔드 — 별점 렌더링
 - **심각도:** 🟢 Low
@@ -10810,7 +10811,7 @@
 
 ---
 
-### [L-401] — `toggleWish` 지연 실행 경로 — `.pli-wish` 카드 버튼 시각 갱신 누락
+### [L-401] ✅ 검토완료·현행유지(2026-06-14, L-bundle-U: 모든 .pli-wish 핸들러가 toggleWishWithHint(item, btn)로 btn 전달 → 지연경로(authReady)에서 btn.classList/aria 갱신. bare toggleWish 호출자 없음) — `toggleWish` 지연 실행 경로 — `.pli-wish` 카드 버튼 시각 갱신 누락
 
 - **영역:** 프론트엔드 — 찜
 - **심각도:** 🟢 Low
@@ -13448,6 +13449,54 @@
 - **원인:** [pipeline/enrich_details.py:67-108](pipeline/enrich_details.py) — targets 쿼리·루프 구간 전체가 `try/finally` 바깥.
 - **수정안:** `con = sqlite3.connect(...)` 직후부터 전체를 `try: ... finally: con.close()` 로 감싸거나 `with sqlite3.connect(...) as con:` 사용.
 - **파일:** [pipeline/enrich_details.py](pipeline/enrich_details.py):67-134
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 81 (2026-06-14 자동루프)
+
+### [FE-018] — `renderLogFeed()` — 정렬/태그 빠른 전환 시 비동기 경쟁 상태(레이스 컨디션)
+
+- **영역:** 프론트엔드 — 커뮤니티 로그 피드 / 비동기 렌더링
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** 사용자가 정렬(최신/인기) 또는 태그 필터를 빠르게 연속 변경하면, 여러 `renderLogFeed()` 호출이 병렬로 Supabase `posts` RPC를 실행. 가장 마지막에 완료된 응답이 `el.innerHTML`을 덮어쓰므로, "인기" 선택 직후 "최신"을 클릭하면 느린 "인기" 응답이 나중에 도착해 화면에 인기 결과가 표시되는 반면 UI 탭은 "최신"을 가리키는 불일치 발생.
+- **원인:** [site/app.js:3917](site/app.js) — `renderLogFeed()`에 세대 카운터가 없음. `renderCategory()`는 `let _catGen = 0; const gen = ++_catGen; ... if (gen !== _catGen) return;` 패턴으로 구식 응답을 폐기하지만 `renderLogFeed()`에는 동일 보호 없음.
+- **수정안:** `_catGen`과 유사하게 모듈 레벨에 `let _logGen = 0;` 선언 후, 함수 진입 시 `const gen = ++_logGen;` → Supabase 응답 수신 후 `if (gen !== _logGen) return;` 체크 추가.
+- **파일:** [site/app.js](site/app.js):3917-3970
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [BE-008] — `run_all.py` — 두 번째 SQLite 연결 블록(line 193-218) `try/finally` 미적용
+
+- **영역:** 백엔드 파이프라인 — run_all / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `run_all.py:179-188` 첫 번째 `con` 블록은 `try/finally`로 정상 보호되나, line 193의 두 번째 `con = sqlite3.connect(DB)` 는 try/finally 없이 `promote_all(con)`, `P.recompute_ratings(con)`, `DROP TABLE`, `UPDATE` 등 다수의 쓰기 작업을 수행. 해당 구간에서 예외 발생 시 line 218 `con.close()`에 도달하지 못해 WAL/잠금 파일 잔류 가능.
+- **원인:** [pipeline/run_all.py:193-218](pipeline/run_all.py) — `con = sqlite3.connect(DB)` 이후 전체 블록이 `try/finally` 바깥.
+- **수정안:** line 193 직후부터 line 218까지를 `try: ... finally: con.close()` 로 감싸기.
+- **파일:** [pipeline/run_all.py](pipeline/run_all.py):193-218
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [BE-009] — 다중 파이프라인 파일 — `con.close()` `try/finally` 미적용(4건 일괄)
+
+- **영역:** 백엔드 파이프라인 — star_catalog / harvest_tents / download_images / export_site
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** BE-004~BE-008과 동일한 `con.close()` 미보호 패턴이 추가 4개 파일에서 발견됨. 예외 발생 시 각각 SQLite 연결이 열린 채로 프로세스가 종료되어 WAL 파일 또는 락이 잔류할 수 있음.
+  - `star_catalog.py:109` — `main()` 내 `con.close()`, catalog_scores 쿼리 이후 try/finally 없음
+  - `harvest_tents.py:237` — `P.recompute_ratings(con)` 및 `report()` 이후 `con.close()` 비보호
+  - `download_images.py:135` — 병렬 다운로드 워커가 `image_local` 업데이트 후 `con.close()` 비보호
+  - `export_site.py:243` — `export(con, args.out)` 이후 `con.close()` 비보호
+- **원인:** 각 파일의 `main()` 함수에서 `sqlite3.connect()` 이후 전체 로직을 `try/finally`로 감싸지 않음.
+- **수정안:** 각 파일에서 `con = sqlite3.connect(...)` 직후부터 `try: ... finally: con.close()` 패턴 적용, 또는 `with sqlite3.connect(...) as con:` 컨텍스트 매니저 사용.
+- **파일:** [pipeline/star_catalog.py](pipeline/star_catalog.py):109, [pipeline/harvest_tents.py](pipeline/harvest_tents.py):237, [pipeline/download_images.py](pipeline/download_images.py):135, [pipeline/export_site.py](pipeline/export_site.py):243
 - **우선순위:** 낮음
 - **상태:** 미해결
 
