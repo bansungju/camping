@@ -623,7 +623,7 @@ async function openSetModal(item) {
   modal.classList.add("on");
   const prevFocus = document.activeElement;   // L-143: 닫을 때 포커스 복귀
   if (modal._onKey) document.removeEventListener("keydown", modal._onKey);  // M-474: 중복 등록 방지
-  const close = () => { modal.classList.remove("on"); document.removeEventListener("keydown", modal._onKey); modal._onKey = null; if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const close = () => { clearTimeout(modal._addTid); modal.classList.remove("on"); document.removeEventListener("keydown", modal._onKey); modal._onKey = null; if (prevFocus && prevFocus.focus) prevFocus.focus(); };  // L-364: 보류 중인 add-후-닫기 타이머 취소(조기 닫기/재오픈 시 새 모달 오닫힘 방지)
   const onKey = e => {   // L-174: Tab focus trap + ESC
     if (e.key === "Escape") { close(); return; }
     if (e.key !== "Tab") return;
@@ -652,11 +652,12 @@ async function openSetModal(item) {
     const res = addToSet(btn.dataset.sid, item);
     if (res.status === "cap") { close(); openReplaceModal(btn.dataset.sid, item, res.slot); return; }
     btn.textContent = "✓ 추가됨";
-    setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);
+    modal._addTid = setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);  // L-364: 타이머 id 저장 → close()에서 취소 가능
   });
   const inp = modal.querySelector(".sm-input");
   modal.querySelector(".sm-create").onclick = () => {
-    const t = inp.value.trim(); if (!t) { inp.focus(); return; }
+    // L-345: .trim()은 NBSP( )는 제거하나 zero-width(ZWSP/ZWNJ/ZWJ/BOM)는 못 지움 → 보이지 않는 빈 이름 통과 방지
+    const t = inp.value.replace(/[​-‍﻿]/g, "").trim(); if (!t) { inp.focus(); return; }
     const type = modal.querySelector(".sm-type-select")?.dataset.value || DEFAULT_SET_TYPE;
     const s = newSet(t, type); const _r = addToSet(s.id, item);  // M-175/M-302: 반환값 검사
     close();
@@ -1003,7 +1004,7 @@ async function setupHomeSearch() {
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
     // M-204/M-371/M-435: 실패 시 idx·idxLoading 모두 초기화 → 재시도 가능
-    if (!idxLoading) idxLoading = getJSON("data/search.json?v=26e37e87").then(d => (idx = d)).catch(e => { idxLoading = null; console.warn("search.json load failed", e); return []; });
+    if (!idxLoading) idxLoading = getJSON("data/search.json?v=5c305338").then(d => (idx = d)).catch(e => { idxLoading = null; console.warn("search.json load failed", e); return []; });
     return idxLoading;
   };
   const inp = document.getElementById("homeq"), box = document.getElementById("homeres");
@@ -1223,7 +1224,7 @@ async function setupSearchPage() {
   const ensureIdx = () => {
     if (idx) return Promise.resolve(idx);
     // M-369/M-371/M-450: 실패 시 _idxLoading 초기화 → 재시도 가능, in-flight 가드(H-75) 유지
-    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=26e37e87").then(d => (idx = d)).catch(e => { _idxLoading = null; console.warn("search.json load failed", e); return []; });
+    if (!_idxLoading) _idxLoading = getJSON("data/search.json?v=5c305338").then(d => (idx = d)).catch(e => { _idxLoading = null; console.warn("search.json load failed", e); return []; });
     return _idxLoading;
   };
 
@@ -2222,7 +2223,8 @@ function openProduct(m) {
   }
   const wbtn = modal.querySelector(".pmwish");
   wbtn.onclick = () => {
-    wbtn.innerHTML = BOOKMARK_SVG;
+    // L-347: .pmwish는 생성 시 이미 BOOKMARK_SVG를 담고 있고 토글 시각상태는 .on 클래스(toggleWishWithHint)가
+    //   담당 → innerHTML 재설정은 동일 SVG를 다시 그려 아이콘만 깜빡이게 함. 제거.
     toggleWishWithHint(wishItem(m, STATE.slug), wbtn);
   };
   const setBtn = modal.querySelector(".pmset");
@@ -2835,7 +2837,7 @@ function draw() {
 async function renderBrand() {
   renderCatNav("");
   let idx;
-  try { idx = await getJSON("data/search.json?v=26e37e87"); }
+  try { idx = await getJSON("data/search.json?v=5c305338"); }
   catch (e) { document.getElementById("title").textContent = "데이터를 불러오지 못했습니다."; return; }
   const params = new URLSearchParams(location.search);
   const bname = params.get("b") || "";
@@ -3303,7 +3305,7 @@ function renderAccount() {
 
           // 후기 → 상품 이동 링크 해석용 인덱스(있으면). 실패해도 후기는 링크 없이 표시.
           let prodMap = new Map();
-          try { (await getJSON("data/search.json?v=26e37e87")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
+          try { (await getJSON("data/search.json?v=5c305338")).forEach(e => prodMap.set(wishKey(e.b, e.m, e.cap), e)); } catch (_) {}
 
           // FE-SOC-09: 내가 쓴 상품 후기
           const reviews = await getMyReviews();
