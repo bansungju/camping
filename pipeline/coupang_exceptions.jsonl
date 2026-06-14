@@ -1,0 +1,6 @@
+{"date":"2026-06-14","sheetRow":197,"name":"니모이큅먼트 초고리 3P","type":"C","triedQ":["니모 초고리 3P","니모 초고리"],"matched":"니모 초고리 2P 2인용 백패킹 알파인텐트","note":"용량 불일치 3P->2P. 용량 인지 선별 필요. 3P 정품이 쿠팡에 있는지도 확인","status":"open"}
+{"date":"2026-06-14","sheetRow":200,"name":"도플갱어아웃도어 DOD 에코 소울 예이 텐트","type":"D/E","triedQ":["DOD 에코 소울 예이 텐트","..."],"matched":"(미발견) 상위 raw: 원터치 캠핑 텐트 YCY","note":"에코소울 표기차(E) 또는 쿠팡 미등록(D). override 'DOD 에코소울 예이' 시도해볼 것","status":"open"}
+{"date":"2026-06-14","sheetRow":362,"name":"코베아 로보카 폴리 와우","type":"D","triedQ":["코베아 로보카 폴리 와우"],"matched":"(미발견) 상위 raw: 코베아 와우 패밀리 골드","note":"로보카폴리 콜라보 미등록 추정. x 확정 후보","status":"open"}
+{"date":"2026-06-14","sheetRow":367,"name":"코베아 미니 티피","type":"오매칭/약한겹침","matched":"코베아 코딘 스퀘어 티피 텐트, 브라운","note":"'티피'만 겹치고 '미니' 불일치. 코딘 스퀘어 티피는 다른 상품. 쿠팡에 '미니 티피' 정품 있는지 확인 or x","status":"open"}
+{"date":"2026-06-14","sheetRow":370,"name":"코베아 베이스 허브돔 2P","type":"F.변형토큰","matched":"non-EX 정품 287,050원(pid 9540827104)","note":"v3가 EX 변형 오채택→사용자 확인 후 non-EX 최저가로 교정(link ezonSQj9CS). v4 변형토큰 패널티로 자동화 가능","status":"resolved"}
+{"date":"2026-06-14","sheetRow":372,"name":"코베아 스크린 300","type":"B.모델번호드롭","matched":"(없음)","note":"사용자 확인: 쿠팡 미등록 → x 확정. 단 모델번호 '300' 드롭으로 ok 오통과했던 위험은 v4에서 수정 필요","status":"resolved_x"}
