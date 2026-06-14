@@ -180,8 +180,8 @@ def insert_flags(con, cur, all_flags):
     inserted = 0
     skipped = 0
     for product_id, metric_id, flag_type, note in all_flags:
-        # 동일 (product_id, metric_id, flag_type, note prefix 50자) 기존 미해결 flag 있으면 skip
-        note_prefix = note[:80]
+        # 동일 (product_id, metric_id, flag_type, note prefix 80자) 기존 미해결 flag 있으면 skip
+        note_prefix = note[:80]   # L-325: 주석/코드 길이 일치(80)
         if metric_id is not None:
             cur.execute("""
                 SELECT id FROM data_quality_flags

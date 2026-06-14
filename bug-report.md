@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 905 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 914 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 183 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 174 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -97,6 +97,7 @@
 | 71 | (xcode) iOS 시뮬레이터 — 홈·헤더·검색 | 2026-06-13 | 4건 (H-118·M-389·M-390·L-310) |
 | 72 | (xcode) iOS 시뮬레이터 — 필터 모달·침낭 카테고리 | 2026-06-13 | 2건 (L-311·L-312) |
 | 73 | BE(파이프라인)·FE(SW/오프라인) 자동루프 | 2026-06-14 | 3건 (BE-001·BE-002·FE-001) |
+| 74 | BE(coupang_runner)·FE(logFeed·bestGear) 자동루프 | 2026-06-14 | 3건 (BE-003·FE-002·FE-003) |
 
 ---
 
@@ -3803,7 +3804,7 @@
 
 ---
 
-### [L-199] — `make_logo.py` — 폰트 경로 macOS 하드코딩 → Linux CI 환경 `OSError`
+### [L-199] ✅ 검토완료·현행유지(2026-06-14, N·코드 실대조) — _font가 macOS→Linux nanum/dejavu→PIL기본 순차 폴백(H-140/M-568, make_logo.py:16-24). Linux CI 크래시 없음. — `make_logo.py` — 폰트 경로 macOS 하드코딩 → Linux CI 환경 `OSError`
 
 - **영역:** 백엔드 — 파이프라인 / 로고 생성
 - **심각도:** 🟢 Low
@@ -3815,7 +3816,7 @@
 
 ---
 
-### [L-200] — `make_logo.py` — `store-assets/` 디렉터리 없을 시 `FileNotFoundError`
+### [L-200] ✅ 검토완료·현행유지(2026-06-14, N·코드 실대조) — store-assets 저장 전 os.makedirs(exist_ok=True)(H-140, make_logo.py:153). — `make_logo.py` — `store-assets/` 디렉터리 없을 시 `FileNotFoundError`
 
 - **영역:** 백엔드 — 파이프라인 / 로고 생성
 - **심각도:** 🟢 Low
@@ -7853,7 +7854,7 @@
 
 ---
 
-### [L-294] — `verify_internal.py` — 모듈 레벨 경로(`QUEUE_OUT`, `DB_DEFAULT`)가 상대 경로 → cwd 의존
+### [L-294] ✅ 검토완료·현행유지(2026-06-14, L·설계) — DB_DEFAULT/QUEUE_OUT 상대경로이나 --db 인자 override(239) 제공, 파이프라인 cwd 실행 전제. — `verify_internal.py` — 모듈 레벨 경로(`QUEUE_OUT`, `DB_DEFAULT`)가 상대 경로 → cwd 의존
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8225,7 +8226,7 @@
 
 ---
 
-### [L-309] — `verify_internal.py` `main` — resolved_set 40자 vs insert_flags 80자 prefix 불일치
+### [L-309] ✅ 검토완료·현행유지(2026-06-14, L·코드 실대조) — resolved_set 40자(false-positive 스킵)와 insert_flags 80자(열린 중복 방지)는 목적이 다른 두 메커니즘, 각자 내부 일관. 최종 INSERT는 insert_flags 80자 dedup가 게이트 → 실제 이중삽입 없음. — `verify_internal.py` `main` — resolved_set 40자 vs insert_flags 80자 prefix 불일치
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8722,7 +8723,7 @@
 
 ---
 
-### [L-325] — `verify_internal.py` — `note_prefix` 길이 주석과 실제 코드(80자) 불일치
+### [L-325] ✅ 해결완료(2026-06-14, L) — insert_flags note_prefix 주석 50자→80자로 코드와 일치(verify_internal.py:183). — `verify_internal.py` — `note_prefix` 길이 주석과 실제 코드(80자) 불일치
 
 - **영역:** 백엔드 — 검증
 - **심각도:** 🟢 Low
@@ -9000,7 +9001,7 @@
 
 ---
 
-### [L-334] — `verify_internal.py` — `resolved_set` 40자 vs `insert_flags` 80자 prefix 불일치로 이중 삽입
+### [L-334] ✅ 검토완료·현행유지(2026-06-14, L·코드 실대조) — L-309와 동일. insert_flags가 동일 (pid,metric,flag_type,note80%) 미해결 flag 존재 시 skip(197). — `verify_internal.py` — `resolved_set` 40자 vs `insert_flags` 80자 prefix 불일치로 이중 삽입
 
 - **영역:** 백엔드 — 내부 검증
 - **심각도:** 🟢 Low
@@ -9768,7 +9769,7 @@
 
 ---
 
-### [L-368] — `make_logo.py` — macOS 전용 폰트 경로 하드코딩으로 Linux CI에서 OG 이미지 생성 실패
+### [L-368] ✅ 검토완료·현행유지(2026-06-14, N·코드 실대조) — L-199와 동일, 폰트 폴백 체인 구현됨. — `make_logo.py` — macOS 전용 폰트 경로 하드코딩으로 Linux CI에서 OG 이미지 생성 실패
 
 - **영역:** 백엔드 — 빌드
 - **심각도:** 🟢 Low
@@ -9889,7 +9890,7 @@
 
 ---
 
-### [L-373] — `make_icons.py` — `make_logo.py` 부재 시 `runpy.run_path()` 불명확 에러
+### [L-373] ✅ 검토완료·현행유지(2026-06-14, N·코드 실대조) — runpy.run_path는 make_logo.py 부재 시 경로를 명시한 FileNotFoundError 발생(충분히 명확), deprecated 위임 셰임. — `make_icons.py` — `make_logo.py` 부재 시 `runpy.run_path()` 불명확 에러
 
 - **영역:** 백엔드 — 빌드
 - **심각도:** 🟢 Low
@@ -12491,7 +12492,7 @@
 
 ---
 
-### [L-458] — `verify_internal.py` `check_price_outlier` — canonical 대표 제품만 검사, 변형 멤버 개별 가격 이상치 미탐지
+### [L-458] ✅ 검토완료·현행유지(2026-06-14, L·설계) — check_price_outlier는 cm.min_price(표시·관련 가격) 검사. 멤버의 저가 이상치는 min_price가 되어 탐지됨, 고가 이상치는 표시 무관. — `verify_internal.py` `check_price_outlier` — canonical 대표 제품만 검사, 변형 멤버 개별 가격 이상치 미탐지
 
 - **영역:** 백엔드 — 파이프라인/데이터 품질
 - **심각도:** 🟢 Low
@@ -13091,6 +13092,61 @@
 - **수정안:** SHELL 배열에 `"search.html"`, `"login.html"` 추가 후 `stamp_version.py` 재실행(SW 캐시명 자동 갱신).
 - **파일:** [site/sw.js](site/sw.js):8-11
 - **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 74 (2026-06-14 자동루프)
+
+| 영역 | 탐색일시 | 발견 건수 |
+|------|----------|-----------|
+| BE(coupang_runner)·FE(logFeed·bestGear) | 2026-06-14 | 3건 (BE-003·FE-002·FE-003) |
+
+---
+
+### [BE-003] — `coupang_runner.js` `post()` — XHR timeout 미설정 → Coupang API 무응답 시 runner 무한 대기
+
+- **영역:** 백엔드 — 파이프라인 / 쿠팡 파트너스 자동링크
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `post()` 함수 내 `XMLHttpRequest`에 `x.timeout`·`x.ontimeout` 미설정. Coupang 파트너스 API가 응답하지 않으면(서버 행 또는 네트워크 단절) `Promise`가 영원히 pending 상태로 남아 `await post(...)` 호출 이후 코드가 실행되지 않음. 결과적으로 쿠팡 러너가 무한 대기 상태가 되어 브라우저 탭을 닫지 않는 한 멈추지 않음. 429·rCode 오류는 처리되지만 행 자체가 없는 hang에는 무력.
+- **재현조건:** partners.coupang.com API가 연결은 되나 응답을 내려주지 않는 상황(서버 부하·방화벽 세션 hold 등).
+- **원인:** [pipeline/coupang_runner.js:31-40](pipeline/coupang_runner.js) — `x.timeout = 30000; x.ontimeout = function(){ rej(new Error("timeout")); };` 미추가.
+- **수정안:** `x.open(...)` 이후 `x.timeout = 30000;` + `x.ontimeout = function(){ rej(new Error("timeout")); };` 추가.
+- **파일:** [pipeline/coupang_runner.js](pipeline/coupang_runner.js):31-40
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-002] — `renderLogFeed()` — `p.created_at` null 시 `new Date(null)` → "1970년 1월 1일" 노출
+
+- **영역:** 프론트엔드 — 커뮤니티 / 로그 피드
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `posts` 쿼리 결과에서 `created_at`이 null인 행이 존재하면 `new Date(null).toLocaleDateString(...)` = `"1970년 1월 1일"` 이 카드 날짜로 노출됨.  Supabase `posts.created_at`에 `DEFAULT now()` + `NOT NULL`이 있다면 정상 케이스에서는 발생 안 하지만, 직접 INSERT·마이그레이션 스크립트·테스트 데이터에서 null이 삽입될 경우 즉시 UI 버그로 드러남.
+- **재현조건:** `posts` 테이블에 `created_at IS NULL` 행 존재 시.
+- **원인:** [site/app.js:3947](site/app.js) — `const dt = new Date(p.created_at).toLocaleDateString(...)` null 가드 없음.
+- **수정안:** `const dt = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" }) : "날짜 미상";`
+- **파일:** [site/app.js](site/app.js):3947
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [FE-003] — `renderBestGear()` — `d.metrics` undefined 시 `.filter()` TypeError → 커뮤니티 베스트 섹션 렌더 중단
+
+- **영역:** 프론트엔드 — 커뮤니티 / 베스트 장비
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색, `site/data/misc.json` metrics 부재 실측 확인)
+- **증상:** `site/data/*.json` 중 `metrics` 키가 없는 파일(실제로 `misc.json` 확인)이 `BEST_SLUGS`에 추가되거나 export 오류로 metrics가 누락될 경우 `d.metrics.filter(m => m.is_star)[0]` 에서 `TypeError: Cannot read properties of undefined (reading 'filter')` 발생. 해당 `try/catch` 블록은 에러를 삼키고 계속 진행하지만, 이미 `el.insertAdjacentHTML` 텍스트가 추가된 상태에서 이후 슬러그가 모두 에러로 건너뛰면 "측정 스펙 기반…" 안내 텍스트만 표시되고 실제 장비 카드가 전혀 없는 빈 섹션이 됨.
+- **재현조건:** `BEST_SLUGS` 내 슬러그의 data JSON에 `metrics` 배열이 없을 때.
+- **원인:** [site/app.js:3864](site/app.js) — `const star = d.metrics.filter(...)` — `d.metrics` undefined 가드 없음. 비교: 같은 패턴의 `renderCategory`(line 1595)는 `d.metrics.filter`를 쓰지만 export_site가 항상 metrics를 생성하므로 무해. `renderBestGear`는 별도 getJSON으로 로드하므로 동일하게 취약.
+- **수정안:** `const star = (d.metrics || []).filter(m => m.is_star)[0];`
+- **파일:** [site/app.js](site/app.js):3864
+- **우선순위:** 중간
 - **상태:** 미해결
 
 ---
