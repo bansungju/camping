@@ -8219,7 +8219,7 @@
 
 ---
 
-### [H-118] (xcode) — `header.top` — iOS 상태바 safe area 미적용: 앱 아이콘·타이틀 시간 표시와 겹침 + 계정 아이콘 탭 불가
+### [H-118] ✅ 해결완료(2026-06-14, HF) (xcode) — `header.top` — iOS 상태바 safe area 미적용: 앱 아이콘·타이틀 시간 표시와 겹침 + 계정 아이콘 탭 불가
 > 수정: style.css header.top에 `padding-top:max(18px,env(safe-area-inset-top))` 적용(L33). iOS 상태바/Dynamic Island 겹침·계정 아이콘 탭 차단 해소.
 
 - **영역:** 프론트엔드 — iOS Capacitor
