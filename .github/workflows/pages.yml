@@ -1,5 +1,8 @@
 name: Deploy site to GitHub Pages
 
+# 이 repo(public camping)는 배포 산출물 site/ 만 보유.
+# 보안·정합성 게이트와 빌드는 비공개 SSOT(bansungju/gear-forest)에서 수행되며,
+# gear-forest가 검증된 site/ 를 이 repo로 push → 아래 워크플로가 Pages로 배포한다.
 on:
   push:
     branches: [main]
@@ -22,39 +25,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      # 보안 게이트: 추적 파일에 토큰/키가 들어가면 배포 중단(우회불가 서버측 2차).
-      #   (2026-06-13 CF 터널 토큰 git 유출 사고 재발 방지. 로컬 pre-commit 훅이 1차)
-      - name: Scan for leaked secrets
-        run: python3 pipeline/scan_secrets.py
-      # 보안 게이트: SQL 문자열에 값을 직접 보간(인젝션)하면 배포 중단(우회불가 서버측 2차).
-      #   (2026-06-13 H-47 fill_whitelist_specs ACC_PAT f-string 삽입 사고 재발 방지. 로컬 pre-commit 훅이 1차)
-      - name: Scan for SQL injection
-        run: python3 pipeline/scan_sql_injection.py
-      # 배포 게이트: 익스포트된 가격이 카테고리 대비 '말이 안 되는' 값이면 배포 중단.
-      #   (쉘터 GHE 2,167원 사건 재발 방지 — 원인 무관하게 결과 JSON을 검증)
-      - name: Validate exported prices
-        run: python3 pipeline/check_export.py
-      # H-136: site/data가 커밋된 DB와 동기화됐는지 점검(DB 변경 후 export_site.py 재실행·커밋 누락 →
-      #   구버전 데이터 배포 방지). DB(repo 포함)→temp로 재익스포트 후 diff.
-      #   ⚠️ 비차단(continue-on-error): site/data를 DB-export 외 경로로 손보는 워크플로우가 있으면
-      #   차단 시 정상 배포가 막힌다 → 경고만 띄운다. 매번 경고가 뜨면 'export 후 커밋' 누락 신호.
-      #   site/data가 항상 순수 DB export임이 확실해지면 continue-on-error를 제거해 차단으로 강화.
-      - name: Check exported data freshness (warn)
-        continue-on-error: true
-        run: |
-          python3 pipeline/export_site.py --db camping_tents500.db --out /tmp/export-fresh >/dev/null
-          if diff -rq /tmp/export-fresh site/data >/dev/null 2>&1; then
-            echo "site/data ↔ DB export 일치"
-          else
-            echo "::warning::site/data가 DB(camping_tents500.db) 재익스포트 결과와 다릅니다 — DB 변경 후 export_site.py 재실행·커밋이 누락됐을 수 있습니다(구버전 데이터 배포 위험)."
-            diff -rq /tmp/export-fresh site/data || true
-          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site            # site/ 폴더만 배포 → <user>.github.io/camping/ 가 index.html
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
