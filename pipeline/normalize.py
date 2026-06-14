@@ -114,7 +114,7 @@ def parse_capacity_l(raw):
     m = re.search(r"(\d*\.?\d+)\s*ml", s)          # ml 우선
     if m:
         return round(float(m.group(1)) / 1000, 3)
-    m = re.search(r"(\d*\.?\d+)\s*(?:l|리터|ℓ)", s)  # L
+    m = re.search(r"(\d*\.?\d+)\s*(?:liter|리터|ℓ|l)\b", s)  # L (L-405: \b로 'lb'·'long' 등 오매칭 차단)
     if m:
         return float(m.group(1))
     # L-263: 단위 없는 bare-number 폴백 제거. 모델명 속 숫자(예 '코펠 24')가 리터로 오인돼

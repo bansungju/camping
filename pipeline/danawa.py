@@ -176,6 +176,12 @@ def parse_spec_string(s):
         if ":" in p:
             k, v = p.split(":", 1)
             k = k.strip()
+            if not k:   # L-406: 빈 키(':값') silent 삽입 방지 — 직전 값 연속 또는 태그로 처리
+                if seen_kv and last_key is not None:
+                    specs[last_key] = f"{specs[last_key]} / {p}"
+                else:
+                    tags.append(p)
+                continue
             specs[k] = v.strip()
             last_key, seen_kv = k, True
         elif seen_kv and last_key is not None:
