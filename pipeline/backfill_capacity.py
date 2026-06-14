@@ -32,10 +32,12 @@ def cap_from_name(name, category=None):
     if not name:
         return None
     s = name.lower()
-    m = re.search(r"(\d+)\s*[-~]\s*\d+\s*인", s)          # '3-4인용' → 3
+    # L-227: '인' 뒤 '치'(인치/inch)는 인원이 아님 — '10인치 팬'·'7인치 접시' 등 비텐트 제품이
+    #   capacity=10/7로 오기재(1~12 필터 통과)되던 문제 → (?!치) 부정전방탐색으로 차단. '인용'은 보존.
+    m = re.search(r"(\d+)\s*[-~]\s*\d+\s*인(?!치)", s)     # '3-4인용' → 3
     if m:
         return int(m.group(1))
-    m = re.search(r"(\d+(?:\.\d+)?)\s*인", s)              # '2인용'
+    m = re.search(r"(\d+(?:\.\d+)?)\s*인(?!치)", s)        # '2인용'
     if m:
         return int(float(m.group(1)))
     # 'P'/'p' 접미사: 텐트류에서만 인원. 또한 모델코드·SKU(G1500P, Z-M812P, BR-FC1100P,

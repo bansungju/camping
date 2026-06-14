@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 1029 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1032 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 59 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 56 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -106,6 +106,7 @@
 | 80 | FE(openLogModal Storage 이미지 누수)·BE(crosssource con.close 미도달·enrich_details con 누수) 자동루프 | 2026-06-14 | 3건 (FE-017·BE-006·BE-007) |
 | 81 | FE(renderLogFeed 레이스조건)·BE(run_all 두번째 con 미보호·다중파일 con.close 누락) 자동루프 | 2026-06-14 | 3건 (FE-018·BE-008·BE-009) |
 | 82 | FE(로그등록 성공 시 close() 미호출·onEsc 누수)·BE(detect_price_drops/column_fixes/backfill_capacity con.close 미보호) 자동루프 | 2026-06-14 | 3건 (FE-019·BE-010·BE-011) |
+| 83 | FE(좋아요 낙관 업데이트 RPC 실패 시 롤백 없음·댓글 등록 실패 무음)·BE(coupang_pull 파일핸들 누수+bare except) 자동루프 | 2026-06-14 | 3건 (FE-020·FE-021·BE-012) |
 
 ---
 
@@ -5246,7 +5247,7 @@
 
 ---
 
-### [L-227] — `backfill_capacity.py` `main()` — 전 카테고리 대상으로 capacity 추정하여 비텐트 제품에 오기재
+### [L-227] ✅ 해결완료(2026-06-14, L-bundle-W: cap_from_name의 한국어 인원 정규식에 (?!치) 부정전방탐색 추가 → "10인치/7인치" 등 비텐트 제품이 capacity로 오기재(1~12 필터 통과)되던 over-assignment 차단. 인용/P-게이트(H-84)는 보존) — `backfill_capacity.py` `main()` — 전 카테고리 대상으로 capacity 추정하여 비텐트 제품에 오기재
 
 - **영역:** 백엔드 — 용량 보강
 - **심각도:** 🟢 Low
@@ -9333,7 +9334,7 @@
 
 ---
 
-### [L-349] — `backfill_capacity.py` — `1.5P` 텐트 용량 `int(float(...))` 절단으로 1인용으로 오분류
+### [L-349] ✅ 검토완료·현행유지(2026-06-14, L-bundle-W: docstring 명시 의도 "1.5P→1" — 1.5P는 1인 솔로+여유 텐트라 정수 인원 필드에 floor(1) 분류가 도메인상 타당) — `backfill_capacity.py` — `1.5P` 텐트 용량 `int(float(...))` 절단으로 1인용으로 오분류
 
 - **영역:** 백엔드 — 용량 백필
 - **심각도:** 🟢 Low
@@ -12326,7 +12327,7 @@
 
 ---
 
-### [L-452] — `backfill_capacity.py` — `total=0` 시 `have*100//total` ZeroDivisionError
+### [L-452] ✅ 검토완료·현행유지(2026-06-14, L-bundle-W: M-176으로 pct=(have*100//total) if total else 0 가드 이미 적용 — total=0 ZeroDivision 미발생) — `backfill_capacity.py` — `total=0` 시 `have*100//total` ZeroDivisionError
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -13544,6 +13545,50 @@
 - **원인:** 각 파일의 `main()` 함수에서 `sqlite3.connect()` 이후 전체 실행 블록을 `try/finally`로 감싸지 않음.
 - **수정안:** 각 파일에서 `con = sqlite3.connect(...)` 직후부터 `try: ... finally: con.close()` 패턴 적용.
 - **파일:** [pipeline/column_fixes.py](pipeline/column_fixes.py):26-100, [pipeline/backfill_capacity.py](pipeline/backfill_capacity.py):54-89
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 83 (2026-06-14 자동루프)
+
+### [FE-020] — `renderLogFeed()`·`openLogDetail()` — 좋아요 낙관적 업데이트 후 RPC 실패 시 UI 롤백 없음
+
+- **영역:** 프론트엔드 — 커뮤니티 로그 피드 / 좋아요
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** 좋아요 버튼 클릭 시 `_setPostLiked()`, `btn.dataset.liked`, `btn.innerHTML` 등 UI를 먼저 변경(낙관적 업데이트)한 뒤 `supabase.rpc("increment/decrement_post_likes")` 를 호출. onclick 핸들러에 try/catch가 없어 RPC 실패(네트워크 오류·Supabase 오류) 시 UnhandledPromiseRejection이 발생하고 UI는 변경된 채로 남는다. 사용자는 좋아요가 반영됐다고 인식하지만 DB에는 반영되지 않아 불일치가 생기며, 페이지 새로고침 후 이전 상태가 복원된다.
+- **원인:** [site/app.js:4016-4030](site/app.js), [site/app.js:4088-4100](site/app.js) — async onclick 핸들러에 try/catch 없음. RPC 오류 시 UI 롤백(`_setPostLiked(pid, wasLiked)` + 버튼 원복) 로직도 부재.
+- **수정안:** 각 onclick 핸들러를 try/catch로 감싸고, catch 블록에서 `_setPostLiked(pid, wasLiked)` 호출 후 버튼 innerHTML 원복 및 `showToast("좋아요 처리 중 오류가 발생했어요")` 표시.
+- **파일:** [site/app.js](site/app.js):4016-4030, [site/app.js](site/app.js):4088-4100
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-021] — `openLogDetail()` — 댓글 INSERT 실패 시 사용자에게 오류 피드백 없음
+
+- **영역:** 프론트엔드 — 커뮤니티 로그 상세 / 댓글
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `cmtForm.onsubmit`에서 `supabase.from("comments").insert()` 에러가 반환되면(error truthy) `if (!error)` 분기를 타지 않아 아무런 피드백 없이 버튼만 다시 활성화됨. 사용자는 댓글이 저장됐는지 실패했는지 알 수 없고 댓글창은 입력한 내용이 그대로 남아 상태 혼란이 발생.
+- **원인:** [site/app.js:4161](site/app.js) — `if (!error)` 분기만 있고 `else` 에러 표시 없음. `showToast` 등 실패 안내 로직 부재.
+- **수정안:** `if (!error) { ... } else { showToast("댓글을 등록하지 못했어요. 잠시 후 다시 시도해주세요."); }` 추가.
+- **파일:** [site/app.js](site/app.js):4159-4161
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [BE-012] — `coupang_pull.py` — `open()` 파일 핸들 미닫힘 + `bare except` 로 모든 예외 무음 폐기
+
+- **영역:** 백엔드 파이프라인 — coupang_pull / 파일 핸들
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** line 10 `json.load(open(hp))` — `open(hp)` 반환 파일 핸들이 `with` 없이 열려, `json.load` 도중 예외 발생 시(잘못된 JSON 등) 핸들이 닫히지 않고 GC에 의존. 또한 `except: pass` (bare except)가 `SystemExit`·`KeyboardInterrupt`를 포함한 모든 예외를 무음 폐기해 `/tmp/coupang_held_rows.json` 파손 시 에러가 완전히 숨겨짐.
+- **원인:** [pipeline/coupang_pull.py:10](pipeline/coupang_pull.py) — `open()` without `with`, bare `except: pass`.
+- **수정안:** `with open(hp) as f: held = set(json.load(f))` 로 교체하고 `except (json.JSONDecodeError, OSError): pass` 로 예외 범위 한정.
+- **파일:** [pipeline/coupang_pull.py](pipeline/coupang_pull.py):10
 - **우선순위:** 낮음
 - **상태:** 미해결
 
