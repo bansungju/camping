@@ -2132,6 +2132,7 @@ function openProduct(m) {
   const _tb = document.getElementById("spec-tip-bubble"); if (_tb) _tb.style.display = "none";  // M-186: 모달 오픈 시 버블 숨김
   pushRecent(wishItem(m, STATE.slug));   // 최근 본 상품 기록
   const d = STATE.data, star = d.metrics.filter(x => x.is_star);
+  const mIdx = d.models ? d.models.indexOf(m) : -1;   // L-237/275/301/399: indexOf 1회 계산 후 재사용(중복 O(n) 제거)
   let modal = document.getElementById("pmodal");
   if (!modal) { modal = document.createElement("div"); modal.id = "pmodal"; modal.className = "pmodal"; document.body.appendChild(modal); }  // L-112: dialog role은 내부 .pmbox에만 — 중첩 제거
   modal._onCloseOnce = null;   // H-92: 이전 open이 남긴 close 훅 제거(잔여 restore 누수 방지)
@@ -2177,7 +2178,7 @@ function openProduct(m) {
        }
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
-       ${STATE.slug && d.models.indexOf(m) >= 0 ? `<a class="pmlink" href="/item/${STATE.slug}/item-${d.models.indexOf(m)}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
+       ${STATE.slug && mIdx >= 0 ? `<a class="pmlink" href="/item/${STATE.slug}/item-${mIdx}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
        <section class="pmrv" aria-label="유저 후기">
          <div class="pmrv-head">
            <span class="pmrv-title">유저 후기<span class="pmrv-cnt" id="pmrv-cnt"></span></span>
@@ -2200,7 +2201,7 @@ function openProduct(m) {
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
         await supabase.from("click_events").insert({
           slug: STATE.slug, brand: m.brand, model: m.model,
-          item_idx: STATE.data?.models ? STATE.data.models.indexOf(m) : null,
+          item_idx: d.models ? mIdx : null,
           coupang_url: url, session_id: sessionId
         });
       } catch (_) {}
@@ -2212,7 +2213,7 @@ function openProduct(m) {
     toggleWishWithHint(wishItem(m, STATE.slug), wbtn);
   };
   const setBtn = modal.querySelector(".pmset");
-  if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug, STATE.data?.models?.indexOf(m)));
+  if (setBtn) setBtn.onclick = () => openSetModal(setItem(m, STATE.slug, d.models ? mIdx : undefined));
   const reportLink = modal.querySelector(".pm-report-link");   // M-116: ⚠️ 버튼 제거 → 하단 텍스트 링크
   if (reportLink) reportLink.onclick = () => {
     const subject = encodeURIComponent(`[오류 제보] ${m.brand} ${m.model}`);
@@ -2222,7 +2223,7 @@ function openProduct(m) {
   // 공유 — 정적 상세페이지 URL(공유·즐겨찾기용)을 우선, 없으면 현재 주소. Web Share → 실패 시 클립보드 복사.
   const shareBtn = modal.querySelector(".pmshare");
   if (shareBtn) shareBtn.onclick = async () => {
-    const idx = d.models.indexOf(m);
+    const idx = mIdx;
     const url = STATE.slug && idx >= 0
       ? `${location.origin}/item/${STATE.slug}/item-${idx}.html`
       : location.href;
@@ -2796,6 +2797,7 @@ function draw() {
   let ldEl = document.getElementById("jsonld-products");
   if (!ldEl) { ldEl = document.createElement("script"); ldEl.type = "application/ld+json"; ldEl.id = "jsonld-products"; document.head.appendChild(ldEl); }
   const catUrl = `https://gear-forest.com/category.html?cat=${STATE.slug}`;
+  const _modelIdx = new Map(d.models.map((mm, ix) => [mm, ix]));   // L-301: indexOf O(n²) → Map O(1) 조회
   ldEl.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList",
     "name": d.name, "url": catUrl,
     "numberOfItems": rows.length,
@@ -2805,7 +2807,7 @@ function draw() {
         "@type": "Product",
         "name": `${m.brand} ${m.model}`,
         "brand": { "@type": "Brand", "name": m.brand },
-        "url": `https://gear-forest.com/item/${STATE.slug}/item-${d.models.indexOf(m)}.html`,  // M-119: 개별 상품 상세 URL (카테고리 URL 중복 제거)
+        "url": `https://gear-forest.com/item/${STATE.slug}/item-${_modelIdx.get(m)}.html`,  // M-119: 개별 상품 상세 URL (카테고리 URL 중복 제거)
         ...(m.price_min != null ? { "offers": { "@type": "Offer", "priceCurrency": "KRW", "price": m.price_min, "availability": "https://schema.org/InStock" } } : {})
       }
     }))

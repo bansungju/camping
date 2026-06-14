@@ -4868,7 +4868,7 @@
 
 ---
 
-### [L-218] — `_showAuthGateModal` — `loginHref` 사용되지 않는 데드 변수
+### [L-218] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조) — loginHref 변수는 현재 app.js에 부재(이미 제거됨). — `_showAuthGateModal` — `loginHref` 사용되지 않는 데드 변수
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟢 Low
@@ -5208,7 +5208,7 @@
 
 ---
 
-### [L-226] — `_showAuthGateModal()` — `loginHref` 변수 계산 후 미사용 (dead code)
+### [L-226] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조) — loginHref 부재. — `_showAuthGateModal()` — `loginHref` 변수 계산 후 미사용 (dead code)
 
 - **영역:** 프론트엔드 — 인증 게이트 모달
 - **심각도:** 🟢 Low
@@ -5731,7 +5731,7 @@
 
 ---
 
-### [L-237] — `openProduct` — `d.models.indexOf(m)` 이중 호출로 불필요한 선형 탐색 중복
+### [L-237] ✅ 해결완료(2026-06-14, A) — openProduct에서 d.models.indexOf(m) 1회 계산(mIdx) 후 재사용. — `openProduct` — `d.models.indexOf(m)` 이중 호출로 불필요한 선형 탐색 중복
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟢 Low
@@ -5999,7 +5999,7 @@
 
 ---
 
-### [L-242] — `_showAuthGateModal` — `loginHref` 변수 계산 후 미사용 (데드 코드)
+### [L-242] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조) — loginHref 부재. — `_showAuthGateModal` — `loginHref` 변수 계산 후 미사용 (데드 코드)
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟢 Low
@@ -7190,7 +7190,7 @@
 
 ---
 
-### [L-273] — `_showAuthGateModal` — `loginHref` 미사용 데드코드
+### [L-273] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조) — loginHref 부재. — `_showAuthGateModal` — `loginHref` 미사용 데드코드
 
 - **영역:** 프론트엔드 — 인증
 - **심각도:** 🟢 Low
@@ -7298,7 +7298,7 @@
 
 ---
 
-### [L-275] — `openProduct` — `d.models.indexOf(m)` 두 번 계산 → 레이스 시 인덱스 불일치
+### [L-275] ✅ 해결완료(2026-06-14, A) — mIdx 단일 계산으로 레이스·중복 제거. — `openProduct` — `d.models.indexOf(m)` 두 번 계산 → 레이스 시 인덱스 불일치
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟢 Low
@@ -7598,7 +7598,7 @@
 
 ---
 
-### [L-284] — `priceRange` — `b`(price_max) 파라미터 미사용 데드 인자
+### [L-284] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조·오탐) — priceRange의 b(price_max)는 M-480 폴백으로 실제 사용 중(app.js:339). — `priceRange` — `b`(price_max) 파라미터 미사용 데드 인자
 
 - **영역:** 프론트엔드 — 가격 표시
 - **심각도:** 🟢 Low
@@ -8044,7 +8044,7 @@
 
 ---
 
-### [L-301] — `draw` 카드 렌더링 — `d.models.indexOf(m)` O(n²) 반복
+### [L-301] ✅ 해결완료(2026-06-14, A) — draw JSON-LD 빌드를 _modelIdx Map(O(1)) 조회로 교체. — `draw` 카드 렌더링 — `d.models.indexOf(m)` O(n²) 반복
 
 - **영역:** 프론트엔드 — 성능
 - **심각도:** 🟢 Low
@@ -9155,7 +9155,7 @@
 
 ---
 
-### [L-342] — `priceRange` — `b`(price_max) 파라미터 선언 후 미사용 (dead parameter)
+### [L-342] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조·오탐) — b는 price_min null시 폴백 사용. — `priceRange` — `b`(price_max) 파라미터 선언 후 미사용 (dead parameter)
 
 - **영역:** 프론트엔드 — 가격 표시
 - **심각도:** 🟢 Low
@@ -10766,7 +10766,7 @@
 
 ---
 
-### [L-398] — `priceRange` `b` 파라미터 dead code — 유지보수 혼란
+### [L-398] ✅ 검토완료·현행유지(2026-06-14, 코드 실대조·오탐) — b 사용 중(app.js:339). — `priceRange` `b` 파라미터 dead code — 유지보수 혼란
 
 - **영역:** 프론트엔드 — 가격 표시
 - **심각도:** 🟢 Low
@@ -10778,7 +10778,7 @@
 
 ---
 
-### [L-399] — `openProduct` — `d.models.indexOf(m)` O(n) 중복 호출
+### [L-399] ✅ 해결완료(2026-06-14, A) — mIdx 재사용. — `openProduct` — `d.models.indexOf(m)` O(n) 중복 호출
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟢 Low
