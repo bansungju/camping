@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 1002 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 1014 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 86 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 74 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -5066,7 +5066,7 @@
 
 ---
 
-### [L-222] — `setupHomeSearch` `run()` — 인덱스 로딩 중 타이핑 시 중복 `run()` 호출 큐잉
+### [L-222] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: 인덱스 로딩 중 키 입력은 동일 idxLoading 프라미스에 콜백 누적되나 각 콜백이 inp.value===_q 가드로 최신 1건만 실제 run() — 중복 실행 없음) — `setupHomeSearch` `run()` — 인덱스 로딩 중 타이핑 시 중복 `run()` 호출 큐잉
 
 - **영역:** 프론트엔드 — 홈 검색
 - **심각도:** 🟢 Low
@@ -5385,7 +5385,7 @@
 
 ---
 
-### [L-230] — `passRange` — 가격 미등록 상품이 가격 필터 적용 시 조용히 제외됨
+### [L-230] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: 가격 필터는 사용자가 실제 좁혔을 때만 활성(isDefault 시 STATE.range 엔트리 delete) → 가격 없는 상품 제외는 범위 검증 불가 항목 제외로 합리적) — `passRange` — 가격 미등록 상품이 가격 필터 적용 시 조용히 제외됨
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -5565,7 +5565,7 @@
 
 ---
 
-### [L-233] — `showToast` — 토스트 표시 중 재호출 시 fade-in 애니메이션 스킵
+### [L-233] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: 토스트 표시 중 재호출 시 텍스트만 교체는 의도된 동작 — 매번 재페이드는 깜빡임 유발. clearTimeout으로 타이머만 갱신) — `showToast` — 토스트 표시 중 재호출 시 fade-in 애니메이션 스킵
 
 - **영역:** 프론트엔드 — UI
 - **심각도:** 🟢 Low
@@ -8277,7 +8277,7 @@
 - **제안 수정:** 검색 활성/비활성 토글 시 `.header-acct` 표시 상태 보존 확인.
 - **파일:** [site/app.js](site/app.js) 검색 초기화 로직, [site/style.css](site/style.css) [lane:FRONTEND]
 
-### [L-310] (xcode) — `homeSearch` — 검색 닫기 후 검색창에 미완성 입력 텍스트 잔류
+### [L-310] (xcode) ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: H-18 의도 — ESC/blur는 드롭다운만 닫고 입력값 유지(input[type=search] 네이티브 초기화 차단), 명시적 삭제는 clearBtn) — `homeSearch` — 검색 닫기 후 검색창에 미완성 입력 텍스트 잔류
 
 - **영역:** 프론트엔드 — 검색 UX
 - **심각도:** 🟢 Low
@@ -8457,7 +8457,7 @@
 
 ---
 
-### [L-315] — `passRange` — null 스펙 값 가진 모델이 슬라이더 기본 범위에서도 제외
+### [L-315] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: 슬라이더 기본 범위(isDefault)에선 delete STATE.range[key]로 엔트리 부재 → passRange가 skip → null 스펙값 제외 안 됨. 제외는 실제 좁힘/프리셋/URL복원 시만) — `passRange` — null 스펙 값 가진 모델이 슬라이더 기본 범위에서도 제외
 
 - **영역:** 프론트엔드 — 필터
 - **심각도:** 🟢 Low
@@ -8481,7 +8481,7 @@
 
 ---
 
-### [L-317] — `openProduct` wish 버튼 — 클릭 즉시 `innerHTML` 리셋으로 로그인 게이트 시 라벨 소실
+### [L-317] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: .pmwish는 라벨 없는 아이콘 전용 버튼이라 라벨 소실 불가. 더불어 L-347로 onclick innerHTML 재설정 자체 제거됨) — `openProduct` wish 버튼 — 클릭 즉시 `innerHTML` 리셋으로 로그인 게이트 시 라벨 소실
 
 - **영역:** 프론트엔드 — 상품 모달
 - **심각도:** 🟢 Low
@@ -9055,7 +9055,7 @@
 
 ---
 
-### [L-338] — `setupHomeSearch` `setActive` — ArrowUp 첫 입력 시 마지막-1 항목으로 이동 (off-by-one)
+### [L-338] ✅ 해결완료(2026-06-14, L-bundle-T: setupHomeSearch ArrowUp을 active<=0?last:active-1로 — 미선택(-1)에서 setActive(-2)=둘째뒤 이동하던 off-by-one 수정, 미선택 ArrowUp→마지막 항목) — `setupHomeSearch` `setActive` — ArrowUp 첫 입력 시 마지막-1 항목으로 이동 (off-by-one)
 
 - **영역:** 프론트엔드 — 홈 검색
 - **심각도:** 🟢 Low
@@ -9427,7 +9427,7 @@
 
 ---
 
-### [L-354] — `pushRecent` — `wishKey` 결과 `"||"` 등 퇴화 키로 정상 항목 잘못 제거
+### [L-354] ✅ 검토완료·현행유지(2026-06-14, L-bundle-T: pushRecent는 openProduct(실 b·m 보유)에서만 호출돼 wishKey "||" 퇴화키 미발생, M-485 빈 key 가드도 존재) — `pushRecent` — `wishKey` 결과 `"||"` 등 퇴화 키로 정상 항목 잘못 제거
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟢 Low
@@ -10834,7 +10834,7 @@
 
 ---
 
-### [L-403] — `pushRecent` — `QuotaExceededError` 무음 처리로 recent 목록 갱신 중단
+### [L-403] ✅ 해결완료(2026-06-14, L-bundle-T: pushRecent QuotaExceeded 시 항목 수 축소(12→4) 후 1회 재시도 → 저장 압박에도 최근 목록 갱신 지속) — `pushRecent` — `QuotaExceededError` 무음 처리로 recent 목록 갱신 중단
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟢 Low
@@ -12510,7 +12510,7 @@
 
 ---
 
-### [L-459] — `renderThumbs` — 삭제 버튼 더블탭 시 stale `data-i`로 두 번 `splice` → 다른 사진 삭제
+### [L-459] ✅ 해결완료(2026-06-14, L-bundle-T: renderThumbs 삭제를 인덱스 대신 렌더시점 File 참조 splice(indexOf, -1이면 no-op) → 더블탭 stale 인덱스로 다른 사진 삭제 방지) — `renderThumbs` — 삭제 버튼 더블탭 시 stale `data-i`로 두 번 `splice` → 다른 사진 삭제
 
 - **영역:** 프론트엔드 — 리뷰 폼
 - **심각도:** 🟢 Low
@@ -12534,7 +12534,7 @@
 
 ---
 
-### [L-461] — `pushRecent` — `localStorage` QuotaExceededError 무음 처리 → 최근 본 상품 미업데이트 안내 없음
+### [L-461] ✅ 해결완료(2026-06-14, L-bundle-T: L-403과 동일 — pushRecent quota 시 축소 재시도로 최근 본 상품 갱신 중단 해소) — `pushRecent` — `localStorage` QuotaExceededError 무음 처리 → 최근 본 상품 미업데이트 안내 없음
 
 - **영역:** 프론트엔드 — 최근 본 상품
 - **심각도:** 🟢 Low
@@ -12818,7 +12818,7 @@
 
 ---
 
-### [L-467] — `_reviewCard()` — `safeHttps()` 빈 문자열 반환 시 `src=""` img 렌더 → `.has-photo` 카드 레이아웃 깨짐
+### [L-467] ✅ 해결완료(2026-06-14, L-bundle-T: _reviewCard가 https 통과 이미지(validImgs)만 사진으로 취급 → 비-https URL의 src="" 빈 이미지로 has-photo 레이아웃 깨짐 방지, 유효 사진 0이면 텍스트 카드 폴백) — `_reviewCard()` — `safeHttps()` 빈 문자열 반환 시 `src=""` img 렌더 → `.has-photo` 카드 레이아웃 깨짐
 
 - **영역:** 프론트엔드 — 상품 모달/후기
 - **심각도:** 🟢 Low
