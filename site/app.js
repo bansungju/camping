@@ -564,7 +564,7 @@ function addToSet(setId, item) {
   const type = s.type || DEFAULT_SET_TYPE;
   const slot = slotForSlug(item.s);
   const cap = slot ? slotCap(slot, type) : 0;
-  const i = s.items.findIndex(x => x.pcode === item.pcode);
+  const i = s.items.findIndex(x => x.pcode != null && x.pcode === item.pcode);  // L-214: pcode 없는 구 항목끼리 undefined===undefined 오매칭(중복 오탐) 방지 — 양쪽 다 있을 때만 동일 취급
   if (i >= 0) {
     // 같은 상품 수량 증가 — 같은-상품 한도(qtyMax)와 슬롯 정원(cap) 둘 다 검사
     const cur = s.items[i].qty || 1;
@@ -1935,6 +1935,7 @@ function buildFilters(d, star) {
   });
   // 정렬 적용(셀렉트·빠른칩 공용) — 셀렉트 값도 동기화
   const ssel = bar.querySelector("[data-sort]");
+  let _syncSortChips = () => {};   // L-277/L-291: 칩 생성 후 실제 동기화 함수 할당(아래)
   const applySort = v => {
     // M-228: 수동 정렬 시 스타일 칩 이중활성 방지 — campStyle 초기화
     if (STATE.campStyle) { STATE.campStyle = ""; if (STATE.data) renderStyleChips(STATE.data); }
@@ -1942,6 +1943,7 @@ function buildFilters(d, star) {
     else if (v === "value") { STATE.sortKey = "value"; STATE.sortAsc = false; }
     else { STATE.sortKey = v; STATE.sortAsc = defaultAsc(v); }
     if (ssel) ssel.value = (STATE.sortKey === defaultSortKey()) ? "" : STATE.sortKey;
+    _syncSortChips();   // L-291: 정렬 변경 후 빠른 칩 활성표시 갱신
     draw();
   };
   if (ssel) ssel.onchange = e => applySort(e.target.value);
@@ -1953,6 +1955,17 @@ function buildFilters(d, star) {
     sc.innerHTML = `<span class="flab">정렬</span>` + CHIPS.map(([v, lab]) =>
       `<button type="button" class="schip" data-sortval="${v}" aria-pressed="false">${esc(lab)}</button>`).join("");  // L-16
     sc.querySelectorAll(".schip").forEach(b => b.onclick = () => applySort(b.dataset.sortval));
+    // L-277/L-291: 현재 정렬키에 맞춰 칩 .on·aria-pressed 동기화. 빈값 칩=기본(spec)정렬일 때만 활성.
+    //   비기본 spec 헤더정렬이면 일치 칩이 없어 모두 비활성(정상 — 해당 칩 부재).
+    _syncSortChips = () => {
+      const dk = defaultSortKey();
+      sc.querySelectorAll(".schip").forEach(b => {
+        const v = b.dataset.sortval;
+        const on = v ? STATE.sortKey === v : STATE.sortKey === dk;
+        b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
+      });
+    };
+    _syncSortChips();
   }
   // 품질 토글
   const qx = bar.querySelector("[data-qx]");
@@ -3073,7 +3086,7 @@ function renderRecent() {
   if (!a.length) { el.innerHTML = ""; return; }
   el.innerHTML = `<h2 class="sec">최근 본 상품</h2><div class="recent-row">` +
     a.filter(x => x.s && x.b && x.m).map((x, i) => `<div class="recard-wrap">
-      <a class="recard" href="category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">  <!-- M-481: undefined 필드 필터 -->
+      <a class="recard" href="category.html?cat=${encodeURIComponent(x.s)}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}">  <!-- M-481: undefined 필드 필터 · L-355: 슬러그도 인코딩 -->
         ${thumbCell(x.img, x.m, "var(--card2)", "🏕️", "recard-thumb", "recard-noimg")}
         <div class="recard-b">${esc(x.b)}</div>
         <div class="recard-m">${esc(x.m)}</div>
@@ -3476,8 +3489,8 @@ function renderAccount() {
       // H-133: x.b/x.m 누락 시 encodeURIComponent(undefined)="undefined"로 "?brands=undefined&q=undefined"
       //   브로큰 URL·0건 검색이 된다 → 둘 다 있을 때만 brands/q 부착, 없으면 카테고리 페이지로 폴백.
       const href = (x.b && x.m)
-        ? `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`
-        : `category.html?cat=${x.s}`;
+        ? `category.html?cat=${encodeURIComponent(x.s)}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`
+        : `category.html?cat=${encodeURIComponent(x.s)}`;  // L-355: 카테고리 슬러그도 인코딩(방어)
       // L-75: role="button" + 내부 <button> 중첩 HTML 위반 → 찜 해제 버튼만 interactive, pli는 click 핸들러만 유지
       return `<div class="pli" data-href="${esc(href)}" data-wkey="${esc(x.key)}" style="cursor:pointer">
         <button type="button" class="pli-wish on" data-key="${esc(x.key)}" aria-label="찜 해제" aria-pressed="true">${BOOKMARK_SVG}</button>
