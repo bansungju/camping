@@ -6413,7 +6413,8 @@
 
 ---
 
-### [L-254] — `renderChips` — 선택된 브랜드가 상위 40개 밖이면 활성 칩이 목록에 미표시
+### [L-254] ✅ 해결완료(2026-06-14, CORE) — `renderChips` — 선택된 브랜드가 상위 40개 밖이면 활성 칩이 목록에 미표시
+> [site/app.js](site/app.js) `renderChips`에서 `.slice(0, 40)` 후, 선택된 브랜드(`params.get("b")`)가 show에 없으면 `sortedBrands`에서 찾아 맨 앞에 `unshift`. 이제 인기 41위 이하 브랜드 선택 시에도 활성(`on`) 칩이 항상 표시됨. node --check 통과.
 
 - **영역:** 프론트엔드 — 브랜드 필터
 - **심각도:** 🟢 Low
