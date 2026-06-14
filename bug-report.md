@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 981 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 990 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 107 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 98 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -102,6 +102,7 @@
 | 76 | FE(JSON-LD SearchAction·renderHotSection폴백)·BE(DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-007·FE-008·BE-004) |
 | 77 | FE(댓글삭제 세션만료·후기카드 날짜 null·댓글 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-009·FE-010·FE-011) |
 | 78 | FE(후기등록 Storage롤백 누락·리뷰날짜 null·renderAccount 날짜 null) 자동루프 | 2026-06-14 | 3건 (FE-012·FE-013·FE-014) |
+| 79 | FE(로그아웃 찜동기화 누락·CDN 버전미고정)·BE(graph_full DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-015·FE-016·BE-005) |
 
 ---
 
@@ -2533,7 +2534,7 @@
 - **제안 수정:** `items.map(m => ({ b:m.brand, m:m.model, cap:m.capacity??null, weight_g:m.specs.weight_min?.value??null, qty:1, img:m.img??null, p:m.price_min??null }))` → `items.map(m => setItem(m, STATE.slug))`
 - **파일:** [site/app.js](site/app.js) line ~2113 [lane:CORE]
 
-### [L-160] — `renderLogFeed` — 비로그인 사용자도 좋아요(like) RPC 호출 가능 — 인증 없는 집계 조작
+### [L-160] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: renderLogFeed는 community.html 전용·커뮤니티 아카이브(COMMUNITY_ENABLED=false) 영역이라 dead 경로) — `renderLogFeed` — 비로그인 사용자도 좋아요(like) RPC 호출 가능 — 인증 없는 집계 조작
 - **영역:** 커뮤니티 — 로그 피드 좋아요 버튼
 - **심각도:** 🟢 Low
 - **증상:** 피드의 좋아요 버튼(`.log-like-btn`, line 3265)은 로그인 여부를 확인하지 않고 즉시 `increment_post_likes` / `decrement_post_likes` RPC를 호출한다. 비로그인 사용자도 좋아요를 누르면 카운트가 즉시 UI에서 변경되고 RPC도 호출된다. DB 측 RLS가 막으면 조용히 실패하지만, 사용자 입장에선 성공한 것처럼 보인다(localStorage만 변경됨). 오해를 유발하고 잘못된 사용자 경험을 제공.
@@ -3017,7 +3018,7 @@
 
 ---
 
-### [L-184] — `openLogModal` — 이미지 교체·폼 닫기 시 Blob URL `revokeObjectURL` 미호출 → 메모리 누수
+### [L-184] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: M-407/L-159로 재오픈·교체·닫기 3경로 모두 revokeObjectURL 이미 호출) — `openLogModal` — 이미지 교체·폼 닫기 시 Blob URL `revokeObjectURL` 미호출 → 메모리 누수
 
 - **영역:** 프론트엔드 — 커뮤니티/소셜 로그 작성 모달 (app.js)
 - **심각도:** 🟢 Low
@@ -3937,7 +3938,7 @@
 
 ---
 
-### [L-203] — `view-set importSet` — 로그인 상태와 무관하게 버튼 레이블 "로그인 필요" 고정
+### [L-203] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: 현재 버튼 레이블은 항상 "내 세트에 추가"·로그인 분기는 추가 후 토스트 문구로만 — "로그인 필요" 고정 코드 부재=stale) — `view-set importSet` — 로그인 상태와 무관하게 버튼 레이블 "로그인 필요" 고정
 
 - **영역:** 프론트엔드 — 세트 공유 / 가져오기 (app.js)
 - **심각도:** 🟢 Low
@@ -8074,7 +8075,7 @@
 
 ---
 
-### [L-303] — `renderHotSection` — Supabase RPC `error` 미체크로 백엔드 오류 묵살
+### [L-303] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: M-558로 hotErr 구조분해+console.error+return 이미 적용) — `renderHotSection` — Supabase RPC `error` 미체크로 백엔드 오류 묵살
 
 - **영역:** 프론트엔드 — 홈
 - **심각도:** 🟢 Low
@@ -11781,7 +11782,7 @@
 
 ---
 
-### [L-432] — `importSet` — `coupang_url` localStorage 저장 전 `safeHttps()` 검증 누락 → 잠재적 저장 XSS
+### [L-432] ✅ 해결완료(2026-06-14, L-bundle-R: 공유 view-set base64 import 시 coupang_url을 safeHttps()로 정화 후 저장 — 신뢰불가 입력 저장 XSS 방어) — `importSet` — `coupang_url` localStorage 저장 전 `safeHttps()` 검증 누락 → 잠재적 저장 XSS
 
 - **영역:** 프론트엔드 — 세트 공유 (보안)
 - **심각도:** 🟢 Low
@@ -11896,7 +11897,7 @@
 
 ---
 
-### [L-433] — `app.js` — `supabaseClient.js`를 두 가지 버전 쿼리스트링으로 import → 모듈 인스턴스 분리 위험
+### [L-433] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: stamp_version.py가 app.js 내부 import 21곳+html ref를 매 빌드 동일 해시(현 9238c997)로 일괄 갱신 → 드리프트 구조적 방지) — `app.js` — `supabaseClient.js`를 두 가지 버전 쿼리스트링으로 import → 모듈 인스턴스 분리 위험
 
 - **영역:** 프론트엔드 — 모듈 로딩
 - **심각도:** 🟢 Low
@@ -12184,7 +12185,7 @@
 
 ---
 
-### [L-445] — `_reviewCard` — `r.body=null`이고 이미지도 없을 때 `esc(null)` 호출 → `"null"` 문자 표시
+### [L-445] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: esc()가 s==null→"" 가드 → esc(null)은 ""=오탐) — `_reviewCard` — `r.body=null`이고 이미지도 없을 때 `esc(null)` 호출 → `"null"` 문자 표시
 
 - **영역:** 프론트엔드 — 상품 상세 모달 / 후기
 - **심각도:** 🟢 Low
@@ -12208,7 +12209,7 @@
 
 ---
 
-### [L-447] — `openProduct` — `data-url="${esc(coupang_url)}"` innerHTML 이중 인코딩 → `click_events` 저장 URL 불일치 가능
+### [L-447] ✅ 검토완료·현행유지(2026-06-14, L-bundle-R: data-url은 esc()로 인코딩되나 dataset.url 읽을 때 브라우저가 엔티티 디코드→원본 복원, click_events 저장값 일치=오탐) — `openProduct` — `data-url="${esc(coupang_url)}"` innerHTML 이중 인코딩 → `click_events` 저장 URL 불일치 가능
 
 - **영역:** 프론트엔드 — 상품 상세 모달 / 구매 버튼
 - **심각도:** 🟢 Low
@@ -12686,7 +12687,7 @@
 
 ---
 
-### [L-464] — `signInWithApple` — `state` 생성 후 `response.state` 비교 검증 없음 → CSRF 방어 무의미
+### [L-464] ✅ 해결완료(2026-06-14, L-bundle-R: state 변수 보존 후 response.state echo-back 비교(반환 시에만·nonce 바인딩이 1차 방어라 미반환 통과) 추가) — `signInWithApple` — `state` 생성 후 `response.state` 비교 검증 없음 → CSRF 방어 무의미
 
 - **영역:** 프론트엔드 — Apple 로그인 OAuth (보안)
 - **심각도:** 🟢 Low
@@ -13353,6 +13354,56 @@
 - **수정안:** `const dt = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR", ...) : "";`
 - **파일:** [site/app.js](site/app.js):3349
 - **우선순위:** 낮음 (커뮤니티 비활성 중)
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 79 (2026-06-14 자동루프)
+
+| 영역 | 발견일 | 신규 버그 |
+|------|--------|-----------|
+| FE(로그아웃 찜동기화 누락·CDN 버전미고정)·BE(graph_full DB연결미종료) | 2026-06-14 | 3건 (FE-015·FE-016·BE-005) |
+
+---
+
+### [FE-015] — `account.html` 로그아웃 버튼 — `signOut()` 전 `window.onWishChange` 미해제 → 로그아웃 중 찜 변경 시 원격 동기화 오염 가능
+
+- **영역:** 프론트엔드 — 마이페이지 / 인증
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `account.html:526` 의 `btnSignout.onclick`은 `await signOut()` 만 호출. 반면 계정 삭제 플로우(line 540)는 `signOut()` 전에 `window.onWishChange = null`을 명시 해제한다(M-214 주석). 로그아웃 직전(또는 로그아웃 중 비동기 대기 동안) 다른 탭에서 찜을 토글하면 `setWish()` → `window.onWishChange(items)` → `saveRemoteWishlist(items)` 가 Supabase session이 무효화되는 시점에 실행돼 인증 오류 또는 잘못된 데이터를 쓰려 시도할 수 있음. 또한 `renderLogin()`(line 429)이 `onWishChange = null`을 세팅하지만, auth 상태 변화가 비동기적으로 `renderLogin()`에 도달하기 전 짧은 구간이 노출됨.
+- **원인:** [site/account.html:526](site/account.html) — `window.onWishChange = null; _wishSyncedUser = null;` 생략. 계정 삭제 경로(line 540)와 비대칭.
+- **수정안:** `btnSignout.onclick = async () => { window.onWishChange = null; _wishSyncedUser = null; await signOut(); }`
+- **파일:** [site/account.html](site/account.html):526
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-016] — `app.js` Capacitor CDN import — 버전 미고정(`@latest`) → CDN 파괴적 업데이트 시 네이티브 앱 무음 장애
+
+- **영역:** 프론트엔드 — 네이티브 앱(Capacitor) / CDN 의존성
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `app.js` lines 12·13·28에서 `import('https://cdn.jsdelivr.net/npm/@capacitor/status-bar/dist/esm/index.js')`, `@capacitor/splash-screen`, `@capacitor/browser` 를 버전 지정 없이 CDN에서 동적 import. jsDelivr `npm/package/...` 경로는 버전 없으면 최신을 서빙 → Capacitor 파괴적 업데이트(예: 메서드명 변경) 시 앱 배포 없이 런타임 장애 발생. 웹(PWA)에서는 `window.Capacitor`가 falsy라 실행 안 되나, iOS/Android 앱에서는 필수 경로. `try/catch`가 있어 크래시는 방지되지만 StatusBar가 적용 안 되거나, SplashScreen이 닫히지 않거나, 외부 링크가 인앱 WebView 없이 열리지 않음.
+- **원인:** [site/app.js:12,13,28](site/app.js) — CDN URL에 `@버전` 없음. 예: `npm/@capacitor/browser@6.0.2/dist/esm/...` 형태여야 함.
+- **수정안:** 각 import URL에 사용 중인 Capacitor 메이저 버전을 고정. 예: `npm/@capacitor/browser@6/dist/esm/index.js`
+- **파일:** [site/app.js](site/app.js):12, 13, 28
+- **우선순위:** 중간 (네이티브 앱 배포 시 높음)
+- **상태:** 미해결
+
+---
+
+### [BE-005] — `graph_full.py` `normalize_node()` — `con.close()` `try/finally` 없이 예외 시 SQLite 연결 미종료
+
+- **영역:** 백엔드 파이프라인 — graph 파이프라인 / SQLite
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `graph_full.py:90` 의 `normalize_node()` 함수에서 `con = sqlite3.connect(s["db"])` 후 `con.close()`를 `try/finally` 없이 호출. `NM.normalize_db(con)` 또는 `con.commit()` 에서 예외가 발생하면 `con.close()`가 건너뛰어져 WAL 파일이 잔류할 수 있음(BE-004와 동일 패턴, 다른 파일). 같은 파일의 `enrich_node()`(line 126)는 `finally: con.close()`를 올바르게 사용하고 있어 비일관성이 있음.
+- **원인:** [pipeline/graph_full.py:90](pipeline/graph_full.py) — `try/finally` 블록 없이 `con.close()` 단순 호출.
+- **수정안:** `try: ... finally: con.close()` 패턴으로 감싸거나 `with sqlite3.connect(...) as con:` 사용.
+- **파일:** [pipeline/graph_full.py](pipeline/graph_full.py):86-91
+- **우선순위:** 낮음
 - **상태:** 미해결
 
 ---
