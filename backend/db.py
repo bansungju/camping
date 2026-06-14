@@ -20,6 +20,10 @@ async def query_db(sql: str, params=()):
         return await asyncio.wait_for(_run(), timeout=8.0)
     except asyncio.TimeoutError:
         raise HTTPException(503, "서버 과부하. 잠시 후 재시도해 주세요.")
+    except (aiosqlite.Error, OSError) as e:
+        # M-464/M-561: DB 손상·락·I/O 오류가 raw 500 스택트레이스로 노출되지 않게 503으로 변환.
+        print(f"[db] query 실패: {type(e).__name__}: {e}")
+        raise HTTPException(503, "데이터베이스 오류. 잠시 후 재시도해 주세요.")
 
 
 async def health_check() -> dict:

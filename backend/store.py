@@ -11,6 +11,11 @@ class DataStore:
         self.search_index: list = []
 
     def load(self):
+        # M-553: 재로드 시 이전 상태를 초기화하지 않으면 manifest에서 삭제된 슬러그가 self.categories에
+        #   잔존해 /api/category/<삭제슬러그>로 계속 노출된다 → 진입 시 전 상태 리셋.
+        self.manifest = {}
+        self.categories = {}
+        self.search_index = []
         # manifest — M-432: 부재·파싱오류가 lifespan까지 전파돼 서버 기동이 죽지 않게 빈 상태로 폴백(+경고).
         #   (search.json은 os.path.exists 가드가 있어 불일치했다.)
         try:
@@ -38,6 +43,10 @@ class DataStore:
         if os.path.exists(search_path):
             with open(search_path, encoding="utf-8") as f:
                 self.search_index = json.load(f)
+            # M-560: /api/search는 b/m/c 약어 키에 의존한다. 스키마가 바뀌어 키가 사라지면 검색이
+            #   조용히 빈 결과를 낸다 → 로드 시 첫 항목으로 키 존재를 검증·경고해 무음 실패를 표면화.
+            if self.search_index and not all(k in self.search_index[0] for k in ("b", "m", "c")):
+                print(f"[store] ⚠ search.json 스키마 경고: 첫 항목에 b/m/c 키 일부 누락 → /api/search 빈 결과 위험")
 
         print(f"[store] manifest {len(self.manifest.get('categories', []))}카테고리 "
               f"/ 검색인덱스 {len(self.search_index)}개 로드")

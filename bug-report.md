@@ -10223,7 +10223,8 @@
 
 ---
 
-### [M-464] — `backend/db.py` `query_db` — TimeoutError 외 DB 예외 미처리 → 원시 500 traceback 노출
+### [M-464] ✅ 해결완료(2026-06-14, MA) — `backend/db.py` `query_db` — TimeoutError 외 DB 예외 미처리 → 원시 500 traceback 노출
+> 수정: db.py query_db에 `except (aiosqlite.Error, OSError)` 추가 → DB 손상·락·I/O 오류를 503으로 변환(스택 노출 차단). M-561과 동일 수정.
 
 - **영역:** 백엔드 — FastAPI 서버
 - **심각도:** 🟡 Medium
@@ -10917,7 +10918,8 @@
 
 ---
 
-### [M-493] — `backend/main.py` `get_real_ip` — `CF-Connecting-IP` 헤더 무조건 신뢰 → rate-limit 우회 가능
+### [M-493] ✅ 해결완료(2026-06-14, MA) — `backend/main.py` `get_real_ip` — `CF-Connecting-IP` 헤더 무조건 신뢰 → rate-limit 우회 가능
+> 수정: get_real_ip가 소켓 IP가 Cloudflare 공식 대역일 때만 CF-Connecting-IP 신뢰(main.py L14~). 헤더 스푸핑 rate-limit 회피 차단. CF 뒤 아니면 소켓IP. 4케이스 검증.
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟡 Medium
@@ -11164,7 +11166,8 @@
 
 ---
 
-### [M-504] — `backend/routers/search.py` — 동시 `data_store` 재로드 시 `search_index` 반복 중 경합
+### [M-504] ✅ 해결완료(2026-06-14, MA) — `backend/routers/search.py` — 동시 `data_store` 재로드 시 `search_index` 반복 중 경합
+> 확인: search_index는 재로드 시 새 리스트로 교체(M-553 후에도 `self.search_index=json.load`)되고 반복은 지역 참조라 thread-safe → 비이슈(오탐). lru_cache staleness는 load 재호출 시에만 관여.
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟡 Medium
@@ -11836,7 +11839,8 @@
 
 ---
 
-### [M-529] — `backend/main.py` — CORS `allow_origins`에 apex `gear-forest.com` 누락 → API 전체 CORS 오류
+### [M-529] ✅ 해결완료(2026-06-14, MA) — `backend/main.py` — CORS `allow_origins`에 apex `gear-forest.com` 누락 → API 전체 CORS 오류
+> 확인: allow_origins에 apex `https://gear-forest.com` 이미 추가됨(M-433, main.py L40).
 
 - **영역:** 백엔드 — CORS 설정
 - **심각도:** 🟡 Medium
@@ -12534,7 +12538,8 @@
 
 ---
 
-### [M-553] — `backend/store.py` `load()` — 재로드 시 `self.categories` 초기화 없어 삭제된 슬러그 메모리 잔류
+### [M-553] ✅ 해결완료(2026-06-14, MA) — `backend/store.py` `load()` — 재로드 시 `self.categories` 초기화 없어 삭제된 슬러그 메모리 잔류
+> 수정: load() 진입 시 manifest/categories/search_index 초기화 추가(store.py L13~) → 재로드 시 삭제된 슬러그 잔존·노출 방지.
 
 - **영역:** 백엔드 — store 레이어
 - **심각도:** 🟡 Medium
@@ -12672,7 +12677,8 @@
 
 ---
 
-### [M-560] — `backend/routers/search.py` — search_index 키 약어 하드코딩 → 구조 불일치 시 조용히 빈 결과
+### [M-560] ✅ 해결완료(2026-06-14, MA) — `backend/routers/search.py` — search_index 키 약어 하드코딩 → 구조 불일치 시 조용히 빈 결과
+> 수정: search.json 로드 후 첫 항목의 b/m/c 키 존재 검증·경고(store.py) → 스키마 변경 시 검색 silent 빈결과를 표면화.
 
 - **영역:** 백엔드 — 검색 라우터
 - **심각도:** 🟡 Medium
@@ -12684,7 +12690,8 @@
 
 ---
 
-### [M-561] — `backend/db.py` `query_db` — `aiosqlite.Error` 미처리 → DB 내부 스택트레이스 HTTP 500으로 노출
+### [M-561] ✅ 해결완료(2026-06-14, MA) — `backend/db.py` `query_db` — `aiosqlite.Error` 미처리 → DB 내부 스택트레이스 HTTP 500으로 노출
+> 수정: M-464와 동일 — `(aiosqlite.Error,OSError)` 캐치로 raw 500/스택트레이스 노출 차단(db.py L23).
 
 - **영역:** 백엔드 — DB
 - **심각도:** 🟡 Medium
@@ -12798,7 +12805,8 @@
 
 ---
 
-### [M-567] — `backend/routers/search.py` — `/api/search` rate limit 데코레이터 미적용 → 무제한 요청 가능
+### [M-567] ✅ 해결완료(2026-06-14, MA) — `backend/routers/search.py` — `/api/search` rate limit 데코레이터 미적용 → 무제한 요청 가능
+> 수정: `SlowAPIMiddleware` 추가(main.py) → Limiter(default_limits 60/min)가 inert라 전 라우트 무제한이던 것을 전역 적용. slowapi.middleware import 확인.
 
 - **영역:** 백엔드 — rate limiting/보안
 - **심각도:** 🟡 Medium
