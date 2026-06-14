@@ -11074,7 +11074,8 @@
 
 ---
 
-### [H-136] — `.github/workflows/pages.yml` — CI가 stale `site/data` JSON 검증 (export 단계 없음)
+### [H-136] ⏸ 보류(2026-06-14, 검토필요) — `.github/workflows/pages.yml` — CI가 stale `site/data` JSON 검증 (export
+> 보류 사유: 수정(export 단계 추가)이 라이브 배포 워크플로우를 바꿔 자율 처리 위험. DB(camping_tents500.db)는 repo에 커밋돼 있어 CI export는 기술적으로 가능 → export를 temp로 돌려 site/data와 diff하는 '게이트' 방식이 안전하나 export_site outdir 지원·CI 테스트 필요. 사용자 검토 후 처리 권장. 단계 없음)
 
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🔴 High
@@ -11580,7 +11581,8 @@
 
 ---
 
-### [H-140] — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 + `store-assets/` 디렉터리 미생성
+### [H-140] ✅ 해결완료(2026-06-14, HB) — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 + `store-assets/` 디렉터리 미생성
+> 수정: `_font(size,index)` 폴백 로더 추가(AppleSDGothicNeo→Nanum→DejaVu→load_default)로 Linux/CI 크래시 방지(make_logo.py L13~). store-assets 저장 전 `os.makedirs(exist_ok=True)` 추가. M-568(동일 폰트 이슈) 동반 해소. 폴백 동작 검증.
 
 - **영역:** 백엔드 — 빌드 스크립트
 - **심각도:** 🔴 High
@@ -12789,7 +12791,8 @@
 
 ---
 
-### [M-568] — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 → Linux CI/CD에서 OG 이미지 생성 크래시
+### [M-568] ✅ 해결완료(H-140과 동일 수정, DP/HB) — `make_logo.py` — macOS 전용 폰트 경로 하드코딩 → Linux CI/CD에서 OG 이미지 생성
+> 확인: H-140의 `_font` 폴백 로더로 동시 해소(make_logo.py L13~). 크래시
 
 - **영역:** 백엔드 — 파이프라인/make_logo
 - **심각도:** 🟡 Medium

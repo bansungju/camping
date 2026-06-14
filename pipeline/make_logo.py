@@ -9,6 +9,20 @@ import numpy as np
 SITE = os.path.join(os.path.dirname(__file__), "..", "site")
 SS = 4  # supersample
 
+
+# H-140/M-568: macOS 전용 폰트 경로를 하드코딩하면 Linux/CI에서 OSError로 아이콘 전체 생성이
+#   실패한다 → 후보 폰트를 순차 시도하고 모두 없으면 PIL 기본폰트로 폴백(크래시 대신 생성 지속).
+def _font(size, index=0):
+    for fp, idx in (("/System/Library/Fonts/AppleSDGothicNeo.ttc", index),
+                    ("/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf", 0),
+                    ("/usr/share/fonts/truetype/nanum/NanumGothic.ttf", 0),
+                    ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 0)):
+        try:
+            return ImageFont.truetype(fp, size, index=idx)
+        except (OSError, IOError):
+            continue
+    return ImageFont.load_default()
+
 # --- palette ---
 BG0=(58,140,93); BG1=(21,64,42)          # 배경 그라데이션
 FOL_L=(245,242,231); FOL_S=(221,215,193) # 잎 밝은면/그늘면
@@ -93,15 +107,14 @@ def make_og():
     W,H=1200,630; K=2
     bg=grad(W*K,H*K)
     img=bg.copy(); d=ImageDraw.Draw(img)
-    FP="/System/Library/Fonts/AppleSDGothicNeo.ttc"
     cy=H*K//2                            # 캔버스 세로 중앙
     full="장비의 숲"; tagline="데이터 기반 캠핑용품 추천"
-    # 워드마크 폰트를 목표 폭에 자동 맞춤
+    # 워드마크 폰트를 목표 폭에 자동 맞춤 (H-140: 폴백 폰트 로더 사용)
     text_target=620*K
-    fs=184*K; wf=ImageFont.truetype(FP,fs,index=6)
+    fs=184*K; wf=_font(fs,6)
     while d.textlength(full,font=wf)>text_target and fs>40*K:
-        fs-=4*K; wf=ImageFont.truetype(FP,fs,index=6)
-    tf=ImageFont.truetype(FP,int(fs*0.28),index=4)
+        fs-=4*K; wf=_font(fs,6)
+    tf=_font(int(fs*0.28),4)
     ww=d.textlength(full,font=wf); tw=d.textlength(tagline,font=tf)
     text_w=max(ww,tw)
     # 마크+텍스트 그룹을 가로 중앙 정렬
@@ -133,4 +146,17 @@ if __name__=="__main__":
     # maskable: 런처 원형 크롭 안전영역 → 콘텐츠 축소, 불투명 정사각
     save(render_icon(512,mark_scale=0.70,rounded=False),"icon-maskable-512.png")
     save(make_og(),"og-image.png")
+    # iOS App Store 제출용: 1024 풀블리드(불투명·둥근모서리X·알파X, 애플이 직접 라운딩).
+    # 마크 0.86으로 코너 라운딩 안전여백 확보. store-assets/로 출력(스토어 등록물).
+    # H-140: store-assets/ 디렉터리가 없으면 save가 FileNotFoundError → 미리 생성.
+    sa_dir=os.path.join(os.path.dirname(__file__),"..","store-assets")
+    os.makedirs(sa_dir, exist_ok=True)
+    ios=render_icon(1024,mark_scale=0.86,rounded=False)
+    ios_path=os.path.join(sa_dir,"icon-ios-1024.png")
+    ios.save(ios_path); print("written","store-assets/icon-ios-1024.png",ios.size)
+    # Google Play 고해상도 아이콘: 512 풀블리드(불투명·둥근모서리X·알파X, Play가 직접 마스킹).
+    # iOS와 동일 0.86 마크 스케일로 코너 안전여백 확보.
+    play=render_icon(512,mark_scale=0.86,rounded=False)
+    play_path=os.path.join(sa_dir,"icon-play-512.png")
+    play.save(play_path); print("written","store-assets/icon-play-512.png",play.size)
     print("done")
