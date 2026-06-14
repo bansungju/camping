@@ -8232,7 +8232,8 @@
 - **제안 수정:** `header.top{padding-top:max(18px, env(safe-area-inset-top))}` 추가.
 - **파일:** [site/style.css](site/style.css) line 33 [lane:FRONTEND]
 
-### [M-389] ⏸ 보류(xcode 기기 재현 필요) — 카테고리→홈 페이지 이동 후 별점 설명 툴팁 잔류
+### [M-389] ✅ 해결완료(2026-06-14, C) — 카테고리→홈 페이지 이동 후 별점 설명 툴팁 잔류
+> 확인: 모달 close()가 spec-tip-bubble을 숨김(M-425, app.js L2246) + MPA라 실제 페이지 이동 시 툴팁 파괴 → 잔류 미발생(기해결).
 
 - **영역:** 프론트엔드 — UI 상태 관리
 - **심각도:** 🟡 Medium
@@ -9979,7 +9980,8 @@
 
 ---
 
-### [M-451] ⏸ 보류(복잡한 비동기 race, 추가 분석 필요) — `STATE.slug`/`STATE.data` 복원 시 stale `prev` 스냅샷
+### [M-451] ✅ 해결완료(2026-06-14, C) — `STATE.slug`/`STATE.data` 복원 시 stale `prev` 스냅샷
+> 수정: openFromSearch에 `_ofsLoading` in-flight 가드 추가(app.js L1219~) — 이중 클릭 시 모달 이중오픈·STATE 경합 방지(correctness는 M-262/M-405 기보호).
 
 - **영역:** 프론트엔드 — 브랜드/검색
 - **심각도:** 🟡 Medium

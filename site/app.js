@@ -1216,7 +1216,12 @@ async function setupSearchPage() {
     return _idxLoading;
   };
 
+  let _ofsLoading = false;
   const openFromSearch = async (x) => {
+    // M-451: 진행 중 fetch 동안 중복 클릭이 들어오면 모달 이중 오픈·STATE prev 스냅샷 경합이 생긴다
+    //   (correctness는 M-262/M-405가 보호하나 UX 깜빡임 방지) → in-flight 가드.
+    if (_ofsLoading) return;
+    _ofsLoading = true;
     try {
       const catData = await getJSON(`data/${x.s}.json`);
       const prod = (catData.models || []).find(p => p.brand === x.b && p.model === x.m);
@@ -1234,6 +1239,7 @@ async function setupSearchPage() {
         return;
       }
     } catch (_) {}
+    finally { _ofsLoading = false; }
     location.href = `category.html?cat=${x.s}&brands=${encodeURIComponent(x.b)}&q=${encodeURIComponent(x.m)}`;
   };
 
