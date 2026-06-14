@@ -50,19 +50,30 @@ export async function signInWithOAuth(provider) {
 
 // B-2: iOS 네이티브 Sign in with Apple — @capacitor-community/apple-sign-in → Supabase nonce 연동
 // Apple Console 설정(Services ID·Key) 완료 전에는 호출되지 않음(account.html 환경 분기로 제어)
+// H-142: Apple은 SHA-256으로 해시한 nonce를 받아 id_token의 nonce 클레임에 그 해시를 담고,
+//   Supabase는 원본 nonce를 받아 같은 해시로 비교한다 → 둘이 매칭하려면 rawNonce '하나'를 만들고
+//   해시는 Apple에, 원본은 Supabase에 줘야 한다. (전엔 randomUUID 2개를 독립 생성·response.nonce를
+//   재사용해 pair가 전혀 맞지 않아 "nonce mismatch"로 로그인 항상 실패.)
+async function _sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export async function signInWithApple() {
   const { SignInWithApple } = await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in/dist/esm/index.js')
+  const rawNonce = crypto.randomUUID()
+  const hashedNonce = await _sha256Hex(rawNonce)
   const { response } = await SignInWithApple.authorize({
     clientId: 'com.gearforest.app',
     redirectURI: 'com.gearforest.app://auth-callback',
     scopes: 'email name',
     state: crypto.randomUUID(),
-    nonce: crypto.randomUUID(),
+    nonce: hashedNonce,
   })
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',
     token: response.identityToken,
-    nonce: response.nonce,
+    nonce: rawNonce,
   })
   return { error }
 }
