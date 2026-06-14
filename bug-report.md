@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 928 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 935 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 160 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 153 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -8011,7 +8011,7 @@
 
 ---
 
-### [L-298] — `add_manual_models.py` `main` — 파일 핸들 미닫힘
+### [L-298] ✅ 검토완료·현행유지(2026-06-14, H·코드 실대조) — add_manual_models.py는 이미 with open(args.json)(116). 기수정. — `add_manual_models.py` `main` — 파일 핸들 미닫힘
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8203,7 +8203,7 @@
 
 ---
 
-### [L-307] — `graph_full.py` `harvest_node` — 예외 발생 시 SQLite 커넥션 미닫힘
+### [L-307] ✅ 해결완료(2026-06-14, H) — graph_full.harvest_node를 try/finally로 감싸 ingest/commit 예외 시에도 con.close()(M-235 동일 패턴). — `graph_full.py` `harvest_node` — 예외 발생 시 SQLite 커넥션 미닫힘
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8404,7 +8404,7 @@
 
 ---
 
-### [L-313] — `pipeline.py` `build_db` — schema 파일 핸들 미닫힘
+### [L-313] ✅ 검토완료·현행유지(2026-06-14, H·코드 실대조) — pipeline.build_db는 schema.sql/reference.sql 모두 with open(65-68). 기수정. — `pipeline.py` `build_db` — schema 파일 핸들 미닫힘
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8416,7 +8416,7 @@
 
 ---
 
-### [L-314] — `pipeline.py` `main` — `whitelist.csv` 파일 핸들 미닫힘
+### [L-314] ✅ 해결완료(2026-06-14, H) — pipeline.py whitelist.csv를 with open()으로 감싸 핸들 확정 닫기(341). — `pipeline.py` `main` — `whitelist.csv` 파일 핸들 미닫힘
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8500,7 +8500,7 @@
 
 ---
 
-### [L-318] — `build_backpacking_bag.py` `main` — JSON 파일 핸들 미닫힘
+### [L-318] ✅ 검토완료·현행유지(2026-06-14, H·코드 실대조) — build_backpacking_bag.py JSON 입출력 모두 with open(219·226·235). 기수정. — `build_backpacking_bag.py` `main` — JSON 파일 핸들 미닫힘
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8712,7 +8712,7 @@
 
 ---
 
-### [L-324] — `add_manual_models.py` — `open()` `with` 미사용으로 파일 핸들 누출
+### [L-324] ✅ 검토완료·현행유지(2026-06-14, H·코드 실대조) — L-298과 동일, with open 사용 중. — `add_manual_models.py` — `open()` `with` 미사용으로 파일 핸들 누출
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -8918,7 +8918,7 @@
 
 ---
 
-### [L-331] — `graph_full.py` — ThreadPoolExecutor 동시 SQLite 쓰기 잠금 오류 미처리
+### [L-331] ✅ 검토완료·현행유지(2026-06-14, H·설계) — enrich 워커는 run_one try/except(129-140)로 lock 오류 캡처+persist timeout=30(109 주석), 잠금 비치명적 처리. 문서화된 설계. — `graph_full.py` — ThreadPoolExecutor 동시 SQLite 쓰기 잠금 오류 미처리
 
 - **영역:** 백엔드 — 그래프 파이프라인
 - **심각도:** 🟢 Low

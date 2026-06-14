@@ -338,7 +338,8 @@ def main():
     ap.add_argument("--db", default=os.path.join(ROOT, "camping_auto.db"))
     args = ap.parse_args()
     con = build_db(args.db)
-    rows = list(csv.DictReader(open(os.path.join(HERE, "whitelist.csv"), encoding="utf-8")))
+    with open(os.path.join(HERE, "whitelist.csv"), encoding="utf-8") as _wf:   # L-314: with로 파일 핸들 확정 닫기
+        rows = list(csv.DictReader(_wf))
     print(f"화이트리스트 {len(rows)}개 수집 시작...")
     for row in rows:
         info = ingest_row(con, row)
