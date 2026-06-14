@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 887 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 900 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 11 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 202 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 189 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -3909,7 +3909,7 @@
 
 ---
 
-### [L-201] — `renderAccount` 로그 섹션 — `dataset.loaded` 재로그인 후 미갱신으로 구 데이터 표시
+### [L-201] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — M-117이 SIGNED_IN 시 my-logs-list dataset.loaded/logLoginShown 삭제(account.html:652-654). 기수정. — `renderAccount` 로그 섹션 — `dataset.loaded` 재로그인 후 미갱신으로 구 데이터 표시
 
 - **영역:** 프론트엔드 — account.html 로그 섹션 (app.js)
 - **심각도:** 🟢 Low
@@ -6168,7 +6168,7 @@
 
 ---
 
-### [L-248] — `account.html` `initAuth` 콜백 — `renderAccount` 정의 전 호출 가능성
+### [L-248] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — renderAccount는 app.js(일반스크립트)에서 먼저 로드, await initAuth 콜백은 비동기로 그 이후 발화. 초기 경로(637·647)는 typeof 가드. — `account.html` `initAuth` 콜백 — `renderAccount` 정의 전 호출 가능성
 
 - **발견일시:** 2026-06-13
 - **증상:** `initAuth` 콜백(account.html line 604)에서 `typeof renderAccount === 'function'`을 체크한 뒤 호출하는데, `renderAccount`는 같은 `<script type="module">` 블록 안에 있으므로 호이스팅이 안 되는 `function` 선언이 아닌 경우 TDZ(일시적 사각지대) 오류가 날 수 있다. 실제로 `renderAccount`가 `function` 선언이면 무해하지만, 콜백이 동기적으로 실행되는 엣지 케이스(Supabase 내부에서 즉시 resolve)에서 `typeof` 체크 타이밍이 모듈 평가 순서에 의존한다.
@@ -6764,7 +6764,7 @@
 
 ---
 
-### [L-260] — `account.html` — `#auth-section` 해시가 `HASH_SEC` 맵에 없어 링크 진입 시 섹션 스크롤 미동작
+### [L-260] ✅ 검토완료·현행유지(2026-06-14, F·추측성) — #auth-section은 실제 내비 타깃 아님(로그인 영역=페이지 상단). HASH_SEC 부재 시 무동작(무해). — `account.html` — `#auth-section` 해시가 `HASH_SEC` 맵에 없어 링크 진입 시 섹션 스크롤 미동작
 
 - **영역:** 프론트엔드 — 계정 페이지
 - **심각도:** 🟢 Low
@@ -6891,7 +6891,7 @@
 
 ---
 
-### [L-261] — `account.html` `syncGearSetsOnLogin()` — `renderAccount` 미정의 시점 호출 가능성
+### [L-261] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — syncGearSetsOnLogin renderAccount 호출은 typeof 가드(267). — `account.html` `syncGearSetsOnLogin()` — `renderAccount` 미정의 시점 호출 가능성
 
 - **영역:** 프론트엔드 — 계정 페이지
 - **심각도:** 🟢 Low
@@ -9035,7 +9035,7 @@
 
 ---
 
-### [L-337] — `renderAccount` 찜 카드 — `wx.s=""` 빈 문자열 시 `data/.json` 불필요 요청 후 무음 실패
+### [L-337] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — 찜카드 go()가 fetch ok체크(3490)+실패 시 href 폴백(3503)으로 graceful 복구. 빈 슬러그는 드문 데이터이상, 낭비요청 1회뿐. — `renderAccount` 찜 카드 — `wx.s=""` 빈 문자열 시 `data/.json` 불필요 요청 후 무음 실패
 
 - **영역:** 프론트엔드 — 계정/찜
 - **심각도:** 🟢 Low
@@ -10133,7 +10133,7 @@
 
 ---
 
-### [L-379] — `account.html` `wish-clear-all` — app.js 전역 미정의 시 silent no-op
+### [L-379] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — wish-clear-all은 typeof getWish/setWish 가드(149-152), app.js 미로드 시 방어적 no-op. — `account.html` `wish-clear-all` — app.js 전역 미정의 시 silent no-op
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟢 Low
@@ -10814,7 +10814,7 @@
 
 ---
 
-### [L-402] — `account.html` 세션 감지 휴리스틱 — 다른 Supabase 앱 토큰 오탐으로 로딩 스피너 flash
+### [L-402] ✅ 검토완료·현행유지(2026-06-14, F·설계) — localStorage는 origin 범위라 gear-forest.com에 타 Supabase 앱 토큰 공존 불가. 오탐. — `account.html` 세션 감지 휴리스틱 — 다른 Supabase 앱 토큰 오탐으로 로딩 스피너 flash
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟢 Low
@@ -11562,7 +11562,7 @@
 
 ---
 
-### [L-425] — `renderAccount` 미로그인 CTA — `account.html`에서 `href="account.html"` 자기 자신 리로드
+### [L-425] ✅ 검토완료·현행유지(2026-06-14, F·UX) — 미로그인 CTA는 account.html 로그인 뷰로 안착(렌더login OAuth 노출). 깨짐 없음. — `renderAccount` 미로그인 CTA — `account.html`에서 `href="account.html"` 자기 자신 리로드
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟢 Low
@@ -11586,7 +11586,7 @@
 
 ---
 
-### [L-427] — `account.html` `localWish.set()` — `setWish()` 우회로 `onWishChange` 미트리거
+### [L-427] ✅ 검토완료·현행유지(2026-06-14, F·설계) — localWish.set 우회는 onWishChange 등록(303) 전 초기병합 한정으로 의도적(H-128), 변경분은 300행서 명시 저장. — `account.html` `localWish.set()` — `setWish()` 우회로 `onWishChange` 미트리거
 
 - **영역:** 프론트엔드 — 찜 동기화
 - **심각도:** 🟢 Low
@@ -11598,7 +11598,7 @@
 
 ---
 
-### [L-428] — `scrollToHashSection` — 섹션 `display:none` 시 silent 종료, 인증 완료 후 재시도 없음
+### [L-428] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — display:none 시 무동작은 인증완료 후 658행 scrollToHashSection 재호출로 재시도됨. — `scrollToHashSection` — 섹션 `display:none` 시 silent 종료, 인증 완료 후 재시도 없음
 
 - **영역:** 프론트엔드 — 계정
 - **심각도:** 🟢 Low
@@ -12214,7 +12214,7 @@
 
 ---
 
-### [L-448] — `account.html` 캠핑 로그 삭제 오류 — `alert()` 사용으로 iOS Safari history 조작 후 차단
+### [L-448] ✅ 해결완료(2026-06-14, F) — app.js:3406 로그삭제 에러 alert()→showToast()(iOS Safari PWA 차단 방지, M-452/539 일관). — `account.html` 캠핑 로그 삭제 오류 — `alert()` 사용으로 iOS Safari history 조작 후 차단
 
 - **영역:** 프론트엔드 — account.html / 캠핑 로그
 - **심각도:** 🟢 Low
@@ -12692,7 +12692,7 @@
 
 ---
 
-### [L-465] — `renderAccount` — `bulkBtn`이 `wish-section` 외부 형제 요소로 삽입 → 비로그인 시 숨겨진 채로 키보드 포커스 가능
+### [L-465] ✅ 검토완료·현행유지(2026-06-14, F·코드 실대조) — #wishlist(account.html:60)는 #wish-section 직속, wishEl.after(bulkBtn)도 섹션 내부 → display:none(3437) 시 함께 숨김. 오탐. — `renderAccount` — `bulkBtn`이 `wish-section` 외부 형제 요소로 삽입 → 비로그인 시 숨겨진 채로 키보드 포커스 가능
 
 - **영역:** 프론트엔드 — account.html 찜 목록 / 접근성
 - **심각도:** 🟢 Low
@@ -12924,7 +12924,7 @@
 
 ---
 
-### [L-472] — `account.html` signOut — `localStorage.removeItem('sets')` 누락으로 레거시 `sets` 키 계정 삭제 후 잔류
+### [L-472] ✅ 해결완료(2026-06-14, F) — 계정삭제 localStorage 정리목록에 레거시 'sets' 키 추가(account.html:544). — `account.html` signOut — `localStorage.removeItem('sets')` 누락으로 레거시 `sets` 키 계정 삭제 후 잔류
 
 - **영역:** 프론트엔드 — 계정/로그아웃
 - **심각도:** 🟢 Low

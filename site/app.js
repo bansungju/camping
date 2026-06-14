@@ -3403,7 +3403,7 @@ function renderAccount() {
                 const { error } = await sb.from("posts")
                   .update({ deleted_at: new Date().toISOString() })
                   .eq("id", p.id).eq("user_id", userId);
-                if (error) { alert("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }
+                if (error) { showToast("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }   // L-448: alert→showToast(iOS Safari PWA 차단 방지, M-452/539와 동일)
                 const remaining = list.filter((_, i) => i !== +btn.dataset.pi);
                 setCount(remaining.length);   // 후기 수 + 남은 글 수
                 renderMyLogs(remaining);

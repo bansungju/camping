@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=80e07282"></script>
+<script src="app.js?v=6bcbe140"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -541,8 +541,8 @@ function renderProfile(profile) {
       _wishSyncedUser = null
       await signOut()
       // M-572: 계정 삭제 시 개인화 localStorage 키 일괄 정리 (공유 기기 데이터 잔류 방지)
-      ;['wish','gear_sets','push-denied','_sid','post_likes','seenIntro','ops',
-        'dark','gear_sets_remote_synced'].forEach(k => localStorage.removeItem(k))
+      ;['wish','sets','gear_sets','push-denied','_sid','post_likes','seenIntro','ops',
+        'dark','gear_sets_remote_synced'].forEach(k => localStorage.removeItem(k))   // L-472: 레거시 'sets' 키도 정리
       location.replace('index.html?account_deleted=1')
     }
   }
