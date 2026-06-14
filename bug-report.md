@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 944 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 955 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 144 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 133 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -99,6 +99,7 @@
 | 73 | BE(파이프라인)·FE(SW/오프라인) 자동루프 | 2026-06-14 | 3건 (BE-001·BE-002·FE-001) |
 | 74 | BE(coupang_runner)·FE(logFeed·bestGear) 자동루프 | 2026-06-14 | 3건 (BE-003·FE-002·FE-003) |
 | 75 | FE(logModal ESC누적·세션만료·파일업로드) 자동루프 | 2026-06-14 | 3건 (FE-004·FE-005·FE-006) |
+| 76 | FE(JSON-LD SearchAction·renderHotSection폴백)·BE(DB연결미종료) 자동루프 | 2026-06-14 | 3건 (FE-007·FE-008·BE-004) |
 
 ---
 
@@ -9855,7 +9856,7 @@
 
 ---
 
-### [L-370] — `backend/routers/categories.py` `/api/manifest` — 인증·속도 제한 없이 전체 manifest 공개
+### [L-370] ✅ 검토완료·현행유지(2026-06-14, O·설계) — manifest는 공개 카탈로그 데이터(정적 사이트에도 동일 공개), 인증 불필요. rate-limit은 main.py 전역 60/min 적용. — `backend/routers/categories.py` `/api/manifest` — 인증·속도 제한 없이 전체 manifest 공개
 
 - **영역:** 백엔드 — API
 - **심각도:** 🟢 Low
@@ -9867,7 +9868,7 @@
 
 ---
 
-### [L-371] — `backend/store.py` — 서버 기동 후 JSON 갱신 시 재로드 불가, stale 데이터 서빙
+### [L-371] ✅ 검토완료·현행유지(2026-06-14, O·설계) — load()는 재호출 가능(M-553 상태 리셋), 기동시 로드가 설계. 운영 서빙은 GitHub Pages 정적(deployment-ssot). 핫리로드는 별도 기능. — `backend/store.py` — 서버 기동 후 JSON 갱신 시 재로드 불가, stale 데이터 서빙
 
 - **영역:** 백엔드 — 서버
 - **심각도:** 🟢 Low
@@ -10473,7 +10474,7 @@
 
 ---
 
-### [L-389] — `backend/routers/search.py` — 검색 인덱스 미로드 시 0건 응답이 정상과 구분 불가
+### [L-389] ✅ 검토완료·현행유지(2026-06-14, O·설계) — 인덱스 미로드는 store가 load 시 경고 로그(49·52), API는 빈 배열 graceful 반환. 운영 가시성은 로그로 확보. — `backend/routers/search.py` — 검색 인덱스 미로드 시 0건 응답이 정상과 구분 불가
 
 - **영역:** 백엔드 — API
 - **심각도:** 🟢 Low
@@ -10485,7 +10486,7 @@
 
 ---
 
-### [L-390] — `backend/routers/categories.py` `manifest()` — manifest 비어있어도 HTTP 200 `{}` 반환
+### [L-390] ✅ 검토완료·현행유지(2026-06-14, O·설계) — manifest 비어도 200+{} graceful 반환(정적 사이트 동작과 일치), 로드 실패는 store 경고 로그. — `backend/routers/categories.py` `manifest()` — manifest 비어있어도 HTTP 200 `{}` 반환
 
 - **영역:** 백엔드 — API
 - **심각도:** 🟢 Low
@@ -10611,7 +10612,7 @@
 
 ---
 
-### [L-393] — `backend/store.py` `load()` — JSON 파일 오류 시 예외 전파로 FastAPI 시작 실패
+### [L-393] ✅ 해결완료(2026-06-14, O) — store.load() search.json 로드를 try/except(JSONDecodeError/OSError)로 감싸 빈 인덱스 폴백. 손상 JSON에도 FastAPI 기동 유지. import·load 검증. — `backend/store.py` `load()` — JSON 파일 오류 시 예외 전파로 FastAPI 시작 실패
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟢 Low
@@ -10623,7 +10624,7 @@
 
 ---
 
-### [L-394] — `backend/main.py` `get_real_ip` — 내부 프로브 공유 rate-limit 키 → 모니터링 429 위험
+### [L-394] ✅ 해결완료(2026-06-14, O) — /health에 @limiter.exempt 추가, 내부 프로브가 공유 '__internal__' 키 60/min 제한에 안 걸리게 면제. app import·라우트 등록 검증. — `backend/main.py` `get_real_ip` — 내부 프로브 공유 rate-limit 키 → 모니터링 429 위험
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟢 Low
@@ -10635,7 +10636,7 @@
 
 ---
 
-### [L-395] — `backend/routers/search.py` — 검색 인덱스 미정규화로 요청마다 O(n) lower() 호출
+### [L-395] ✅ 검토완료·현행유지(2026-06-14, O·성능) — _search_cached가 lru_cache(512)로 반복쿼리 캐싱(M-438), 2323개 인덱스 lower() 스캔은 고유쿼리당 sub-ms. 사전 lower화는 현 규모서 과최적화. — `backend/routers/search.py` — 검색 인덱스 미정규화로 요청마다 O(n) lower() 호출
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟢 Low
@@ -10994,7 +10995,7 @@
 
 ---
 
-### [L-407] — `backend/store.py` — `site/data/*.json` glob이 임시/백업 파일 로드
+### [L-407] ✅ 검토완료·현행유지(2026-06-14, O·코드 실대조) — glob('*.json')이나 manifest 등재 슬러그 allowlist로만 로드(M-443, store.py:30·33). 임시/백업 파일 제외됨. — `backend/store.py` — `site/data/*.json` glob이 임시/백업 파일 로드
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟢 Low
@@ -11279,7 +11280,7 @@
 
 ---
 
-### [L-417] — `backend/routers/categories.py` `SLUG_RE` — 언더스코어 미허용으로 미래 slug 변경 시 400 오탐
+### [L-417] ✅ 검토완료·현행유지(2026-06-14, O·추측성) — 현 슬러그는 전부 하이픈(backpacking-tent 등), 언더스코어 미사용. 미래 slug 변경 시 재검토. — `backend/routers/categories.py` `SLUG_RE` — 언더스코어 미허용으로 미래 slug 변경 시 400 오탐
 
 - **영역:** 백엔드 — API 서버
 - **심각도:** 🟢 Low
@@ -11941,7 +11942,7 @@
 
 ---
 
-### [L-437] — `backend/store.py` — `load()` 예외 처리 없어 JSON 누락/손상 시 FastAPI 기동 크래시
+### [L-437] ✅ 해결완료(2026-06-14, O) — L-393과 동일 수정. manifest/categories(M-432/443)에 이어 search.json도 예외 폴백 적용. — `backend/store.py` — `load()` 예외 처리 없어 JSON 누락/손상 시 FastAPI 기동 크래시
 
 - **영역:** 백엔드 — store
 - **심각도:** 🟢 Low
@@ -12980,7 +12981,7 @@
 
 ---
 
-### [L-473] — `backend/routers/search.py` — 검색 시마다 전체 인덱스 `.lower()` 재계산 → 대량 데이터 성능 저하
+### [L-473] ✅ 검토완료·현행유지(2026-06-14, O·성능) — L-395와 동일. lru_cache(512)가 반복 .lower() 스캔 방지, 현 데이터 규모(2323)서 성능 영향 무시 가능. — `backend/routers/search.py` — 검색 시마다 전체 인덱스 `.lower()` 재계산 → 대량 데이터 성능 저하
 
 - **영역:** 백엔드 — 검색 성능
 - **심각도:** 🟢 Low
@@ -13199,6 +13200,56 @@
 - **원인:** [site/app.js:4281](site/app.js) — `imgFile.name.split(".").pop()` — 점이 없는 파일명에 대한 예외 처리 없음.
 - **수정안:** `const nameParts = imgFile.name.split("."); const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "jpg";`
 - **파일:** [site/app.js](site/app.js):4281
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 76 (2026-06-14 자동루프)
+
+| 영역 | 발견일 | 신규 버그 |
+|------|--------|-----------|
+| FE(JSON-LD SearchAction·renderHotSection폴백)·BE(DB연결미종료) | 2026-06-14 | 3건 (FE-007·FE-008·BE-004) |
+
+---
+
+### [FE-007] — `index.html`·`category.html` JSON-LD `SearchAction` urlTemplate — `category.html?q=` → 검색 결과 아닌 Browse 그리드 노출
+
+- **영역:** 프론트엔드 — SEO / JSON-LD 구조화 데이터
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `index.html`(line 33)과 `category.html`(line 33) 두 곳에 Google Sitelinks Searchbox용 JSON-LD가 있고, `target.urlTemplate`이 `"https://gear-forest.com/category.html?q={search_term_string}"` 로 지정돼 있음. 그런데 `app.js:1526` 의 `renderBrowse()` 진입 조건은 `cat` 파라미터가 없으면 전체 그리드(`renderBrowse()`)를 실행하고 `q` 파라미터만으로는 검색 결과를 보여주지 않음. 실제 검색은 `search.html?q=` 에서 `setupSearchPage()`가 처리함. Google이 Searchbox를 크롤링해 `category.html?q=텐트` 로 접근하면 검색 결과가 아닌 전 카테고리 그리드가 노출됨.
+- **원인:** `site/index.html:33`, `site/category.html:33` — urlTemplate 엔드포인트 오지정.
+- **수정안:** `"urlTemplate": "https://gear-forest.com/search.html?q={search_term_string}"` 로 양쪽 모두 수정.
+- **파일:** [site/index.html](site/index.html):33, [site/category.html](site/category.html):33
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-008] — `renderHotSection()` RPC 에러 시 `return` → HOT_FALLBACK 칩 미렌더링·섹션 숨김 상태 유지
+
+- **영역:** 프론트엔드 — 홈 HOT 섹션
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `app.js:3000` 에서 `if (hotErr) { console.error("renderHotSection rpc:", hotErr); return; }` — RPC 에러 발생 시 `return`으로 함수 종료. 이후 line 3041 또는 3054에서만 `sec.style.display = "block"` 을 설정하므로, 에러 경로에서는 `hot-section` 이 초기 숨김 상태(`display:none` 또는 margin만)로 남음. lines 3047-3054의 `HOT_FALLBACK` 칩 렌더링도 실행되지 않음 → Supabase RPC가 일시 오류를 내면 홈 화면 HOT 섹션 전체가 공백.
+- **원인:** [site/app.js:3000](site/app.js) — 에러 조기 return이 폴백 분기를 우회.
+- **수정안:** 에러 시 `hotErr` 플래그를 세팅하고 `return` 제거 후 이후 분기에서 `if (hotErr || !data?.length)` 로 HOT_FALLBACK 을 렌더링.
+- **파일:** [site/app.js](site/app.js):3000
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [BE-004] — `resolve_duplicates.py`·`normalize_models.py` — `con.close()` finally 블록 없이 예외 발생 시 SQLite 연결 미종료
+
+- **영역:** 백엔드 파이프라인 — SQLite DB 관리
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `resolve_duplicates.py:118`, `normalize_models.py:336` 등에서 `con.close()`를 `try` 블록 안에서 호출하지만 `finally` 블록 없이 예외 발생 시 close가 건너뜀. Python GC가 결국 연결을 정리하지만, WAL 모드(`camping_tents500.db-wal`, `-shm`)에서 프로세스 중단 후 다음 파이프라인 실행 전까지 WAL 파일이 남아 DB 재오픈 시 리커버리 오버헤드 발생. CI 환경처럼 프로세스가 짧게 죽으면 WAL 파일이 누적될 수 있음.
+- **원인:** [pipeline/resolve_duplicates.py](pipeline/resolve_duplicates.py):118, [pipeline/normalize_models.py](pipeline/normalize_models.py):336 — `try/finally con.close()` 패턴 미사용.
+- **수정안:** `try: ... finally: con.close()` 패턴 또는 `with sqlite3.connect(...) as con:` context manager 사용.
+- **파일:** [pipeline/resolve_duplicates.py](pipeline/resolve_duplicates.py):118, [pipeline/normalize_models.py](pipeline/normalize_models.py):336
 - **우선순위:** 낮음
 - **상태:** 미해결
 

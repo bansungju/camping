@@ -79,6 +79,7 @@ async def no_cache_api(request: Request, call_next):
 
 
 @app.get("/health")
+@limiter.exempt   # L-394: 모니터링/내부 프로브가 공유 '__internal__' 키의 60/min 제한에 걸려 429나지 않게 면제
 async def health():
     result = await health_check()
     status_code = 200 if result["status"] == "ok" else 503

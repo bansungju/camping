@@ -41,8 +41,15 @@ class DataStore:
         # 검색 인덱스
         search_path = os.path.join(SITE_DATA, "search.json")
         if os.path.exists(search_path):
-            with open(search_path, encoding="utf-8") as f:
-                self.search_index = json.load(f)
+            # L-393/437: manifest/categories와 달리 search.json은 try/except 미적용이었다 →
+            #   손상 JSON이면 JSONDecodeError가 lifespan까지 전파돼 FastAPI 기동이 죽는다.
+            #   다른 로드와 동일하게 빈 인덱스 폴백(+경고)으로 부분 가용성 유지.
+            try:
+                with open(search_path, encoding="utf-8") as f:
+                    self.search_index = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"[store] ⚠ search.json 로드 실패({e}) — 빈 인덱스로 기동")
+                self.search_index = []
             # M-560: /api/search는 b/m/c 약어 키에 의존한다. 스키마가 바뀌어 키가 사라지면 검색이
             #   조용히 빈 결과를 낸다 → 로드 시 첫 항목으로 키 존재를 검증·경고해 무음 실패를 표면화.
             if self.search_index and not all(k in self.search_index[0] for k in ("b", "m", "c")):
