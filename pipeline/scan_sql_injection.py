@@ -19,6 +19,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 작은따옴표 SQL 리터럴 안에 {..} 보간 (값 직접삽입의 전형)
+# L-451 검토: 큰따옴표 리터럴까지 매칭하면 Python 기본 문자열 구분자라 일반 f-string 42건 오탐 →
+#   SQL 문자열 리터럴은 작은따옴표를 쓰므로 '{v}'만 보는 현행 설계가 오탐/탐지 균형상 정답.
 QUOTED_BRACE = re.compile(r"'[^']*\{[^}]*\}[^']*'")
 # 같은 줄에 SQL 키워드가 함께 있어야 탐지 → 일반 f-string 오탐 최소화
 SQL_KW = re.compile(r"select|insert|update|delete|where|like|values|from |join| set ",
@@ -52,9 +54,10 @@ def main():
     for rel in tracked_py_files():
         path = os.path.join(ROOT, rel)
         try:
-            with open(path, "r", encoding="utf-8", errors="strict") as f:
+            # L-278과 동일: errors="strict"는 비UTF-8 바이트로 파일 전체 스킵 → 우회 가능. replace로 계속 스캔.
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
-        except (UnicodeDecodeError, OSError):
+        except OSError:
             continue
         for i, line in enumerate(lines, 1):
             if any(a in line for a in ALLOW_INLINE):

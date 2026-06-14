@@ -7,9 +7,9 @@
 
 | 상태 | 건수 | 비고 |
 |---|---|---|
-| ✅ 해결완료 | 914 | 수정 + 기해결확인 + 검토·현행유지 포함 |
+| ✅ 해결완료 | 924 | 수정 + 기해결확인 + 검토·현행유지 포함 |
 | ⏸ 보류 | 12 | 멀티탭(M-496·527)·아카이브(커뮤니티/비교)·재현필요 — 전부 사유 명시 |
-| ⬜ 미처리 | 174 | **전원 L(저위험)** — 별도 세션 예정 |
+| ⬜ 미처리 | 164 | **전원 L(저위험)** — 별도 세션 예정 |
 
 > **고위험(H)·중위험(M) 미처리 0건.** 2026-06-14 세션: DP 파이프라인 스윕 + P0(H 21) + P1(M 40) + SYNC(H-143/146) + H-136 CI 가드 + 데이터 회귀군 검토 완료.
 > **✅ 2026-06-14 수동 SQL 전량 적용(사용자):** 006(gear_sets)·024_gear_sets_type(H-143/146)·023(reports unique)·024_price_alert_log(B-1)·012(push_subscriptions)·025(push_native_tokens) 대시보드 RUN 완료. APPLY-NOW.sql(008/013/015/022)는 2026-06-11 기적용. → 수동 운영 SQL 잔여 0건.
@@ -98,6 +98,7 @@
 | 72 | (xcode) iOS 시뮬레이터 — 필터 모달·침낭 카테고리 | 2026-06-13 | 2건 (L-311·L-312) |
 | 73 | BE(파이프라인)·FE(SW/오프라인) 자동루프 | 2026-06-14 | 3건 (BE-001·BE-002·FE-001) |
 | 74 | BE(coupang_runner)·FE(logFeed·bestGear) 자동루프 | 2026-06-14 | 3건 (BE-003·FE-002·FE-003) |
+| 75 | FE(logModal ESC누적·세션만료·파일업로드) 자동루프 | 2026-06-14 | 3건 (FE-004·FE-005·FE-006) |
 
 ---
 
@@ -7396,7 +7397,7 @@
 
 ---
 
-### [L-278] — `scan_secrets.py` `main` — `errors="strict"` 파일 전체 스킵으로 시크릿 스캔 우회 가능
+### [L-278] ✅ 해결완료(2026-06-14, K·보안) — scan_secrets errors=strict→replace: 비UTF-8 바이트로 파일 전체 스킵되던 우회 차단(라인 계속 스캔). 게이트 통과 유지 확인. — `scan_secrets.py` `main` — `errors="strict"` 파일 전체 스킵으로 시크릿 스캔 우회 가능
 
 - **영역:** 백엔드 — 보안
 - **심각도:** 🟢 Low
@@ -9361,7 +9362,7 @@
 
 ---
 
-### [L-352] — `scan_secrets.py` — JWT 패턴이 공개 Supabase anon key를 오탐지할 수 있음
+### [L-352] ✅ 검토완료·현행유지(2026-06-14, K·코드 실대조) — 공개키가 sb_publishable_ 신형식(JWT 아님, supabaseClient.js:5)이라 JWT 패턴 미매치. 오탐 없음. — `scan_secrets.py` — JWT 패턴이 공개 Supabase anon key를 오탐지할 수 있음
 
 - **영역:** 백엔드 — 시크릿 스캔
 - **심각도:** 🟢 Low
@@ -9553,7 +9554,7 @@
 
 ---
 
-### [L-359] — `pages.yml` — CI가 JSON 재생성 없이 검증만 수행, DB·JSON 불일치 배포 가능
+### [L-359] ✅ 검토완료·현행유지(2026-06-14, K·설계) — 신선도 체크는 H-136이 의도적 continue-on-error(비차단): site/data를 DB-export 외 경로로 손보는 워크플로 보호. 경고로 누락 신호 제공. — `pages.yml` — CI가 JSON 재생성 없이 검증만 수행, DB·JSON 불일치 배포 가능
 
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🟢 Low
@@ -9757,7 +9758,7 @@
 
 ---
 
-### [L-367] — `scan_sql_injection.py` — `# sql-ok` 허용 주석을 문자열 리터럴 내 포함으로 우회 가능
+### [L-367] ✅ 검토완료·현행유지(2026-06-14, K·위협모델) — 게이트는 우발적 SQLi 차단용, # sql-ok는 의도된 이스케이프. 문자열에 텍스트 넣을 수 있는 자는 실제 주석도 추가 가능 → 동일. — `scan_sql_injection.py` — `# sql-ok` 허용 주석을 문자열 리터럴 내 포함으로 우회 가능
 
 - **영역:** 백엔드 — 시크릿/보안 스캔
 - **심각도:** 🟢 Low
@@ -9878,7 +9879,7 @@
 
 ---
 
-### [L-372] — `pages.yml` — CI에 `pip install` 단계 없어 gate 스크립트 의존성 추가 시 묵음 실패
+### [L-372] ✅ 검토완료·현행유지(2026-06-14, K·코드 실대조) — 게이트(scan_*·check_export·export_site) 전부 stdlib+로컬모듈만 import. pip install 불요. — `pages.yml` — CI에 `pip install` 단계 없어 gate 스크립트 의존성 추가 시 묵음 실패
 
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🟢 Low
@@ -10460,7 +10461,7 @@
 
 ---
 
-### [L-388] — `validate_ranges.py` — `capacity=0` 데이터 오염 시 모든 텐트 면적 outlier 오탐
+### [L-388] ✅ 검토완료·현행유지(2026-06-14, K·코드 실대조) — cap=0이면 floor_hard_range가 좁은 FLOOR_CAP_BP 대신 느슨한 HARD_RANGES['floor_area'](0.3~80)로 폴백(63-65). 대량 outlier 오탐 없음. 오탐. — `validate_ranges.py` — `capacity=0` 데이터 오염 시 모든 텐트 면적 outlier 오탐
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟢 Low
@@ -11266,7 +11267,7 @@
 
 ---
 
-### [L-416] — `.github/workflows/pages.yml` — `cancel-in-progress: true`로 정상 배포 취소 위험
+### [L-416] ✅ 검토완료·현행유지(2026-06-14, K·설계) — cancel-in-progress:true는 고빈도 커밋 레포에서 최신만 배포(중간 커밋 낭비 방지), deploy-pages는 원자적이라 반쪽배포 없음. — `.github/workflows/pages.yml` — `cancel-in-progress: true`로 정상 배포 취소 위험
 
 - **영역:** 백엔드 — CI/CD
 - **심각도:** 🟢 Low
@@ -11728,7 +11729,7 @@
 
 ---
 
-### [L-430] — `scan_sql_injection.py` — 비따옴표 SQL 삽입(`{expr}` 키워드 위치) 탐지 불가
+### [L-430] ✅ 검토완료·현행유지(2026-06-14, K·설계) — 비따옴표 {expr} 탐지는 안전한 IN ({ph}) 플레이스홀더 조립을 대량 오탐(line 10 문서화). 작은따옴표 값삽입만 보는 게 균형상 정답. — `scan_sql_injection.py` — 비따옴표 SQL 삽입(`{expr}` 키워드 위치) 탐지 불가
 
 - **영역:** 백엔드 — 보안 도구
 - **심각도:** 🟢 Low
@@ -12306,7 +12307,7 @@
 
 ---
 
-### [L-451] — `scan_sql_injection.py` — 큰따옴표 SQL 보간 미탐지 → SQL 인젝션 게이트 우회 가능
+### [L-451] ✅ 검토완료·현행유지(2026-06-14, K·검증) — 큰따옴표 패턴 추가 시도→기존 코드 42건 오탐(큰따옴표는 Python 기본 구분자). SQL 리터럴은 작은따옴표 사용이라 현행 설계 정답. errors=replace는 함께 적용. — `scan_sql_injection.py` — 큰따옴표 SQL 보간 미탐지 → SQL 인젝션 게이트 우회 가능
 
 - **영역:** 백엔드 — 배포 게이트 / 보안
 - **심각도:** 🟢 Low
@@ -12658,7 +12659,7 @@
 
 ---
 
-### [L-462] — `check_export.py` — `price_min > price_max` 역전 케이스 미탐지
+### [L-462] ✅ 해결완료(2026-06-14, K) — check_export에 price_min>price_max 역전 탐지 추가(양수 한정). 현재 18파일 오탐0 확인. — `check_export.py` — `price_min > price_max` 역전 케이스 미탐지
 
 - **영역:** 백엔드 — 배포 게이트
 - **심각도:** 🟢 Low
@@ -13147,6 +13148,58 @@
 - **수정안:** `const star = (d.metrics || []).filter(m => m.is_star)[0];`
 - **파일:** [site/app.js](site/app.js):3864
 - **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+---
+
+## 🤖 자동 버그 탐색 — 회차 75 (2026-06-14 자동루프)
+
+| 영역 | 탐색일시 | 발견 건수 |
+|------|----------|-----------|
+| FE(logModal ESC누적·세션만료·파일업로드) | 2026-06-14 | 3건 (FE-004·FE-005·FE-006) |
+
+---
+
+### [FE-004] — `openLogModal()` — ESC 리스너(`onEsc`) 재호출 시 이전 리스너 미제거 → 누적 등록
+
+- **영역:** 프론트엔드 — 커뮤니티 / 캠핑 로그 모달
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `openLogModal()`이 모달이 열린 상태에서 다시 호출되면(예: 세트 상세에서 "로그 쓰기" 재클릭) 새 `onEsc` 함수가 `document.addEventListener("keydown", onEsc)`로 추가 등록되고 이전 함수는 제거되지 않음. 이후 ESC 키 누름 시 `close()` 가 두 번 호출되어 두 번째 호출에서 이미 제거된 리스너를 제거 시도(무해하나 불필요)하며, `modal.classList.remove("on")`이 중복 호출됨. 다른 모달(`openSetModal` line 624, `openReviewModal` line 4078)은 `modal._onKey` 패턴으로 이를 방지하나 `openLogModal`만 누락.
+- **원인:** [site/app.js:4319](site/app.js) — `document.addEventListener("keydown", onEsc)` 전에 이전 onEsc 제거 코드 없음.
+- **수정안:** `openLogModal` 함수 시작부에서 `modal._onEsc`로 저장·제거 패턴 적용:  `if (modal._onEsc) document.removeEventListener("keydown", modal._onEsc);` 추가 후 `modal._onEsc = onEsc`로 저장.
+- **파일:** [site/app.js](site/app.js):4318-4319
+- **우선순위:** 낮음
+- **상태:** 미해결
+
+---
+
+### [FE-005] — `openLogModal()` form submit — `window.currentUser()` null 체크 없이 `.id` 접근 → 세션 만료 시 TypeError
+
+- **영역:** 프론트엔드 — 커뮤니티 / 캠핑 로그 모달
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `form.onsubmit` 핸들러 내 line 4282·4299에서 `window.currentUser().id`를 직접 사용. 모달 열 때(`isLoggedIn()` 체크, line 4147)는 로그인 상태였지만 form 제출 시점까지 세션이 만료되면 `window.currentUser()` → `null` → `null.id` → `TypeError: Cannot read properties of null`. 이 경우 `try/catch`가 포착해 "저장 중 오류" 메시지를 표시하지만, Supabase Storage에는 `path = "${null}/..."` 로 업로드가 시도된 후 에러가 나므로 이미지가 부분 업로드될 수도 있음.
+- **원인:** [site/app.js:4282,4299](site/app.js) — async submit 시 재인증 체크 없이 `window.currentUser()` 직접 호출.
+- **수정안:** submit 핸들러 진입 시 `const user = window.currentUser(); if (!user) { errEl.textContent = "로그인 세션이 만료됐어요. 다시 로그인해주세요."; errEl.style.display = ""; return; }` 추가 후 `user.id` 사용.
+- **파일:** [site/app.js](site/app.js):4282, 4299
+- **우선순위:** 중간
+- **상태:** 미해결
+
+---
+
+### [FE-006] — `openLogModal()` 이미지 업로드 — 확장자 없는 파일명 시 파일명 전체가 확장자로 사용됨
+
+- **영역:** 프론트엔드 — 커뮤니티 / 캠핑 로그 모달
+- **심각도:** 🟡 Low
+- **발견일시:** 2026-06-14 (자동 탐색)
+- **증상:** `imgFile.name.split(".").pop()` 는 파일명에 점(`.`)이 없으면 파일명 전체를 반환(예: `"photo"` → `"photo"`). `|| "jpg"` 폴백은 `pop()`이 falsy를 반환할 때만 작동하므로 `"photo"`(truthy)는 폴백 미작동 → Storage 업로드 경로가 `userId/timestamp.photo` 가 됨. 업로드 자체는 성공하지만 Content-Type이 `application/octet-stream`으로 서빙돼 이미지로 렌더링되지 않거나 CDN에서 거부될 수 있음. 모바일 카메라 앱이 확장자 없이 파일을 전달하는 경우 발생.
+- **원인:** [site/app.js:4281](site/app.js) — `imgFile.name.split(".").pop()` — 점이 없는 파일명에 대한 예외 처리 없음.
+- **수정안:** `const nameParts = imgFile.name.split("."); const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "jpg";`
+- **파일:** [site/app.js](site/app.js):4281
+- **우선순위:** 낮음
 - **상태:** 미해결
 
 ---

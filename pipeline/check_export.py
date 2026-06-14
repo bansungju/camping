@@ -73,6 +73,9 @@ def check_file(path):
             violations.append(("영/음수가격", cat, b, mo, pmin, int(med), 0.0))
         if pmin is not None and pmin > 0 and pmin < med * FLOOR_RATIO:
             violations.append(("저가이상", cat, b, mo, pmin, int(med), pmin / med))
+        # L-462: price_min > price_max 역전(데이터 오염) 탐지 — 둘 다 양수일 때만
+        if pmin is not None and raw_pmax is not None and pmin > 0 and raw_pmax > 0 and pmin > raw_pmax:
+            violations.append(("가격역전", cat, b, f"{mo} (max={raw_pmax:,})", pmin, int(med), pmin / med))
         if raw_pmax is not None and raw_pmax <= 0:   # M-294: price_max=0/음수 자체가 이상
             violations.append(("영/음수상한가", cat, b, mo, raw_pmax, int(med), 0.0))
         elif pmax is not None and pmax > med * CEIL_RATIO:

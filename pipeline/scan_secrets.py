@@ -76,10 +76,12 @@ def main():
     for rel in tracked_files():
         path = os.path.join(ROOT, rel)
         try:
-            with open(path, "r", encoding="utf-8", errors="strict") as f:
+            # L-278: errors="strict"면 비UTF-8 바이트 1개로 파일 전체 스킵 → 시크릿 은닉 우회 가능.
+            #   errors="replace"로 깨진 바이트만 U+FFFD 치환하고 나머지 라인은 계속 스캔(우회 차단).
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
-        except (UnicodeDecodeError, OSError):
-            continue  # 바이너리/읽기불가 → 건너뜀
+        except OSError:
+            continue  # 읽기불가 → 건너뜀
         for i, line in enumerate(lines, 1):
             if any(a in line for a in ALLOW_INLINE):
                 continue
