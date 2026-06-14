@@ -63,13 +63,19 @@ export async function signInWithApple() {
   const { SignInWithApple } = await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in/dist/esm/index.js')
   const rawNonce = crypto.randomUUID()
   const hashedNonce = await _sha256Hex(rawNonce)
+  const state = crypto.randomUUID()
   const { response } = await SignInWithApple.authorize({
     clientId: 'com.gearforest.app',
     redirectURI: 'com.gearforest.app://auth-callback',
     scopes: 'email name',
-    state: crypto.randomUUID(),
+    state,
     nonce: hashedNonce,
   })
+  // L-464: state echo-back 검증(CSRF 방어). 플러그인이 state를 돌려줄 때만 비교 — 네이티브 플러그인이
+  //   state를 생략해도 nonce(rawNonce↔hashedNonce) 바인딩이 1차 방어이므로 미반환 시엔 통과.
+  if (response.state && response.state !== state) {
+    return { error: { message: 'Apple sign-in state mismatch (possible CSRF)' } }
+  }
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',
     token: response.identityToken,
