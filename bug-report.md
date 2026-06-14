@@ -11096,7 +11096,8 @@
 
 ---
 
-### [H-136] ⏸ 보류(2026-06-14, 검토필요) — `.github/workflows/pages.yml` — CI가 stale `site/data` JSON 검증 (export
+### [H-136] ✅ 해결완료(2026-06-14, CI) — `.github/workflows/pages.yml` — CI가 stale `site/data` JSON 검증 (export
+> 수정: pages.yml에 비차단 freshness 가드 추가 — DB(repo)→temp 재익스포트 후 site/data와 diff, 다르면 ::warning(배포물 불변). ⚠️ 비차단 사유: 최근 데이터 직접교정 커밋 등 site/data가 순수 DB-export와 다를 수 있어 차단 시 정상배포 차단 위험 → 경고로 stale 신호만. 순수 export 확정 시 continue-on-error 제거로 차단 강화 가능.
 > 보류 사유: 수정(export 단계 추가)이 라이브 배포 워크플로우를 바꿔 자율 처리 위험. DB(camping_tents500.db)는 repo에 커밋돼 있어 CI export는 기술적으로 가능 → export를 temp로 돌려 site/data와 diff하는 '게이트' 방식이 안전하나 export_site outdir 지원·CI 테스트 필요. 사용자 검토 후 처리 권장. 단계 없음)
 
 - **영역:** 백엔드 — CI/CD
