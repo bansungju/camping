@@ -237,3 +237,22 @@ DP 파이프라인 스윕에 이어 잔여 고/중위험 전량 처리 — **미
 MP/MA/MD(M 파이프라인/API/devagent)·SYNC(H-143/146 + 마이그레이션 024)·H-136 CI·데이터 회귀군 검토.
 ✅ 2026-06-14 수동 SQL 전량 적용(사용자): 006·024_gear_sets_type·023·024_price_alert_log·012·025 + APPLY-NOW(기적용) → 수동 운영 SQL 잔여 0건.
 잔여: ⏸ 11(멀티탭·아카이브·재현필요) + L 253(별도 세션).
+
+## 프론트엔드 L-bundle 연속 스윕 (2026-06-14, 세션 seq-loop)
+
+미해결 L 253건을 묶음별 연속 처리(코드 실대조 → 실수정 → 라이브검증 → 커밋). 핫파일 락 준수.
+
+| 묶음 | 영역 | 실수정 | 현행유지/보류 | 커밋 |
+|---|---|---|---|---|
+| A 데드코드·중복호출 | app.js | 4 (indexOf 캐시·Map) | 7 | 577d5e7 |
+| B 필터 URL 동기화 | app.js | 0 | 10 | 8da52b5 |
+| C 슬라이더·단위·반올림 | app.js | 4 (lo≥hi·m²·.0·노이즈) | 6 | 7aa383f |
+| D 모달 접근성 | app.js | 4 (_trapTab 4모달) | 11 | 7dae02c |
+| G sw.js 캐시 | sw.js | 1 (community 프리캐시 제외) | 4 | 2fcaa3e |
+| F 계정페이지 | app.js·account.html | 2 (alert→toast·sets정리) | 11 | 440f02e |
+| E 웹푸시 | app.js | 2 (권한재확인·SW타임아웃) | 3 + ⏸1(L-267 백엔드) | bd8fc00 |
+
+**합계: 17 실수정 + 52 현행유지 + 1 보류 = 70건 처리.** 미처리 253→183.
+핵심: 버그리포트에 stale·오탐·중복 다수(loginHref 부재·priceRange b 사용중·serialize* draw중앙화·ESC누수 기수정 등) — 코드 실대조로 거짓 'fixed' 방지.
+
+남은 183건은 대부분 `pipeline/*.py`·`backend/*`(DATA/BACKEND 레인) — 파일별 묶음(H~R)으로 계속.
