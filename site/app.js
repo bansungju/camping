@@ -2865,6 +2865,12 @@ async function renderBrand() {
   const renderChips = (filter = "") => {
     const f = filter.toLowerCase();
     const show = sortedBrands.filter(([b]) => !f || b.toLowerCase().includes(f)).slice(0, 40);
+    // L-254: 선택된 브랜드가 상위 40개(또는 필터 결과) 밖이면 활성 표시가 사라지므로 맨 앞에 강제 추가
+    const sel = params.get("b") || "";
+    if (sel && !show.some(([b]) => b === sel)) {
+      const selEntry = sortedBrands.find(([b]) => b === sel);
+      if (selEntry) show.unshift(selEntry);
+    }
     blist.innerHTML = show.length
       ? show.map(([b, n]) =>
           `<button class="achip${b === (params.get("b") || "") ? " on" : " clear"}" data-b="${esc(b)}">${esc(b)} ${n}</button>`).join("")  // M-293: 선택된 칩에 on 클래스
