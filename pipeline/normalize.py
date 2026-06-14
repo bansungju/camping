@@ -94,8 +94,10 @@ def floor_area_m2(raw=None, dims_cm=None):
         # 테이퍼 'A(B)' → 평균폭. 괄호가 1번째 치수에 붙어도 폭 누락 없이 처리.
         # H-89: `(\d+)`는 정수만 매칭해 '210.5(185)'에서 '5'만 잡아 평균폭을 95로 오산(면적 최대 6.7% 과대).
         #       소수점 치수를 포함하도록 `\d*\.?\d+` + float 캐스트.
+        # M-488: 평균폭을 정수로 반올림하면(예: (210.5+185)/2=197.75→198) 0.1cm 단위 정밀도가 손실돼
+        #        면적에 누적 오차를 남긴다 → 1자리 소수로 보존(parse_dims_cm는 소수 치수 처리 가능).
         section = re.sub(r"(\d*\.?\d+)\s*\((\d*\.?\d+)\)",
-                         lambda mm: str(round((float(mm.group(1)) + float(mm.group(2))) / 2)), section)
+                         lambda mm: str(round((float(mm.group(1)) + float(mm.group(2))) / 2, 1)), section)
         d = parse_dims_cm(section)
         if d and d[0] and d[1]:
             return round((d[0] / 100.0) * (d[1] / 100.0), 2)

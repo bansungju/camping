@@ -138,6 +138,11 @@ def compute_value_score(models: list, config: dict, metrics_meta: dict) -> list:
     metric_keys = config["metrics"]
     is_single = config.get("single", False)
 
+    # M-479: config["metrics"]가 빈 리스트면 다지표 분기에서 qs=[] → sum([])/len([]) ZeroDivisionError.
+    #   비교 지표가 없으면 가성비 산출 불가이므로 전 모델 미표시로 조기 반환.
+    if not metric_keys:
+        return [{"id": m["id"], "value_display": None, "stars": None} for m in models]
+
     # 정직성: 전 지표 + price_min 있는 모델만
     eligible = []
     for m in models:

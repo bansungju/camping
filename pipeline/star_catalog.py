@@ -71,8 +71,11 @@ def main():
             d = mm[p["seg"]][k]
             d[0] = min(d[0], val); d[1] = max(d[1], val)
 
-    con.execute("DROP TABLE IF EXISTS catalog_scores")
-    con.execute("CREATE TABLE catalog_scores (product_id INT, profile TEXT, score REAL, PRIMARY KEY(product_id,profile))")
+    # M-478: DROP+CREATE는 commit 실패(디스크 풀 등) 시 catalog_scores가 빈 상태로 소실돼 복구 불가.
+    #        CREATE IF NOT EXISTS로 테이블은 항상 보존하고, 기존 행은 DELETE로 비운다(아래 INSERT·
+    #        commit과 한 트랜잭션 → 실패 시 롤백으로 이전 데이터 유지).
+    con.execute("CREATE TABLE IF NOT EXISTS catalog_scores (product_id INT, profile TEXT, score REAL, PRIMARY KEY(product_id,profile))")
+    con.execute("DELETE FROM catalog_scores")
     star_of = {}
     for pid, p in prods.items():
         st = {k: stars(v, mm[p["seg"]][k][0], mm[p["seg"]][k][1], DIRECTION[k]) for k, v in p["v"].items()}

@@ -75,9 +75,12 @@ def snapshot(con):
 
 
 def _group_prices_by_cat(con):
+    # M-469: category_id IS NULL 상품을 제외하지 않으면, ORDER BY로 맨 앞에 모인 NULL 그룹의
+    #   가격이 (cur_cid is not None 가드 탓에 yield되지 못하고) 첫 실제 카테고리 bucket에 흡수돼
+    #   해당 카테고리 중앙값을 오염시킨다 → NULL 카테고리는 cat_median 산출에서 제외한다.
     rows = con.execute("""SELECT p.category_id, po.price_krw
         FROM price_observations po JOIN products p ON p.id=po.product_id
-        WHERE po.valid=1 ORDER BY p.category_id""").fetchall()
+        WHERE po.valid=1 AND p.category_id IS NOT NULL ORDER BY p.category_id""").fetchall()
     cur_cid, bucket = None, []
     for cid, price in rows:
         if cid != cur_cid and cur_cid is not None:
@@ -176,7 +179,10 @@ def main():
                             R["new"].append((label, c["name"], c["price"]))
                         else:
                             R["skipped"] += 1
-                con.commit()
+                # M-470: --dry-run인데 페이지별 commit이 먼저 실행되면 최종 rollback이 no-op가 돼
+                #        DB에 실제 기록된다 → dry-run에서는 커밋하지 않고 끝에서 일괄 rollback.
+                if not args.dry_run:
+                    con.commit()
                 D.polite_sleep(0.8, 1.2)   # 지터(고정 간격 = 봇 지문)
             print(f"  [{label} · {q}] 누적 신규 {len(R['new'])} / 변동 {len(R['changed'])} / 스캔 {R['scanned']}")
 

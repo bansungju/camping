@@ -170,6 +170,41 @@ def flag_price_outliers(con):
                     LIMIT 1""", (cid, pid, pr / 2)).fetchone()
                 if not peer:                       # 카테고리 내 고립 봉우리 → 비현실 오기
                     con.execute("UPDATE price_observations SET valid=0 WHERE id=?", (oid,))
+
+    # D. 제품 내부 모순 격리: 같은 product_id 안에 본품가와 '부속·오타 단가'가 공존하는 경우.
+    #   B(canonical 중앙값)는 그룹에 제품이 2종 미만이면 skip하고, A(텐트 하한 15,000)는 그보다 높은
+    #   오염가(예: 코베아 마리나 28,000원 = 본품 142,500원과 한 product에 공존)를 통과시킨다 →
+    #   단일제품의 '제품 내부' 오염이 min/max를 오염시키는 이중 사각지대였다.
+    #   판정틀: 제품 내부만 보면 본품/오염을 못 가린다(저가 오염일 수도, 고가 오염일 수도).
+    #   → '같은 카테고리 제품대표가(제품당 최저 유효가) 중앙값'을 기준으로 [0.2×,5×] 밴드 밖만 격리.
+    #     이러면 저가 오염(마리나 28,000<밴드)도, 고가 오염도 카테고리 분포가 옳게 가린다
+    #     (max 앵커는 정상 저가를 오격리 → 카테고리 앵커로 회피. 예: 타프 33,800원 정상가 보존).
+    #   발동 조건(과격리 방지): 제품 내 max/min>5(내부 모순이 실재) 이고 카테고리 대표가 중앙값이 신뢰가능
+    #     (제품 2종 이상). 단일 관측·작은 분산 제품은 손대지 않는다.
+    cat_reps = {}   # category_id -> 제품대표가(최저 유효가) 중앙값
+    for (cid,) in con.execute("SELECT id FROM categories").fetchall():
+        reps = con.execute("""SELECT MIN(po.price_krw) FROM price_observations po
+            JOIN products p ON p.id=po.product_id
+            WHERE p.category_id=? AND po.valid=1 AND po.price_krw IS NOT NULL
+            GROUP BY po.product_id""", (cid,)).fetchall()
+        vals = [r[0] for r in reps if r[0]]
+        if len(vals) >= 2:
+            cat_reps[cid] = statistics.median(vals)
+    prod_obs = {}   # product_id -> (category_id, [(oid, price), ...])
+    for oid, pr, pid, cid in con.execute("""SELECT po.id, po.price_krw, po.product_id, p.category_id
+            FROM price_observations po JOIN products p ON p.id=po.product_id
+            WHERE po.valid=1 AND po.price_krw IS NOT NULL""").fetchall():
+        prod_obs.setdefault(pid, (cid, []))[1].append((oid, pr))
+    for pid, (cid, obs) in prod_obs.items():
+        prices = [p for _, p in obs]
+        if len(prices) < 2 or min(prices) <= 0 or max(prices) / min(prices) <= 5:
+            continue                                # 내부 모순 없음 → skip
+        med = cat_reps.get(cid)
+        if not med or med <= 0:
+            continue
+        for oid, pr in obs:
+            if pr < med * 0.2 or pr > med * 5:      # 카테고리 분포 기준 본품일 수 없는 가격
+                con.execute("UPDATE price_observations SET valid=0 WHERE id=?", (oid,))
     con.commit()
 
 

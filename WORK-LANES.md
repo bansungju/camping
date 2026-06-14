@@ -132,40 +132,40 @@
 | **D3** | `ocr_specs.py` | M-299·M-300·M-353·M-356·M-417 | 1 부분쓰기 | ✅ 2026-06-13 (356/417 max·300 SAVEPOINT / 299·353 기해결) |
 | **D4** | `detect_price_drops.py` | M-251·M-334·M-374·M-385·M-402·M-418 | 1 크래시 | 🟡 2026-06-13 5건 완료 (M-385=in_stock→D12 refresh) |
 | **D5** | `multicat.py` | M-256·M-366·M-367·M-423 | 1 pid오취득 | ✅ 2026-06-13 (256튜플키·366 lastrowid·423 기수정 / M-367=style.css 프론트) |
-| **D6** | `pipeline.py` | M-205·M-401 | 1 크래시·핸들 | ⬜ |
-| **D7** | `promote_catalog.py` | M-392 | 1 트랜잭션 | ⬜ |
-| **D8** | `crosssource.py` | M-420 | 1 데이터유실 | ⬜ |
-| **D9** | `resolve_duplicates.py` | M-415 | 1 stale노출 | ⬜ |
-| **D10** | `value_metric.py` | M-414·M-416 | 1 ZeroDiv(C2중복?) | ⬜ |
-| **D11** | `star_catalog.py` | M-411 | 1 별점왜곡 | ⬜ |
-| **D12** | `refresh.py` | M-206·M-207·M-383·M-384·M-394·M-429·**M-385**(in_stock 기록) | 2 집계·UTC | ⬜ |
-| **D13** | `export_site.py` | M-377·M-382·M-388·M-413 | 2 오연결 | ⬜ |
-| **D14** | `graph_pipeline.py` | M-185·M-255·M-268 | 2 (=C10) | ⬜ |
-| **D15** | `column_fixes.py` | M-179·M-281·M-360 | 2 채널가드 | ⬜ |
-| **D16** | `normalize_models.py` | M-359·M-400 | 2 중앙값 | ⬜ |
-| **D17** | `harvest_tents.py` | M-275·M-428 | 2 dedup | ⬜ |
-| **D18** | `verify_internal.py` | M-361·M-398 | 2 | ⬜ |
-| **D19** | `reclassify_other_tent.py` | M-234·M-431 | 2 오분류 | ⬜ |
-| **D20** | `collect_images.py` | M-217·M-422 | 2 | ⬜ |
-| **D21** | `add_value_star.py` | M-252·M-376 | 2 | ⬜ |
-| **D22** | `babysit.py` | M-365·M-378·M-421 | 2 리포트 | ⬜ |
-| **D23** | `validate_ranges.py` | M-387 | 2 | ⬜ |
-| **D24** | `fill_whitelist_specs.py` | M-412 | 2 | ⬜ |
-| **D25** | `graph_full.py` | M-324 | 2 | ⬜ |
-| **D26** | `normalize.py` | M-362 | 2 유니코드 | ⬜ |
-| **D27** | `enrich_details.py` | M-424 | 2 | ⬜ |
-| **D28** | `backfill_capacity.py` | M-176 | 2 ZeroDiv | ⬜ |
-| **D29** | `danawa.py` | M-355 | 2 | ⬜ |
-| **D30** | `seed_coupang.py` | M-393 | 2 | ⬜ |
-| **D31** | `scan_secrets.py` | M-314 | 2 | ⬜ |
-| **D32** | `stamp_version.py` | M-375 | 2 | ⬜ |
-| **D33** | `backend/store.py` | M-432·M-443 | 3 서버 | ⬜ |
-| **D34** | `backend/routers/search.py` | M-438 | 3 DoS | ⬜ |
-| **D35** | `backend/main.py` | M-433 | 3 CORS | ⬜ |
-| **D36** | `backend/db.py` | M-437 | 3 health | ⬜ |
-| **D37** | `dev-harness/devagent/ledger.py` | M-444 | 4 TOCTOU | ⬜ |
-| **D38** | `dev-harness/devagent/progress.py` | M-445 | 4 | ⬜ |
-| **D39** | `dev-harness/devagent/contract_checker.py` | M-446 | 4 | ⬜ |
+| **D6** | `pipeline.py` | M-205·M-401 | 1 크래시·핸들 | ✅ 2026-06-13 (M-401 with / M-205 C35 기수정) |
+| **D7** | `promote_catalog.py` | M-392 | 1 트랜잭션 | ✅ 2026-06-13 (SAVEPOINT 원자화) |
+| **D8** | `crosssource.py` | M-420 | 1 데이터유실 | ✅ 2026-06-13 (미매핑 경고) |
+| **D9** | `resolve_duplicates.py` | M-415 | 1 stale노출 | ✅ 2026-06-13 (stale rep 검출 경고) |
+| **D10** | `value_metric.py` | M-414·M-416 | 1 ZeroDiv | ✅ 2026-06-13 (C2 M-166/168/289로 기수정: price>0 가드·eligible<2 stars None) |
+| **D11** | `star_catalog.py` | M-411 | 1 별점왜곡 | ✅ 2026-06-13 (line92 valid=1; 별점calc는 M-260 기수정) |
+| **D12** | `refresh.py` | M-206·M-207·M-383·M-384·M-394·M-429·M-385 | 2 집계·UTC | ✅ 2026-06-13 (M-385 in_stock 신규 / 나머지 기수정·충족) |
+| **D13** | `export_site.py` | M-377·M-382·M-388·M-413 | 2 오연결 | ✅ 2026-06-13 |
+| **D14** | `graph_pipeline.py` | M-185·M-255·M-268 | 2 (=C10) | ✅ 2026-06-13 (185가드·255 src4보존 / 268=H-91 기수정) |
+| **D15** | `column_fixes.py` | M-179·M-281·M-360 | 2 채널가드 | ✅ 2026-06-13 (채널 allowlist 보호 / M-179 기원자적) |
+| **D16** | `normalize_models.py` | M-359·M-400 | 2 중앙값 | ✅ 2026-06-13 (C패스 statistics.median 통일) |
+| **D17** | `harvest_tents.py` | M-275·M-428 | 2 dedup | ✅ 2026-06-13 (seen_names 튜플키 기적용=M-256/C39) |
+| **D18** | `verify_internal.py` | M-361·M-398 | 2 | ✅ 2026-06-13 (flag_type 3-튜플·복합 인덱스) |
+| **D19** | `reclassify_other_tent.py` | M-234·M-431 | 2 오분류 | ✅ 2026-06-13 (cap=4 band / M-234 기수정) |
+| **D20** | `collect_images.py` | M-217·M-422 | 2 | ✅ 2026-06-13 (M-422 지터 / M-217 기수정) |
+| **D21** | `add_value_star.py` | M-252·M-376 | 2 | ✅ 2026-06-13 (M-252=C36 n<2·M-376=B20 encoding 기수정) |
+| **D22** | `babysit.py` | M-365·M-378·M-421 | 2 리포트 | ✅ 2026-06-13 (near 블록분리·promote 롤백) |
+| **D23** | `validate_ranges.py` | M-387 | 2 | ✅ 2026-06-13 (M-323 NULL→valid=0으로 기해소) |
+| **D24** | `fill_whitelist_specs.py` | M-412 | 2 | ✅ 2026-06-13 (by-design: 무효화값 보존 의도·주석명시, =C9 L-223) |
+| **D25** | `graph_full.py` | M-324 | 2 | ⏸ 보류 2026-06-13 (graph_pipeline 스펙추출 TENT_MAP 고정 → 비텐트 대상확대 시 오파싱·부적절 fetch 위험. graph_pipeline 카테고리별 spec_map 선행 필요) |
+| **D26** | `normalize.py` | M-362 | 2 유니코드 | ✅ 2026-06-13 (곡선따옴표·더블프라임 정규화) |
+| **D27** | `enrich_details.py` | M-424 | 2 | ✅ 2026-06-13 (두 타깃 쿼리 danawa_pcode IS NOT NULL 기적용) |
+| **D28** | `backfill_capacity.py` | M-176 | 2 ZeroDiv | ✅ 2026-06-13 (total=0 가드) |
+| **D29** | `danawa.py` | M-355 | 2 | ✅ 2026-06-13 (L-210 last=e로 기수정) |
+| **D30** | `seed_coupang.py` | M-393 | 2 | ✅ 2026-06-13 (비정수 rep_id 행 스킵) |
+| **D31** | `scan_secrets.py` | M-314 | 2 | ✅ 2026-06-13 (sk-[_-] 신형키 패턴 기적용) |
+| **D32** | `stamp_version.py` | M-375 | 2 | ✅ 2026-06-13 (H-119/B26 fail-fast로 해소) |
+| **D33** | `backend/store.py` | M-432·M-443 | 3 서버 | ✅ 2026-06-13 (manifest 폴백·카테고리 allowlist) |
+| **D34** | `backend/routers/search.py` | M-438 | 3 DoS | ✅ 2026-06-13 (최소길이2+lru_cache) |
+| **D35** | `backend/main.py` | M-433 | 3 CORS | ✅ 2026-06-13 (apex origin 추가) |
+| **D36** | `backend/db.py` | M-437 | 3 health | ✅ 2026-06-13 (실패 시 503) |
+| **D37** | `dev-harness/devagent/ledger.py` | M-444 | 4 TOCTOU | ✅ 2026-06-13 (원자적 rename 탈취) |
+| **D38** | `dev-harness/devagent/progress.py` | M-445 | 4 | ✅ 2026-06-13 (형식깨짐 이력 보존) |
+| **D39** | `dev-harness/devagent/contract_checker.py` | M-446 | 4 | ✅ 2026-06-13 (단순 .sql 삭제 제외·nodes/contract_checker.py) |
 
 ## 규칙
 1. 각 세션은 시작 시 자기 레인을 정한다 — cron `args.lane`, 없으면 작업 성격으로 판단(버그수정 기본 = `CORE`).
@@ -211,3 +211,21 @@
 ⑥ 커밋: **`git commit -m "..." -- <내 파일들>` (pathspec 필수, bare commit 금지)**·제외목록 확인·stamp_version.py·build-item-pages.js 단계 준수. 커밋 후 `git show --name-only`로 검증.
 ```
 세션 정책(새 세션·ScheduleWakeup 금지)은 메모리 `feedback_bug_loop_session`, 운영 제약은 `frontend-fix-loop-runbook` 참고.
+
+## 백엔드 데이터 파이프라인 — 실패성격 클러스터 (DP-1~DP-8)
+
+`pipeline/*.py` Medium 버그 47건을 **실패 성격(failure-mode)** 기준으로 8개 세션 클러스터로 묶어 처리.
+클러스터 정의·진행상태 SSOT는 [PIPELINE-BUG-CLUSTERS.md](PIPELINE-BUG-CLUSTERS.md). (DATA 레인 하위 `[lane:BACKEND]`)
+
+| 클러스터 | 성격 | 실수정 / 기해결·검증 | 상태 |
+|---|---|---|---|
+| DP-1 | 빈 입력 가드(ZeroDiv·IN()·None) | 1 / 7 | ✅ 2026-06-14 |
+| DP-2 | 트랜잭션 원자성·DB 누수 | 6 / 1 | ✅ 2026-06-14 |
+| DP-3 | I/O 견고성(예외·인코딩·silent) | 3 / 5 | ✅ 2026-06-14 |
+| DP-4 | normalize 중앙값 일관성 | 1 / 3 | ✅ 2026-06-14 |
+| DP-5 | export_site·value 메트릭 | 4 / 1 | ✅ 2026-06-14 |
+| DP-6 | ocr_specs CLI·정확도 | 2 / 2 | ✅ 2026-06-14 |
+| DP-7 | 스크래핑 파서(harvest·danawa) | 2 / 2 | ✅ 2026-06-14 |
+| DP-8 | 분류·필터·링크·쿼리 | 3 / 4 | ✅ 2026-06-14 |
+
+> 합계 47건: **22건 실수정 + 25건 기해결·검증무해**(이전 루프 중복등록 또는 오탐). 미커밋 — 검토 후 커밋 예정.

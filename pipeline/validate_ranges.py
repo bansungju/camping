@@ -441,13 +441,15 @@ def validate_db(con):
         # M-323: value_normalized이 NULL인 행은 유효 데이터가 아니다(rederive_thickness 등이 NULL로
         #        설정). NULL+valid=1이면 'valid=1 직접조회'에서 유효값으로 오인 → 일괄 valid=0.
         con.execute("UPDATE product_spec_values SET valid=0 WHERE value_normalized IS NULL AND valid=1")
+        # M-471: implausible/재분류 플래그 DELETE를 SAVEPOINT 내부로 이동. 외부에 있으면 이후
+        #        예외 시 플래그가 0건으로 비워진 채 잔존할 위험 → 리셋과 동일 롤백 단위로 보호.
+        con.execute("DELETE FROM data_quality_flags WHERE flag_type='implausible'")
+        con.execute("DELETE FROM data_quality_flags WHERE flag_type='category_mismatch' AND note LIKE '[재분류]%'")
     except Exception:
         con.execute("ROLLBACK TO validate_reset")
         con.execute("RELEASE validate_reset")
         raise
     con.execute("RELEASE validate_reset")
-    con.execute("DELETE FROM data_quality_flags WHERE flag_type='implausible'")
-    con.execute("DELETE FROM data_quality_flags WHERE flag_type='category_mismatch' AND note LIKE '[재분류]%'")
 
     hard_flagged, soft_flagged = [], []
     rows = con.execute("""

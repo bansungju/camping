@@ -61,9 +61,11 @@ def main():
     except Exception:
         con.execute("ROLLBACK TO promote")
         con.execute("RELEASE promote")
+        con.close()   # M-556: 재raise 시 말미 con.close()(L110)에 도달 못해 연결 누수 → 여기서 닫고 전파.
         raise
     con.commit()
     if not CORE:
+        con.close()   # M-556: 조기 return 경로도 말미 con.close() 미도달 → 누수 차단.
         return
 
     # 3) 검증 카탈로그 뷰
@@ -88,13 +90,20 @@ def main():
     print("=" * 56)
 
     print("\n[검증 카탈로그 내 핵심지표 보유율]")
-    def covpct(expr):
-        return con.execute(f"SELECT ROUND(SUM(CASE WHEN {expr} THEN 1 ELSE 0 END)*100.0/COUNT(*),1) FROM v_verified_catalog").fetchone()[0]
-    print(f"   가격     : {covpct('price_krw IS NOT NULL')}%")
-    print(f"   무게     : {covpct('weight_g IS NOT NULL')}%")
-    print(f"   내수압   : {covpct('water_mm IS NOT NULL')}%")
-    print(f"   바닥면적 : {covpct('floor_m2 IS NOT NULL')}%")
-    print(f"   인원     : {covpct('capacity IS NOT NULL')}%")
+    # M-522: covpct(expr)가 expr을 f-string으로 SQL에 직접 삽입해(따옴표 없는 동적 SQL) 인젝션 스캐너를
+    #   우회하던 코드 스멜 → 컬럼이 고정이므로 단일 정적 쿼리로 일괄 산출(동적 SQL 제거, 스캐너-클린).
+    cov = con.execute("""SELECT
+        ROUND(SUM(price_krw IS NOT NULL)*100.0/COUNT(*),1),
+        ROUND(SUM(weight_g  IS NOT NULL)*100.0/COUNT(*),1),
+        ROUND(SUM(water_mm  IS NOT NULL)*100.0/COUNT(*),1),
+        ROUND(SUM(floor_m2  IS NOT NULL)*100.0/COUNT(*),1),
+        ROUND(SUM(capacity  IS NOT NULL)*100.0/COUNT(*),1)
+      FROM v_verified_catalog""").fetchone()
+    print(f"   가격     : {cov[0]}%")
+    print(f"   무게     : {cov[1]}%")
+    print(f"   내수압   : {cov[2]}%")
+    print(f"   바닥면적 : {cov[3]}%")
+    print(f"   인원     : {cov[4]}%")
 
     print("\n[검증 카탈로그 예시 — 백패킹 2인, 경량순]")
     for b, mn, w, wh, fa, pr in con.execute("""

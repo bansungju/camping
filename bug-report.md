@@ -7651,7 +7651,8 @@
 
 ---
 
-### [M-367] — `multicat.py` `ingest_one` — INSERT OR IGNORE 후 SELECT 조건 불일치 → `NoneType` TypeError
+### [M-367] ✅ 해결완료(M-509와 동일, DP-1) — `multicat.py` `ingest_one` — INSERT OR IGNORE 후 SELECT 조건 불일치 → `NoneType` TypeError
+> 확인: M-509와 동일 버그. lastrowid 패턴으로 해소됨.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7663,7 +7664,8 @@
 
 ---
 
-### [M-368] — `enrich_details.py` `main` — `targets` 빈 리스트 시 `IN ()` 구문 오류
+### [M-368] ✅ 해결완료(M-512와 동일, DP-1) — `enrich_details.py` `main` — `targets` 빈 리스트 시 `IN ()` 구문 오류
+> 확인: M-512와 동일 버그. `if not targets:` 가드로 해소됨.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -7807,7 +7809,7 @@
 
 ---
 
-### [M-375] — `stamp_version.py` `_hash` — 파일 미존재 시 FileNotFoundError → 전체 파이프라인 중단
+### ✅ 해결완료(2026-06-13) [M-375] — `stamp_version.py` `_hash` — 파일 미존재 시 FileNotFoundError → 전체 파이프라인 중단
 
 - **영역:** 백엔드 — 빌드
 - **심각도:** 🟡 Medium
@@ -8342,7 +8344,7 @@
 
 ---
 
-### [M-393] — `seed_coupang.py` `load` — `rep_product_id` 비정수 CSV 행에서 ValueError 크래시
+### ✅ 해결완료(2026-06-13) [M-393] — `seed_coupang.py` `load` — `rep_product_id` 비정수 CSV 행에서 ValueError 크래시
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -9576,7 +9578,7 @@
 
 ---
 
-### [M-432] — `backend/store.py` `load()` — `manifest.json` 부재 시 서버 기동 전체 중단
+### ✅ 해결완료(2026-06-13) [M-432] — `backend/store.py` `load()` — `manifest.json` 부재 시 서버 기동 전체 중단
 
 - **영역:** 백엔드 — 서버
 - **심각도:** 🟡 Medium
@@ -9588,7 +9590,7 @@
 
 ---
 
-### [M-433] — `backend/main.py` CORS — apex 도메인 `gear-forest.com` 누락으로 API 차단
+### ✅ 해결완료(2026-06-13) [M-433] — `backend/main.py` CORS — apex 도메인 `gear-forest.com` 누락으로 API 차단
 
 - **영역:** 백엔드 — CORS
 - **심각도:** 🟡 Medium
@@ -9696,7 +9698,7 @@
 
 ---
 
-### [M-437] — `backend/db.py` `health_check()` — 모든 예외 무음 처리, DB 손상 시 HTTP 200 반환
+### ✅ 해결완료(2026-06-13) [M-437] — `backend/db.py` `health_check()` — 모든 예외 무음 처리, DB 손상 시 HTTP 200 반환
 
 - **영역:** 백엔드 — 서버 헬스체크
 - **심각도:** 🟡 Medium
@@ -9708,7 +9710,7 @@
 
 ---
 
-### [M-438] — `backend/routers/search.py` — 속도 제한 없는 검색 엔드포인트로 단문 쿼리 CPU DoS 가능
+### ✅ 해결완료(2026-06-13) [M-438] — `backend/routers/search.py` — 속도 제한 없는 검색 엔드포인트로 단문 쿼리 CPU DoS 가능
 
 - **영역:** 백엔드 — 검색 API
 - **심각도:** 🟡 Medium
@@ -9816,7 +9818,7 @@
 
 ---
 
-### [M-443] — `backend/store.py` — `site/data/*.json` 전체 로드로 임시·debug 파일 API 노출
+### ✅ 해결완료(2026-06-13) [M-443] — `backend/store.py` — `site/data/*.json` 전체 로드로 임시·debug 파일 API 노출
 
 - **영역:** 백엔드 — 서버
 - **심각도:** 🟡 Medium
@@ -9876,7 +9878,7 @@
 
 ---
 
-### [M-444] — `dev-harness/devagent/ledger.py` — TTL 락 탈취 TOCTOU 경쟁 조건
+### ✅ 해결완료(2026-06-13) [M-444] — `dev-harness/devagent/ledger.py` — TTL 락 탈취 TOCTOU 경쟁 조건
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -9888,7 +9890,7 @@
 
 ---
 
-### [M-445] — `dev-harness/devagent/progress.py` `append_progress` — 헤더 파싱 실패 시 기존 이력 전체 소실
+### ✅ 해결완료(2026-06-13) [M-445] — `dev-harness/devagent/progress.py` `append_progress` — 헤더 파싱 실패 시 기존 이력 전체 소실
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -9900,7 +9902,7 @@
 
 ---
 
-### [M-446] — `dev-harness/devagent/contract_checker.py` — `.sql` 파일 단순 삭제도 schema-change로 오판
+### ✅ 해결완료(2026-06-13) [M-446] — `dev-harness/devagent/contract_checker.py` — `.sql` 파일 단순 삭제도 schema-change로 오판
 
 - **영역:** 백엔드 — 개발 하네스
 - **심각도:** 🟡 Medium
@@ -10202,7 +10204,8 @@
 
 ---
 
-### [M-463] — `export_site.py` — `canonical_model IS NULL` 대표 이미지 조회 실패 (`=?` vs `IS ?`)
+### [M-463] ✅ 해결완료(기해결 M-382 확인, DP-5) — `export_site.py` — `canonical_model IS NULL` 대표 이미지 조회 실패 (`=?` vs `IS ?`)
+> 확인: 이미지 쿼리가 `p2.canonical_model IS ?`(NULL-safe)로 이미 교정됨(M-382, export_site.py L137). brand_id outer값 직접사용으로 타브랜드 위험도 해소.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10334,7 +10337,8 @@
 
 ---
 
-### [M-469] — `refresh.py` `_group_prices_by_cat` — `category_id IS NULL` 첫 그룹 silent 누락
+### [M-469] ✅ 해결완료(2026-06-14, DP-3) — `refresh.py` `_group_prices_by_cat` — `category_id IS NULL` 첫 그룹 silent 누락
+> 수정: 쿼리에 `AND p.category_id IS NOT NULL` 추가(refresh.py L78). NULL 카테고리 가격이 ORDER BY로 맨앞에 모였다 첫 실제 카테고리 bucket에 흡수돼 중앙값을 오염시키던 것을 차단. in-memory 테스트로 NULL 누수 미발생 검증.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10346,7 +10350,8 @@
 
 ---
 
-### [M-470] — `refresh.py` `--dry-run` — 페이지별 `con.commit()` 으로 롤백 무력화
+### [M-470] ✅ 해결완료(2026-06-14, DP-2) — `refresh.py` `--dry-run` — 페이지별 `con.commit()` 으로 롤백 무력화
+> 수정: 페이지별 commit을 `if not args.dry_run:`로 가드(refresh.py L178). dry-run은 끝에서 일괄 rollback만 수행해 DB 미변경 보장.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10358,7 +10363,8 @@
 
 ---
 
-### [M-471] — `validate_ranges.py` — implausible flag DELETE가 SAVEPOINT 외부 → 예외 시 플래그 테이블 빈 상태 잔존
+### [M-471] ✅ 해결완료(2026-06-14, DP-2) — `validate_ranges.py` — implausible flag DELETE가 SAVEPOINT 외부 → 예외 시 플래그 테이블 빈 상태 잔존
+> 수정: implausible/재분류 플래그 두 DELETE를 `validate_reset` SAVEPOINT try 내부로 이동(L443~). valid 리셋과 동일 롤백 단위로 보호.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10370,7 +10376,8 @@
 
 ---
 
-### [M-472] — `detect_price_drops.py` — `in_stock` 미기록으로 재입고 이벤트 항상 미트리거
+### [M-472] ✅ 해결완료(기해결 M-385 확인, DP-8) — `detect_price_drops.py` — `in_stock` 미기록으로 재입고 이벤트 항상 미트리거
+> 확인: refresh `_insert_price`가 in_stock 기록(크롤=1, 품절=0)하고(M-385, refresh.py L255~259), detect_price_drops가 `MAX(in_stock)`로 집계해 `prev_stock==0 and cur_stock==1` 재입고 분기 동작(M-251, L107).
 
 - **영역:** 백엔드 — 가격 알림
 - **심각도:** 🟡 Medium
@@ -10382,7 +10389,8 @@
 
 ---
 
-### [M-473] — `detect_price_drops.py` `send()` — `urlopen` 예외 미처리 → traceback 크래시
+### [M-473] ✅ 해결완료(기해결 M-374 확인, DP-3) — `detect_price_drops.py` `send()` — `urlopen` 예외 미처리 → traceback 크래시
+> 확인: send()에 HTTPError/URLError try/except가 이미 적용됨(M-374, detect_price_drops.py L150~157). 4xx/5xx·네트워크 오류 시 sys.exit로 처리.
 
 - **영역:** 백엔드 — 가격 알림
 - **심각도:** 🟡 Medium
@@ -10502,7 +10510,8 @@
 
 ---
 
-### [M-475] — `ocr_specs.py` — `--verify`/`--fill` 미입력 시 묵시적 verify 모드 실행
+### [M-475] ✅ 해결완료(2026-06-14, DP-6) — `ocr_specs.py` — `--verify`/`--fill` 미입력 시 묵시적 verify 모드 실행
+> 수정: main()에서 둘 다 미지정 시 `ap.error("--verify 또는 --fill 중 하나를 지정해주세요.")`로 종료(ocr_specs.py L256~). 묵시적 verify 실행·의도치 않은 conflict flag 삽입 차단. 플래그 없음=exit2, --verify=정상진행 검증.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10526,7 +10535,8 @@
 
 ---
 
-### [M-477] — `crosssource.py` — 단일 레코드 파싱 예외 시 전체 RECORDS 롤백
+### [M-477] ✅ 해결완료(2026-06-14, DP-2) — `crosssource.py` — 단일 레코드 파싱 예외 시 전체 RECORDS 롤백
+> 수정: RECORDS 루프를 레코드별 `SAVEPOINT rec`로 격리 — 실패행만 ROLLBACK TO+경고 후 continue, 정상행 보존. H-76(spec+recompute_ratings 단일 커밋)은 외부 트랜잭션으로 유지. SAVEPOINT 격리 테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10538,7 +10548,8 @@
 
 ---
 
-### [M-478] — `star_catalog.py` — `DROP TABLE` + `CREATE TABLE` 트랜잭션 미보호 → 크래시 시 테이블 소실
+### [M-478] ✅ 해결완료(2026-06-14, DP-2) — `star_catalog.py` — `DROP TABLE` + `CREATE TABLE` 트랜잭션 미보호 → 크래시 시 테이블 소실
+> 수정: `DROP`→`CREATE TABLE IF NOT EXISTS`+`DELETE FROM catalog_scores`로 변경(star_catalog.py L73). 테이블 항상 보존·INSERT/commit과 단일 트랜잭션이라 크래시 시 이전 데이터 롤백 유지. in-memory sqlite 멱등성 테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10550,7 +10561,8 @@
 
 ---
 
-### [M-479] — `value_metric.py` `compute_value_score` — `metric_keys` 빈 리스트 시 ZeroDivisionError
+### [M-479] ✅ 해결완료(2026-06-14, DP-1) — `value_metric.py` `compute_value_score` — `metric_keys` 빈 리스트 시 ZeroDivisionError
+> 수정: 함수 초반 `if not metric_keys: return [전 모델 미표시]` 가드 추가(value_metric.py L141). 빈 metrics 단위테스트로 ZeroDivision 미발생 검증.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10826,7 +10838,8 @@
 
 ---
 
-### [M-488] — `normalize.py` `floor_area_m2` — 테이퍼 평균 정수 반올림으로 소수점 정밀도 손실
+### [M-488] ✅ 해결완료(2026-06-14, DP-4) — `normalize.py` `floor_area_m2` — 테이퍼 평균 정수 반올림으로 소수점 정밀도 손실
+> 수정: 테이퍼 'A(B)' 평균폭을 `round((A+B)/2)`(정수) → `round((A+B)/2, 1)`(1자리 소수)로 변경(normalize.py L98). 0.1cm 정밀도 보존. sqft/dims 경로 회귀 없음(자가테스트 통과).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10838,7 +10851,8 @@
 
 ---
 
-### [M-489] — `export_site.py` — value 메트릭 `fill: 100` 하드코딩 → 실제 커버리지 미반영
+### [M-489] ✅ 해결완료(2026-06-14, DP-5) — `export_site.py` — value 메트릭 `fill: 100` 하드코딩 → 실제 커버리지 미반영
+> 수정: 합성 가성비 지표 fill을 `value가 부여된 모델 비율`로 산출(export_site.py L191). 비교풀<2·스펙결측으로 value 미부여된 모델이 가려지던 것 해소. 단위테스트로 fill≠100 검증.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10850,7 +10864,8 @@
 
 ---
 
-### [M-490] — `babysit.py` — `promote_all` 예외 시 DB 커넥션 누수
+### [M-490] ✅ 해결완료(2026-06-14, DP-2) — `babysit.py` — `promote_all` 예외 시 DB 커넥션 누수
+> 수정: promote_all except(rollback+raise)에 `con.close()` 추가(babysit.py L43). 재raise로 말미 close 미도달하던 누수 차단.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10862,7 +10877,8 @@
 
 ---
 
-### [M-491] — `babysit.py` — 커버리지 검사 카테고리 이름 하드코딩 → 이름 변경 시 silent 무음
+### [M-491] ✅ 해결완료(2026-06-14, DP-3) — `babysit.py` — 커버리지 검사 카테고리 이름 하드코딩 → 이름 변경 시 silent 무음
+> 수정: '백패킹텐트' id를 루프 전 1회 해소·파라미터화(babysit.py L96~). 미존재 시 분모0→SQL NULL로 무음 통과하던 것을 명시적 경보(`커버리지 검사 불가: 카테고리 미존재`)로 전환.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -10874,7 +10890,8 @@
 
 ---
 
-### [M-492] — `danawa.py` `http_get` — URLError 재시도 시 `last=None` 리셋으로 이전 HTTPError 정보 손실
+### [M-492] ✅ 해결완료(기해결 L-210 확인, DP-3) — `danawa.py` `http_get` — URLError 재시도 시 `last=None` 리셋으로 이전 HTTPError 정보 손실
+> 확인: URLError 분기에서 `last = e`로 실제 에러 보존(L-210, danawa.py L89). 끝에서 `if last: raise last`로 정보 유지.
 
 - **영역:** 백엔드 — 데이터 수집
 - **심각도:** 🟡 Medium
@@ -11066,7 +11083,8 @@
 
 ---
 
-### [M-499] — `export_site.py` — `value_normalized` 문자열 저장 시 `round()` TypeError 크래시
+### [M-499] ✅ 해결완료(2026-06-14, DP-5) — `export_site.py` — `value_normalized` 문자열 저장 시 `round()` TypeError 크래시
+> 수정: `round(float(val),2)` + `(TypeError,ValueError)` 방어로 변경(export_site.py L116). 문자열('12.5')·비수치 모두 안전. 단위테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11078,7 +11096,8 @@
 
 ---
 
-### [M-500] — `export_site.py` — value metric을 `star_metrics` 스펙만으로 계산 → `CATEGORY_CONFIG` 비star 메트릭 silent 누락
+### [M-500] ✅ 해결완료(2026-06-14, DP-5) — `export_site.py` — value metric을 `star_metrics` 스펙만으로 계산 → `CATEGORY_CONFIG` 비star 메트릭 silent 누락
+> 수정: specs 빌드를 `star_metrics ∪ VM.CATEGORY_CONFIG[slug].metrics`(=spec_metrics)로 확장(export_site.py L72~). config가 지정한 비★ 지표가 compute_value_score eligibility에서 누락되던 잠재버그 차단(현재 데이터에선 모든 config 지표가 ★라 미발현이나 방어).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11090,7 +11109,8 @@
 
 ---
 
-### [M-501] — `normalize_models.py` C-pass — 구 하위 인덱스 중앙값 공식 사용 (H-83 B-pass 수정 미적용)
+### [M-501] ✅ 해결완료(기해결 M-359/M-400 확인, DP-4) — `normalize_models.py` C-pass — 구 하위 인덱스 중앙값 공식 사용 (H-83 B-pass 수정 미적용)
+> 확인: C 패스(브랜드+카테고리 고립봉우리)도 `statistics.median(prices)`로 통일됨(M-359/M-400, normalize_models.py L163). B 패스(L138)와 동일 공식. 잔여 하위인덱스 코드 없음.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11102,7 +11122,8 @@
 
 ---
 
-### [M-502] — `normalize_models.py` — `valid=1` 일괄 리셋과 A-pass 플래그 재설정 사이 크래시 시 outlier 영구 허용
+### [M-502] ✅ 해결완료(기완화 확인, DP-2) — `normalize_models.py` — `valid=1` 일괄 리셋과 A-pass 플래그 재설정 사이 크래시 시 outlier 영구 허용
+> 확인: `flag_price_outliers`의 valid=1 리셋(L112)→A/B/C 재격리→commit(L173) 사이에 중간 commit이 없어 단일 트랜잭션. 크래시 시 미커밋분 자동 롤백 → outlier 영구 허용 미발생. B15/M-263(manual_invalid 보호)와 동일 영역으로 기완화. 코드변경 불필요.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11318,7 +11339,8 @@
 
 ---
 
-### [M-509] — `multicat.py` `ingest_one` — `INSERT OR IGNORE` 중복 시 `fetchone()[0]` TypeError
+### [M-509] ✅ 해결완료(기해결 M-183/M-290 확인, DP-1) — `multicat.py` `ingest_one` — `INSERT OR IGNORE` 중복 시 `fetchone()[0]` TypeError
+> 확인: multicat.py L177 `if cur.rowcount: pid=cur.lastrowid else: 스킵` + 브랜드 `if not brow` 가드 이미 적용됨(M-183/M-290). fetchone()[0] 의존 제거됨.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11330,7 +11352,8 @@
 
 ---
 
-### [M-510] — `collect_images.py` — 검증 상품 0건 시 `100*done/tot` ZeroDivisionError
+### [M-510] ✅ 해결완료(기해결 L-192 확인, DP-1) — `collect_images.py` — 검증 상품 0건 시 `100*done/tot` ZeroDivisionError
+> 확인: collect_images.py L95 `pct = round(100*done/tot) if tot else 0` 가드 이미 적용됨(L-192).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11342,7 +11365,8 @@
 
 ---
 
-### [M-511] — `backfill_capacity.py` — products 테이블 비어있을 때 `have*100//total` ZeroDivisionError
+### [M-511] ✅ 해결완료(기해결 M-176 확인, DP-1) — `backfill_capacity.py` — products 테이블 비어있을 때 `have*100//total` ZeroDivisionError
+> 확인: backfill_capacity.py L79 `pct = (have*100//total) if total else 0` 가드 이미 적용됨(M-176).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11354,7 +11378,8 @@
 
 ---
 
-### [M-512] — `enrich_details.py` — `targets` 빈 리스트 시 `IN ()` SQL 문법 오류
+### [M-512] ✅ 해결완료(기해결 M-215 확인, DP-1) — `enrich_details.py` — `targets` 빈 리스트 시 `IN ()` SQL 문법 오류
+> 확인: enrich_details.py L91 `if not targets:` 조기 종료 가드 이미 적용됨(M-215).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11366,7 +11391,8 @@
 
 ---
 
-### [M-513] — `seed_coupang.py` `--load` — 비정수 `rep_product_id` CSV 행에서 `int()` ValueError
+### [M-513] ✅ 해결완료(기해결 M-393 확인, DP-3) — `seed_coupang.py` `--load` — 비정수 `rep_product_id` CSV 행에서 `int()` ValueError
+> 확인: load()에서 `rid` 비정수 검사 후 경고+continue 가드가 이미 적용됨(M-393, seed_coupang.py L90~93).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11378,7 +11404,8 @@
 
 ---
 
-### [M-514] — `harvest_tents.py` — `p_trunc` 정의 순서가 `report()` 호출 뒤 → 코드 추출 시 NameError 위험
+### [M-514] ✅ 해결완료(2026-06-14, DP-7) — `harvest_tents.py` — `p_trunc` 정의 순서가 `report()` 호출 뒤 → 코드 추출 시 NameError 위험
+> 수정: `p_trunc` 정의를 `report()` 앞으로 이동(harvest_tents.py L239 직전). 부분 import/REPL에서 report만 먼저 평가될 때의 NameError 위험 제거. 단일 정의 확인.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11560,7 +11587,8 @@
 
 ---
 
-### [M-518] — `ocr_specs.py` — 무게 주석 "가장 큰 값" vs 코드 `min()` 불일치 → 유지보수 위험
+### [M-518] ✅ 해결완료(기해결 M-356/M-417 확인, DP-6) — `ocr_specs.py` — 무게 주석 "가장 큰 값" vs 코드 `min()` 불일치 → 유지보수 위험
+> 확인: 무게 채택이 `max(kgs)`로 주석 의도(가장 큰 값=본체/패키지)와 일치하도록 이미 교정됨(M-356/M-417, ocr_specs.py L104). 부속 과소평가 방지.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11572,7 +11600,8 @@
 
 ---
 
-### [M-519] — `ocr_specs.py` `run()` — `ocr_text()` 예외 미처리로 스펙 삽입 롤백
+### [M-519] ✅ 해결완료(2026-06-14, DP-3) — `ocr_specs.py` `run()` — `ocr_text()` 예외 미처리로 스펙 삽입 롤백
+> 수정: `parse_specs(ocr_text(url))`를 try/except로 감싸 단일 URL OCR 실패 시 con.rollback()+로그 후 다음 pid로 continue(ocr_specs.py L211~). run() 전체 크래시·잔여 타깃 유실 방지.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11584,7 +11613,8 @@
 
 ---
 
-### [M-520] — `star_catalog.py` TOP3 리포트 쿼리 — `valid=1` 필터 없어 무효 가격 표시
+### [M-520] ✅ 해결완료(기해결 M-411 확인, DP-8) — `star_catalog.py` TOP3 리포트 쿼리 — `valid=1` 필터 없어 무효 가격 표시
+> 확인: TOP3 price 서브쿼리에 `po.valid=1`(격리 제외) 이미 적용됨(M-411, star_catalog.py L95).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11596,7 +11626,8 @@
 
 ---
 
-### [M-521] — `seed_coupang.py` CSV `open()` — 인코딩 미지정으로 Windows/CP949 환경 한글 문자 깨짐
+### [M-521] ✅ 해결완료(기해결 L-193 확인, DP-3) — `seed_coupang.py` CSV `open()` — 인코딩 미지정으로 Windows/CP949 환경 한글 문자 깨짐
+> 확인: build/load의 CSV open 3곳 모두 `encoding="utf-8"` 명시됨(L-193, seed_coupang.py L54·60·83).
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11608,7 +11639,8 @@
 
 ---
 
-### [M-522] — `promote_catalog.py` `covpct()` — 비따옴표 f-string SQL 삽입으로 인젝션 스캐너 우회
+### [M-522] ✅ 해결완료(2026-06-14, DP-8) — `promote_catalog.py` `covpct()` — 비따옴표 f-string SQL 삽입으로 인젝션 스캐너 우회
+> 수정: expr을 f-string으로 SQL에 삽입하던 covpct() 동적쿼리를 제거하고, 고정 컬럼 5개 보유율을 단일 정적 쿼리(`SUM(col IS NOT NULL)*100.0/COUNT(*)`)로 일괄 산출(promote_catalog.py L92~). 동적 SQL 제거로 스캐너-클린. 단위테스트 통과.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11620,7 +11652,8 @@
 
 ---
 
-### [M-523] — `add_value_star.py` — `backpacking-bag.json` 미존재 시 FileNotFoundError (export 미실행 환경)
+### [M-523] ✅ 해결완료(2026-06-14, DP-5) — `add_value_star.py` — `backpacking-bag.json` 미존재 시 FileNotFoundError (export 미실행 환경)
+> 수정: main 초반 `if not os.path.exists(PATH): 안내 후 return` 가드 추가(add_value_star.py L48~). export 선행 안내 후 정상 종료.
 
 - **영역:** 백엔드 — 데이터 파이프라인
 - **심각도:** 🟡 Medium
@@ -11766,7 +11799,8 @@
 
 ---
 
-### [M-528] — `collect_images.py` — `tot=0` 시 진행률 계산 ZeroDivisionError
+### [M-528] ✅ 해결완료(M-510과 동일지점, DP-1) — `collect_images.py` — `tot=0` 시 진행률 계산 ZeroDivisionError
+> 확인: M-510과 동일 라인. `if tot else 0` 가드로 해소됨.
 
 - **영역:** 백엔드 — 파이프라인/이미지 수집
 - **심각도:** 🟡 Medium
@@ -11886,7 +11920,8 @@
 
 ---
 
-### [M-531] — `babysit.py` — `near[:10]` 출력 루프가 `if near:` 조건 없이 항상 실행
+### [M-531] ✅ 해결완료(기해결 M-365/M-421 확인, DP-8) — `babysit.py` — `near[:10]` 출력 루프가 `if near:` 조건 없이 항상 실행
+> 확인: `if near:` 가드 + 별도 헤더 블록으로 분리됨(M-365/M-421, babysit.py L131). 항목 있을 때만 출력.
 
 - **영역:** 백엔드 — 파이프라인/watchdog
 - **심각도:** 🟡 Medium
@@ -11898,7 +11933,8 @@
 
 ---
 
-### [M-532] — `brand_filter.py` — `name_ko=NULL` 브랜드 처리 시 `None + str` TypeError
+### [M-532] ✅ 해결완료(2026-06-14, DP-8) — `brand_filter.py` — `name_ko=NULL` 브랜드 처리 시 `None + str` TypeError
+> 수정: 제외 브랜드 예시 출력을 `n+'('+str(c)+')'` → f-string `{n or '?'}({c})`로 변경(brand_filter.py L88~). NULL 브랜드도 '?'로 안전 표기. 단위테스트 통과.
 
 - **영역:** 백엔드 — 파이프라인/brand_filter
 - **심각도:** 🟡 Medium
@@ -11910,7 +11946,8 @@
 
 ---
 
-### [M-533] — `seed_coupang.py` — CSV `rep_product_id` 비숫자 행에서 `int()` ValueError 비처리
+### [M-533] ✅ 해결완료(M-513과 동일, DP-3) — `seed_coupang.py` — CSV `rep_product_id` 비숫자 행에서 `int()` ValueError 비처리
+> 확인: M-513과 동일 버그. M-393 가드로 해소됨.
 
 - **영역:** 백엔드 — 파이프라인/seed_coupang
 - **심각도:** 🟡 Medium
@@ -11958,7 +11995,8 @@
 
 ---
 
-### [M-534] — `harvest_tents.py` — `seen_names` 모델명만으로 dedup → 다른 브랜드 동명 모델 누락
+### [M-534] ✅ 해결완료(기해결 M-275/L-241 확인, DP-7) — `harvest_tents.py` — `seen_names` 모델명만으로 dedup → 다른 브랜드 동명 모델 누락
+> 확인: ingest의 dedup 키가 `(cid, brand, model)` 튜플로 이미 교정됨(M-275/L-241, harvest_tents.py L121). 다른 브랜드/카테고리 동명 모델 오차단 없음. refresh/multicat과 키 형태 일치.
 
 - **영역:** 백엔드 — 파이프라인/데이터
 - **심각도:** 🟡 Medium
@@ -11970,7 +12008,8 @@
 
 ---
 
-### [M-535] — `harvest_tents.py` `parse_results()` — `range(1, len(parts)-1, 2)` 오프-바이-원 → 마지막 상품 블록 누락
+### [M-535] ✅ 해결완료(검증·무결함 확인, DP-7) — `harvest_tents.py` `parse_results()` — `range(1, len(parts)-1, 2)` 오프-바이-원 → 마지막 상품 블록 누락
+> 검증: `re.split`이 캡처그룹 1개라 parts 길이는 항상 1+2N(홀수). `range(1,len-1,2)`는 i=len-2까지 도달해 마지막 (pcode,block) 쌍을 모두 처리하며(제품 1·2·3·5개 테스트로 누락 0 확인), `-1`은 오히려 i+1 인덱스 유효를 보장하는 방어적 상한이다. off-by-one 미발생 → 오탐. 향후 오인 방지 주석 추가.
 
 - **영역:** 백엔드 — 파이프라인/데이터
 - **심각도:** 🟡 Medium
@@ -11982,7 +12021,8 @@
 
 ---
 
-### [M-536] — `affiliate_links.py` `sample()` — `GROUP BY b.name_ko` 비집계 컬럼 임의 선택 → 스펙 혼용
+### [M-536] ✅ 해결완료(2026-06-14, DP-8) — `affiliate_links.py` `sample()` — `GROUP BY b.name_ko` 비집계 컬럼 임의 선택 → 스펙 혼용
+> 수정: `GROUP BY b.name_ko`(비결정·이식 시 혼용 위험)를 `ROW_NUMBER() OVER (PARTITION BY b.name_ko ORDER BY p.id)` rn=1로 교체(affiliate_links.py L63~). 브랜드당 가장 낮은 p.id 1행으로 model/cat/cap을 결정화. 단위테스트 통과.
 
 - **영역:** 백엔드 — 파이프라인/제휴링크
 - **심각도:** 🟡 Medium
@@ -12130,7 +12170,8 @@
 
 ---
 
-### [M-541] — `danawa.py` `_meta_description` — 속성 순서 고정 정규식으로 Description 추출 실패
+### [M-541] ✅ 해결완료(2026-06-14, DP-7) — `danawa.py` `_meta_description` — 속성 순서 고정 정규식으로 Description 추출 실패
+> 수정: `name 바로 뒤 content` 고정 정규식 → 메타태그를 먼저 매칭하고 그 안에서 content를 순서 무관 추출(danawa.py L141~). 속성순서(content 먼저)·중간 속성·작은/큰따옴표·대소문자 4케이스 단위테스트 통과.
 
 - **영역:** 백엔드 — 데이터 수집 파이프라인
 - **심각도:** 🟡 Medium
@@ -12142,7 +12183,8 @@
 
 ---
 
-### [M-542] — `reclassify_other_tent.py` `bucket()` — `weight=None` 시 무조건 "auto" 분류 → 백패킹 텐트 오분류
+### [M-542] ✅ 해결완료(기처리 L-196 확인, DP-8) — `reclassify_other_tent.py` `bucket()` — `weight=None` 시 무조건 "auto" 분류 → 백패킹 텐트 오분류
+> 확인: L-196이 weight=None을 `auto 분류 + 경고 출력`으로 처리 중(reclassify_other_tent.py L38~41). 무게 없으면 백패킹/오토 판정이 물리적으로 불가하므로 경고로 사후 감지 유도하는 의도된 결정. 이름기반 추정 추가는 오탐 위험으로 보류.
 
 - **영역:** 백엔드 — 데이터 분류 파이프라인
 - **심각도:** 🟡 Medium
@@ -12266,7 +12308,8 @@
 
 ---
 
-### [M-545] — `ocr_specs.py` — `--verify`/`--fill` 미지정 시 `mode="verify"` 기본 동작, `--verify` 플래그는 dead code
+### [M-545] ✅ 해결완료(M-475와 동일 수정, DP-6) — `ocr_specs.py` — `--verify`/`--fill` 미지정 시 `mode="verify"` 기본 동작, `--verify` 플래그는 dead code
+> 확인: M-475 수정으로 동시 해소 — 이제 `--verify` 없이(그리고 --fill도 없이) 실행하면 에러이므로 `--verify`가 의미를 가진다(dead code 해소).
 
 - **영역:** 백엔드 — 파이프라인/OCR
 - **심각도:** 🟡 Medium
@@ -12278,7 +12321,8 @@
 
 ---
 
-### [M-546] — `ocr_specs.py` `detail_images()` — PIL 미설치 시 `Image is None` 체크가 루프 안에 있어 불필요한 전체 이미지 다운로드
+### [M-546] ✅ 해결완료(2026-06-14, DP-6) — `ocr_specs.py` `detail_images()` — PIL 미설치 시 `Image is None` 체크가 루프 안에 있어 불필요한 전체 이미지 다운로드
+> 수정: `detail_images()` 초반 `if Image is None: return []` 조기반환 추가(ocr_specs.py L51~). PIL 없으면 페이지 fetch·이미지 다운로드 자체를 안 함. 루프 내 중복 체크 제거.
 
 - **영역:** 백엔드 — 파이프라인/OCR
 - **심각도:** 🟡 Medium
@@ -12290,7 +12334,8 @@
 
 ---
 
-### [M-547] — `normalize_models.py` `flag_price_outliers` — C 패스 중앙값이 B 패스와 다른 계산식 사용 → 동일 데이터에 격리 결과 불일치
+### [M-547] ✅ 해결완료(M-501과 동일, DP-4) — `normalize_models.py` `flag_price_outliers` — C 패스 중앙값이 B 패스와 다른 계산식 사용 → 동일 데이터에 격리 결과 불일치
+> 확인: M-501과 동일 영역. B/C 패스 모두 statistics.median 사용으로 일관(M-359/M-400).
 
 - **영역:** 백엔드 — 파이프라인/데이터
 - **심각도:** 🟡 Medium
@@ -12302,7 +12347,8 @@
 
 ---
 
-### [M-548] — `add_manual_models.py` — `canonical_models` DELETE+INSERT 후 `normalize_db()` 실행 시 수동 값 덮어씌워짐
+### [M-548] ✅ 해결완료(검증·무해 확인, DP-4) — `add_manual_models.py` — `canonical_models` DELETE+INSERT 후 `normalize_db()` 실행 시 수동 값 덮어씌워짐
+> 검증: normalize_db가 canonical_models를 재롤업해도 수동 데이터 무손실 — ①가격은 price_observations(channel='수동',valid=1)에서 국내 폴백으로 복원(in-memory 재생성 SQL로 890k~950k 보존 확인), ②스펙은 source_id=4로 정규화/검증 패스 보호, ③solo 수동모델은 그룹<2라 이상치 격리 비대상. add_manual의 canonical write는 단독실행용 사전시드로, 두 경로가 동일 결과 수렴. 상호작용 설명 주석 추가(동작 무변경).
 
 - **영역:** 백엔드 — 파이프라인/데이터
 - **심각도:** 🟡 Medium
@@ -12496,7 +12542,8 @@
 
 ---
 
-### [M-556] — `promote_catalog.py` — SAVEPOINT 예외 경로에서 `con.close()` 미도달 → DB 연결 누수
+### [M-556] ✅ 해결완료(2026-06-14, DP-2) — `promote_catalog.py` — SAVEPOINT 예외 경로에서 `con.close()` 미도달 → DB 연결 누수
+> 수정: SAVEPOINT 재raise 경로와 `if not CORE: return` 조기종료 경로 양쪽에 `con.close()` 추가(promote_catalog.py). 말미 close 미도달 누수 차단.
 
 - **영역:** 백엔드 — 파이프라인/카탈로그 승격
 - **심각도:** 🟡 Medium
@@ -12907,5 +12954,19 @@
 - **원인:** [site/app.js](site/app.js) line 486 — `|| !b.dataset.key` 조건이 key 미매칭 버튼도 갱신 대상에 포함.
 - **제안 수정:** `!b.dataset.key` 분기 제거 또는 `openProduct` 내 `#item-wish` 버튼에 항상 `data-key` 설정.
 - **파일:** [site/app.js](site/app.js) line 486 [lane:CORE]
+
+---
+
+### [M-573] ✅ 해결완료(2026-06-14) — `normalize_models.py` `flag_price_outliers()` — 단일제품 '제품 내부' 저가 오염(부속·오타 단가)이 min/max 오염
+
+- **영역:** 백엔드 — 파이프라인 / 가격 이상치 탐지
+- **심각도:** 🟠 Medium
+- **발견일시:** 2026-06-14 (사용자 제보: 코베아 마리나 28,000원)
+- **증상:** 한 `product_id`에 본품가와 부속·오타 단가가 함께 적재되면(예: 코베아 마리나 본품 142,500원 + 28,000원) `price_min`이 오염가로 내려가 가성비 지수가 부풀려진다(마리나 value 99·★5 가성비 1위). A패스(텐트 하한 15,000원)는 28,000원을 통과시키고, B패스(canonical 중앙값)는 비교 제품이 2종 미만이면 skip → 단일제품 내부 오염이 이중 사각지대로 빠져나감.
+- **재현조건:** canonical 그룹에 제품 1종뿐이고 그 product에 5배 이상 벌어진 관측치가 공존할 때.
+- **원인:** [pipeline/normalize_models.py](pipeline/normalize_models.py) `flag_price_outliers()` — 제품 내부 관측치 간 모순을 검사하는 패스 부재.
+- **수정:** 패스 D 추가 — 제품 내부 max/min>5(내부 모순 실재)인 제품에 한해, 같은 카테고리 '제품대표가(제품당 최저 유효가) 중앙값'의 [0.2×,5×] 밴드 밖 관측을 `valid=0` 격리. 카테고리 분포를 기준틀로 써서 저가·고가 오염을 모두 옳게 가린다(제품 내부 max 앵커는 정상 저가를 오격리 → 회피). 전 카탈로그 6,786 관측 중 1건만 격리(과격리 없음). 멱등.
+- **파일:** [pipeline/normalize_models.py](pipeline/normalize_models.py) (flag_price_outliers 패스 D) [lane:BACKEND]
+- **데이터 후속:** 코베아 마리나(GF-AT-00068) 가격 398,000원으로 수동 확정, value_score·item-201.html·search.json·모바일 번들 동기 반영.
 
 ---

@@ -175,23 +175,35 @@ def main():
     filled = 0
     try:
         for r in RECORDS:
-            row = con.execute("SELECT id, category_id FROM products WHERE danawa_pcode=?", (r["pcode"],)).fetchone()
-            if not row:
+            # M-477: 단일 레코드 파싱 예외(packed_volume_cm3 등)가 전체 RECORDS를 롤백시켜 정상
+            #   데이터까지 잃지 않도록 레코드별 SAVEPOINT로 격리. 실패 행은 되돌리고 경고 후 계속.
+            #   외부 단일 커밋(H-76: spec+recompute_ratings 원자화)은 그대로 유지.
+            con.execute("SAVEPOINT rec")
+            try:
+                row = con.execute("SELECT id, category_id FROM products WHERE danawa_pcode=?", (r["pcode"],)).fetchone()
+                if not row:
+                    con.execute("RELEASE rec")
+                    continue
+                pid, cid = row
+                n = 0
+                ow = r.get("confirm", False)   # True면 기존(다나와)값을 확정값으로 덮어씀
+                if "weight" in r:
+                    n += upsert(con, pid, cid, "weight_min", N.parse_weight(r["weight"]), r["weight"], "high", r["src"], ow)
+                if "water" in r:
+                    n += upsert(con, pid, cid, "water_head", N.parse_water_head(r["water"]), r["water"], "high", r["src"], ow)
+                if "floor_m2" in r:
+                    n += upsert(con, pid, cid, "floor_area", r["floor_m2"], f"{r['floor_m2']}㎡", "high", r["src"], ow)
+                if "packed" in r:
+                    n += upsert(con, pid, cid, "packed_volume", N.packed_volume_cm3(r["packed"]), r["packed"], "medium", r["src"], ow)
+                for key, val in r.get("m", {}).items():
+                    n += upsert(con, pid, cid, key, val, str(val), "high", r["src"], ow)
+                filled += n
+                con.execute("RELEASE rec")
+            except Exception as e:
+                con.execute("ROLLBACK TO rec")
+                con.execute("RELEASE rec")
+                print(f"[crosssource] 레코드 스킵 pcode={r.get('pcode')}: {e}")
                 continue
-            pid, cid = row
-            n = 0
-            ow = r.get("confirm", False)   # True면 기존(다나와)값을 확정값으로 덮어씀
-            if "weight" in r:
-                n += upsert(con, pid, cid, "weight_min", N.parse_weight(r["weight"]), r["weight"], "high", r["src"], ow)
-            if "water" in r:
-                n += upsert(con, pid, cid, "water_head", N.parse_water_head(r["water"]), r["water"], "high", r["src"], ow)
-            if "floor_m2" in r:
-                n += upsert(con, pid, cid, "floor_area", r["floor_m2"], f"{r['floor_m2']}㎡", "high", r["src"], ow)
-            if "packed" in r:
-                n += upsert(con, pid, cid, "packed_volume", N.packed_volume_cm3(r["packed"]), r["packed"], "medium", r["src"], ow)
-            for key, val in r.get("m", {}).items():
-                n += upsert(con, pid, cid, key, val, str(val), "high", r["src"], ow)
-            filled += n
         # H-76: spec 변경을 recompute 전에 commit하면 recompute_ratings 예외 시 rollback이
         #       이미 커밋된 spec을 되돌리지 못해 "spec 커밋 + ratings 미반영" 반쪽 상태가 남았다.
         #       recompute_ratings는 같은 con을 쓰고 내부 commit이 없으므로(확인됨), spec upsert와

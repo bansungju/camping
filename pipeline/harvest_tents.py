@@ -48,7 +48,9 @@ def parse_results(html):
     """검색결과 HTML → [{pcode,name,spec_text,price}] (광고/부속 제외)."""
     out = []
     parts = re.split(r'id="productItem(\d+)"', html)
-    # parts = [pre, pcode, block, pcode, block, ...]
+    # parts = [pre, pcode, block, pcode, block, ...]  (캡처그룹 1개 → 길이 항상 1+2N, 홀수)
+    # M-535: `len(parts)-1`은 off-by-one이 아니다 — 홀수 길이라 마지막 (pcode,block) 쌍까지 포함하며
+    #   (i=len-2까지 도달), 오히려 i+1 인덱스가 항상 유효함을 보장하는 방어적 상한이다(검증완료).
     for i in range(1, len(parts) - 1, 2):
         pcode, block = parts[i], parts[i + 1]
         nm = re.search(r'class="prod_name"[^>]*>\s*<a[^>]*>(.*?)</a>', block, re.S)
@@ -115,9 +117,12 @@ def ingest(con, cand, seen_names):
     brand = toks[0]
     model = " ".join(toks[1:]) if len(toks) > 1 else cand["name"]  # 모델명서 브랜드 중복 제거
     brand, model = fix_brand(brand, model)
-    if model in seen_names:
+    # M-275/L-241: 중복판정 키를 (카테고리, 브랜드, 모델) 튜플로. 평면 model 문자열만 쓰면
+    #   서로 다른 브랜드/카테고리의 동명 모델이 dup_name으로 오차단된다. refresh가 HT/multicat에
+    #   동일 seen_names를 공유하므로 세 곳(여기·multicat·snapshot)의 키 형태가 일치해야 한다.
+    if (cid, brand, model) in seen_names:
         return "dup_name"
-    seen_names.add(model)
+    seen_names.add((cid, brand, model))
 
     con.execute("INSERT OR IGNORE INTO brands(name_ko) VALUES(?)", (brand,))
     bid = con.execute("SELECT id FROM brands WHERE name_ko=?", (brand,)).fetchone()[0]
@@ -183,7 +188,9 @@ def main():
         con = sqlite3.connect(args.db)
         seen_pcode = {r[0] for r in con.execute(
             "SELECT danawa_pcode FROM products WHERE danawa_pcode IS NOT NULL")}
-        seen_names = {r[0] for r in con.execute("SELECT model_name FROM products")}
+        seen_names = {(cid, brand, model) for cid, brand, model in con.execute(
+            "SELECT p.category_id, b.name_ko, p.model_name "
+            "FROM products p JOIN brands b ON b.id=p.brand_id")}
         target = 10 ** 9   # append는 카운트 목표 대신 모든 쿼리 소진
         print(f"[append] 기존 {len(seen_pcode)} pcode 로드 → 신규만 추가")
     else:
@@ -231,6 +238,12 @@ def main():
     print(f"\nDB 저장: {args.db}")
 
 
+# M-514: p_trunc는 report()가 호출하므로 정의 순서를 report 앞으로 둔다(전엔 report 뒤 정의 →
+#   부분 import·REPL에서 report만 먼저 평가될 때 NameError 위험).
+def p_trunc(s, n=34):
+    return s if len(s) <= n else s[:n - 1] + "…"
+
+
 def report(con):
     print("\n" + "=" * 60)
     print("텐트 대량 수확 리포트")
@@ -264,10 +277,6 @@ def report(con):
     print("\n[플래그 유형]")
     for ft, c in con.execute("SELECT flag_type,COUNT(*) FROM data_quality_flags GROUP BY flag_type ORDER BY 2 DESC"):
         print(f"   {ft}: {c}")
-
-
-def p_trunc(s, n=34):
-    return s if len(s) <= n else s[:n - 1] + "…"
 
 
 if __name__ == "__main__":

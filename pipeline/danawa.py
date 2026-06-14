@@ -139,8 +139,14 @@ def fetch(pcode, timeout=15):
 
 
 def _meta_description(html):
-    m = re.search(r'<meta\s+name="Description"\s+content="(.*?)"', html, re.I | re.S)
-    return htmllib.unescape(m.group(1)) if m else None
+    # M-541: 속성 순서를 고정한 정규식(name 바로 뒤에 content)은 다나와가 속성 순서를 바꾸거나
+    #   (content 먼저) 사이에 다른 속성을 끼우면 매칭 실패 → 메타태그를 먼저 잡고 그 안에서
+    #   content를 순서 무관하게 추출(작은/큰따옴표 모두 허용).
+    tag = re.search(r'<meta\b[^>]*\bname=["\']Description["\'][^>]*>', html, re.I)
+    if not tag:
+        return None
+    c = re.search(r'\bcontent=["\'](.*?)["\']', tag.group(0), re.I | re.S)
+    return htmllib.unescape(c.group(1)) if c else None
 
 
 def parse_price(html):

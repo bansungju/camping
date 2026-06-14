@@ -155,9 +155,12 @@ def ingest_one(con, cfg, c, seen_names):
     brand, model = HT.fix_brand(brand, model)
     if brand in PSEUDO_BRANDS:
         return "skip_brand"
-    if model in seen_names:
+    # M-256: 중복판정 키를 (카테고리, 브랜드, 모델) 튜플로. 평면 model 문자열만 쓰면 서로 다른
+    #   카테고리의 동명 모델("Solo" 의자 vs "Solo" 랜턴)이 dup_name으로 오차단된다.
+    #   refresh가 HT/multicat에 동일 seen_names를 공유 → 세 곳의 키 형태가 일치해야 한다.
+    if (cid, brand, model) in seen_names:
         return "dup_name"
-    seen_names.add(model)
+    seen_names.add((cid, brand, model))
     cap = None
     if cfg["seg"] == "인원":
         m = re.search(r"(\d+)인", blob)
@@ -228,7 +231,9 @@ def main():
     con = sqlite3.connect(args.db)
     bootstrap(con)
     seen_pcode = {r[0] for r in con.execute("SELECT danawa_pcode FROM products WHERE danawa_pcode IS NOT NULL")}
-    seen_names = {r[0] for r in con.execute("SELECT model_name FROM products")}
+    seen_names = {(cid, brand, model) for cid, brand, model in con.execute(
+        "SELECT p.category_id, b.name_ko, p.model_name "
+        "FROM products p JOIN brands b ON b.id=p.brand_id")}
     print("다카테고리 시드 수확")
     for name, cfg in CONFIG.items():
         if args.only and name != args.only:

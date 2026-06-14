@@ -45,6 +45,11 @@ def value_stars(models):
 
 
 def main():
+    # M-523: 가성비 별점은 export 산출물(backpacking-bag.json)에 후처리로 얹는 단계라, export 미실행
+    #   환경에서 파일이 없으면 FileNotFoundError로 크래시한다 → 파이프라인 순서 안내 후 정상 종료.
+    if not os.path.exists(PATH):
+        print(f"건너뜀: {PATH} 없음 — export_site.py 선행 필요(가성비 별점은 export 후 적용)")
+        return
     with open(PATH, encoding="utf-8") as f:
         d = json.load(f)
     models = d["models"]

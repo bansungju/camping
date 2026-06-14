@@ -50,6 +50,10 @@ def _dl(url, timeout=20):
 
 def detail_images(page_url):
     """상세 페이지에서 세로로 긴 큰 이미지(스펙/설명표) URL→bytes 추출."""
+    # M-546: PIL 미설치면 아래 Image.open이 불가해 받은 이미지를 전부 버린다 → 페이지 fetch와
+    #   이미지 다운로드를 시작하기 전에 조기 반환해 불필요한 네트워크 낭비를 막는다.
+    if Image is None:
+        return []
     host = urlsplit(page_url).netloc
     html = D.http_get(_enc(page_url))
     urls = re.findall(r'(?:src|data-src|ec-data-src|data-original)=["\']([^"\']+\.(?:jpg|jpeg|png))["\']',
@@ -66,7 +70,7 @@ def detail_images(page_url):
     for u in dict.fromkeys(norm):
         try:
             data = _dl(u, 15)
-            if len(data) < 8000 or Image is None:
+            if len(data) < 8000:   # M-546: Image is None 체크는 함수 초반 조기반환으로 이관됨
                 continue
             im = Image.open(io.BytesIO(data))
             w, h = im.size
@@ -208,7 +212,12 @@ def run(con, mode):
         except Exception as e:
             print(f"  [price] 검증 실패: {e}")
 
-        parsed = parse_specs(ocr_text(url))
+        # M-519: ocr_text()(네트워크/이미지 디코드)가 예외를 던지면 run() 전체가 크래시하며
+        #   이 pid의 미커밋 spec과 남은 타깃이 통째로 유실 → 단건 실패는 롤백·로그 후 다음 pid로.
+        try:
+            parsed = parse_specs(ocr_text(url))
+        except Exception as e:
+            print(f"  OCR 텍스트 추출 실패, 스킵: {e}"); con.rollback(); continue
         if not parsed:
             print("  OCR 스펙 추출 실패"); continue
 
@@ -248,6 +257,10 @@ def main():
     ap.add_argument("--verify", action="store_true", help="다나와값과 비교만(불일치 flag)")
     ap.add_argument("--fill", action="store_true", help="결측 스펙 OCR 보강 + 불일치 flag")
     args = ap.parse_args()
+    # M-475/M-545: 플래그 미지정 시 묵시적으로 verify가 돌아(의도치 않은 conflict flag 삽입 가능) +
+    #   `--verify`가 dead code였다 → 둘 중 하나를 반드시 요구해 의도를 명시화.
+    if not args.verify and not args.fill:
+        ap.error("--verify 또는 --fill 중 하나를 지정해주세요.")
     mode = "fill" if args.fill else "verify"
     con = sqlite3.connect(args.db)
     run(con, mode)

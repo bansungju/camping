@@ -69,6 +69,11 @@ def export(con, outdir):
             metrics.append({"key": key, "label": lab, "unit": unit or "", "direction": direction,
                             "is_star": is_star, "fill": pct, "limit": is_star and pct < LM.GOOD})
         star_metrics = [m for m in metrics if m["is_star"]]
+        # M-500: 가성비 계산은 VM.CATEGORY_CONFIG[slug]["metrics"]를 참조하는데, specs를 star_metrics로만
+        #   채우면 config가 지정한 비★ 지표(예: max_load가 비★로 강등된 경우)가 specs에서 빠져
+        #   compute_value_score의 eligibility(specs[k].value)에서 silent 누락된다 → 그 지표도 specs에 채운다.
+        _cfg_keys = set(VM.CATEGORY_CONFIG.get(slug, {}).get("metrics", []))
+        spec_metrics = star_metrics + [m for m in metrics if not m["is_star"] and m["key"] in _cfg_keys]
 
         # 모델(canonical dedup) 행
         models = []
@@ -85,7 +90,7 @@ def export(con, outdir):
             ORDER BY b.name_ko, p.canonical_model""", (cid,)).fetchall()
         for rep, brand, cm, cap, variants, gf_code, brand_id in reps:
             specs = {}
-            for m in star_metrics:
+            for m in spec_metrics:
                 # M-242/M-331: 같은 metric에 valid 행이 여럿(crosssource 보정·source 1/4 공존)일 때
                 #   ORDER BY 없는 LIMIT 1은 임의 행을 줘 낮은 신뢰도 값이 대표가 될 수 있다.
                 #   is_primary 우선 → 높은 source_id(외부확정 4) 우선으로 결정화.
@@ -112,8 +117,14 @@ def export(con, outdir):
                 stars = con.execute("""SELECT r.stars FROM ratings r JOIN metrics mt ON mt.id=r.metric_id
                     WHERE r.product_id=? AND mt.key=?
                     ORDER BY LENGTH(r.comparison_scope) DESC LIMIT 1""", (rep, m["key"])).fetchone()
+                # M-499: value_normalized가 문자열("12.5")로 저장된 행이 있으면 round(str,2)가
+                #   TypeError로 export 전체를 죽인다 → float 강제변환 + 비수치 방어.
+                try:
+                    vnum = round(float(val), 2) if val is not None else None
+                except (TypeError, ValueError):
+                    vnum = None
                 specs[m["key"]] = {
-                    "value": round(val, 2) if val is not None else None,
+                    "value": vnum,
                     "stars": stars[0] if stars else None,
                     "badge": metric_badge(m["key"], src, se, val is not None, conf),
                 }
@@ -184,6 +195,10 @@ def export(con, outdir):
                     }
             # metrics 목록에 가성비 추가 (중복 방지)
             vkey = cfg["value_key"]
+            # M-489: 가성비는 합성 지표라 metric id가 없어 LM.fill_rate를 못 쓴다 → fill을 100으로
+            #   하드코딩하면 실제 커버리지(비교풀<2·스펙결측으로 value 미부여된 모델)가 가려진다.
+            #   실제로 value가 부여된 모델 비율로 fill을 산출한다.
+            vfill = round(100 * sum(1 for m in models if vkey in m["specs"]) / len(models)) if models else 0
             if not any(mt["key"] == vkey for mt in metrics):
                 metrics.append({
                     "key": vkey,
@@ -191,7 +206,7 @@ def export(con, outdir):
                     "unit": cfg.get("unit", ""),
                     "direction": "lower_better" if vkey == "value_per_g" else "higher_better",
                     "is_star": True,
-                    "fill": 100,
+                    "fill": vfill,
                     "limit": False,
                 })
 

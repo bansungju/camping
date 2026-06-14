@@ -74,6 +74,11 @@ def upsert_model(con, m):
     pmin, pmax = min(prices), max(prices)
 
     # canonical_models upsert
+    # M-548: 이 직접 write는 add_manual 단독 실행(normalize_db 미선행) 시 export가 곧장 동작하도록 하는
+    #   사전 시드다. 이후 normalize_db(SSOT)가 canonical_models를 DROP+재롤업해도 수동 데이터는 손실되지
+    #   않는다 — 가격은 price_observations(channel='수동', valid=1)에서 국내 폴백으로 복원되고(검증),
+    #   스펙은 source_id=4로 정규화/검증 패스에서 보호되며, solo 수동모델은 그룹<2라 이상치 격리 대상이
+    #   아니다. 따라서 두 경로(단독/full)가 동일 결과로 수렴하므로 '덮어쓰기'는 무해하다.
     cur.execute("""DELETE FROM canonical_models WHERE brand_id=? AND canonical_model=? AND IFNULL(capacity,-1)=IFNULL(?,-1)""",
         (bid, model, cap))
     cur.execute("""INSERT INTO canonical_models

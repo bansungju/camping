@@ -85,7 +85,10 @@ def main():
     print(f"카테고리 '{args.cat}': 브랜드 {len(rows)}개 / 제품 {keep_n+drop_n}")
     print(f"  ✅ 화이트리스트 브랜드 {len(keep_b)}개 / 제품 {keep_n}")
     print(f"  ❌ 노네임·셀러 {len(drop_b)}개 / 제품 {drop_n} (reject 대상)")
-    print(f"\n  제외될 브랜드 예시: {', '.join(n+'('+str(c)+')' for n,c in drop_b[:20])}")
+    # M-532: name_ko=NULL 브랜드가 drop_b에 들어오면 `None+'('` TypeError로 출력이 죽는다 → None-안전
+    #   표기('?'). (NULL 브랜드는 BRANDS 화이트리스트에 없어 drop으로 분류되는 경로가 존재.)
+    drop_ex = ', '.join(f"{n or '?'}({c})" for n, c in drop_b[:20])
+    print(f"\n  제외될 브랜드 예시: {drop_ex}")
 
     if args.apply:
         # M-333: NOT IN (?,?,…)는 SQLite 변수 한도(구버전 999)에 걸린다. BRANDS가 커지면 임시테이블로

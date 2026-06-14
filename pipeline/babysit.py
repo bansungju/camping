@@ -41,6 +41,7 @@ def main():
         con.commit()
     except Exception:
         con.rollback()
+        con.close()   # M-490: 재raise 시 하단 con.close()(L102)에 도달 못해 연결 누수 → 여기서 닫고 전파.
         raise
 
     # ── 2) 감지 ────────────────────────────────────────
@@ -93,15 +94,24 @@ def main():
         todos.append(f"완비 근접 메이저 {len(near)}종 — 크로스소스 1스펙이면 verified 승격:")
 
     # (e) 커버리지 경보 — 백패킹텐트의 core만(전역 합산은 멀티카테고리서 오경보; water/floor는 텐트·타프 전용)
-    for key, thr in COVERAGE_MIN.items():
-        c = con.execute(f"""SELECT COUNT(DISTINCT v.product_id)*100/
-            (SELECT COUNT(*) FROM products WHERE curation_status='verified'
-             AND category_id=(SELECT id FROM categories WHERE name_ko='백패킹텐트'))
-            FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id AND m.key=?
-            JOIN products p ON p.id=v.product_id AND p.curation_status='verified'
-            AND p.category_id=(SELECT id FROM categories WHERE name_ko='백패킹텐트') WHERE v.valid=1""", (key,)).fetchone()[0]
-        if c is not None and c < thr:
-            issues.append(f"커버리지 경보(백패킹텐트): {key} {c}% < {thr}%")
+    # M-491: 카테고리 이름을 쿼리에 하드코딩하면, 이름이 바뀐 순간 하위쿼리가 NULL→분모0→SQL NULL이 돼
+    #   `c is None`으로 모든 커버리지 경보가 silent 무음이 된다. 이름을 루프 전에 한 번 해소하고,
+    #   미존재 시 무음 통과 대신 명시적 경보를 띄운다.
+    COVERAGE_CAT = "백패킹텐트"
+    cat_row = con.execute("SELECT id FROM categories WHERE name_ko=?", (COVERAGE_CAT,)).fetchone()
+    if not cat_row:
+        issues.append(f"커버리지 검사 불가: 카테고리 '{COVERAGE_CAT}' 미존재(이름 변경?) — 커버리지 경보가 무음 처리됨")
+    else:
+        cov_cid = cat_row[0]
+        for key, thr in COVERAGE_MIN.items():
+            c = con.execute(f"""SELECT COUNT(DISTINCT v.product_id)*100/
+                (SELECT COUNT(*) FROM products WHERE curation_status='verified'
+                 AND category_id=?)
+                FROM product_spec_values v JOIN metrics m ON m.id=v.metric_id AND m.key=?
+                JOIN products p ON p.id=v.product_id AND p.curation_status='verified'
+                AND p.category_id=? WHERE v.valid=1""", (cov_cid, key, cov_cid)).fetchone()[0]
+            if c is not None and c < thr:
+                issues.append(f"커버리지 경보({COVERAGE_CAT}): {key} {c}% < {thr}%")
 
     con.close()
 

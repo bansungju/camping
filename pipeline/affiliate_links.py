@@ -60,13 +60,18 @@ def resolve_buy_link(row: dict, tag=None) -> dict:
 def sample(db_path: str, n: int, tag):
     con = sqlite3.connect(db_path)
     # 브랜드 다양성: 브랜드당 1개씩 라운드로빈
+    # M-536: `GROUP BY b.name_ko`로 model/cat/cap을 비집계 선택하면 브랜드 대표행이 비결정적이고
+    #   (SQLite는 같은 행에서 뽑지만 어느 행인지 불특정), 타 DB 이식 시 컬럼이 서로 다른 행에서 뽑혀
+    #   스펙이 혼용될 수 있다 → 브랜드당 1행(rep=가장 낮은 p.id)을 명시적으로 골라 결정화.
     rows = con.execute("""
-        SELECT b.name_ko brand, p.canonical_model model, c.name_ko cat, p.capacity cap
-        FROM products p
-        JOIN brands b ON b.id=p.brand_id
-        JOIN categories c ON c.id=p.category_id
-        WHERE p.curation_status='verified' AND p.canonical_model IS NOT NULL
-        GROUP BY b.name_ko
+        SELECT brand, model, cat, cap FROM (
+            SELECT b.name_ko brand, p.canonical_model model, c.name_ko cat, p.capacity cap,
+                   ROW_NUMBER() OVER (PARTITION BY b.name_ko ORDER BY p.id) rn
+            FROM products p
+            JOIN brands b ON b.id=p.brand_id
+            JOIN categories c ON c.id=p.category_id
+            WHERE p.curation_status='verified' AND p.canonical_model IS NOT NULL
+        ) WHERE rn=1
         ORDER BY RANDOM() LIMIT ?""", (n,)).fetchall()
     con.close()
 
