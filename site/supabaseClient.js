@@ -112,9 +112,11 @@ export async function registerNativePush() {
 }
 
 export async function signOut() {
-  localStorage.removeItem("wish");
-  localStorage.removeItem("sets");
-  localStorage.removeItem("gear_sets");  // M-430: gear_sets 키도 정리
+  // L-190: plain localStorage만 지우면 사생활보호 모드 등에서 sessionStorage로 폴백된 사본이 남는다.
+  //   safeLocalStorage.removeItem은 localStorage·sessionStorage를 함께 정리한다.
+  safeLocalStorage.removeItem("wish");
+  safeLocalStorage.removeItem("sets");
+  safeLocalStorage.removeItem("gear_sets");  // M-430: gear_sets 키도 정리
   return supabase.auth.signOut()
 }
 
@@ -181,7 +183,7 @@ export async function saveRemoteWishlist(items) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: { message: 'unauthorized' } }
   _wishPending = items   // 대기 중 이전 payload는 폐기 — 누적 스냅샷이라 최신만 쓰면 충분
-  _wishWriteChain = _wishWriteChain.then(async () => {
+  const run = _wishWriteChain.then(async () => {
     if (_wishPending === undefined) return            // 더 최신 호출이 이미 flush함
     const payload = _wishPending
     _wishPending = undefined
@@ -192,8 +194,15 @@ export async function saveRemoteWishlist(items) {
       .upsert({ user_id: user.id, items: payload }, { onConflict: 'user_id' })
     if (res?.error) console.error('saveRemoteWishlist', res.error)
     return res
-  }).catch(e => { console.error('saveRemoteWishlist', e) })
-  return _wishWriteChain
+  }).catch(e => {
+    // L-391: 예외를 삼켜 undefined를 반환하면 호출자가 실패를 감지할 수 없었다. reject로 바꾸면
+    //   체인(_wishWriteChain)이 끊겨 후속 write가 스킵되므로, supabase 컨벤션대로 {error}를 반환해
+    //   체인은 살리면서(reject 안 함) 호출자는 결과의 error로 실패를 감지할 수 있게 한다.
+    console.error('saveRemoteWishlist', e)
+    return { error: e }
+  })
+  _wishWriteChain = run
+  return run
 }
 
 // 로컬·원격 찜을 key 기준 합집합(원격 항목의 가격/이미지 등은 로컬 최신값 우선)
