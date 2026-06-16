@@ -109,7 +109,7 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
   (async () => {
     try {
-      const { supabase } = await import('./supabaseClient.js?v=a112359b');
+      const { supabase } = await import('./supabaseClient.js?v=c8f38da9');
       const { data: { session } } = await supabase.auth.getSession();
       _user = session?.user ?? null;
       window._accUser = _user;   // account.html 등 하위호환
@@ -465,7 +465,7 @@ function _execToggleWish(item) {
     const u = window.currentUser && window.currentUser();
     if (u && u.id) {
       if (window.Capacitor?.isNativePlatform?.()) {
-        import("./supabaseClient.js?v=a112359b").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
+        import("./supabaseClient.js?v=c8f38da9").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
       } else if ("serviceWorker" in navigator && "PushManager" in window) {
         requestPushSubscription(u.id);
       }
@@ -2227,7 +2227,7 @@ function openProduct(m) {
       const url = buyBtn.dataset.url;
       openExternal(url);
       try {
-        const { supabase } = await import("./supabaseClient.js?v=a112359b");
+        const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
         let sessionId = localStorage.getItem("_sid");
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
         await supabase.from("click_events").insert({
@@ -2419,7 +2419,7 @@ function openReviewDetail(r) {
       if (reason.length < 5) { showToast("5자 이상 입력해주세요"); inp.focus(); return; }
       submitBtn2.disabled = true; submitBtn2.textContent = "신고 중…";
       try {
-        const { reportContent } = await import("./supabaseClient.js?v=a112359b");
+        const { reportContent } = await import("./supabaseClient.js?v=c8f38da9");
         const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
         if (error) {
           const msg = error.message || "";
@@ -2454,7 +2454,7 @@ async function loadReviews(modal, pcode) {
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
-    const { supabase } = await import("./supabaseClient.js?v=a112359b");
+    const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
     const rv = await _fetchReviews(supabase, pcode);
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
@@ -2565,7 +2565,7 @@ function wireReviews(modal, m, pcode) {
       const submitBtn = form.querySelector(".pmrv-submit");
       submitBtn.disabled = true;
       try {
-        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=a112359b");
+        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=c8f38da9");
         const { data: { user: u } } = await supabase.auth.getUser();
         if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
         // 사진 업로드(순차)
@@ -3039,7 +3039,7 @@ async function renderHotSection(categories) {
   // 1) RPC로 최근 7일 클릭 상위 집계(클릭수 내림차순). 실패해도 시드로 진행.
   let real = [];
   try {
-    const { supabase } = await import("./supabaseClient.js?v=a112359b");
+    const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
     const { data, error: hotErr } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });  // M-558: error 구조분해
     if (hotErr) throw hotErr;
     if (Array.isArray(data)) real = data;
@@ -3275,7 +3275,7 @@ function openSetDetail(sid) {
     if (!url) return;
     openExternal(url);
     try {
-      const { supabase } = await import("./supabaseClient.js?v=a112359b");
+      const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
       let sessionId = localStorage.getItem("_sid");
       if (!sessionId) { sessionId = Math.random().toString(36).slice(2); localStorage.setItem("_sid", sessionId); }
       await supabase.from("click_events").insert({
@@ -3351,7 +3351,7 @@ function renderAccount() {
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-        import("./supabaseClient.js?v=a112359b").then(async ({ supabase, getMyReviews }) => {
+        import("./supabaseClient.js?v=c8f38da9").then(async ({ supabase, getMyReviews }) => {
           myLogsList.dataset.loaded = "1";
           const logsCnt = document.getElementById("logscount");
 
@@ -3438,11 +3438,15 @@ function renderAccount() {
                   if (newBody.length < 20) { errEl2.textContent = "내용을 20자 이상 작성해주세요."; errEl2.style.display = ""; return; }
                   const saveBtn = document.getElementById(`le-save-${pi}`);
                   saveBtn.disabled = true; saveBtn.textContent = "저장 중…";
-                  const { supabase: sb } = await import("./supabaseClient.js?v=a112359b");
-                  const { error } = await sb.from("posts")
-                    .update({ title: newTitle, body: newBody })
-                    .eq("id", p.id).eq("user_id", userId);
-                  if (error) { errEl2.textContent = "저장 중 오류가 발생했어요."; errEl2.style.display = ""; saveBtn.disabled = false; saveBtn.textContent = "저장"; return; }
+                  // try/catch — import·update가 reject로 throw해도 "저장 중…" 고착 방지(2.1a 부류).
+                  let _le;
+                  try {
+                    const { supabase: sb } = await import("./supabaseClient.js?v=c8f38da9");
+                    _le = await sb.from("posts")
+                      .update({ title: newTitle, body: newBody })
+                      .eq("id", p.id).eq("user_id", userId);
+                  } catch (e) { _le = { error: e }; }
+                  if (_le.error) { errEl2.textContent = "저장 중 오류가 발생했어요."; errEl2.style.display = ""; saveBtn.disabled = false; saveBtn.textContent = "저장"; return; }
                   list[pi] = { ...p, title: newTitle, body: newBody };
                   renderMyLogs(list);
                 };
@@ -3454,11 +3458,15 @@ function renderAccount() {
                 const p = list[+btn.dataset.pi];
                 if (!confirm(`"${p.title}" 로그를 삭제할까요?`)) return;
                 btn.disabled = true;
-                const { supabase: sb } = await import("./supabaseClient.js?v=a112359b");
-                const { error } = await sb.from("posts")
-                  .update({ deleted_at: new Date().toISOString() })
-                  .eq("id", p.id).eq("user_id", userId);
-                if (error) { showToast("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }   // L-448: alert→showToast(iOS Safari PWA 차단 방지, M-452/539와 동일)
+                // try/catch — import·update가 reject로 throw해도 삭제 버튼이 영구 비활성되지 않게(2.1a 부류).
+                let _ld;
+                try {
+                  const { supabase: sb } = await import("./supabaseClient.js?v=c8f38da9");
+                  _ld = await sb.from("posts")
+                    .update({ deleted_at: new Date().toISOString() })
+                    .eq("id", p.id).eq("user_id", userId);
+                } catch (e) { _ld = { error: e }; }
+                if (_ld.error) { showToast("삭제 중 오류가 발생했어요."); btn.disabled = false; return; }   // L-448: alert→showToast(iOS Safari PWA 차단 방지, M-452/539와 동일)
                 const remaining = list.filter((_, i) => i !== +btn.dataset.pi);
                 setCount(remaining.length);   // 후기 수 + 남은 글 수
                 renderMyLogs(remaining);
@@ -3469,17 +3477,11 @@ function renderAccount() {
         }).catch(() => { logsSec._accHasContent = false; logsSec.style.display = "none"; delete myLogsList.dataset.loaded; });  // H-129: 실패 시 loaded 리셋 → 다음 렌더서 재시도(영구 미로드 방지)
       }
     } else {
-      // L-39: 비로그인 시 섹션 숨김 대신 로그인 안내 표시
+      // 비로그인 시 '내 로그' 섹션 완전히 숨김 (상단 로그인 버튼으로 유도 — 섹션별 CTA 제거)
       logsSec._accHasContent = false;
-      logsSec.style.display = "block";
-      if (myLogsList && !myLogsList.dataset.logLoginShown) {
-        myLogsList.dataset.logLoginShown = "1";
-        myLogsList.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--muted);font-size:14px">
-          <div style="font-size:28px;margin-bottom:10px">📝</div>
-          <div>로그인하면 내 캠핑 로그를 기록할 수 있어요</div>
-          <a href="account.html" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인</a>
-        </div>`;
-      }
+      logsSec.style.display = "none";
+      const logsCntEl = document.getElementById("logscount");
+      if (logsCntEl) logsCntEl.textContent = "";   // 직전 로그인 세션의 잔여 카운트 제거
     }
   }
 
@@ -3604,26 +3606,11 @@ function renderAccount() {
   const setsEl = document.getElementById("setslist");
   const setsCnt = document.getElementById("setscount");
   if (setsSec) {
-    setsSec._accHasContent = true;
-    setsSec.style.display = "block";
-    // M-240/M-409: 사용자 변경 또는 로그인 시 loginShown 초기화 → 재로그인 후 CTA가 잔류하는 문제 방지
-    if (setsEl) {
-      const setsUserId = window._accUser?.id || "";
-      if (setsEl.dataset.loginShownUser !== undefined && setsEl.dataset.loginShownUser !== setsUserId) {
-        delete setsEl.dataset.loginShown;
-      }
-      setsEl.dataset.loginShownUser = setsUserId;
-    }
-    if (!isLoggedIn && setsEl && !setsEl.dataset.loginShown) {
-      setsEl.dataset.loginShown = "1";
-      setsEl.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--muted);font-size:14px">
-        <div style="font-size:28px;margin-bottom:10px">🎒</div>
-        <div>로그인하면 나만의 장비 꾸러미를 만들 수 있어요</div>
-        <a href="account.html" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인</a>
-      </div>`;
-    }
+    // 비로그인 시 '내 세트' 섹션 완전히 숨김 (상단 로그인 버튼으로 유도 — 섹션별 CTA 제거)
+    setsSec._accHasContent = isLoggedIn;
+    setsSec.style.display = isLoggedIn ? "block" : "none";
   }
-  if (setsCnt) setsCnt.textContent = sets.length ? `${sets.length}개` : "";
+  if (setsCnt) setsCnt.textContent = (isLoggedIn && sets.length) ? `${sets.length}개` : "";
   if (setsEl && !sets.length && isLoggedIn) {  // M-526: 비로그인 시 CTA가 이미 표시됨, empty msg 중복 방지
     setsEl.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--muted)">
       <div style="font-size:32px;margin-bottom:10px">🎒</div>
@@ -3848,7 +3835,7 @@ async function requestPushSubscription(userId) {
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
   if (!j || !j.keys) { console.warn("_savePushSub: keys 없음"); return; }  // M-466: keys null 가드
-  const { supabase } = await import("./supabaseClient.js?v=a112359b");
+  const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
   // L-267: 같은 endpoint를 다른 사용자가 재구독할 때 이전 사용자 행이 잔존하면 푸시가 누출되므로
   //   서버 RPC(save_push_subscription)가 해당 endpoint의 기존 행을 삭제하고 현재 사용자로 재등록한다.
   const { error } = await supabase.rpc("save_push_subscription", {
@@ -3885,7 +3872,7 @@ async function renderBestGear() {
 
   // 커뮤니티 태그 집계 TOP-10 (RPC)
   try {
-    const { supabase: sb } = await import("./supabaseClient.js?v=a112359b");
+    const { supabase: sb } = await import("./supabaseClient.js?v=c8f38da9");
     const { data: topTags } = await sb.rpc("get_top_gear_tags", { limit_n: 10 });
     if (topTags && topTags.length) {
       const sec = document.createElement("div");
@@ -3981,7 +3968,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
 
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
-    const { supabase } = await import("./supabaseClient.js?v=a112359b");
+    const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     let query = supabase
       .from("posts")
@@ -4050,14 +4037,14 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
           btn.dataset.liked = "0";
           btn.classList.remove("on");
           btn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=a112359b");
+          const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
           await supabase.rpc("decrement_post_likes", { post_id: pid });
         } else {
           _setPostLiked(pid, true);
           btn.dataset.liked = "1";
           btn.classList.add("on");
           btn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span>`;
-          const { supabase } = await import("./supabaseClient.js?v=a112359b");
+          const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
           await supabase.rpc("increment_post_likes", { post_id: pid });
         }
       };
@@ -4122,13 +4109,13 @@ function openLogDetail(p) {
         _setPostLiked(pid, false);
         likeBtn.dataset.liked = "0"; likeBtn.classList.remove("on");
         likeBtn.innerHTML = `♡ <span class="log-like-cnt">${cur - 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=a112359b");
+        const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
         await supabase.rpc("decrement_post_likes", { post_id: pid });
       } else {
         _setPostLiked(pid, true);
         likeBtn.dataset.liked = "1"; likeBtn.classList.add("on");
         likeBtn.innerHTML = `♥ <span class="log-like-cnt">${cur + 1}</span> 좋아요`;
-        const { supabase } = await import("./supabaseClient.js?v=a112359b");
+        const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
         await supabase.rpc("increment_post_likes", { post_id: pid });
       }
     };
@@ -4140,7 +4127,7 @@ function openLogDetail(p) {
 
   // 댓글 로드 및 제출
   (async () => {
-    const { supabase } = await import("./supabaseClient.js?v=a112359b");
+    const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
     const cmtList = document.getElementById("detail-cmt-list");
     const cmtCnt = document.getElementById("detail-cmt-cnt");
     const cmtForm = document.getElementById("detail-cmt-form");
@@ -4189,9 +4176,13 @@ function openLogDetail(p) {
         if (!window._commUser) { alert("로그인 후 댓글을 작성할 수 있어요."); return; }
         const submitBtn = cmtForm.querySelector("button[type=submit]");
         if (submitBtn) submitBtn.disabled = true;
-        const { error } = await supabase.from("comments").insert({ post_id: p.id, user_id: window._commUser.id, body: content });
-        if (submitBtn) submitBtn.disabled = false;
-        if (!error) { if (cmtInput) cmtInput.value = ""; await loadComments(); }
+        // try/finally — insert가 reject로 throw해도 제출 버튼이 영구 비활성되지 않게(2.1a 부류).
+        try {
+          const { error } = await supabase.from("comments").insert({ post_id: p.id, user_id: window._commUser.id, body: content });
+          if (!error) { if (cmtInput) cmtInput.value = ""; await loadComments(); }
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
       };
     }
   })().catch(e => console.error("openLogDetail async:", e));  // M-211: UnhandledPromiseRejection 방지
@@ -4333,7 +4324,7 @@ function openLogModal(presetSetIndex) {
     errEl.style.display = "none";
     submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
     try {
-      const { supabase } = await import("./supabaseClient.js?v=a112359b");
+      const { supabase } = await import("./supabaseClient.js?v=c8f38da9");
       let image_url = null;
       const imgFile = imgInput.files[0];
       if (imgFile) {
@@ -4456,7 +4447,7 @@ document.addEventListener("DOMContentLoaded", () => {
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
         if (window._accUser?.id) {
-          import("./supabaseClient.js?v=a112359b").then(async ({ upsertGearSet }) => {
+          import("./supabaseClient.js?v=c8f38da9").then(async ({ upsertGearSet }) => {
             const id = await upsertGearSet(newSet, window._accUser.id);
             if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
           }).catch(() => {});

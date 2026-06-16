@@ -30,7 +30,9 @@ export async function initAuth(onStateChange) {
 export async function signInWithOAuth(provider) {
   const isApp = !!(window.Capacitor?.isNativePlatform?.())
   if (isApp) {
-    const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')
+    // 네이티브 주입 Browser 우선 — CDN import 실패 시에도 동작(인앱 브라우저가 안 떠 "로그인 중…" 고착되던 원인 차단)
+    const Browser = window.Capacitor?.Plugins?.Browser
+      || (await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')).Browser
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -38,7 +40,8 @@ export async function signInWithOAuth(provider) {
         skipBrowserRedirect: true
       }
     })
-    if (error || !data?.url) return { data, error }
+    if (error) return { data, error }
+    if (!data?.url) return { data, error: { message: 'OAuth URL을 받지 못했습니다.' } }
     await Browser.open({ url: data.url })
     return { data, error: null }
   }
@@ -60,7 +63,11 @@ async function _sha256Hex(str) {
 }
 
 export async function signInWithApple() {
-  const { SignInWithApple } = await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in/dist/esm/index.js')
+  // 네이티브 주입 플러그인 우선 — CDN ESM import는 별도 @capacitor/core 인스턴스라
+  //   authorize() 호출이 네이티브 브리지에 안 붙어 응답 없이 멈춘다("로그인 중…" 고착의 원인).
+  const SignInWithApple = window.Capacitor?.Plugins?.SignInWithApple
+    || (await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in/dist/esm/index.js')).SignInWithApple
+  if (!SignInWithApple) return { error: { message: 'Apple 로그인 모듈을 불러오지 못했습니다.' } }
   const rawNonce = crypto.randomUUID()
   const hashedNonce = await _sha256Hex(rawNonce)
   const state = crypto.randomUUID()
@@ -111,14 +118,23 @@ export async function savePushToken(token, platform) {
 export async function registerNativePush() {
   if (!window.Capacitor?.isNativePlatform?.()) return
   try {
-    const { PushNotifications } = await import('https://cdn.jsdelivr.net/npm/@capacitor/push-notifications/dist/esm/index.js')
+    // 네이티브 주입 플러그인 우선 — CDN ESM import는 별도 @capacitor/core 인스턴스라
+    //   'registration' 이벤트를 못 받는다(appUrlOpen과 동일 부류의 버그). window.Capacitor.Plugins가
+    //   네이티브 이벤트 브리지에 직접 연결돼 있어 토큰 콜백이 실제로 발화한다.
+    const PushNotifications = window.Capacitor?.Plugins?.PushNotifications
+      || (await import('https://cdn.jsdelivr.net/npm/@capacitor/push-notifications/dist/esm/index.js')).PushNotifications
+    if (!PushNotifications) return
     const perm = await PushNotifications.requestPermissions()
     if (perm.receive !== 'granted') return
-    PushNotifications.addListener('registration', (t) => {
+    // 리스너를 register() 전에 등록 — 토큰 이벤트 유실 방지
+    await PushNotifications.addListener('registration', (t) => {
       savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
     })
+    await PushNotifications.addListener('registrationError', (e) => {
+      console.error('[push] APNs 등록 실패:', e?.error || e)
+    })
     await PushNotifications.register()
-  } catch (_) { /* 플러그인 미동기화 등 — 무시 */ }
+  } catch (e) { console.warn('[push] 등록 건너뜀:', e?.message || e) }
 }
 
 export async function signOut() {
