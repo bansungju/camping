@@ -3066,16 +3066,19 @@ async function renderHotSection(categories) {
 
     const cards = items.map((h, i) => {
       const models = catData[h.cat]?.models || [];
-      // 1차: item_idx로 룩업. 어긋나면(재정렬 등) 브랜드+모델 매칭으로 보정.
-      let m = (h.item_idx != null && h.item_idx >= 0) ? models[h.item_idx] : null;
+      // 1차: item_idx로 룩업. 없거나(레거시 클릭 item_idx=null) 어긋나면 브랜드+모델 매칭으로 인덱스까지 보정.
+      let idx = (h.item_idx != null && h.item_idx >= 0) ? h.item_idx : -1;
+      let m = idx >= 0 ? models[idx] : null;
       if (!m || m.brand !== h.brand || m.model !== h.model) {
-        m = models.find(p => p.brand === h.brand && p.model === h.model) || m;
+        const found = models.findIndex(p => p.brand === h.brand && p.model === h.model);
+        if (found >= 0) { idx = found; m = models[found]; }
       }
       const img = m?.img || null;                 // 없으면 thumbCell이 '이미지 준비중' 폴백
       const price = m?.price_min ?? null;
       const catName = (categories || []).find(c => c.slug === h.cat)?.name || h.cat;
-      const href = (h.item_idx != null && h.item_idx >= 0)
-        ? `/item/${h.cat}/item-${h.item_idx}.html`
+      // 인덱스를 복원했으면 상세 직링크, 끝내 못 찾으면 카테고리 목록으로 폴백.
+      const href = (idx >= 0 && m)
+        ? `/item/${h.cat}/item-${idx}.html`
         : `category.html?cat=${encodeURIComponent(h.cat)}&brands=${encodeURIComponent(h.brand)}`;
       const rk = i < 3 ? ` rank-${i + 1}` : "";    // 1~3위만 금/은/동 색
       const tagTxt = Number(h.clicks) >= HOT_LOW_CLICK ? `이번주 ${Number(h.clicks)}회` : "이번주 인기";
