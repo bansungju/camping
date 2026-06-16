@@ -428,7 +428,7 @@ function thumbCell(img, name, tint, icon, imgCls, noCls) {
   imgCls = imgCls || "pli-thumb"; noCls = noCls || "pli-noimg";
   if (!img) return `<div class="${noCls}" style="background:${tint}">${icon}<span>이미지 준비중</span></div>`;
   const sz = _THUMB_SZ[imgCls]; const szAttr = sz ? ` width="${sz}" height="${sz}"` : "";
-  const loadAttr = imgCls === "recard-thumb" ? "eager" : "lazy";
+  const loadAttr = (imgCls === "recard-thumb" || imgCls === "hot-card-img") ? "eager" : "lazy";
   return `<img class="${imgCls}" src="${esc(img)}" alt="${esc(name)}" loading="${loadAttr}"${szAttr}` +
     ` data-tint="${tint}" data-icon="${icon}" data-fcls="${noCls}" onerror="thumbFallback(this)">`;
 }
@@ -3015,63 +3015,88 @@ const HOT_FALLBACK = [
   { slug: "lantern",          name: "랜턴" },
 ];
 
+const HOT_LOW_CLICK = 5;  // 이 미만이면 '이번주 인기' 라벨로 — 빈약한 'N회' 노출 방지(저트래픽 단계)
+const HOT_TARGET = 8;     // 카드 목표 개수 — 실클릭 데이터가 부족하면 가성비 시드로 채움
+
+// 첫 방문/저트래픽 단계용 '가성비' 시드 — 카테고리별 스펙 별점 대비 가격이 우수한 모델.
+// item_idx로 카테고리 JSON과 조인해 실제 이미지·가격을 채운다(brand/model은 idx 드리프트 보정용).
+const HOT_SEED = [
+  { cat: "auto-tent",        item_idx: 224, brand: "코베아",   model: "와우 쉐이드 L" },
+  { cat: "backpacking-tent", item_idx: 148, brand: "플라이탑", model: "파이어 플라이 2" },
+  { cat: "sleeping-bag",     item_idx: 138, brand: "살레와",   model: "오리털 침낭 1500g" },
+  { cat: "cot",              item_idx: 46,  brand: "투마운트", model: "초경량 접이식 야전침대" },
+  { cat: "tarp",             item_idx: 162, brand: "캠프365",  model: "히말라야 별빛 렉타 타프" },
+  { cat: "lantern",          item_idx: 51,  brand: "에너자이저", model: "웨어러블 라이트" },
+  { cat: "table",            item_idx: 12,  brand: "메사",     model: "빈슨메시프 블랙에디션 백패킹 테이블" },
+  { cat: "wagon",            item_idx: 21,  brand: "블랙독",   model: "CBD2300JJ023 다용도 캠핑 웨건" },
+];
+
 async function renderHotSection(categories) {
   const sec = document.getElementById("hot-section");
   const listEl = document.getElementById("hot-list");
   if (!sec || !listEl) return;
 
-  // RPC로 최근 7일 클릭 상위 30개 집계 (카테고리별 분류용으로 여유있게)
+  // 1) RPC로 최근 7일 클릭 상위 집계(클릭수 내림차순). 실패해도 시드로 진행.
+  let real = [];
   try {
     const { supabase } = await import("./supabaseClient.js?v=5867fba9");
     const { data, error: hotErr } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });  // M-558: error 구조분해
-    if (hotErr) { console.error("renderHotSection rpc:", hotErr); return; }
-    if (data && data.length >= 1) {
-      // cat별로 그룹핑 (클릭수 내림차순 유지 — RPC가 이미 정렬함)
-      const catMap = new Map();
-      for (const h of data) {
-        if (!catMap.has(h.cat)) catMap.set(h.cat, []);
-        catMap.get(h.cat).push(h);
-      }
-      // 카테고리별 최대 3개씩, 최소 1개 항목 있는 카테고리만 표시 (M-87 저트래픽 단계 fallback 방지)
-      const sections = [...catMap.entries()]
-        .filter(([, items]) => items.length >= 1)
-        .slice(0, 5); // 최대 5개 카테고리
+    if (hotErr) throw hotErr;
+    if (Array.isArray(data)) real = data;
+  } catch (e) { console.warn("renderHotSection rpc:", e); }
 
-      if (sections.length >= 1) {
-        listEl.innerHTML = sections.map(([cat, items]) => {
-          const catName = (categories || []).find(c => c.slug === cat)?.name || cat;
-          const icon = catIcon(catName);
-          const tint = catTint(catName);
-          const top3 = items.slice(0, 3);
-          const rowsHtml = top3.map((h, i) => {
-            const href = (h.item_idx != null && h.item_idx >= 0)
-              ? `/item/${cat}/item-${h.item_idx}.html`
-              : `category.html?cat=${cat}&brands=${encodeURIComponent(h.brand)}`;
-            return `<a class="hot-rank-row" href="${href}">
-              <span class="hot-rank-num rank-${i + 1}">${i + 1}</span>
-              <span class="hot-rank-info">
-                <span class="hot-rank-brand">${esc(h.brand)}</span>
-                <span class="hot-rank-model">${esc(h.model)}</span>
-              </span>
-              <span class="hot-rank-cnt">${h.clicks}회</span>
-            </a>`;
-          }).join("");
-          return `<div class="hot-cat-block">
-            <div class="hot-cat-header">
-              <span class="hot-cat-icon" style="background:${tint}">${icon}</span>
-              <span class="hot-cat-name">${esc(catName)}</span>
-              <a class="hot-cat-more" href="category.html?cat=${cat}">전체보기 ›</a>
-            </div>
-            <div class="hot-rank-list">${rowsHtml}</div>
-          </div>`;
-        }).join("");
-        sec.style.display = "block";
-        return;
-      }
-    }
-  } catch (_) {}
+  // 2) 실데이터 우선 + 부족분은 가성비 시드로 채워 항상 풍성한 카드(첫 방문 빈 화면 방지).
+  const items = real.slice(0, HOT_TARGET);
+  const seen = new Set(items.map(h => `${h.brand}|${h.model}`));
+  for (const s of HOT_SEED) {
+    if (items.length >= HOT_TARGET) break;
+    const k = `${s.brand}|${s.model}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    items.push({ cat: s.cat, brand: s.brand, model: s.model, clicks: 0, item_idx: s.item_idx });
+  }
 
-  // fallback: 카테고리 chip
+  if (items.length) {
+    // 3) 카드에 필요한 img/price를 카테고리 JSON에서 item_idx로 조인(필요한 카테고리만 1회 로드).
+    const cats = [...new Set(items.map(h => h.cat))];
+    const catData = {};
+    await Promise.all(cats.map(async c => {
+      try { catData[c] = await getJSON(`data/${c}.json`); } catch (_) { catData[c] = null; }
+    }));
+
+    const cards = items.map((h, i) => {
+      const models = catData[h.cat]?.models || [];
+      // 1차: item_idx로 룩업. 어긋나면(재정렬 등) 브랜드+모델 매칭으로 보정.
+      let m = (h.item_idx != null && h.item_idx >= 0) ? models[h.item_idx] : null;
+      if (!m || m.brand !== h.brand || m.model !== h.model) {
+        m = models.find(p => p.brand === h.brand && p.model === h.model) || m;
+      }
+      const img = m?.img || null;                 // 없으면 thumbCell이 '이미지 준비중' 폴백
+      const price = m?.price_min ?? null;
+      const catName = (categories || []).find(c => c.slug === h.cat)?.name || h.cat;
+      const href = (h.item_idx != null && h.item_idx >= 0)
+        ? `/item/${h.cat}/item-${h.item_idx}.html`
+        : `category.html?cat=${encodeURIComponent(h.cat)}&brands=${encodeURIComponent(h.brand)}`;
+      const rk = i < 3 ? ` rank-${i + 1}` : "";    // 1~3위만 금/은/동 색
+      const tagTxt = Number(h.clicks) >= HOT_LOW_CLICK ? `이번주 ${Number(h.clicks)}회` : "이번주 인기";
+      return `<a class="hot-card" href="${href}">
+        ${thumbCell(img, h.model, catTint(catName), "🏕️", "hot-card-img", "hot-card-noimg")}
+        <span class="hot-card-rank${rk}">${i + 1}</span>
+        <span class="hot-card-cat">${esc(catName)}</span>
+        <div class="hot-card-scrim">
+          <div class="hot-card-b">${esc(h.brand)}</div>
+          <div class="hot-card-m">${esc(h.model)}</div>
+          <div class="hot-card-p">${priceLabeled(price, '<span class="nd" style="color:#fff">—</span>')}</div>
+          <div class="hot-card-tag">🔥 ${tagTxt}</div>
+        </div>
+      </a>`;
+    }).join("");
+    listEl.innerHTML = `<div class="hot-card-row">${cards}</div>`;
+    sec.style.display = "block";
+    return;
+  }
+
+  // 4) 최후 폴백: 카테고리 chip
   listEl.innerHTML = HOT_FALLBACK.map(h =>
     `<a class="hot-chip" href="category.html?cat=${h.slug}">
       <span class="hot-icon">${catIcon(h.name)}</span>
