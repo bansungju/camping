@@ -134,7 +134,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=3fa4a835"></script>
+<script src="app.js?v=b6038a69"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -202,7 +202,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=5867fba9'
+} from './supabaseClient.js?v=a112359b'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -423,6 +423,62 @@ const APPLE_LOGIN_ENABLED = false;
 const _isApp = !!(window.Capacitor?.isNativePlatform?.())
 const _showApple = APPLE_LOGIN_ENABLED || _isApp
 
+// BE-073/FE-AUTH: 네이티브 OAuth 콜백 처리 (App Store 2.1a 반려 수정)
+// 앱은 구글 로그인을 인앱 브라우저로 띄우고 com.gearforest.app://auth-callback?code=…로 돌아오는데,
+// 이 복귀를 듣는 리스너가 없으면 code 교환이 안 일어나 "로그인 중…"이 영구 고착된다(반려 사유).
+// 여기서 appUrlOpen으로 code를 받아 exchangeCodeForSession → 성공 시 onAuthStateChange(SIGNED_IN)가 화면 갱신.
+if (_isApp) {
+  let _oauthInFlight = false
+  const _restoreLogin = (msg) => {
+    renderLogin()
+    if (msg) { const e = document.getElementById('auth-error'); if (e) { e.textContent = msg; e.style.display = 'block' } }
+  }
+  ;(async () => {
+    // 네이티브 런타임이 주입한 플러그인을 우선 사용한다. CDN ESM import는 자체 @capacitor/core
+    //   인스턴스를 들고 와서, 네이티브가 발화하는 appUrlOpen '이벤트'를 못 받는다(메서드 호출만 됨).
+    //   window.Capacitor.Plugins.App 은 네이티브 이벤트 브리지에 직접 연결돼 있어 확실히 동작한다.
+    let App = window.Capacitor?.Plugins?.App
+    let Browser = window.Capacitor?.Plugins?.Browser
+    if (!Browser) { try { ({ Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')) } catch (_) {} }
+    if (!App) {
+      console.error('[oauth] App plugin unavailable — appUrlOpen 등록 실패')
+      return
+    }
+    App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url || url.indexOf('auth-callback') === -1) return
+      _oauthInFlight = true
+      // try/finally — exchangeCodeForSession이 예외를 던져도(PKCE verifier 부재 등) 반드시 복구해
+      //   "로그인 중…"이 고착되지 않게 한다(2.1a 반려 핵심).
+      try {
+        try { await Browser.close() } catch (_) {}   // 인앱 브라우저(SFSafariViewController) 닫기
+        let p
+        try { p = new URL(url) } catch (_) { return _restoreLogin('로그인 처리 중 오류가 발생했습니다.') }
+        const oauthError = p.searchParams.get('error')
+        const code = p.searchParams.get('code')
+        if (oauthError) return _restoreLogin(p.searchParams.get('error_description') || '로그인이 취소되었습니다.')
+        if (!code)      return _restoreLogin('로그인 처리 중 오류가 발생했습니다.')
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error) return _restoreLogin(getErrorMessage(error))
+        // 성공 → initAuth의 onAuthStateChange(SIGNED_IN)가 renderProfile로 화면을 갱신(추가 동작 불필요).
+      } catch (e) {
+        console.error('[oauth] callback error:', e)
+        _restoreLogin('로그인 처리 중 오류가 발생했습니다.')
+      } finally {
+        _oauthInFlight = false
+      }
+    })
+    // 안전망: 사용자가 인앱 브라우저를 그냥 닫으면(취소) 콜백이 오지 않아 "로그인 중…"만 남는다 → 복구.
+    Browser.addListener('browserFinished', () => {
+      setTimeout(async () => {
+        if (_oauthInFlight) return   // 콜백 처리 중이면 그쪽이 화면을 책임짐(오복구 방지)
+        const { data: { session } } = await supabase.auth.getSession()
+        const stuck = ['btn-google', 'btn-apple'].some(id => { const b = document.getElementById(id); return b && b.disabled })
+        if (!session && stuck) _restoreLogin('')
+      }, 800)
+    })
+  })()
+}
+
 const _APPLE_SVG = `<svg width="17" height="17" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>`
 
 function renderLogin() {
@@ -475,7 +531,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=5867fba9')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=a112359b')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)

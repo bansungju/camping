@@ -64,13 +64,23 @@ export async function signInWithApple() {
   const rawNonce = crypto.randomUUID()
   const hashedNonce = await _sha256Hex(rawNonce)
   const state = crypto.randomUUID()
-  const { response } = await SignInWithApple.authorize({
-    clientId: 'com.gearforest.app',
-    redirectURI: 'com.gearforest.app://auth-callback',
-    scopes: 'email name',
-    state,
-    nonce: hashedNonce,
-  })
+  // BE-073/FE-AUTH: authorize()는 사용자가 시트를 취소하면 reject한다. try/catch가 없으면
+  //   예외가 호출부(account.html)로 전파돼 버튼 복구 코드가 실행되지 않고 "로그인 중…"이 영구 고착된다.
+  let response
+  try {
+    ({ response } = await SignInWithApple.authorize({
+      clientId: 'com.gearforest.app',
+      redirectURI: 'com.gearforest.app://auth-callback',
+      scopes: 'email name',
+      state,
+      nonce: hashedNonce,
+    }))
+  } catch (e) {
+    return { error: { message: e?.message || 'Apple 로그인이 취소되었습니다.', _cancelled: true } }
+  }
+  if (!response?.identityToken) {
+    return { error: { message: 'Apple 로그인이 취소되었습니다.', _cancelled: true } }
+  }
   // L-464: state echo-back 검증(CSRF 방어). 플러그인이 state를 돌려줄 때만 비교 — 네이티브 플러그인이
   //   state를 생략해도 nonce(rawNonce↔hashedNonce) 바인딩이 1차 방어이므로 미반환 시엔 통과.
   if (response.state && response.state !== state) {
