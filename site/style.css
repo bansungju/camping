@@ -606,8 +606,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .hot-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center top;background:#fafafa;padding:6px 6px 0}
 .hot-card-noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:46px;background:var(--card2)}
 .hot-card-noimg span{display:none}
-.hot-card-scrim{position:absolute;left:0;right:0;bottom:0;padding:22px 11px 10px;
-  background:linear-gradient(to top,rgba(16,22,17,.94) 0%,rgba(16,22,17,.74) 40%,rgba(16,22,17,0) 100%)}
+.hot-card-scrim{position:absolute;left:0;right:0;bottom:0;padding:18px 11px 10px;text-shadow:0 1px 3px rgba(0,0,0,.55);
+  background:linear-gradient(to top,rgba(16,22,17,.78) 0%,rgba(16,22,17,.40) 48%,rgba(16,22,17,0) 100%)}
 .hot-card-scrim .hot-card-b{font-size:11px;color:rgba(255,255,255,.82);margin:0}
 .hot-card-scrim .hot-card-m{font-size:13px;font-weight:700;color:#fff;line-height:1.25;margin:1px 0 3px;
   overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
