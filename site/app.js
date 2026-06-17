@@ -1581,11 +1581,12 @@ async function renderCategory() {
     + `<button class="share-btn" id="share-btn" aria-label="공유">🔗</button>`;
   document.getElementById("share-btn").onclick = async () => {
     // 현재 필터 상태가 URL에 반영돼 있으므로 location.href 사용 (필터 공유)
-    const currentUrl = location.href.replace(/^https?:\/\/localhost:\d+/, "https://gear-forest.com");
+    const currentUrl = location.href.replace(/^https?:\/\/localhost(:\d+)?/, "https://gear-forest.com");  // FE-091: 포트 옵셔널 — Capacitor 네이티브 https://localhost(포트 없음)도 치환
     const hasFilter = location.search.length > 1;
     const shareTarget = hasFilter ? currentUrl : shareUrl;
     if (navigator.share) {
-      try { await navigator.share({ title: shareTitle, url: shareTarget }); return; } catch (_) {}
+      try { await navigator.share({ title: shareTitle, url: shareTarget }); return; }
+      catch (err) { if (err && err.name === "AbortError") return; }  // FE-092: 공유 취소 시 클립보드 폴백·거짓 ✓ 금지
     }
     try {
       await navigator.clipboard.writeText(shareTarget);
@@ -2256,9 +2257,11 @@ function openProduct(m) {
   const shareBtn = modal.querySelector(".pmshare");
   if (shareBtn) shareBtn.onclick = async () => {
     const idx = mIdx;
+    // FE-090: Capacitor 네이티브는 location.origin이 https://localhost → 공유 링크가 깨짐. 정식 도메인으로 치환.
+    const _origin = location.hostname === "localhost" ? "https://gear-forest.com" : location.origin;
     const url = STATE.slug && idx >= 0
-      ? `${location.origin}/item/${STATE.slug}/item-${idx}.html`
-      : location.href;
+      ? `${_origin}/item/${STATE.slug}/item-${idx}.html`
+      : location.href.replace(/^https?:\/\/localhost(:\d+)?/, "https://gear-forest.com");
     const title = `${m.brand} ${m.model} — 장비의 숲`;
     const text = `${m.brand} ${m.model} 스펙·후기 보러가기`;
     try {
@@ -3711,7 +3714,7 @@ function renderAccount() {
       const s = getSets().find(x => x.id === b.dataset.sid);
       if (!s) return;
       try {
-        const payload = { name: s.title || s.name || "세트", items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };
+        const payload = { name: s.title || s.name || "세트", type: s.type || DEFAULT_SET_TYPE, items: (s.items || []).map(x => ({ b: x.b, m: x.m, qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, s: x.s || "", pcode: x.pcode || "", coupang_url: x.coupang_url || "", p: x.p ?? null, img: x.img ?? null })) };  // FE-110: type 포함 — 미포함 시 복원 세트가 DEFAULT_SET_TYPE로 오분류돼 슬롯·완성도 오계산
         // H-78: deprecated escape/unescape 대신 TextEncoder로 UTF-8 바이트→base64(한글·이모지 안전). 출력은 기존 idiom과 동일.
         const _utf8 = new TextEncoder().encode(JSON.stringify(payload));
         const encoded = btoa(Array.from(new Uint8Array(_utf8), c => String.fromCharCode(c)).join("")).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');  // H-108: spread 대신 Array.from → 대형 세트 스택 오버플로 방지
@@ -4406,6 +4409,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const s = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(vsFixed), c => c.charCodeAt(0))));
       // FE-108: 신뢰 불가 공유 페이로드의 숫자 필드를 신뢰 경계에서 강제 변환·정규화.
       //   weight_g/p/qty/cap를 검증 없이 렌더하면 문자열 HTML이 innerHTML에 삽입돼 XSS(반사형+import 후 저장형).
+      // FE-109: 조작된 링크의 대량 아이템 렌더·localStorage 적재(프리즈/쿼터 DoS) 방지 — 아이템 수 상한.
+      if (Array.isArray(s.items) && s.items.length > 50) s.items = s.items.slice(0, 50);
       const _vsNum = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
       if (Array.isArray(s.items)) s.items.forEach(it => {
         it.weight_g = _vsNum(it.weight_g, null);
@@ -4451,7 +4456,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const fingerprint = `${s.name || ""}|${(s.items || []).length}|${(s.items || []).map(x => `${x.b}${x.m}`).join(",")}`;
         const isDup = arr.some(x => `${x.title || x.name || ""}|${(x.items || []).length}|${(x.items || []).map(i => `${i.b}${i.m}`).join(",")}` === fingerprint);
         if (isDup) { showToast("이미 동일한 세트가 있어요."); closeVs(); return; }  // M-539: alert() → showToast() (iOS Safari PWA 차단 방지)
-        const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: safeHttps(x.coupang_url || "") })) };  // L-432: 공유 base64 페이로드의 coupang_url은 신뢰불가 → 저장 전 https만 허용(저장 XSS 방지)
+        const newSet = { id: Date.now().toString(36), title: s.name || "공유 세트", type: (SET_TYPES[s.type] ? s.type : DEFAULT_SET_TYPE), style: "공유", items: (s.items || []).map(x => ({ b: x.b || "", m: x.m || "", qty: x.qty || 1, weight_g: x.weight_g ?? null, cap: x.cap ?? null, img: x.img ?? null, p: x.p ?? null, s: x.s || "", pcode: x.pcode || wishKey(x.b || "", x.m || "", x.cap ?? null), coupang_url: safeHttps(x.coupang_url || "") })) };  // L-432: coupang_url https만 허용. FE-110: type 복원(화이트리스트 검증 — 조작값은 DEFAULT)
         newSet.completeness = setCompletion(newSet).pct;   // H-146: 총 아이템 수가 아닌 실제 완성도 pct(0~100) 저장
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
