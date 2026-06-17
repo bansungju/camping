@@ -2,10 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://gear-forest.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=backpacking-tent</loc><changefreq>weekly</changefreq><priority>0.8</priority><lastmod>2026-06-13</lastmod></url>
-  <url><loc>https://gear-forest.com/category.html?cat=backpacking-bag</loc><changefreq>weekly</changefreq><priority>0.8</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=sleeping-bag</loc><changefreq>weekly</changefreq><priority>0.8</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=auto-tent</loc><changefreq>weekly</changefreq><priority>0.8</priority><lastmod>2026-06-13</lastmod></url>
-  <url><loc>https://gear-forest.com/category.html?cat=shelter</loc><changefreq>weekly</changefreq><priority>0.7</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=tarp</loc><changefreq>weekly</changefreq><priority>0.7</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=mat</loc><changefreq>weekly</changefreq><priority>0.7</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=burner</loc><changefreq>weekly</changefreq><priority>0.7</priority><lastmod>2026-06-13</lastmod></url>
@@ -18,6 +16,5 @@
   <url><loc>https://gear-forest.com/category.html?cat=firepit</loc><changefreq>weekly</changefreq><priority>0.6</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=wagon</loc><changefreq>weekly</changefreq><priority>0.6</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/category.html?cat=powerbank</loc><changefreq>weekly</changefreq><priority>0.6</priority><lastmod>2026-06-13</lastmod></url>
-  <url><loc>https://gear-forest.com/category.html?cat=misc</loc><changefreq>weekly</changefreq><priority>0.5</priority><lastmod>2026-06-13</lastmod></url>
   <url><loc>https://gear-forest.com/account.html</loc><changefreq>monthly</changefreq><priority>0.4</priority><lastmod>2026-06-13</lastmod></url>
 </urlset>

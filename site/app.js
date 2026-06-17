@@ -186,17 +186,19 @@ function _showAuthGateModal() {
 const OPS = localStorage.getItem("ops") === "1";
 const LEGAL_LINKS = ` · <a href="privacy.html" style="color:var(--muted);text-decoration:underline">개인정보처리방침</a> · <a href="terms.html" style="color:var(--muted);text-decoration:underline">이용약관</a>`;
 
-/* 세트 수량 한도(같은 상품 pcode 기준): 텐트류·침낭·매트·코트·가방 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
+/* 세트 수량 한도(같은 상품 pcode 기준): 텐트류·침낭·매트·코트 = 1, 의자 = 4, 테이블 = 2, 나머지 = 4 */
 const SET_QTY_MAX = {
   "backpacking-tent": 1, "auto-tent": 1, "shelter": 1, "tarp": 1,
-  "sleeping-bag": 1, "mat": 1, "cot": 1, "backpacking-bag": 1,
+  "sleeping-bag": 1, "mat": 1, "cot": 1,
 };
 const qtyMax = slug => SET_QTY_MAX[slug] ?? (slug === "chair" ? 4 : slug === "table" ? 2 : 4);
 
 /* FE-WISH-09 — '도장판' 세트 구성(SET-COMPOSITION-PLAN.md, v1).
    핵심 규칙: 완성 = 슬롯에 1개라도 담기면(0→≥1). 정원(cap)은 목표가 아니라 상한선 —
-   넘기려 할 때만 교체 유도. 15개 카테고리를 그룹 10칸으로 묶음(타입별 cap=0이면 비노출 → auto는 9칸).
+   넘기려 할 때만 교체 유도. 카테고리를 그룹 9칸으로 묶음(타입별 cap=0이면 비노출).
    완성도 = 채운 필수슬롯 / 노출 필수슬롯(슬롯 안 개수 무관, 0이냐 아니냐만 봄). */
+/* NOTE: '가방'(backpacking-bag) 슬롯은 소스 DB 미보유로 라이브에서 내림(데이터 동결 JSON 제거).
+   추후 camping_tents500.db에 가방 카테고리를 재누적하면 슬롯/스타일 프로파일을 복원할 것. */
 const SET_SLOTS = [
   { key: "tent",     slugs: ["backpacking-tent","auto-tent","shelter"], icon: "⛺", label: "텐트·쉘터", tier: "must" },
   { key: "tarp",     slugs: ["tarp"],              icon: "⛱️", label: "타프",      tier: "nice" },
@@ -207,14 +209,13 @@ const SET_SLOTS = [
   { key: "cook",     slugs: ["burner","cookware"], icon: "🔥", label: "화력",      tier: "nice" },
   { key: "light",    slugs: ["lantern"],           icon: "🔦", label: "랜턴",      tier: "nice" },
   { key: "living",   slugs: ["cooler","wagon","firepit","powerbank"], icon: "🧊", label: "살림", tier: "opt" },
-  { key: "bag",      slugs: ["backpacking-bag"],   icon: "🎒", label: "가방",      tier: "opt" },
 ];
 /* 세트 타입별 정원 프리셋(상한선). cap=0 → 해당 타입에서 슬롯 비노출.
    label=짧은 표시명(카드/배지), optLabel=드롭다운용 쉬운 말(상황어+괄호용어), caption=선택 따라 바뀌는 회색 보조 1줄. */
 const SET_TYPES = {
-  auto:        { label: "오토캠핑", icon: "🏕️", optLabel: "가족과 차로 (오토캠핑)",   caption: "4인 가족 기준 · 침낭·의자 최대 4", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4, bag:0 } },
-  backpacking: { label: "백패킹",   icon: "🥾", optLabel: "가볍게 배낭 메고 (백패킹)", caption: "1~2인 기준 · 무게 줄이기",        caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0, bag:1 } },
-  carcamp:     { label: "차박",     icon: "🚐", optLabel: "차에서 자기 (차박)",       caption: "차량 취침 기준 · 텐트 생략",      caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4, bag:0 } },
+  auto:        { label: "오토캠핑", icon: "🏕️", optLabel: "가족과 차로 (오토캠핑)",   caption: "4인 가족 기준 · 침낭·의자 최대 4", caps: { tent:1, tarp:1, sleeping:4, mat:4, chair:4, table:1, cook:2, light:2, living:4 } },
+  backpacking: { label: "백패킹",   icon: "🥾", optLabel: "가볍게 배낭 메고 (백패킹)", caption: "1~2인 기준 · 무게 줄이기",        caps: { tent:1, tarp:1, sleeping:2, mat:2, chair:1, table:0, cook:1, light:1, living:0 } },
+  carcamp:     { label: "차박",     icon: "🚐", optLabel: "차에서 자기 (차박)",       caption: "차량 취침 기준 · 텐트 생략",      caps: { tent:0, tarp:1, sleeping:2, mat:2, chair:2, table:1, cook:1, light:1, living:4 } },
 };
 const DEFAULT_SET_TYPE = "auto";
 const SET_TYPE_ORDER = ["auto", "backpacking", "carcamp"];
@@ -1344,7 +1345,7 @@ async function setupSearchPage() {
 /* ---------- 캠핑 스타일 칩 상수 ---------- */
 // cats: 표시할 카테고리 slug 화이트리스트. 없으면 전 카테고리.
 const STYLE_META = [
-  { key:"backpacking", label:"백패킹",  icon:"🏕", cats:["backpacking-tent","backpacking-bag","sleeping-bag","mat","tarp"] },
+  { key:"backpacking", label:"백패킹",  icon:"🏕", cats:["backpacking-tent","sleeping-bag","mat","tarp"] },
   { key:"car-camping", label:"오토캠핑",icon:"🚗", cats:["auto-tent","chair","table","cooler","cot","burner","cookware","lantern","firepit","wagon","shelter"] },
   { key:"glamping",    label:"글램핑",  icon:"✨", cats:["auto-tent","shelter","chair","table","cot","lantern","cooler","firepit"] },
   { key:"winter",      label:"겨울",    icon:"❄", cats:["backpacking-tent","auto-tent","sleeping-bag","mat"] },
