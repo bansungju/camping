@@ -895,3 +895,12 @@ a.ssb-cell:hover{border-color:var(--accent);color:var(--accent)}
   :focus-visible { outline: 2px solid ButtonText; outline-offset: 2px; }
   .homesearch input:focus, .frng:focus, .fsel:focus, .lf-input:focus, .lf-textarea:focus { outline: 2px solid ButtonText; }
 }
+
+/* ── iOS Safari 호환(A5) ─────────────────────────────────────── */
+/* FE-098: iOS가 가로모드 등에서 텍스트를 임의 확대하지 않도록 고정 */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* FE-089: 탭 시 회색 하이라이트 박스 제거(네이티브 앱 느낌) */
+*{-webkit-tap-highlight-color:transparent}
+/* FE-083: iOS는 폰트<16px 입력 포커스 시 화면을 자동 확대한다 → 텍스트 입력 요소를 16px로 통일해 확대 방지.
+   파일 끝(소스 순서 최후)에 둬 모바일 미디어쿼리(.homesearch input 14px 등)도 덮어쓴다. */
+.toolbar input,.toolbar select,.homesearch input,.pmrv-ta,.lf-input,.lf-textarea,.sm-input{font-size:16px}
