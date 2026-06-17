@@ -394,21 +394,47 @@ const GRADE_LEGEND = `
     <span><span class="b 데이터부족">데이터부족</span> 미공개</span>
   </div>`;
 
+/* BE-073/079: 네이티브(Capacitor) 앱은 셸(HTML/JS/CSS)만 번들하고, 데이터(data/*.json)·상품
+   이미지(images/*)는 라이브 gear-forest.com에서 로드한다.
+   → 가격·카탈로그가 항상 최신(BE-073: 번들 스냅샷 동결 해소), IPA 경량(BE-079: 158MB 제외).
+   웹(gear-forest.com / 로컬 dev)에서는 IS_NATIVE=false → 기존 상대경로 그대로(무회귀). */
+const GF_ORIGIN = "https://gear-forest.com";
+const IS_NATIVE = !!(typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.());
+// 상대 자원경로를 네이티브에선 라이브 절대 URL로 승격. 이미 절대/data:/blob: URL이면 그대로 둔다.
+function gfAsset(p) {
+  if (!p || !IS_NATIVE) return p;
+  if (/^(https?:)?\/\//.test(p) || p.startsWith("data:") || p.startsWith("blob:")) return p;
+  return GF_ORIGIN + "/" + p.replace(/^\.?\//, "");
+}
+
 const _getJSONCache = new Map();  // M-455: 동시 호출 dedup — 동일 URL in-flight 요청 공유
+async function _fetchJSON(url, origPath) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${origPath} ${r.status}`);
+  // H-60: GitHub Pages가 누락 경로에 200+HTML(커스텀 404/SPA fallback)을 주면 .json() 파싱오류가
+  // caller의 .catch(()=>[])에 무음으로 삼켜져 빈 목록이 정상처럼 표시됨 → JSON이 아니면 명시적으로 throw+경고
+  const ct = r.headers.get("content-type") || "";
+  if (!ct.includes("json")) {
+    const head = (await r.text()).slice(0, 80).replace(/\s+/g, " ");
+    console.warn(`[getJSON] non-JSON response for ${origPath} (content-type: ${ct || "none"}): ${head}`);
+    throw new Error(`${origPath}: non-JSON (${ct || "none"})`);
+  }
+  return r.json();
+}
 async function getJSON(p) {
   if (_getJSONCache.has(p)) return _getJSONCache.get(p);
   const promise = (async () => {
-    const r = await fetch(p);
-    if (!r.ok) throw new Error(`${p} ${r.status}`);
-    // H-60: GitHub Pages가 누락 경로에 200+HTML(커스텀 404/SPA fallback)을 주면 .json() 파싱오류가
-    // caller의 .catch(()=>[])에 무음으로 삼켜져 빈 목록이 정상처럼 표시됨 → JSON이 아니면 명시적으로 throw+경고
-    const ct = r.headers.get("content-type") || "";
-    if (!ct.includes("json")) {
-      const head = (await r.text()).slice(0, 80).replace(/\s+/g, " ");
-      console.warn(`[getJSON] non-JSON response for ${p} (content-type: ${ct || "none"}): ${head}`);
-      throw new Error(`${p}: non-JSON (${ct || "none"})`);
+    // BE-073: 네이티브는 라이브 데이터 우선 → 실패(오프라인 등) 시 번들 스냅샷으로 폴백.
+    const remote = gfAsset(p);
+    try {
+      return await _fetchJSON(remote, p);
+    } catch (e) {
+      if (IS_NATIVE && remote !== p) {
+        console.warn(`[getJSON] live fetch 실패 → 번들 폴백: ${p}`, e);
+        return await _fetchJSON(p, p);
+      }
+      throw e;
     }
-    return r.json();
   })();
   _getJSONCache.set(p, promise);
   promise.finally(() => _getJSONCache.delete(p));
@@ -429,7 +455,8 @@ function thumbCell(img, name, tint, icon, imgCls, noCls) {
   if (!img) return `<div class="${noCls}" style="background:${tint}">${icon}<span>이미지 준비중</span></div>`;
   const sz = _THUMB_SZ[imgCls]; const szAttr = sz ? ` width="${sz}" height="${sz}"` : "";
   const loadAttr = (imgCls === "recard-thumb" || imgCls === "hot-card-img") ? "eager" : "lazy";
-  return `<img class="${imgCls}" src="${esc(img)}" alt="${esc(name)}" loading="${loadAttr}"${szAttr}` +
+  // BE-079: 네이티브 앱은 상품 이미지를 번들에 넣지 않으므로 라이브 gear-forest.com에서 로드.
+  return `<img class="${imgCls}" src="${esc(gfAsset(img))}" alt="${esc(name)}" loading="${loadAttr}"${szAttr}` +
     ` data-tint="${tint}" data-icon="${icon}" data-fcls="${noCls}" onerror="thumbFallback(this)">`;
 }
 function thumbFallback(img) {
@@ -3547,7 +3574,7 @@ function renderAccount() {
         if (!wx || wx.s == null) { location.href = card.dataset.href; return; }  // M-516: 빈 문자열 wx.s 허용
         card.dataset.loading = "1";
         try {
-          const catJson = await fetch(`data/${wx.s}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });  // M-357/M-408: response.ok 체크
+          const catJson = await getJSON(`data/${wx.s}.json`);  // M-357/M-408 + BE-073: getJSON 경유(네이티브 라이브 fetch·오프라인 폴백)
           const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m);
           if (prod) {
             const prevSlug = STATE.slug, prevData = STATE.data;
