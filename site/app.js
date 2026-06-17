@@ -4404,6 +4404,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const vsFixed = vsParam.replace(/-/g, '+').replace(/_/g, '/');
       // H-78: deprecated escape 대신 TextDecoder로 base64→UTF-8 디코드(한글·이모지 안전). 기존 공유 URL과 호환.
       const s = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(vsFixed), c => c.charCodeAt(0))));
+      // FE-108: 신뢰 불가 공유 페이로드의 숫자 필드를 신뢰 경계에서 강제 변환·정규화.
+      //   weight_g/p/qty/cap를 검증 없이 렌더하면 문자열 HTML이 innerHTML에 삽입돼 XSS(반사형+import 후 저장형).
+      const _vsNum = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+      if (Array.isArray(s.items)) s.items.forEach(it => {
+        it.weight_g = _vsNum(it.weight_g, null);
+        it.p   = _vsNum(it.p, null);
+        it.qty = _vsNum(it.qty, 1) || 1;
+        it.cap = _vsNum(it.cap, null);
+      });
       const modal = document.createElement("div");
       modal.className = "pmodal on";
       modal.style.zIndex = "300";

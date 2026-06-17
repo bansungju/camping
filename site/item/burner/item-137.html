@@ -26,13 +26,13 @@
 <meta name="twitter:image:alt" content="지라프 시그니처 가스렌지 — 장비의 숲">
 <link rel="icon" type="image/png" href="../../icon-192.png">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="../../style.css?v=44fef071">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"시그니처 가스렌지","brand":{"@type":"Brand","name":"지라프"},"url":"https://gear-forest.com/item/burner/item-137.html","image":"https://gear-forest.com/images/1724.jpg","description":"지라프 시그니처 가스렌지 정량 스펙 실측 데이터. 버너 내 138위/227개 비교. 무게·가격 등 실측값 기반 별점.","offers":{"@type":"Offer","priceCurrency":"KRW","price":60600,"availability":"https://schema.org/OutOfStock"}}</script>
+<link rel="stylesheet" href="../../style.css?v=8af77a71">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"시그니처 가스렌지","brand":{"@type":"Brand","name":"지라프"},"url":"https://gear-forest.com/item/burner/item-137.html","image":"https://gear-forest.com/images/1724.jpg","description":"지라프 시그니처 가스렌지 정량 스펙 실측 데이터. 버너 내 138위/227개 비교. 무게·가격 등 실측값 기반 별점.","offers":{"@type":"Offer","priceCurrency":"KRW","price":60600,"availability":"https://schema.org/InStock"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://gear-forest.com/"},{"@type":"ListItem","position":2,"name":"버너","item":"https://gear-forest.com/category.html?cat=burner"},{"@type":"ListItem","position":3,"name":"지라프 시그니처 가스렌지","item":"https://gear-forest.com/item/burner/item-137.html"}]}</script>
 <style>
 .item-hero{display:flex;gap:20px;align-items:flex-start;margin:24px 0 20px;flex-wrap:wrap}
 .item-img{width:200px;height:200px;object-fit:contain;border-radius:8px;background:var(--card);border:1px solid var(--line);flex-shrink:0}
-.item-info{flex:1;min-width:200px}
+.item-info{flex:1;min-width:0}/* FE-061: min-width:200px면 .item-img(200)+gap(20)+200=420px>375px 기기 → 가로 스크롤. 0으로 완화(flex-wrap이 줄바꿈 처리) */
 .item-title{font-size:22px;font-weight:700;margin:0 0 4px}
 .item-brand{font-size:14px;color:var(--muted);margin:0 0 12px}
 .item-price{font-size:18px;font-weight:600;color:var(--accent);margin:0 0 12px}
@@ -154,7 +154,7 @@
 
 <footer><div class="wrap">정량 스펙 기반 정직 비교 · <a href="https://gear-forest.com/item/burner/item-137.html" style="color:inherit">지라프 시그니처 가스렌지</a></div></footer>
 
-<script src="../../app.js?v=c363b579"></script>
+<script src="../../app.js?v=d532355d"></script>
 <script>
 // 찜하기 — app.js의 전역 찜 API(wishKey·inWish·toggleWish) 재사용 (H-07)
 (function(){
