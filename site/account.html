@@ -616,9 +616,16 @@ function renderProfile(profile) {
         _restoreDelete()
         return
       }
+      // FE-051: Edge Function이 auth 삭제 실패 시 200 + auth_deleted:false를 반환할 수 있다.
+      //   이 경우 프로필은 익명화됐지만 auth.users가 남아 재로그인 가능 → 성공 오판 금지, 재시도 유도.
+      if (delResult?.data?.auth_deleted === false) {
+        if (deleteHint) { deleteHint.textContent = '계정 삭제가 완료되지 않았습니다. 잠시 후 다시 시도해주세요.'; deleteHint.style.display = '' }
+        _restoreDelete()
+        return
+      }
       window.onWishChange = null  // M-214: signOut 전 onWishChange 해제 → 빈 배열 원격 저장 방지
       _wishSyncedUser = null
-      await signOut()
+      try { await signOut() } catch (_) {}  // FE-029: signOut 예외에도 로컬 정리·redirect는 진행(서버측 삭제는 이미 완료)
       // M-572: 계정 삭제 시 개인화 localStorage 키 일괄 정리 (공유 기기 데이터 잔류 방지)
       ;['wish','sets','gear_sets','push-denied','_sid','post_likes','seenIntro','ops',
         'dark','gear_sets_remote_synced'].forEach(k => localStorage.removeItem(k))   // L-472: 레거시 'sets' 키도 정리
