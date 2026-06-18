@@ -2266,6 +2266,10 @@ function openProduct(m) {
     buyBtn.onclick = async () => {
       const url = buyBtn.dataset.url;
       openExternal(url);
+      // GA4 클릭 이벤트(쿠팡 구매) — Supabase 집계와 병행, 미로드 시 무해 no-op
+      if (typeof gtag === "function") gtag("event", "coupang_buy", {
+        item_brand: m.brand, item_model: m.model, item_category: STATE.slug,
+      });
       try {
         const { supabase } = await import("./supabaseClient.js?v=fc0aca58");
         let sessionId = localStorage.getItem("_sid");
@@ -3316,6 +3320,10 @@ function openSetDetail(sid) {
     const url = item?.coupang_url;
     if (!url) return;
     openExternal(url);
+    // GA4 클릭 이벤트(쿠팡 구매) — Supabase 집계와 병행, 미로드 시 무해 no-op
+    if (typeof gtag === "function") gtag("event", "coupang_buy", {
+      item_brand: item.b, item_model: item.m, item_category: item.s,
+    });
     try {
       const { supabase } = await import("./supabaseClient.js?v=fc0aca58");
       let sessionId = localStorage.getItem("_sid");
