@@ -6,6 +6,29 @@ if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
 
 // Phase 4: Capacitor 네이티브 UX — StatusBar·SplashScreen
 if (window.Capacitor?.isNativePlatform?.()) {
+  // 웹 스플래시 오버레이: 네이티브 스플래시 숨기기 전 동적 애니메이션
+  (function showWebSplash() {
+    const el = document.createElement('div');
+    el.id = 'web-splash';
+    el.innerHTML = `<style>
+#web-splash{position:fixed;inset:0;background:#2f7a4e;display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .35s ease}
+#web-splash.fade-out{opacity:0;pointer-events:none}
+.ws-icon{width:96px;height:96px;animation:ws-pop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes ws-pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.ws-ring{position:absolute;width:96px;height:96px;border-radius:50%;border:3px solid rgba(255,255,255,.35);animation:ws-ring 1.2s ease-out .3s both}
+@keyframes ws-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2);opacity:0}}
+</style>
+<div style="position:relative;display:flex;align-items:center;justify-content:center">
+  <div class="ws-ring"></div>
+  <img class="ws-icon" src="/icon-512.png" alt="">
+</div>`;
+    document.documentElement.appendChild(el);
+    window.__hideSplash = function() {
+      el.classList.add('fade-out');
+      setTimeout(() => el.remove(), 400);
+    };
+  })();
+
   (async () => {
     try {
       const [{ StatusBar, Style }, { SplashScreen }] = await Promise.all([
@@ -16,6 +39,8 @@ if (window.Capacitor?.isNativePlatform?.()) {
       await StatusBar.setBackgroundColor({ color: '#2f7a4e' })
       await SplashScreen.hide()
     } catch (_) {}
+    // 최소 0.8초 보여준 뒤 페이드 아웃
+    setTimeout(() => window.__hideSplash?.(), 800);
   })()
 }
 
