@@ -91,9 +91,12 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .b.외형기준{color:var(--outer);border-color:#f0e2b0}
 .b.데이터부족{color:var(--faint);font-style:italic}
 .nd{color:var(--faint);font-style:italic;font-size:12px}
-footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0;color:var(--muted);font-size:12px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 max(22px,env(safe-area-inset-bottom)) 0;color:var(--muted);font-size:12px}  /* FE-095: 푸터 하단 안전영역 */
 .disc{display:block;margin-top:6px;font-size:11px;opacity:.7}
 body:has(.pmodal.on){overflow:hidden}
+/* FE-088: iOS 길게 누르기 콜아웃(이미지 저장/복사) 억제 — 어필리에이트 이미지·버튼 보호 */
+img,button{-webkit-touch-callout:none}
+img{-webkit-user-select:none;user-select:none}
 /* 세트 슬롯 도장판 */
 .set-slots{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px}
 .set-slot{font-size:17px;opacity:.15;transition:opacity .15s;cursor:default;line-height:1}
@@ -688,8 +691,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 @media (max-width:640px){
   /* 탭바: 모바일은 하단 bottom-nav가 floating 내비를 담당 → 중복 탭바 숨김 */
   .tabbar{display:none}
-  /* GNB 아카이브로 하단 bottom-nav 미노출 → 하단 여백 제거(복구 시 62px) */
-  body{padding-bottom:0}
+  /* GNB 아카이브로 하단 bottom-nav 미노출 → 하단 여백 제거(복구 시 62px). FE-095: 노치/홈인디케이터 안전영역은 유지 */
+  body{padding-bottom:env(safe-area-inset-bottom)}
   .pli{gap:11px;padding:10px 12px}
   .pli-thumb,.pli-noimg{width:62px;height:62px}
   .pli-name{font-size:14px}
@@ -792,7 +795,11 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .sac-view:hover{filter:brightness(1.06)}
 .sac-bar{margin:12px -14px 0;height:3px;background:var(--line)}
 .sac-bar>i{display:block;height:100%;background:var(--accent);transform-origin:left center;transform:scaleX(1)}
-@media(prefers-reduced-motion:reduce){.set-added-card{transition:opacity .15s ease}.sac-bar>i{transition:none!important}}
+@media(prefers-reduced-motion:reduce){
+  /* FE-097: 동작 줄이기 — skel-pulse 펄스·spin 스피너·모달/토스트 transition 등 전역 최소화 */
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .set-added-card{transition:opacity .15s ease}.sac-bar>i{transition:none!important}
+}
 /* 모바일 하단 내비게이션 바 */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;background:var(--card);border-top:1px solid var(--line);height:56px;safe-area-inset-bottom:env(safe-area-inset-bottom)}
 @supports(padding-bottom:env(safe-area-inset-bottom)){
