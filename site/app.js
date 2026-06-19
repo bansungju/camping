@@ -52,7 +52,7 @@ async function openExternal(url) {
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
       const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser@8/dist/esm/index.js');
-      await Browser.open({ url });
+      await Browser.open({ url, toolbarColor: '#2f7a4e' });  // FE-157: 인앱 브라우저 툴바를 브랜드 그린으로(흰 툴바 불일치 해소)
       return;
     } catch (_) { /* 플러그인 미동기화 등 — 아래 폴백 */ }
   }

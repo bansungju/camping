@@ -37,7 +37,7 @@
   // Capacitor 앱 환경에서 OAuth 콜백 처리 후 인앱 브라우저 닫기
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
-      const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')
+      const { Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser@8/dist/esm/index.js')  /* FE-156: 메이저 버전 고정(@latest 파괴적 업데이트 차단·app.js와 일치) */
       await Browser.close()
     } catch (_) {}
   }
