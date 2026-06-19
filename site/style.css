@@ -22,6 +22,13 @@
   --border:#3a3a3f; --fg:#f0f0f0;
   --header-bg:rgba(18,18,18,.88); --tabbar-bg:rgba(30,30,30,.96);
 }
+/* FE-122·123·149·154: 다크 테마 하드코딩 색상 오버라이드(라이트 값은 그대로 보존) */
+[data-theme="dark"] .pmimg,[data-theme="dark"] .recard-thumb,[data-theme="dark"] .hot-card-img{background:var(--card2)}
+[data-theme="dark"] .opsbar{background:#3a2f10;border-bottom-color:#5e4600;color:#f0d896}
+[data-theme="dark"] .opsbar button{background:#f0d896;color:#2a2000}
+[data-theme="dark"] .opsbar button:hover{background:#e0c47a}
+[data-theme="dark"] .stp-btn.stp-active{background:rgba(61,158,104,.18)}
+[data-theme="dark"] .lf-err{background:#3a1a1a;color:#f87171}
 .theme-toggle{display:none !important}
 /* L-26: Skip-to-content link (visually hidden until focused) */
 .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;background:var(--accent);color:#fff;padding:8px 16px;font-size:14px;font-weight:600;border-radius:4px;text-decoration:none;z-index:9999}
