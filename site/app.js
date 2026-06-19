@@ -1928,15 +1928,19 @@ function buildFilters(d, star) {
       document.body.appendChild(backdrop);
     }
     const tg = document.getElementById("filtoggle");
-    const openSheet = () => { aside.classList.add("open"); backdrop.classList.add("on"); document.body.classList.add("filter-sheet-lock"); tg.setAttribute("aria-expanded", "true"); };
-    const closeSheet = () => { aside.classList.remove("open"); backdrop.classList.remove("on"); document.body.classList.remove("filter-sheet-lock"); tg.setAttribute("aria-expanded", "false"); };
+    const openSheet = () => { aside.classList.add("open"); backdrop.classList.add("on"); document.body.classList.add("filter-sheet-lock"); tg.setAttribute("aria-expanded", "true"); const fx = aside.querySelector(".fsheet-x"); if (fx) fx.focus(); };  // FE-147: 열 때 시트 내부로 포커스 이동
+    const closeSheet = () => { aside.classList.remove("open"); backdrop.classList.remove("on"); document.body.classList.remove("filter-sheet-lock"); tg.setAttribute("aria-expanded", "false"); if (tg) tg.focus(); };  // FE-146: 닫을 때 필터 토글로 포커스 복귀
     tg.onclick = openSheet;
     backdrop.onclick = closeSheet;
     aside.querySelector(".fsheet-x").onclick = closeSheet;
     aside.querySelector(".fsheet-apply").onclick = closeSheet;   // 필터는 실시간 적용(draw) — 닫기만
     // H-64: buildFilters 재호출 시 익명 리스너가 누적되지 않도록 이전 핸들러 제거 후 재등록
     if (document._filterSheetKeyHandler) document.removeEventListener("keydown", document._filterSheetKeyHandler);
-    document._filterSheetKeyHandler = e => { if (e.key === "Escape" && aside.classList.contains("open")) closeSheet(); };
+    document._filterSheetKeyHandler = e => {  // FE-147: Esc 닫기 + Tab 포커스 트랩(배경 요소 이탈 방지)
+      if (!aside.classList.contains("open")) return;
+      if (e.key === "Escape") { closeSheet(); return; }
+      if (e.key === "Tab") _trapTab(e, aside);
+    };
     document.addEventListener("keydown", document._filterSheetKeyHandler);
   }
 
