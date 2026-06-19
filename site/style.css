@@ -97,6 +97,15 @@ body:has(.pmodal.on){overflow:hidden}
 /* FE-088: iOS 길게 누르기 콜아웃(이미지 저장/복사) 억제 — 어필리에이트 이미지·버튼 보호 */
 img,button{-webkit-touch-callout:none}
 img{-webkit-user-select:none;user-select:none}
+/* 네이티브 앱 웹 스플래시 오버레이 (FE-125·127: 인라인 <style> 주입 제거 → CSP 안전·CSSOM 누수 방지) */
+#web-splash{position:fixed;inset:0;background:#2f7a4e;display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .35s ease}
+#web-splash.fade-out{opacity:0;pointer-events:none}
+.ws-stage{position:relative;display:flex;align-items:center;justify-content:center}
+.ws-icon{width:96px;height:96px;animation:ws-pop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes ws-pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+/* FE-130: 링은 800ms 페이드아웃 전에 끝나야 잘리지 않음 → 0.3s 지연 제거 + 0.7s */
+.ws-ring{position:absolute;width:96px;height:96px;border-radius:50%;border:3px solid rgba(255,255,255,.35);animation:ws-ring .7s ease-out both}
+@keyframes ws-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2);opacity:0}}
 /* 세트 슬롯 도장판 */
 .set-slots{display:flex;gap:3px;flex-wrap:wrap;margin-top:7px}
 .set-slot{font-size:17px;opacity:.15;transition:opacity .15s;cursor:default;line-height:1}

@@ -8,17 +8,10 @@ if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
 if (window.Capacitor?.isNativePlatform?.()) {
   // 웹 스플래시 오버레이: 네이티브 스플래시 숨기기 전 동적 애니메이션
   (function showWebSplash() {
+    // FE-125·127: 인라인 <style> 주입 제거(엄격 CSP 차단·CSSOM 전역 누수 방지). 스타일은 style.css(#web-splash·.ws-*)에 정의.
     const el = document.createElement('div');
     el.id = 'web-splash';
-    el.innerHTML = `<style>
-#web-splash{position:fixed;inset:0;background:#2f7a4e;display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .35s ease}
-#web-splash.fade-out{opacity:0;pointer-events:none}
-.ws-icon{width:96px;height:96px;animation:ws-pop .5s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes ws-pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
-.ws-ring{position:absolute;width:96px;height:96px;border-radius:50%;border:3px solid rgba(255,255,255,.35);animation:ws-ring 1.2s ease-out .3s both}
-@keyframes ws-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2);opacity:0}}
-</style>
-<div style="position:relative;display:flex;align-items:center;justify-content:center">
+    el.innerHTML = `<div class="ws-stage">
   <div class="ws-ring"></div>
   <img class="ws-icon" src="/icon-512.png" alt="">
 </div>`;
@@ -30,15 +23,21 @@ if (window.Capacitor?.isNativePlatform?.()) {
   })();
 
   (async () => {
+    // FE-126: StatusBar 실패와 SplashScreen.hide()를 분리 — StatusBar가 실패해도 네이티브 스플래시는
+    //   반드시 숨김 시도(미숨김 시 LaunchScreen이 화면을 덮은 채 잔류). 실패는 삼키지 말고 로그.
+    let SplashScreen
     try {
-      const [{ StatusBar, Style }, { SplashScreen }] = await Promise.all([
+      const [sb, ss] = await Promise.all([
         import('https://cdn.jsdelivr.net/npm/@capacitor/status-bar@8/dist/esm/index.js'),
         import('https://cdn.jsdelivr.net/npm/@capacitor/splash-screen@8/dist/esm/index.js'),
       ])
-      await StatusBar.setStyle({ style: Style.Dark })
-      await StatusBar.setBackgroundColor({ color: '#2f7a4e' })
-      await SplashScreen.hide()
-    } catch (_) {}
+      SplashScreen = ss.SplashScreen
+      try {
+        await sb.StatusBar.setStyle({ style: sb.Style.Dark })
+        await sb.StatusBar.setBackgroundColor({ color: '#2f7a4e' })
+      } catch (e) { console.warn('[splash] StatusBar 설정 실패:', e) }
+    } catch (e) { console.warn('[splash] Capacitor 플러그인 로드 실패:', e) }
+    try { await SplashScreen?.hide() } catch (e) { console.warn('[splash] SplashScreen.hide 실패:', e) }
     // 최소 0.8초 보여준 뒤 페이드 아웃
     setTimeout(() => window.__hideSplash?.(), 800);
   })()
