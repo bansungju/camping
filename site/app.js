@@ -12,8 +12,10 @@ if (window.Capacitor?.isNativePlatform?.()) {
     const el = document.createElement('div');
     el.id = 'web-splash';
     el.innerHTML = `<div class="ws-stage">
-  <div class="ws-ring"></div>
-  <img class="ws-icon" src="/icon-512.png" alt="">
+  <div class="ws-ring ws-ring1"></div>
+  <div class="ws-ring ws-ring2"></div>
+  <div class="ws-ring ws-ring3"></div>
+  <img class="ws-icon" src="/splash-mark.png" alt="">
 </div>`;
     document.documentElement.appendChild(el);
     window.__hideSplash = function() {
@@ -603,13 +605,19 @@ function showToast(msg, duration) {
   if (!t) {
     t = document.createElement("div"); t.id = "app-toast";
     // L-377: GNB 비활성 상태에선 bottom:80px가 불필요한 여백 → GNB 높이 변수 기반(없으면 24px)으로 계산.
-    t.style.cssText = "position:fixed;bottom:calc(24px + var(--gnb-height, 0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;max-width:90vw;text-align:center";
+    // FE-131: white-space:nowrap 제거 + 줄바꿈 허용(word-break:keep-all) → 긴 한글 메시지 잘림 방지
+    t.style.cssText = "position:fixed;bottom:calc(24px + var(--gnb-height, 0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:16px;font-size:13px;font-weight:600;line-height:1.45;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:normal;word-break:keep-all;max-width:min(90vw,360px);text-align:center";
     document.body.appendChild(t);
   }
   clearTimeout(t._tid);
   t.textContent = msg; t.style.pointerEvents = "none";
-  requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
-  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; t.style.pointerEvents = "none"; }, duration || 2400);  // M-208/M-327: fade 후 포인터 이벤트 차단 유지
+  if (t._shown) {  // FE-133: 이미 표시 중이면 진입 애니메이션 재실행 없이 텍스트만 교체(연속 호출 깜빡임 방지)
+    t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)";
+  } else {
+    t._shown = true;
+    requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
+  }
+  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; t.style.pointerEvents = "none"; t._shown = false; }, duration || 2400);  // M-208/M-327: fade 후 포인터 이벤트 차단 유지
 }
 function newSet(title, type) {
   const s = { id: Date.now().toString(36), title, type: type || DEFAULT_SET_TYPE, style: "", items: [], created_at: new Date().toISOString() };
