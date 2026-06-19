@@ -8,8 +8,10 @@
   --shadow-h:0 8px 24px rgba(0,0,0,.10);
   --border:#d0d0d5; --fg:var(--txt);
   --header-bg:rgba(255,255,255,.88); --tabbar-bg:rgba(255,255,255,.96);
+  color-scheme:light;  /* FE-119: 브라우저/WKWebView가 네이티브 UI(스크롤바·폼컨트롤)를 테마에 맞춤 */
 }
 [data-theme="dark"]{
+  color-scheme:dark;  /* FE-119 */
   --bg:#121212; --card:#1e1e1e; --card2:#2a2a2a; --line:#2e2e2e;
   --txt:#f0f0f0; --muted:#9a9a9e; --faint:#6a6a70;
   --accent:#3d9e68; --accent-d:#2f7a4e;
