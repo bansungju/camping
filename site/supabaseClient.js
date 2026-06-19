@@ -127,8 +127,9 @@ export async function registerNativePush() {
     const perm = await PushNotifications.requestPermissions()
     if (perm.receive !== 'granted') return
     // 리스너를 register() 전에 등록 — 토큰 이벤트 유실 방지
-    await PushNotifications.addListener('registration', (t) => {
-      savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
+    await PushNotifications.addListener('registration', async (t) => {  // FE-033·044: await + 에러 로깅(미await fire-and-forget로 토큰 저장 실패 무음 방지)
+      const { error } = await savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
+      if (error) console.error('[push] 토큰 저장 실패:', error.message || error)
     })
     await PushNotifications.addListener('registrationError', (e) => {
       console.error('[push] APNs 등록 실패:', e?.error || e)
