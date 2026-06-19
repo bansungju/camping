@@ -460,15 +460,23 @@ export async function upsertGearSet(set, userId) {
       : Math.min(100, set.items?.length || 0),
   }
   if (set.remoteId) {
-    const { error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId).eq('user_id', userId)  // M-566: user_id 필터 추가 — RLS 오류 시 타인 세트 덮어쓰기 방지
-    return error ? null : set.remoteId
+    // M-566: user_id 필터 — RLS 오류 시 타인 세트 덮어쓰기 방지. FE-035: .select로 갱신 행수 확인
+    const { data, error } = await supabase.from('gear_sets').update(payload).eq('id', set.remoteId).eq('user_id', userId).select('id')
+    if (error) return null
+    if (data && data.length) return set.remoteId
+    // FE-035: 원격 행이 이미 삭제됨(0행 UPDATE) → 무음 성공 대신 insert로 재생성
+    const { data: ins, error: insErr } = await supabase.from('gear_sets').insert(payload).select('id').single()
+    return insErr ? null : ins?.id
   }
   const { data, error } = await supabase.from('gear_sets').insert(payload).select('id').single()
   return error ? null : data?.id
 }
 
 export async function deleteRemoteGearSet(remoteId) {
-  return supabase.from('gear_sets').update({ deleted_at: new Date().toISOString() }).eq('id', remoteId)
+  // FE-053: user_id 이중 보호 — RLS 오구성 시 타인 세트 삭제 방지(upsertGearSet과 동일 정책)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: { message: 'no user' } }
+  return supabase.from('gear_sets').update({ deleted_at: new Date().toISOString() }).eq('id', remoteId).eq('user_id', user.id)
 }
 
 // ── 전역 에러 핸들러 (네트워크 실패 등) — 모듈 중복 로드 시 리스너 중복 방지 ──
