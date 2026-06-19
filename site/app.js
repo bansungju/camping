@@ -3805,11 +3805,14 @@ function renderAccount() {
         const url = `${_origin}/account.html?view-set=${encoded}`;
         // M-274: URL 2000자 초과 시 경고(일부 환경에서 링크 단축기 파손)
         if (url.length > 2000) showToast("세트 크기가 커 일부 환경에서 링크가 깨질 수 있어요");
-        navigator.clipboard.writeText(url).then(() => {
-          b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500);
-          window.accAnnounce?.('링크가 복사됐어요');
-        }).catch(() => { prompt("링크를 복사해 주세요:", url); });
-      } catch { alert("링크 생성에 실패했어요."); }
+        const done = () => { b.textContent = "✓"; setTimeout(() => { b.textContent = "🔗"; }, 1500); window.accAnnounce?.('링크가 복사됐어요'); showToast('링크가 복사됐어요'); };
+        const fallbackCopy = () => {  // FE-150: iOS WKWebView는 prompt() 차단 → execCommand 폴백 후 토스트 안내
+          try { const ta = document.createElement('textarea'); ta.value = url; ta.style.cssText = 'position:fixed;top:0;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok = document.execCommand('copy'); ta.remove(); if (ok) { done(); return; } } catch (_) {}
+          showToast('복사에 실패했어요. 링크를 길게 눌러 복사해주세요');
+        };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url).then(done).catch(fallbackCopy);
+        else fallbackCopy();
+      } catch { showToast("링크 생성에 실패했어요."); }  // FE-139: alert()는 WKWebView서 차단될 수 있어 토스트로
     });
     setsEl.querySelectorAll(".acc-set-del").forEach(b => b.onclick = e => {
       e.stopPropagation();
