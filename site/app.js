@@ -3384,7 +3384,7 @@ function _myReviewCard(r, prodMap) {
   const href = ent ? `category.html?cat=${ent.s}&brands=${encodeURIComponent(ent.b)}&q=${encodeURIComponent(ent.m)}` : null;
   const dt = fmtDate(r.created_at, { month: "long", day: "numeric" });
   const photo = safeHttps(r.image_urls && r.image_urls[0])
-    ? `<img src="${esc(safeHttps(r.image_urls[0]))}" alt="" loading="lazy" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : "";
+    ? `<img src="${esc(safeHttps(r.image_urls[0]))}" alt="" loading="lazy" onerror="this.style.display='none'" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0">` : "";
   const body = (r.body || "").replace(/\n/g, " ");
   const title = (`${b} ${m}`).trim() || "상품";
   const inner = `<div style="display:flex;gap:12px">
@@ -4078,7 +4078,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
       const dt = fmtDate(p.created_at, { month: "long", day: "numeric" });
       const tagHtml = (p.tags || []).slice(0, 4).map(t => `<button type="button" class="log-tag log-tag-btn" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
       const preview = (p.body || "").slice(0, 80).replace(/\n/g, " ");
-      const imgHtml = safeHttps(p.image_url) ? `<img class="log-card-img" src="${esc(safeHttps(p.image_url))}" alt="" loading="lazy">` : "";  // M-233
+      const imgHtml = safeHttps(p.image_url) ? `<img class="log-card-img" src="${esc(safeHttps(p.image_url))}" alt="" loading="lazy" onerror="this.style.display='none'">` : "";  // M-233 · FE-138: 깨진 이미지 폴백
       const gs = p.gear_set_snapshot;
       const gsBadge = gs ? (() => { const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const cnt = (gs.items||[]).length; return `<div class="log-set-badge">🎒 ${esc(gs.name)}${cnt ? ` · ${cnt}개` : ""}${wTxt ? ` · ${wTxt}` : ""}</div>`; })() : "";
       const liked = _isPostLiked(p.id);
@@ -4160,7 +4160,7 @@ function openLogDetail(p) {
       <span class="log-date">${dt}</span>
     </div>
     <h2 style="font-size:18px;font-weight:700;margin:0 0 12px;line-height:1.4">${esc(p.title)}</h2>
-    ${safeHttps(p.image_url) ? `<img src="${esc(safeHttps(p.image_url))}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
+    ${safeHttps(p.image_url) ? `<img src="${esc(safeHttps(p.image_url))}" alt="" onerror="this.style.display='none'" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:14px">` : ""}
     <div style="font-size:14px;line-height:1.8;color:var(--fg);margin-bottom:16px">${body}</div>
     ${tagHtml ? `<div class="log-tags" style="margin-top:12px">${tagHtml}</div>` : ""}
     ${(() => { const gs = p.gear_set_snapshot; if (!gs) return ""; const w = gs.total_weight_g; const wTxt = w ? (w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`) : ""; const itemsHtml = (gs.items||[]).slice(0,5).map(x => `<span class="log-set-item">${esc(x.name)}${x.weight_g ? ` <span style="color:var(--muted)">${x.weight_g >= 1000 ? (x.weight_g/1000).toFixed(1)+"kg" : x.weight_g+"g"}</span>` : ""}</span>`).join(""); return `<div class="log-set-detail" style="margin-top:14px;padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--line)"><div style="font-size:12px;font-weight:600;margin-bottom:6px">🎒 ${esc(gs.name)}${wTxt ? ` · 총 ${wTxt}` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:4px">${itemsHtml}${(gs.items||[]).length > 5 ? `<span style="font-size:11px;color:var(--muted)">외 ${(gs.items||[]).length - 5}개</span>` : ""}</div></div>`; })()}
