@@ -4,6 +4,37 @@ if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
   window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));  // L-85: 절대경로 — item 서브경로에서 sw.js 404 방지
 }
 
+// FE-130: 왼쪽 가장자리 스와이프 뒤로가기 — PWA(standalone)·Capacitor 네이티브는 브라우저 크롬이 없어
+//   iOS 기본 가장자리 제스처가 사라진다. 일반 사파리는 OS 기본 제스처가 있으므로 적용 제외(충돌 방지).
+(function edgeSwipeBack() {
+  const isAppShell = window.matchMedia?.("(display-mode: standalone)").matches
+    || window.navigator.standalone === true
+    || window.Capacitor?.isNativePlatform?.() === true;
+  if (!isAppShell) return;
+
+  const EDGE = 30;    // 시작 인식 가장자리 폭(px) — iOS 기본과 유사
+  const DIST = 70;    // 뒤로가기 트리거 최소 가로 이동(px)
+  const SLOPE = 0.6;  // |dy| ≤ dx*SLOPE 일 때만 수평 스와이프로 인정(세로 스크롤과 구분)
+  let startX = 0, startY = 0, tracking = false;
+
+  window.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) { tracking = false; return; }
+    const t = e.touches[0];
+    tracking = t.clientX <= EDGE;
+    startX = t.clientX; startY = t.clientY;
+  }, { passive: true });
+
+  window.addEventListener("touchend", (e) => {
+    if (!tracking) return;
+    tracking = false;
+    if (history.length <= 1) return;  // 진입 첫 화면이면 무시(앱 종료 방지)
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (dx >= DIST && Math.abs(dy) <= dx * SLOPE) history.back();
+  }, { passive: true });
+})();
+
 // Phase 4: Capacitor 네이티브 UX — StatusBar·SplashScreen
 if (window.Capacitor?.isNativePlatform?.()) {
   // 웹 스플래시 오버레이: 네이티브 스플래시 숨기기 전 동적 애니메이션
