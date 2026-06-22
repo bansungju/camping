@@ -1,0 +1,6 @@
+# public 배포 레포 — site/ + .github 만 추적. 운영/문서 파일 제외(공개 위생)
+.claude/
+CLAUDE.md
+bug_report.md
+mobile/
+scripts/
