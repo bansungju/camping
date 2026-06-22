@@ -663,6 +663,7 @@ function showToast(msg, duration) {
   let t = document.getElementById("app-toast");
   if (!t) {
     t = document.createElement("div"); t.id = "app-toast";
+    t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); t.setAttribute("aria-atomic", "true");  // UXUI-008: 스크린리더에 토스트 메시지 전달(배너·sortbar와 동일 패턴)
     // L-377: GNB 비활성 상태에선 bottom:80px가 불필요한 여백 → GNB 높이 변수 기반(없으면 24px)으로 계산.
     // FE-131: white-space:nowrap 제거 + 줄바꿈 허용(word-break:keep-all) → 긴 한글 메시지 잘림 방지
     t.style.cssText = "position:fixed;bottom:calc(24px + var(--gnb-height, 0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:16px;font-size:13px;font-weight:600;line-height:1.45;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:normal;word-break:keep-all;max-width:min(90vw,360px);text-align:center";

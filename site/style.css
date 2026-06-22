@@ -13,7 +13,7 @@
 [data-theme="dark"]{
   color-scheme:dark;  /* FE-119 */
   --bg:#121212; --card:#1e1e1e; --card2:#2a2a2a; --line:#2e2e2e;
-  --txt:#f0f0f0; --muted:#9a9a9e; --faint:#6a6a70;
+  --txt:#f0f0f0; --muted:#9a9a9e; --faint:#888890;  /* UXUI-005: #6a6a70(대비 ~3.1:1)→#888890 — 다크 bg/card 위 WCAG AA 4.5:1 충족 */
   --accent:#3d9e68; --accent-d:#2f7a4e;
   --ok:#22c55e; --ref:#6b6b70; --outer:#f59e0b; --none:#4a4a50;
   --gA:#22c55e; --gB:#eab308; --gL:#f87171;
@@ -23,7 +23,7 @@
   --header-bg:rgba(18,18,18,.88); --tabbar-bg:rgba(30,30,30,.96);
 }
 /* FE-122·123·149·154: 다크 테마 하드코딩 색상 오버라이드(라이트 값은 그대로 보존) */
-[data-theme="dark"] .pmimg,[data-theme="dark"] .recard-thumb,[data-theme="dark"] .hot-card-img{background:var(--card2)}
+[data-theme="dark"] .pmimg,[data-theme="dark"] .recard-thumb,[data-theme="dark"] .hot-card-img,[data-theme="dark"] .pli-thumb,[data-theme="dark"] .sres-thumb,[data-theme="dark"] .rcard .rthumb{background:var(--card2)}  /* UXUI-017·025: 라이트 #fafafa 하드코딩 썸네일 다크 오버라이드(.pli-thumb·.sres-thumb·.rthumb 추가 — 기존 누락분) */
 [data-theme="dark"] .opsbar{background:#3a2f10;border-bottom-color:#5e4600;color:#f0d896}
 [data-theme="dark"] .opsbar button{background:#f0d896;color:#2a2000}
 [data-theme="dark"] .opsbar button:hover{background:#e0c47a}
@@ -41,6 +41,8 @@ body{margin:0;background:var(--bg);color:var(--txt);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo",sans-serif;
   line-height:1.5}
 a{color:inherit;text-decoration:none}
+/* UXUI-051: 다크/라이트 전환 시 대형 표면 색 깜빡임 완화(기존 transition 미정의 요소만 — .pli/.card 등 충돌 방지). reduced-motion에서 자동 무효화(아래 미디어쿼리) */
+body,header.top,.bottom-nav,.tabbar,.pmbox{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
 .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
 header.top{border-bottom:1px solid var(--line);padding:max(18px,env(safe-area-inset-top)) 0 18px 0;position:sticky;top:var(--banner-h,0px);
   background:var(--header-bg);backdrop-filter:blur(10px);z-index:10}
@@ -123,7 +125,7 @@ img{-webkit-user-select:none;user-select:none}
 .set-slot.on{opacity:1}
 /* 세트 수량 컨트롤 */
 .qty-ctrl{display:flex;align-items:center;gap:4px;justify-content:flex-end}
-.qty-ctrl button{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.qty-ctrl button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}  /* UXUI-007: 22px→34px 오탭 감소(±버튼 인접이라 44 대신 34로 겹침 방지) */
 .qty-ctrl button:disabled{opacity:.28;cursor:not-allowed}
 .qty-num{font-size:13px;font-weight:700;min-width:16px;text-align:center}
 /* 검색 자동완성 하이라이트 (M-24) + 카운트 푸터 (M-25) */
@@ -220,7 +222,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-formbox{margin-bottom:12px}
 .pmrv-form{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--card2,var(--card));border:1px solid var(--line);border-radius:10px}
 .pmrv-rate{display:flex;align-items:center;gap:2px}
-.pmrv-star{border:0;background:none;font-size:24px;line-height:1;color:var(--line);cursor:pointer;padding:0 1px;transition:color .1s}
+.pmrv-star{border:0;background:none;font-size:24px;line-height:1;color:var(--line);cursor:pointer;padding:7px 5px;transition:color .1s}  /* UXUI-004: padding 0 1px→7px 5px — 탭 타겟 ~26px→~38px(별 5개 한 줄 유지) */
 .pmrv-star.on{color:#f5a623}
 .pmrv-rate-hint{margin-left:8px;font-size:12px;color:var(--muted)}
 .pmrv-ta{width:100%;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--fg);box-sizing:border-box}
@@ -233,7 +235,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-thumbs{display:flex;flex-wrap:wrap;gap:8px}
 .pmrv-thumb{position:relative;width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .pmrv-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.pmrv-thumb-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pmrv-thumb-x{position:absolute;top:2px;right:2px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}  /* UXUI-003: 18→24px */
+.pmrv-thumb-x::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px}  /* UXUI-003: 보이는 크기 유지하면서 탭 영역 확대(54px 썸네일 내라 34로 제한) */
 .pmrv-addphoto{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:var(--accent);border:1.5px dashed var(--accent);border-radius:9px;padding:8px 12px;cursor:pointer}
 .pmrv-photohint{color:var(--muted);font-weight:400;font-size:11px}
 
@@ -287,6 +290,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;
   padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
 .pchip:hover{border-color:var(--accent);color:var(--txt)}
+.pchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}  /* UXUI-020: 키보드 탐색 시 현재 칩 위치 가시화 */
 .pchip.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 .pchip .pe{font-size:15px}
 /* 추천 섹션 */
@@ -380,13 +384,13 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .dslider-track{position:relative;height:4px;background:var(--line);border-radius:4px;margin:10px 0 6px}
 .dslider-fill{position:absolute;height:100%;background:var(--accent);border-radius:4px;pointer-events:none}
 /* 듀얼 레인지: input은 이벤트 통과(none), thumb만 받음(auto) → 양쪽 손잡이 독립 조작 */
-.dsl-input{position:absolute;top:6px;left:0;width:100%;height:20px;margin:0;padding:0;background:transparent;
+.dsl-input{position:absolute;top:4px;left:0;width:100%;height:24px;margin:0;padding:0;background:transparent;  /* UXUI-022: thumb 24px 수용(중심 유지: top 6→4, height 20→24) */
   -webkit-appearance:none;appearance:none;pointer-events:none}
 .dsl-input::-webkit-slider-runnable-track{background:transparent;border:none}
 .dsl-input::-moz-range-track{background:transparent;border:none}
-.dsl-input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:18px;height:18px;
-  border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
-.dsl-input::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#fff;
+.dsl-input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:24px;height:24px;
+  border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}  /* UXUI-022: 18→24px — 핸들 겹침 시 그립 확보 */
+.dsl-input::-moz-range-thumb{pointer-events:auto;width:24px;height:24px;border-radius:50%;background:#fff;
   border:2px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
 .dslider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600;margin-top:2px;line-height:1.2}
 /* 셀렉트(브랜드 더보기·정렬) */
@@ -499,6 +503,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pli-wish{position:absolute;top:5px;left:5px;z-index:2;width:28px;height:28px;border:0;border-radius:50%;
   background:rgba(255,255,255,.85);color:var(--faint);font-size:16px;line-height:1;cursor:pointer;padding:0;
   box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s ease,color .12s ease}
+.pli-wish::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%}  /* UXUI-001: 28px 하트 시각 유지하며 탭 타겟 44px 확보 */
 .pli-wish:hover{color:var(--accent);transform:scale(1.12)}
 .pli-wish.on{color:var(--accent)}
 /* 세트 선택 모달 */
@@ -845,7 +850,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .bnav-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;line-height:1}
 .bnav-icon svg{width:24px;height:24px;display:block}
 .bnav-item.on .bnav-icon svg{stroke-width:2}
-.bnav-label{font-size:10px;font-weight:600;line-height:1}
+.bnav-label{font-size:11px;font-weight:600;line-height:1}  /* UXUI-027: 10→11px 가독성 */
 @media(min-width:640px){.bottom-nav{display:none}}
 /* 세트 무게 목표 프로그레스바 */
 .set-goal-bar-wrap{margin-top:5px;display:flex;align-items:center;gap:8px}
