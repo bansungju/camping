@@ -1,7 +1,7 @@
 /* 장비의 숲 — 서비스워커 (오프라인 + 빠른 로딩)
    CACHE 이름의 __BUILD__는 stamp_version.py가 app.js+style.css 해시로 자동 치환.
    → 내용이 바뀌면 캐시명이 바뀌어 옛 캐시가 폐기된다(구버전 잔류 방지). */
-const CACHE = "camping-0d5ee713";
+const CACHE = "camping-b38a8693";
 
 // 앱 셸 — 버전쿼리 없는 정적 진입점들(버전 붙은 app.js/style.css는 런타임 캐싱이 잡음)
 const SHELL = [
@@ -68,12 +68,11 @@ self.addEventListener("fetch", (e) => {
   // 자산·데이터: 캐시 우선 + 백그라운드 갱신(stale-while-revalidate)
   e.respondWith((async () => {
     const cached = await caches.match(req);
-    const fetching = fetch(req).then((net) => {
+    const fetching = fetch(req).then(async (net) => {
       // 리다이렉트 응답은 캐싱 금지 (H-28) — 캐시 히트 시 redirect 루프 방지
       if (net && net.ok && !net.redirected) {
-        const clone = net.clone();
-        // H-85: 캐시 쓰기 Promise를 waitUntil로 잡아 SW 조기 종료로 인한 갱신 누락 방지
-        e.waitUntil(caches.open(CACHE).then((c) => c.put(req, clone)));
+        const c = await caches.open(CACHE);
+        await c.put(req, net.clone());   // FE-174: 캐시 쓰기까지 fetching에 포함 → waitUntil(fetching)이 완료 보장
       }
       return net;
     }).catch((err) => {
@@ -81,6 +80,10 @@ self.addEventListener("fetch", (e) => {
       console.warn("[SW] 백그라운드 갱신 실패:", req.url, err);
       return null;
     });
+    // FE-174: 캐시히트 시 `return cached`로 respondWith가 즉시 settle되면 이벤트가 비활성화돼,
+    //   fetching.then 내부에서 호출하던 waitUntil 등록이 무시된다(iOS에서 SW 조기 종료 → 백그라운드 갱신 누락).
+    //   waitUntil(fetching)을 동기적으로 등록해 네트워크 갱신·캐시 쓰기 완료까지 SW 생존을 보장.
+    e.waitUntil(fetching);
     return cached || (await fetching) || new Response("", { status: 504 });
   })());
 });

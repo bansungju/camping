@@ -115,6 +115,7 @@ export async function savePushToken(token, platform) {
 
 // 네이티브 앱에서 푸시 권한 요청 + 토큰 등록. 웹/미설치 환경에선 조용히 no-op.
 // (Push Notifications capability·plugin 동기화가 안 됐으면 catch로 무시)
+let _pushListenersAdded = false  // FE-175: 중복 호출 시 addListener 누적 방지(모듈 1회 등록)
 export async function registerNativePush() {
   if (!window.Capacitor?.isNativePlatform?.()) return
   try {
@@ -126,14 +127,18 @@ export async function registerNativePush() {
     if (!PushNotifications) return
     const perm = await PushNotifications.requestPermissions()
     if (perm.receive !== 'granted') return
-    // 리스너를 register() 전에 등록 — 토큰 이벤트 유실 방지
-    await PushNotifications.addListener('registration', async (t) => {  // FE-033·044: await + 에러 로깅(미await fire-and-forget로 토큰 저장 실패 무음 방지)
-      const { error } = await savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
-      if (error) console.error('[push] 토큰 저장 실패:', error.message || error)
-    })
-    await PushNotifications.addListener('registrationError', (e) => {
-      console.error('[push] APNs 등록 실패:', e?.error || e)
-    })
+    // 리스너를 register() 전에 등록 — 토큰 이벤트 유실 방지.
+    // FE-175: 리스너는 모듈당 1회만 등록(중복 호출 시 registration 이벤트가 N개 리스너를 깨워 savePushToken N회 중복 실행).
+    if (!_pushListenersAdded) {
+      _pushListenersAdded = true
+      await PushNotifications.addListener('registration', async (t) => {  // FE-033·044: await + 에러 로깅(미await fire-and-forget로 토큰 저장 실패 무음 방지)
+        const { error } = await savePushToken(t.value, window.Capacitor.getPlatform?.() || 'ios')
+        if (error) console.error('[push] 토큰 저장 실패:', error.message || error)
+      })
+      await PushNotifications.addListener('registrationError', (e) => {
+        console.error('[push] APNs 등록 실패:', e?.error || e)
+      })
+    }
     await PushNotifications.register()
   } catch (e) { console.warn('[push] 등록 건너뜀:', e?.message || e) }
 }

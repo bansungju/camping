@@ -29,7 +29,7 @@
   <p>로그인 처리 중입니다…</p>
 </div>
 <script type="module">
-  import { supabase } from './supabaseClient.js?v=69398431'
+  import { supabase } from './supabaseClient.js?v=2c2c2f38'
 
   // M-161: iOS 14 Safari는 top-level await 미지원 → async IIFE로 감싸기
   ;(async () => {
@@ -78,7 +78,19 @@
   }
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    // FE-176: 네트워크 지연 시 exchangeCodeForSession이 무한 대기 → 스피너 영구 고착.
+    //   implicit flow(else)와 동일하게 15초 타임아웃 가드 후 에러 화면으로 복귀.
+    let xres
+    try {
+      xres = await Promise.race([
+        supabase.auth.exchangeCodeForSession(code),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+      ])
+    } catch (_) {
+      location.replace('./account.html?auth_error=1&err=timeout')
+      return
+    }
+    const { error } = xres
     if (error) {
       const msg = encodeURIComponent(error.message || error.status || 'unknown')
       location.replace(`./account.html?auth_error=1&err=${msg}`)

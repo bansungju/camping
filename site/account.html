@@ -138,7 +138,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=ce6745de"></script>
+<script src="app.js?v=154d0901"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -149,10 +149,14 @@
   };
 
   // L-37: 찜 전체 삭제 버튼
-  document.getElementById('wish-clear-all')?.addEventListener('click', () => {
+  document.getElementById('wish-clear-all')?.addEventListener('click', async () => {
     const count = typeof getWish === 'function' ? getWish().length : 0;
     if (!count) return;
-    if (!confirm(`찜한 상품 ${count}개를 모두 해제할까요?`)) return;
+    // UXUI-019: window.confirm()은 iOS PWA/WKWebView에서 차단 → uiConfirm(커스텀 모달)로 대체
+    const okToClear = typeof uiConfirm === 'function'
+      ? await uiConfirm(`찜한 상품 ${count}개를 모두 해제할까요?`, { ok: '전체 해제', danger: true })
+      : confirm(`찜한 상품 ${count}개를 모두 해제할까요?`);
+    if (!okToClear) return;
     if (typeof setWish === 'function') { setWish([]); if (window.onWishChange) window.onWishChange([]); }  // M-213: 원격 찜도 초기화
     if (typeof renderAccount === 'function') renderAccount();
     window.accAnnounce?.('찜한 상품 전체 해제됐어요');
@@ -206,7 +210,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=69398431'
+} from './supabaseClient.js?v=2c2c2f38'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -449,7 +453,7 @@ if (_isApp) {
     //   window.Capacitor.Plugins.App 은 네이티브 이벤트 브리지에 직접 연결돼 있어 확실히 동작한다.
     let App = window.Capacitor?.Plugins?.App
     let Browser = window.Capacitor?.Plugins?.Browser
-    if (!Browser) { try { ({ Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser/dist/esm/index.js')) } catch (_) {} }
+    if (!Browser) { try { ({ Browser } = await import('https://cdn.jsdelivr.net/npm/@capacitor/browser@8/dist/esm/index.js')) } catch (_) {} }  /* FE-172: 메이저 버전 고정(@latest 파괴적 업데이트 시 browserFinished 미수신·로그인 고착 차단 — 나머지 import와 일치) */
     if (!App) {
       console.error('[oauth] App plugin unavailable — appUrlOpen 등록 실패')
       return
@@ -549,7 +553,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=69398431')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=2c2c2f38')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)
