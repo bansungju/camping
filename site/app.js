@@ -2536,7 +2536,9 @@ function openProduct(m) {
     btn.addEventListener("blur", hideTip);
     btn.onclick = e => {
       e.stopPropagation();
-      _tipBubble.style.display === "block" ? hideTip() : showTip(btn);
+      // FE-152: iOS는 tap 시 focus(showTip)→click 순으로 발생. 토글이면 click이 방금 뜬 버블을 즉시 닫아
+      //   툴팁이 깜빡이고 사라진다. click은 항상 showTip(닫기는 바깥 영역 탭=pmbox click이 담당).
+      showTip(btn);
     };
   });
   modal.querySelector(".pmbox").addEventListener("click", hideTip);
@@ -2674,13 +2676,16 @@ function openReviewDetail(r) {
   document.addEventListener("keydown", onKey, true);
 }
 
+let _rvGen = 0;  // FE-034: loadReviews 동시 호출 경합 가드(스테일 응답이 신규 후기를 덮어쓰는 문제)
 async function loadReviews(modal, pcode) {
+  const gen = ++_rvGen;
   const listEl = modal.querySelector("#pmrv-list");
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
     const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
     const rv = await _fetchReviews(supabase, pcode);
+    if (gen !== _rvGen) return;  // FE-034: 더 최신 호출이 시작됐으면 이 응답은 폐기(신규 후기 사라짐 방지)
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
       if (rv.length) {
