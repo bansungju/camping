@@ -957,7 +957,7 @@ function showSetConfirm(setId) {
     <div class="sac-actions"><button type="button" class="sac-view">꾸러미 보기 ›</button></div>
     <div class="sac-bar" aria-hidden="true"><i></i></div>`;
 
-  const DUR = 2500; // 2~3초 자동소멸(AC1)
+  const DUR = 4500; // UXUI-031: 2.5→4.5초 — '꾸러미 보기' 탭할 시간 확보(터치는 hover 일시정지 미작동). 진행바도 DUR 연동.
   const dismiss = () => { clearTimeout(card._tid); card.classList.remove("on"); };
   const startTimer = () => { clearTimeout(card._tid); card._tid = setTimeout(dismiss, DUR); };
 
@@ -3430,11 +3430,11 @@ function openSetDetail(sid) {
     ${boardHtml}
     <table style="width:100%;border-collapse:collapse;margin-top:18px">
       <thead><tr>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted)">장비</th>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">무게</th>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">가격</th>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">수량</th>
-        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted)">구매</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:left;color:var(--muted);position:sticky;top:0;background:var(--card);z-index:1">장비</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted);position:sticky;top:0;background:var(--card);z-index:1">무게</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted);position:sticky;top:0;background:var(--card);z-index:1">가격</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted);position:sticky;top:0;background:var(--card);z-index:1">수량</th>
+        <th style="padding:6px 8px;border-bottom:2px solid var(--line);font-size:12px;text-align:right;color:var(--muted);position:sticky;top:0;background:var(--card);z-index:1">구매</th>
       </tr></thead>
       <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">장비가 없어요</td></tr>'}</tbody>
       <tfoot><tr>
