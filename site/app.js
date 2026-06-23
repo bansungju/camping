@@ -2770,15 +2770,16 @@ function wireReviews(modal, m, pcode) {
       e.preventDefault();
       const body = ta.value.trim();
       if (!rating) { showToast("별점을 선택해주세요"); return; }
-      if (body.length < 10) { showToast("후기는 10자 이상 입력해주세요"); return; }
+      if ([...body].length < 10) { showToast("후기는 10자 이상 입력해주세요"); return; }  // FE-121: 코드포인트 수로 검증(DB char_length 일치 — 이모지 .length 과대계수로 DB CHECK 위반 방지)
       const submitBtn = form.querySelector(".pmrv-submit");
       submitBtn.disabled = true;
+      const uploadedPaths = [];  // FE-099: 외부 catch에서도 정리 가능하도록 try 밖 선언
       try {
         const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=0cfa00cd");
         const { data: { user: u } } = await supabase.auth.getUser();
         if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
         // 사진 업로드(순차)
-        const urls = [], uploadedPaths = [];
+        const urls = [];
         if (photos.length) {
           submitBtn.textContent = "사진 올리는 중…";
           for (const f of photos) {
@@ -2811,6 +2812,8 @@ function wireReviews(modal, m, pcode) {
         reset();
         loadReviews(modal, pcode);
       } catch (_) {
+        // FE-099: 네트워크 예외 등으로 catch 진입 시에도 업로드된 사진 롤백(if-error 경로와 별개)
+        if (uploadedPaths.length) { try { const { removeUploadedImages } = await import("./supabaseClient.js?v=0cfa00cd"); await removeUploadedImages(uploadedPaths); } catch (__) {} }
         showToast("후기를 등록하지 못했어요.");
         submitBtn.disabled = false; submitBtn.textContent = "등록";
       }
@@ -3288,7 +3291,7 @@ async function renderHotSection(categories) {
       // 인덱스를 복원했으면 상세 직링크, 끝내 못 찾으면 카테고리 목록으로 폴백.
       const href = (idx >= 0 && m)
         ? `/item/${h.cat}/item-${idx}.html`
-        : `category.html?cat=${encodeURIComponent(h.cat)}&brands=${encodeURIComponent(h.brand)}`;
+        : `category.html?cat=${encodeURIComponent(h.cat)}&brands=${encodeURIComponent(h.brand)}&q=${encodeURIComponent(h.model)}`;  // FE-042: 모델명 q 추가 — 폴백 시 브랜드 전체가 아닌 해당 모델로 좁힘
       const rk = i < 3 ? ` rank-${i + 1}` : "";    // 1~3위만 금/은/동 색
       const tagTxt = Number(h.clicks) >= HOT_LOW_CLICK ? `이번주 ${Number(h.clicks)}회` : "이번주 인기";
       return `<a class="hot-card" href="${href}">
