@@ -112,6 +112,8 @@ if (window.Capacitor?.isNativePlatform?.()) {
       } catch (e) { console.warn('[splash] StatusBar 설정 실패:', e) }
     } catch (e) { console.warn('[splash] Capacitor 플러그인 로드 실패:', e) }
     try { await SplashScreen?.hide() } catch (e) { console.warn('[splash] SplashScreen.hide 실패:', e) }
+    // FE-070: 스플래시(녹색) 이후엔 실제 테마에 맞춰 상태바 동기화(부팅 1회 Dark 고정 해소)
+    syncStatusBar(localStorage.getItem('theme') === 'dark');
     // 최소 0.8초 보여준 뒤 페이드 아웃
     setTimeout(() => window.__hideSplash?.(), 800);
   })()
@@ -131,6 +133,18 @@ async function openExternal(url) {
   window.open(url, "_blank", "noopener");
 }
 
+// FE-070/071: StatusBar를 현재 테마와 동기화. (부팅 1회 Style.Dark 고정·setTheme 토글 미반영 문제 해소)
+//   Capacitor Style: Dark=밝은 텍스트(어두운 배경용) / Light=어두운 텍스트(밝은 배경용).
+//   setBackgroundColor는 Android 전용(iOS no-op) — iOS는 viewport-fit=cover로 헤더색이 비쳐 보임.
+async function syncStatusBar(dark) {
+  if (!window.Capacitor?.isNativePlatform?.()) return;
+  try {
+    const sb = await import('https://cdn.jsdelivr.net/npm/@capacitor/status-bar@8/dist/esm/index.js');
+    await sb.StatusBar.setStyle({ style: dark ? sb.Style.Dark : sb.Style.Light });
+    try { await sb.StatusBar.setBackgroundColor({ color: dark ? '#121212' : '#ffffff' }); } catch (_) {}  // FE-071: Android만 적용
+  } catch (_) {}
+}
+
 // 테마: 기본 라이트. 다크는 '내 정보 > 설정'에서 명시적으로 켤 때만 적용(prefers-dark 자동 추종 안 함).
 // 헤더 토글 버튼은 제거됨(.theme-toggle CSS도 display:none). 토글 UI는 account.html 설정 섹션이 담당.
 (function initTheme() {
@@ -142,6 +156,7 @@ window.setTheme = function (mode) {
   const dark = mode === "dark";
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
+  syncStatusBar(dark);   // FE-070: 테마 토글 시 상태바도 즉시 동기화
 };
 
 // PWA 설치 유도 배너
