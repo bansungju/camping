@@ -1445,7 +1445,8 @@ async function setupSearchPage() {
     _ofsLoading = true;
     try {
       const catData = await getJSON(`data/${x.s}.json`);
-      const prod = (catData.models || []).find(p => p.brand === x.b && p.model === x.m);
+      // FE-040: brand+model만 비교하면 다인원(1인/2인) 변형에서 첫 변형이 잡혀 오모달. capacity까지 일치시킴.
+      const prod = (catData.models || []).find(p => p.brand === x.b && p.model === x.m && String(p.capacity ?? "") === String(x.cap ?? ""));
       if (prod) {
         // M-262: 직전 검색모달이 STATE를 바꿔둔 채 닫히지 않았으면 먼저 복원 → prev가 원본을 가리키게(중첩 오염 방지)
         const _pmOld = document.getElementById("pmodal");
@@ -3776,7 +3777,8 @@ function renderAccount() {
         card.dataset.loading = "1";
         try {
           const catJson = await getJSON(`data/${wx.s}.json`);  // M-357/M-408 + BE-073: getJSON 경유(네이티브 라이브 fetch·오프라인 폴백)
-          const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m);
+          // FE-039: capacity까지 일치(다인원 변형 오모달 방지)
+          const prod = (catJson.models || []).find(p => p.brand === wx.b && p.model === wx.m && String(p.capacity ?? "") === String(wx.cap ?? ""));
           if (prod) {
             const prevSlug = STATE.slug, prevData = STATE.data;
             STATE.slug = wx.s; STATE.data = catJson;
