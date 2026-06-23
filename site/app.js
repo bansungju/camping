@@ -559,7 +559,7 @@ function thumbCell(img, name, tint, icon, imgCls, noCls) {
   imgCls = imgCls || "pli-thumb"; noCls = noCls || "pli-noimg";
   if (!img) return `<div class="${noCls}" style="background:${tint}">${icon}<span>이미지 준비중</span></div>`;
   const sz = _THUMB_SZ[imgCls]; const szAttr = sz ? ` width="${sz}" height="${sz}"` : "";
-  const loadAttr = (imgCls === "recard-thumb" || imgCls === "hot-card-img") ? "eager" : "lazy";
+  const loadAttr = (imgCls === "hot-card-img") ? "eager" : "lazy";  // FE-148: recard-thumb(최근 본 상품)은 뷰포트 밖이라 lazy로 — 불필요한 eager 요청 제거
   // BE-079: 네이티브 앱은 상품 이미지를 번들에 넣지 않으므로 라이브 gear-forest.com에서 로드.
   return `<img class="${imgCls}" src="${esc(gfAsset(img))}" alt="${esc(name)}" loading="${loadAttr}"${szAttr}` +
     ` data-tint="${tint}" data-icon="${icon}" data-fcls="${noCls}" onerror="thumbFallback(this)">`;
@@ -693,7 +693,7 @@ function showToast(msg, duration) {
     t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); t.setAttribute("aria-atomic", "true");  // UXUI-008: 스크린리더에 토스트 메시지 전달(배너·sortbar와 동일 패턴)
     // L-377: GNB 비활성 상태에선 bottom:80px가 불필요한 여백 → GNB 높이 변수 기반(없으면 24px)으로 계산.
     // FE-131: white-space:nowrap 제거 + 줄바꿈 허용(word-break:keep-all) → 긴 한글 메시지 잘림 방지
-    t.style.cssText = "position:fixed;bottom:calc(24px + var(--gnb-height, 0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:16px;font-size:13px;font-weight:600;line-height:1.45;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:normal;word-break:keep-all;max-width:min(90vw,360px);text-align:center";
+    t.style.cssText = "position:fixed;bottom:calc(24px + var(--gnb-height, 0px) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 18px;border-radius:16px;font-size:13px;font-weight:600;line-height:1.45;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:normal;word-break:keep-all;max-width:min(90vw,360px);text-align:center";
     document.body.appendChild(t);
   }
   clearTimeout(t._tid);
@@ -2055,7 +2055,7 @@ function buildFilters(d, star) {
       document.body.appendChild(backdrop);
     }
     const tg = document.getElementById("filtoggle");
-    const openSheet = () => { aside.classList.add("open"); backdrop.classList.add("on"); document.body.classList.add("filter-sheet-lock"); tg.setAttribute("aria-expanded", "true"); const fx = aside.querySelector(".fsheet-x"); if (fx) fx.focus(); };  // FE-147: 열 때 시트 내부로 포커스 이동
+    const openSheet = () => { aside.scrollTop = 0; aside.classList.add("open"); backdrop.classList.add("on"); document.body.classList.add("filter-sheet-lock"); tg.setAttribute("aria-expanded", "true"); const fx = aside.querySelector(".fsheet-x"); if (fx) fx.focus(); };  // FE-147: 열 때 시트 내부로 포커스 이동 · FE-159: 재열기 시 스크롤 상단 초기화
     const closeSheet = () => { aside.classList.remove("open"); backdrop.classList.remove("on"); document.body.classList.remove("filter-sheet-lock"); tg.setAttribute("aria-expanded", "false"); if (tg) tg.focus(); };  // FE-146: 닫을 때 필터 토글로 포커스 복귀
     tg.onclick = openSheet;
     backdrop.onclick = closeSheet;
