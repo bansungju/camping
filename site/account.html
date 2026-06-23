@@ -138,7 +138,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=6e5b2b38"></script>
+<script src="app.js?v=1f490e89"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -350,7 +350,8 @@ function renderNicknameModal() {
   const setHint = (msg, ok) => { hint.textContent = msg; hint.style.color = ok ? '#2f7a4e' : '#e53e3e' }
   const enable  = (on) => { save.disabled = !on; save.style.opacity = on ? '1' : '.5' }
 
-  input.addEventListener('input', () => {
+  input.addEventListener('input', (e) => {
+    if (e && e.isComposing) return   // FE-100: 한글 IME 조합 중엔 검증 보류(조합 중간 자모로 형식오류 깜빡임 방지) — compositionend 후 input에서 검증
     const v = input.value.trim()
     enable(false); lastChecked = null
     clearTimeout(debounce)
@@ -665,7 +666,8 @@ function renderProfile(profile) {
   cancel.addEventListener('click', () => { form.style.display = 'none' })
 
   let debounce, lastChecked = null
-  input.addEventListener('input', () => {
+  input.addEventListener('input', (e) => {
+    if (e && e.isComposing) return   // FE-100: 한글 IME 조합 중 검증 보류(닉네임 변경 폼)
     const v = input.value.trim()
     setOk(false); lastChecked = null; clearTimeout(debounce)
     if (!v) { hint.textContent = ''; return }

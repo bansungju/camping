@@ -641,22 +641,32 @@ function _paintWishBtn(key, on) {
 }
 // toggleWishWithHint: 기존 호출부(카테고리/상세 뷰)용. 힌트 대신 requireLogin 게이트.
 // M-174/M-305/M-372: _gAuthReady 미완료 시 toggleWish와 동일한 authReady() 대기 경로 사용.
+// UXUI-015: 찜 토글 결과 토스트. 전(wasIn)/후(inWish) 비교라 500 상한 차단(미변경) 시 중복/오메시지 없음.
+function _wishToggleToast(wasIn, key) {
+  const nowIn = inWish(key);
+  if (!wasIn && nowIn) showToast("찜 목록에 추가했어요");
+  else if (wasIn && !nowIn) showToast("찜을 해제했어요");
+}
 function toggleWishWithHint(item, btn) {
   function _gate() {
     requireLogin({ action: 'toggleWish', params: item, returnTo: location.href });
   }
   if (window._gAuthReady) {
     if (!window.isLoggedIn()) { _gate(); return inWish(item.key); }
+    const wasIn = inWish(item.key);
     const added = _execToggleWish(item);
     if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
+    _wishToggleToast(wasIn, item.key);   // UXUI-015: 찜 처리 결과 토스트(전/후 비교 — cap 미변경 시 미표시)
     return added;
   }
   // auth 초기화 중 — 완료 후 결정
   window.authReady().then(() => {
     if (window.isLoggedIn()) {
+      const wasIn = inWish(item.key);
       const added = _execToggleWish(item);
       _paintWishBtn(item.key, added);
       if (btn) { btn.classList.toggle("on", added); btn.setAttribute("aria-pressed", String(added)); }
+      _wishToggleToast(wasIn, item.key);
     } else _gate();
   });
   return inWish(item.key);
@@ -908,7 +918,7 @@ function showSetConfirm(setId) {
   const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
   const tp = s.items.reduce((sum, x) => sum + (x.p || 0) * (x.qty || 1), 0);
   const wStr = tw >= 1000 ? `${(tw / 1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
-  const pStr = tp > 0 ? `${tp.toLocaleString()}원` : null;
+  const pStr = tp > 0 ? `${tp.toLocaleString('ko-KR')}원` : null;
   const meta = [`${s.items.length}개 장비`, wStr && `⚖️ ${wStr}`, pStr && `💰 ${pStr}`].filter(Boolean).join(" · ");
 
   let card = document.getElementById("set-added-card");
@@ -1048,7 +1058,7 @@ async function renderHub() {
   // 헤드라인 카운트를 앱 전체와 동일하게 dedup 모델 기준으로 통일(변형 포함 raw와 불일치 해소)
   const totalModels = m.categories.reduce((s, c) => s + (c.count || 0), 0);
   document.getElementById("lead").innerHTML =
-    `<b>${totalModels.toLocaleString()}개</b> 모델 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
+    `<b>${totalModels.toLocaleString('ko-KR')}개</b> 모델 · ${m.categories.length}개 카테고리를 정량 스펙으로 별점 비교`;
 
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
 
@@ -1105,7 +1115,7 @@ async function renderHub() {
     <a class="card" href="category.html?cat=${c.slug}">
       <div class="icon" style="background:${catTint(c.name)}">${catIcon(c.name)}</div>
       <div class="ct"><h3>${c.name}</h3>${gradeBadge(c.grade)}</div>
-      <div class="meta">${c.count.toLocaleString()}개 모델</div>
+      <div class="meta">${c.count.toLocaleString('ko-KR')}개 모델</div>
       <div class="metrics">
         ${c.star_metrics.map(s => OPS
           ? `<span class="chip${c.limits.includes(s) ? " lim" : ""}" title="${c.limits.includes(s) ? s + ' — 데이터 부족(표본 적음)' : s}">${s}${c.limits.includes(s) ? " ⚠" : ""}</span>`
@@ -1454,7 +1464,7 @@ async function setupSearchPage() {
           <div class="pli-body">
             <div class="pli-top">${esc(x.b)}${x.cap != null ? ` · ${x.cap}인` : ""}<span class="pli-cat" style="color:var(--muted);font-size:11px;margin-left:6px">${esc(x.c || "")}</span></div>
             <div class="pli-name">${esc(x.m)}</div>
-            <div class="pli-price">${x.p ? x.p.toLocaleString() + "원~" : ""}</div>
+            <div class="pli-price">${x.p ? x.p.toLocaleString('ko-KR') + "원~" : ""}</div>
           </div>
           <button class="pli-wish${wished ? " on" : ""}" data-si="${i}" aria-label="찜" aria-pressed="${wished}">${BOOKMARK_SVG}</button>
         </div>`;
@@ -1648,10 +1658,10 @@ function updateLeadText(d) {
   if (STATE.campStyle) {
     const sm = STYLE_META.find(s => s.key === STATE.campStyle);
     // H-132: campStyle이 STYLE_META에 없는 키면 sm=undefined → sm.icon TypeError 크래시 → 스타일 표기 생략.
-    if (!sm) { leadEl.textContent = `${d.count.toLocaleString()}개 모델`; return; }
-    leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · <span style="color:var(--accent);font-weight:700">${sm.icon} ${sm.label} 기준</span> — 관련 스펙 슬라이더를 활용해보세요`;
+    if (!sm) { leadEl.textContent = `${d.count.toLocaleString('ko-KR')}개 모델`; return; }
+    leadEl.innerHTML = `${d.count.toLocaleString('ko-KR')}개 모델 · <span style="color:var(--accent);font-weight:700">${sm.icon} ${sm.label} 기준</span> — 관련 스펙 슬라이더를 활용해보세요`;
   } else {
-    leadEl.innerHTML = `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
+    leadEl.innerHTML = `${d.count.toLocaleString('ko-KR')}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
   }
 }
 
@@ -1683,7 +1693,7 @@ async function renderBrowse() {
   const crumb = document.getElementById("crumbName"); if (crumb) crumb.textContent = "탐색";
   document.getElementById("title").textContent = "무엇을 찾으세요?";
   const lead = document.getElementById("lead");
-  if (lead) lead.innerHTML = `<b>${m.categories.reduce((s,c)=>s+(c.count||0),0).toLocaleString()}개</b> 모델 · ${m.categories.length}개 카테고리`;
+  if (lead) lead.innerHTML = `<b>${m.categories.reduce((s,c)=>s+(c.count||0),0).toLocaleString('ko-KR')}개</b> 모델 · ${m.categories.length}개 카테고리`;
   // 상단 검색창(홈 검색과 동일 동작) — 카테고리 내 검색용 #q 입력은 숨김
   const tb = document.querySelector(".toolbar"); if (tb) tb.style.display = "none";
   const sc = document.getElementById("sortchips"); if (sc) sc.innerHTML = "";
@@ -1697,7 +1707,7 @@ async function renderBrowse() {
     <a class="card" href="category.html?cat=${c.slug}">
       <div class="icon" style="background:${catTint(c.name)}">${catIcon(c.name)}</div>
       <div class="ct"><h3>${c.name}</h3>${OPS ? gradeBadge(c.grade) : ""}</div>
-      <div class="meta">${c.count.toLocaleString()}개 모델</div>
+      <div class="meta">${c.count.toLocaleString('ko-KR')}개 모델</div>
     </a>`).join("");
   renderCatNav("");
 }
@@ -1747,7 +1757,7 @@ async function renderCategory() {
   const _crumb = document.getElementById("crumbName"); if (_crumb) _crumb.textContent = d.name;  // M-352
   const shareUrl = `https://gear-forest.com/category.html?cat=${slug}`;
   const shareTitle = `${d.name} 비교 — 장비의 숲`;
-  const shareDesc = `${d.count.toLocaleString()}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다.`;
+  const shareDesc = `${d.count.toLocaleString('ko-KR')}개 모델을 정량 스펙으로 별점 비교. 실측값만 사용합니다.`;
   document.title = shareTitle;
   // OG / Twitter 메타 동적 업데이트 (SNS 공유 미리보기)
   [["og:title", shareTitle], ["og:description", shareDesc], ["og:url", shareUrl],
@@ -1772,14 +1782,19 @@ async function renderCategory() {
       catch (err) { if (err && err.name === "AbortError") return; }  // FE-092: 공유 취소 시 클립보드 폴백·거짓 ✓ 금지
     }
     try {
+      if (!navigator.clipboard?.writeText) throw new Error("no clipboard");
       await navigator.clipboard.writeText(shareTarget);
       const btn = document.getElementById("share-btn");
       btn.textContent = "✓"; btn.style.color = "var(--accent)";
       setTimeout(() => { btn.textContent = "🔗"; btn.style.color = ""; }, 2000);
-    } catch (_) {}
+      showToast("링크를 복사했어요 📋");   // UXUI-053: 아이콘 변경만으론 성공 여부 불명확 → 토스트
+    } catch (_) {  // FE-179: 무응답 → 수동 복사 폴백(prompt 차단 환경도 토스트로 안내)
+      try { window.prompt("아래 링크를 복사해 공유하세요", shareTarget); }
+      catch (__) { showToast("이 환경에서는 링크 복사를 지원하지 않아요"); }
+    }
   };
   document.getElementById("lead").innerHTML =
-    `${d.count.toLocaleString()}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
+    `${d.count.toLocaleString('ko-KR')}개 모델 · 같은 그룹 안 순위로 환산한 별점`;
   document.getElementById("legend").innerHTML = OPS ? GRADE_LEGEND : "";
 
   const star = d.metrics.filter(m => m.is_star);
@@ -1875,8 +1890,8 @@ function buildFilters(d, star) {
         <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${lo}" data-b="min" aria-label="가격 최솟값">
         <input class="dsl-input" type="range" min="${lo}" max="${hi}" step="${step}" value="${hi}" data-b="max" aria-label="가격 최댓값">
         <div class="dslider-labels">
-          <span class="dsl-val" data-b="min">${lo.toLocaleString()}원</span>
-          <span class="dsl-val" data-b="max">${hi.toLocaleString()}원</span>
+          <span class="dsl-val" data-b="min">${lo.toLocaleString('ko-KR')}원</span>
+          <span class="dsl-val" data-b="max">${hi.toLocaleString('ko-KR')}원</span>
         </div>
       </div></div>`);
     } // end else (M-570)
@@ -2085,7 +2100,7 @@ function buildFilters(d, star) {
     const fill = sl.querySelector(".dslider-fill");
 
     const fmtLabel = v => {
-      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isPrice) return (+v).toLocaleString('ko-KR') + "원";
       if (isWeight) return (+v).toFixed(1) + "kg";
       return (+(+v).toFixed(1)) + (sl.dataset.unit || "");   // L-312: 정수 스펙값 .0 제거
     };
@@ -2256,7 +2271,7 @@ function syncFilterUI() {
     const fill = sl.querySelector(".dslider-fill");
     const toDisplay = v => isWeight ? v / 1000 : v;
     const fmtLabel = v => {
-      if (isPrice) return (+v).toLocaleString() + "원";
+      if (isPrice) return (+v).toLocaleString('ko-KR') + "원";
       if (isWeight) return (+v).toFixed(1) + "kg";
       return (+(+v).toFixed(1)) + (sl.dataset.unit || "");   // L-312: 정수 스펙값 .0 제거
     };
@@ -3328,7 +3343,7 @@ function openSetDetail(sid) {
   const s = si >= 0 ? sets[si] : null;
   if (!s) return;
   const fmtW = g => g >= 1000 ? `${(g/1000).toFixed(1)}kg` : `${g}g`;
-  const fmtP = p => p ? p.toLocaleString() + "원" : "—";
+  const fmtP = p => p ? p.toLocaleString('ko-KR') + "원" : "—";
   const type = s.type || DEFAULT_SET_TYPE;
   const tw = s.items.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g * (x.qty || 1) : sum, 0);
   const tp = s.items.reduce((sum, x) => x.p ? sum + x.p * (x.qty || 1) : sum, 0);
@@ -3398,7 +3413,7 @@ function openSetDetail(sid) {
       <tfoot><tr>
         <td style="padding:8px 8px 0;font-size:13px;font-weight:700">합계</td>
         <td style="padding:8px 8px 0;font-size:13px;font-weight:700;text-align:right;color:var(--accent)">${tw ? fmtW(tw) : "—"}</td>
-        <td style="padding:8px 8px 0;font-size:13px;font-weight:700;text-align:right;color:var(--accent)">${tp ? tp.toLocaleString() + "원~" : "—"}</td>
+        <td style="padding:8px 8px 0;font-size:13px;font-weight:700;text-align:right;color:var(--accent)">${tp ? tp.toLocaleString('ko-KR') + "원~" : "—"}</td>
         <td></td>
         <td></td>
       </tr></tfoot>
@@ -3793,7 +3808,7 @@ function renderAccount() {
       const tw = setItems.reduce((sum, x) => x.weight_g != null ? sum + x.weight_g : sum, 0);
       const tp = setItems.reduce((sum, x) => sum + (x.p || 0), 0);
       const wStr = tw >= 1000 ? `${(tw/1000).toFixed(1)}kg` : tw > 0 ? `${tw}g` : null;
-      showToast(`"${setName}" 저장됨${wStr ? " · ⚖️ " + wStr : ""}${tp ? " · 💰 " + tp.toLocaleString() + "원" : ""}`, 3000);
+      showToast(`"${setName}" 저장됨${wStr ? " · ⚖️ " + wStr : ""}${tp ? " · 💰 " + tp.toLocaleString('ko-KR') + "원" : ""}`, 3000);
       bulkBtn.textContent = "✅ 세트 저장됨 — 마이페이지 세트 탭에서 확인";
       bulkBtn.disabled = true;
     };
