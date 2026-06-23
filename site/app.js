@@ -1321,6 +1321,9 @@ async function setupHomeSearch() {
         : (!brandHtml ? `<div class="sres-footer" role="presentation"><a href="category.html" style="color:var(--accent);text-decoration:none">📂 카테고리 탐색하기</a></div>` : ""));  // L-07 · L-117 role=presentation
     // 찜 버튼 이벤트
     box.querySelectorAll(".sres-wish").forEach(btn => {
+      // FE-132: 찜 버튼 탭이 input을 blur시키면 onblur의 150ms closeBox가 발화해 click과 경합(탭 씹힘).
+      //   pointerdown preventDefault로 포커스 이동(blur)을 막아 박스를 유지 → click이 안정적으로 처리.
+      btn.addEventListener("pointerdown", e => e.preventDefault());
       btn.onclick = e => {
         e.preventDefault(); e.stopPropagation();
         const x = hits[+btn.dataset.hi];
@@ -3119,7 +3122,7 @@ async function renderBrand() {
       : rows.length
       ? `<b>${rows.length}개</b> 모델 · ${cats.length}개 카테고리에 분포. 카테고리 제목을 누르면 그 카테고리에서 <b>${esc(bn)}</b>만 필터된 비교표로 이동.`
       : `<b>${esc(bn)}</b> 제품이 없습니다. 브랜드명을 확인하거나 위에서 다시 검색하세요.`;
-    document.getElementById("sections").innerHTML = cats.map(c => {
+    document.getElementById("sections").innerHTML = !bn ? "" : cats.map(c => {  // FE-037: 브랜드 미선택 시 '제품 없음' 오류 대신 빈 영역(아래 브랜드 칩이 선택 UI)
       const tint = catTint(c.name), icon = catIcon(c.name);
       const items = c.items.sort((a, b) => (a.p == null) - (b.p == null) || (a.p || 0) - (b.p || 0)).map(x =>
         `<a class="pli" href="category.html?cat=${x.s}&brands=${encodeURIComponent(bn)}&q=${encodeURIComponent(x.m)}">
