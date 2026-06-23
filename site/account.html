@@ -138,7 +138,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=d3cf12ba"></script>
+<script src="app.js?v=4d66c156"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -210,7 +210,7 @@ import {
   getProfile, isNicknameAvailable, setNickname, NICKNAME_RE,
   loadRemoteWishlist, saveRemoteWishlist, mergeWishlists,
   loadRemoteGearSets, upsertGearSet, deleteRemoteGearSet
-} from './supabaseClient.js?v=0cfa00cd'
+} from './supabaseClient.js?v=16a1dfbf'
 
 const section = document.getElementById('auth-section')
 // L-76: 세트 공유 URL 열람 중에는 배경 개인 데이터 표시 억제
@@ -238,7 +238,8 @@ const localSets = {
 }
 
 // M-517: 세트 내용 지문 (제목+아이템수+아이템명 조합)
-const _setFingerprint = s => `${s.title||''}|${(s.items||[]).length}|${(s.items||[]).map(x=>`${x.b||''}${x.m||''}`).join(',')}`
+// FE-045: cap(인원)도 지문에 포함 — 동일 제목·모델의 1인/2인 구성이 중복으로 오판되던 문제 방지
+const _setFingerprint = s => `${s.title||''}|${(s.items||[]).length}|${(s.items||[]).map(x=>`${x.b||''}${x.m||''}${x.cap==null?'':x.cap}`).join(',')}`
 
 // 로그인 직후 1회: 로컬↔원격 기어세트 병합
 async function syncGearSetsOnLogin(userId) {
@@ -251,10 +252,13 @@ async function syncGearSetsOnLogin(userId) {
   const remoteFp = new Set(remote.map(_setFingerprint))
   // upsert local-only sets (원격에 동일 내용이 없는 경우만)
   const toUpsert = local.filter(s => !s.remoteId && !remoteFp.has(_setFingerprint(s)))
+  let _setSyncFailed = false
   for (const s of toUpsert) {
     const id = await upsertGearSet(s, userId)
     if (id) s.remoteId = id
+    else _setSyncFailed = true   // FE-184: 세션 만료 등으로 null 반환 시 무음 실패 → 사용자 통보
   }
+  if (_setSyncFailed && typeof showToast === 'function') showToast('세트 동기화에 실패했어요. 다시 시도해주세요.')
   // 로컬에 동일 지문 세트가 있으면 remoteId만 연결
   const localFp = new Map(local.filter(s => !s.remoteId).map(s => [_setFingerprint(s), s]))
   for (const r of remote) {
@@ -308,7 +312,10 @@ async function syncWishlistOnLogin() {
   if (remote === null) { _wishSyncedUser = null; return }   // M-454/FE-031·052: 실패 시 비파괴 + 잠금 해제 → 다음 트리거에 재시도(잠금 채로 남으면 세션 내 onWishChange 영구 미등록)
   const merged = await backfillGfCodes(mergeWishlists(localWish.get(), remote))   // P0.5 gf_code 주입
   localWish.set(merged)
-  if (JSON.stringify(merged) !== JSON.stringify(remote)) await saveRemoteWishlist(merged)
+  // FE-188: merged는 async gap(loadRemote→backfill fetch) 시작 시점 캡처값. 그 사이 사용자가
+  //   찜을 추가하면 onWishChange 미등록 상태라 원격 누락 → 저장 직전 localStorage 최신값을 읽는다.
+  const _latest = localWish.get()
+  if (JSON.stringify(_latest) !== JSON.stringify(remote)) await saveRemoteWishlist(_latest)
   // H-128: onWishChange를 merge 완료 후 등록 — merge 전에 등록하면 그 사이 setWish 발화가
   //   병합 전 로컬 목록으로 원격을 덮어써 stale overwrite가 된다.
   window.onWishChange = _remoteWishSync   // app.js setWish가 호출 (FE-104: 실패 시 사용자 통보)
@@ -382,6 +389,13 @@ function renderNicknameModal() {
         return
       }
       const profile = await getProfile()
+      // FE-190: upsert 후에도 복제 지연 등으로 저장이 확정 안 됐을 수 있어 실제 반영을 재확인.
+      //   닉네임이 비었거나 입력값과 다르면 '성공' 처리하지 않고 재시도 안내(무음 미저장 고착 방지).
+      if (!profile || profile.nickname !== v) {
+        setHint('저장에 실패했어요. 잠시 후 다시 시도해주세요.', false)
+        save.textContent = '시작하기'; enable(true)
+        return
+      }
       renderProfile(profile)   // 성공 시 화면 교체 → 버튼 복구 불필요
       syncWishlistOnLogin()
       // M-123/L-150: 닉네임 설정 완료 후 세트 동기화
@@ -557,7 +571,7 @@ function renderLogin() {
       btn.disabled = true
       btn.innerHTML = '<span style="font-size:15px">로그인 중…</span>'
       if (!_isApp && location.hash && location.hash !== '#') sessionStorage.setItem('acc-return-hash', location.hash)
-      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=0cfa00cd')
+      const { signInWithApple, signInWithOAuth: _oAuth } = await import('./supabaseClient.js?v=16a1dfbf')
       const { error } = _isApp ? await signInWithApple() : await _oAuth('apple')
       if (error) {
         document.getElementById('auth-error').textContent = getErrorMessage(error)
@@ -582,7 +596,7 @@ function renderProfile(profile) {
     <div style="padding:20px 0 8px">
       <div style="display:flex;align-items:center;gap:14px">
         ${avatar
-          ? `<img src="${esc(avatar)}" referrerpolicy="no-referrer" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+          ? `<img src="${esc(avatar)}" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'🙂',style:'width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0'}))" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0">`
           : `<div style="width:48px;height:48px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🙂</div>`}
         <div style="min-width:0;flex:1">
           <div id="profile-nickname" style="font-weight:700;font-size:17px">${esc(nickname)}</div>
@@ -732,6 +746,8 @@ if (authErrorParam) {
 
 await initAuth(async (user, event) => {
   window._accUser = user || null
+  // FE-187: 토큰 자동 갱신(TOKEN_REFRESHED)은 동일 세션 — 이미 프로필이 렌더된 상태면 getProfile 재조회+전체 재렌더 생략(중복 쿼리·깜빡임 방지). 미렌더 상태면 정상 진행.
+  if (event === 'TOKEN_REFRESHED' && user && document.getElementById('profile-nickname')) return
   if (user && authErrorTimer) { clearTimeout(authErrorTimer); authErrorTimer = null }
   if (!user) {
     setSyncHint(false)

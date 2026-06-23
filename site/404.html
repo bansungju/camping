@@ -33,10 +33,20 @@
 <div id="not-found" style="display:none;text-align:center;padding:80px 20px">
   <div style="font-size:48px;margin-bottom:16px">🔍</div>
   <h1 style="font-size:22px;font-weight:700;margin:0 0 10px">상품을 찾을 수 없습니다</h1>
-  <p style="color:#6e6e73;font-size:14px;margin:0 0 28px">링크가 잘못됐거나 상품이 제거되었을 수 있어요.</p>
+  <p style="color:#6e6e73;font-size:14px;margin:0 0 28px">이 상품은 찾을 수 없어요. 비슷한 상품을 검색해보세요.</p>
   <a href="/index.html" style="display:inline-block;padding:12px 24px;background:#2f7a4e;color:#fff;border-radius:11px;font-size:15px;font-weight:700;text-decoration:none">홈으로 돌아가기</a>
   <span style="margin:0 12px;color:#d0d0d5">|</span>
+  <a href="/search.html" style="color:#2f7a4e;font-size:15px;font-weight:600;text-decoration:none">검색으로 찾기</a>
+  <span style="margin:0 12px;color:#d0d0d5">|</span>
   <a href="javascript:history.back()" style="color:#2f7a4e;font-size:15px;font-weight:600;text-decoration:none">뒤로 가기</a>
+  <!-- UXUI-085: 검색창 없는 정적 404의 탈출 경로 — 인기 카테고리 재탐색 칩 -->
+  <div style="margin:30px auto 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:340px">
+    <a href="/category.html?cat=backpacking-tent" style="background:#f0f0f2;color:#2f7a4e;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none">텐트</a>
+    <a href="/category.html?cat=sleeping-bag" style="background:#f0f0f2;color:#2f7a4e;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none">침낭</a>
+    <a href="/category.html?cat=burner" style="background:#f0f0f2;color:#2f7a4e;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none">버너</a>
+    <a href="/category.html?cat=chair" style="background:#f0f0f2;color:#2f7a4e;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none">의자</a>
+    <a href="/category.html?cat=lantern" style="background:#f0f0f2;color:#2f7a4e;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none">랜턴</a>
+  </div>
 </div>
 <p style="font-family:system-ui,sans-serif;color:#6e6e73;padding:40px;text-align:center">페이지를 찾는 중입니다…</p>
 </body>

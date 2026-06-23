@@ -158,6 +158,8 @@ export async function signOut() {
   safeLocalStorage.removeItem("wish");
   safeLocalStorage.removeItem("sets");
   safeLocalStorage.removeItem("gear_sets");  // M-430: gear_sets 키도 정리
+  // FE-186: 세트별 무게 목표(set-goal-*) 키도 정리 — signOut 후 잔존 시 다음 사용자에게 노출
+  try { Object.keys(localStorage).filter(k => k.startsWith('set-goal-')).forEach(k => safeLocalStorage.removeItem(k)); } catch { /* private mode 등 */ }
   return supabase.auth.signOut()
 }
 
@@ -202,7 +204,9 @@ export async function isNicknameAvailable(nickname) {
 export async function setNickname(nickname) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: { message: 'unauthorized' } }
-  return supabase.from('profiles').update({ nickname }).eq('id', user.id)
+  // FE-190: UPDATE만 쓰면 트리거(handle_new_user) 복제 지연으로 profiles 행이 아직 없을 때
+  //   0행 업데이트가 error=null로 무음 성공 → 닉네임 영구 미저장. upsert로 행 없으면 INSERT.
+  return supabase.from('profiles').upsert({ id: user.id, nickname }, { onConflict: 'id' })
 }
 
 // ── 찜(위시리스트) 동기화 ──────────────────────────────────────────────────
@@ -435,7 +439,12 @@ const ERROR_MAP = {
 export function getErrorMessage(error) {
   if (!error) return null
   // Postgres unique violation(닉네임 중복 등)
-  if (error.code === '23505') return '이미 사용 중인 닉네임입니다'
+  if (error.code === '23505') {
+    // FE-101: 23505를 무조건 닉네임 중복으로 표시하면 알림 구독(endpoint) 등 다른 unique 위반을 오안내
+    const m = error.message ?? ''
+    if (/endpoint|push_subscription/i.test(m)) return '이미 등록된 알림입니다'
+    return '이미 사용 중인 닉네임입니다'
+  }
   const msg = error.message ?? ''
   for (const [key, label] of Object.entries(ERROR_MAP)) {
     if (msg.includes(key)) return label
