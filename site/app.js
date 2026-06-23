@@ -4,6 +4,19 @@ if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
   window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));  // L-85: 절대경로 — item 서브경로에서 sw.js 404 방지
 }
 
+// FE-086: body:has(.pmodal.on) 스크롤잠금은 :has()(Safari 15.4+)에 의존 → iOS 15.0~15.3에서 모달 뒤 배경이 스크롤됨.
+//   :has 미지원 브라우저에서만 MutationObserver로 .pmodal.on을 감지해 body.modal-open을 토글(모던 브라우저는 CSS만 사용, 옵저버 비용 0).
+(function modalScrollLockFallback() {
+  const supportsHas = window.CSS && CSS.supports && CSS.supports("selector(:has(*))");
+  if (supportsHas) return;
+  const sync = () => { document.body.classList.toggle("modal-open", !!document.querySelector(".pmodal.on")); };
+  const start = () => {
+    new MutationObserver(sync).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
+    sync();
+  };
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})();
+
 // FE-181: 전역 에러 핸들러 — 미처리 예외/거부가 빈 화면으로 남지 않도록 로깅 + 사용자 안내.
 //   iOS WKWebView는 크래시 시 아무 피드백 없이 흰 화면만 남는다. 토스트 스팸 방지 가드 포함.
 (function globalErrorGuard() {
@@ -194,7 +207,7 @@ const GRADE_CLASS = { "🟢 A": "A", "🟡 B": "B", "🔴 한계": "L" };
 
   (async () => {
     try {
-      const { supabase } = await import('./supabaseClient.js?v=2c2c2f38');
+      const { supabase } = await import('./supabaseClient.js?v=0cfa00cd');
       const { data: { session } } = await supabase.auth.getSession();
       _user = session?.user ?? null;
       window._accUser = _user;   // account.html 등 하위호환
@@ -563,7 +576,7 @@ function thumbFallback(img) {
    항목: {key, b(브랜드), m(모델), cap(인원), s(카테고리슬러그), p(최저가), img} */
 function getWish() { try { return JSON.parse(localStorage.getItem("wish") || "[]"); } catch (e) { return []; } }
 function setWish(a) {
-  try { localStorage.setItem("wish", JSON.stringify(a)); } catch (e) { /* 저장공간 부족 시 로컬 동작만 */ }
+  try { localStorage.setItem("wish", JSON.stringify(a)); } catch (e) { showToast("저장 공간이 부족해 찜이 기기에 저장되지 않았어요."); }  // FE-028: 무음 폐기 → 사용자 통보
   if (typeof window !== "undefined" && typeof window.onWishChange === "function") {
     try { window.onWishChange(a); } catch (e) {}
   }
@@ -576,7 +589,11 @@ function inWish(key) { return getWish().some(x => x.key === key); }
 function _execToggleWish(item) {
   const a = getWish(), i = a.findIndex(x => x.key === item.key);
   const added = i < 0;
-  if (i >= 0) a.splice(i, 1); else a.push(item);
+  if (i >= 0) a.splice(i, 1);
+  else {
+    if (a.length >= 500) { showToast("찜은 최대 500개까지 담을 수 있어요."); return false; }  // FE-103: 서버 chk_wishlist_len(500)·merge 상한과 일치 — 초과 시 원격 저장 실패 방지
+    a.push(item);
+  }
   setWish(a);
   // B-1: 첫 찜(추가) 시 가격알림 푸시 구독을 1회 요청(찜 = 가격 추적 대상).
   //  앱(Capacitor)=네이티브 APNs 토큰 등록 / 웹=Web Push 구독. 둘 다 권한거부·기구독 자체처리.
@@ -584,7 +601,7 @@ function _execToggleWish(item) {
     const u = window.currentUser && window.currentUser();
     if (u && u.id) {
       if (window.Capacitor?.isNativePlatform?.()) {
-        import("./supabaseClient.js?v=2c2c2f38").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
+        import("./supabaseClient.js?v=0cfa00cd").then(m => m.registerNativePush && m.registerNativePush()).catch(() => {});
       } else if ("serviceWorker" in navigator && "PushManager" in window) {
         requestPushSubscription(u.id);
       }
@@ -2402,7 +2419,7 @@ function openProduct(m) {
         item_brand: m.brand, item_model: m.model, item_category: STATE.slug,
       });
       try {
-        const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+        const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
         let sessionId = localStorage.getItem("_sid");
         if (!sessionId) { sessionId = Math.random().toString(36).slice(2); try { localStorage.setItem("_sid", sessionId); } catch (_) {} }  // FE-023: setItem 예외가 insert를 막지 않게 격리
         await supabase.from("click_events").insert({
@@ -2540,7 +2557,7 @@ function _reviewCard(r, i) {
   if (validImgs.length) {
     const more = validImgs.length > 1 ? `<span class="pmrv-more">+${validImgs.length - 1}</span>` : "";
     return `<button type="button" class="pmrv-card has-photo" data-i="${i}">
-      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(validImgs[0])}" alt="" loading="lazy" onerror="this.style.display='none'">${more}</span>
+      <span class="pmrv-photowrap"><img class="pmrv-photo" src="${esc(validImgs[0])}" alt="${nick}님의 후기 사진" loading="lazy" onerror="this.style.display='none'">${more}</span>
       ${cap}</button>`;
   }
   return `<button type="button" class="pmrv-card textcard" data-i="${i}">
@@ -2552,7 +2569,7 @@ function openReviewDetail(r) {
   let ov = document.getElementById("pmrv-detail");
   if (!ov) { ov = document.createElement("div"); ov.id = "pmrv-detail"; ov.className = "pmodal"; document.body.appendChild(ov); }  // M-128: dialog role은 내부 .pmbox에만
   const nick = esc(r.profiles?.nickname || "익명");
-  const imgs = (r.image_urls || []).filter(safeHttps).map(u => `<img class="pmrvd-img" src="${esc(u)}" alt="" loading="eager" onerror="this.style.display='none'">`).join("");
+  const imgs = (r.image_urls || []).filter(safeHttps).map((u, _i) => `<img class="pmrvd-img" src="${esc(u)}" alt="${nick}님의 후기 사진 ${_i + 1}" loading="eager" onerror="this.style.display='none'">`).join("");  // FE-113: 빈 alt → 스크린리더가 후기 사진 인지 가능하게 설명 부여
   const me = window.currentUser ? window.currentUser() : null;
   const isMine = me && r.user_id && me.id === r.user_id;
   const reportBtn = isMine ? "" : `<button type="button" class="rv-report">🚩 신고</button>`;
@@ -2596,7 +2613,7 @@ function openReviewDetail(r) {
       if (reason.length < 5) { showToast("5자 이상 입력해주세요"); inp.focus(); return; }
       submitBtn2.disabled = true; submitBtn2.textContent = "신고 중…";
       try {
-        const { reportContent } = await import("./supabaseClient.js?v=2c2c2f38");
+        const { reportContent } = await import("./supabaseClient.js?v=0cfa00cd");
         const { error } = await reportContent({ target_type: "review", target_id: r.id, reason: reason.trim() });
         if (error) {
           const msg = error.message || "";
@@ -2631,7 +2648,7 @@ async function loadReviews(modal, pcode) {
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
   try {
-    const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+    const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
     const rv = await _fetchReviews(supabase, pcode);
     if (cntEl) cntEl.textContent = rv.length ? ` ${rv.length}` : "";
     if (ratingEl) {
@@ -2742,7 +2759,7 @@ function wireReviews(modal, m, pcode) {
       const submitBtn = form.querySelector(".pmrv-submit");
       submitBtn.disabled = true;
       try {
-        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=2c2c2f38");
+        const { supabase, getErrorMessage, uploadImage, removeUploadedImages } = await import("./supabaseClient.js?v=0cfa00cd");
         const { data: { user: u } } = await supabase.auth.getUser();
         if (!u) { showToast("로그인이 필요해요"); submitBtn.disabled = false; return; }
         // 사진 업로드(순차)
@@ -3216,7 +3233,7 @@ async function renderHotSection(categories) {
   // 1) RPC로 최근 7일 클릭 상위 집계(클릭수 내림차순). 실패해도 시드로 진행.
   let real = [];
   try {
-    const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+    const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
     const { data, error: hotErr } = await supabase.rpc("get_hot_items", { days_n: 7, limit_n: 30 });  // M-558: error 구조분해
     if (hotErr) throw hotErr;
     if (Array.isArray(data)) real = data;
@@ -3456,7 +3473,7 @@ function openSetDetail(sid) {
       item_brand: item.b, item_model: item.m, item_category: item.s,
     });
     try {
-      const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+      const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
       let sessionId = localStorage.getItem("_sid");
       if (!sessionId) { sessionId = Math.random().toString(36).slice(2); try { localStorage.setItem("_sid", sessionId); } catch (_) {} }  // FE-023: setItem 예외가 insert를 막지 않게 격리
       await supabase.from("click_events").insert({
@@ -3532,7 +3549,7 @@ function renderAccount() {
       logsSec.style.display = isLoggedIn ? "block" : "none";
       if (!myLogsList.dataset.loaded) {
         myLogsList.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0">불러오는 중…</div>`;
-        import("./supabaseClient.js?v=2c2c2f38").then(async ({ supabase, getMyReviews }) => {
+        import("./supabaseClient.js?v=0cfa00cd").then(async ({ supabase, getMyReviews }) => {
           myLogsList.dataset.loaded = "1";
           const logsCnt = document.getElementById("logscount");
 
@@ -3622,7 +3639,7 @@ function renderAccount() {
                   // try/catch — import·update가 reject로 throw해도 "저장 중…" 고착 방지(2.1a 부류).
                   let _le;
                   try {
-                    const { supabase: sb } = await import("./supabaseClient.js?v=2c2c2f38");
+                    const { supabase: sb } = await import("./supabaseClient.js?v=0cfa00cd");
                     _le = await sb.from("posts")
                       .update({ title: newTitle, body: newBody })
                       .eq("id", p.id).eq("user_id", userId);
@@ -3642,7 +3659,7 @@ function renderAccount() {
                 // try/catch — import·update가 reject로 throw해도 삭제 버튼이 영구 비활성되지 않게(2.1a 부류).
                 let _ld;
                 try {
-                  const { supabase: sb } = await import("./supabaseClient.js?v=2c2c2f38");
+                  const { supabase: sb } = await import("./supabaseClient.js?v=0cfa00cd");
                   _ld = await sb.from("posts")
                     .update({ deleted_at: new Date().toISOString() })
                     .eq("id", p.id).eq("user_id", userId);
@@ -4020,7 +4037,7 @@ async function requestPushSubscription(userId) {
 async function _savePushSub(sub, userId) {
   const j = sub.toJSON();
   if (!j || !j.keys) { console.warn("_savePushSub: keys 없음"); return; }  // M-466: keys null 가드
-  const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+  const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
   // L-267: 같은 endpoint를 다른 사용자가 재구독할 때 이전 사용자 행이 잔존하면 푸시가 누출되므로
   //   서버 RPC(save_push_subscription)가 해당 endpoint의 기존 행을 삭제하고 현재 사용자로 재등록한다.
   const { error } = await supabase.rpc("save_push_subscription", {
@@ -4057,7 +4074,7 @@ async function renderBestGear() {
 
   // 커뮤니티 태그 집계 TOP-10 (RPC)
   try {
-    const { supabase: sb } = await import("./supabaseClient.js?v=2c2c2f38");
+    const { supabase: sb } = await import("./supabaseClient.js?v=0cfa00cd");
     const { data: topTags } = await sb.rpc("get_top_gear_tags", { limit_n: 10 });
     if (topTags && topTags.length) {
       const sec = document.createElement("div");
@@ -4155,7 +4172,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
 
   el.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">불러오는 중…</div>`;
   try {
-    const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+    const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
     const orderCol = sortMode === "popular" ? "likes" : "created_at";
     let query = supabase
       .from("posts")
@@ -4227,7 +4244,7 @@ async function renderLogFeed(sortMode = "latest", filterTag = _logFeedTag) {
         btn.classList.toggle("on", next);
         btn.innerHTML = `${next ? "♥" : "♡"} <span class="log-like-cnt">${cur + (next ? 1 : -1)}</span>`;
         try {
-          const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+          const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
           const { error } = await supabase.rpc(next ? "increment_post_likes" : "decrement_post_likes", { post_id: pid });
           if (error) throw error;
         } catch (_) {  // FE-020: RPC 실패 시 낙관적 업데이트 롤백
@@ -4301,7 +4318,7 @@ function openLogDetail(p) {
       likeBtn.dataset.liked = next ? "1" : "0"; likeBtn.classList.toggle("on", next);
       likeBtn.innerHTML = `${next ? "♥" : "♡"} <span class="log-like-cnt">${cur + (next ? 1 : -1)}</span> 좋아요`;
       try {
-        const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+        const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
         const { error } = await supabase.rpc(next ? "increment_post_likes" : "decrement_post_likes", { post_id: pid });
         if (error) throw error;
       } catch (_) {  // FE-020: RPC 실패 시 낙관적 업데이트 롤백
@@ -4319,7 +4336,7 @@ function openLogDetail(p) {
 
   // 댓글 로드 및 제출
   (async () => {
-    const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+    const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
     const cmtList = document.getElementById("detail-cmt-list");
     const cmtCnt = document.getElementById("detail-cmt-cnt");
     const cmtForm = document.getElementById("detail-cmt-form");
@@ -4521,7 +4538,7 @@ function openLogModal(presetSetIndex) {
     submitBtn.disabled = true; submitBtn.textContent = "등록 중…";
     let uploadedPath = null;  // FE-017: posts.insert 실패 시 고아 Storage 파일 롤백 위해 try 바깥 선언
     try {
-      const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+      const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
       let image_url = null;
       const imgFile = imgInput.files[0];
       if (imgFile) {
@@ -4554,7 +4571,7 @@ function openLogModal(presetSetIndex) {
     } catch (err) {
       if (uploadedPath) {  // FE-017: 업로드 성공 후 INSERT 실패 시 고아 파일 삭제
         try {
-          const { supabase } = await import("./supabaseClient.js?v=2c2c2f38");
+          const { supabase } = await import("./supabaseClient.js?v=0cfa00cd");
           await supabase.storage.from("post-images").remove([uploadedPath]);
         } catch (_) {}
       }
@@ -4598,7 +4615,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       //   (onWishChange가 이미 있으면 account.html이 처리하므로 건너뜀)
       if (typeof window.onWishChange !== "function") {
         try {
-          const m = await import("./supabaseClient.js?v=2c2c2f38");
+          const m = await import("./supabaseClient.js?v=0cfa00cd");
           const remote = await m.loadRemoteWishlist();
           if (remote !== null) {
             const merged = m.mergeWishlists(getWish(), remote);  // 로컬 우선 병합(원격 항목 보존)
@@ -4679,7 +4696,7 @@ document.addEventListener("DOMContentLoaded", () => {
         arr.push(newSet); saveSets(arr);
         // L-114: 로그인 상태면 즉시 Supabase 동기화
         if (window._accUser?.id) {
-          import("./supabaseClient.js?v=2c2c2f38").then(async ({ upsertGearSet }) => {
+          import("./supabaseClient.js?v=0cfa00cd").then(async ({ upsertGearSet }) => {
             const id = await upsertGearSet(newSet, window._accUser.id);
             if (id) { newSet.remoteId = id; const all = getSets(); const idx = all.findIndex(x => x.id === newSet.id); if (idx >= 0) { all[idx].remoteId = id; saveSets(all); } }
           }).catch(() => {});

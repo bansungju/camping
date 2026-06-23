@@ -105,6 +105,7 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 max(22px,env(safe-area-inset-bottom)) 0;color:var(--muted);font-size:12px}  /* FE-095: 푸터 하단 안전영역 */
 .disc{display:block;margin-top:6px;font-size:11px;opacity:.7}
 body:has(.pmodal.on){overflow:hidden}
+body.modal-open{overflow:hidden}  /* FE-086: :has() 미지원(iOS 15.0~15.3) 폴백 — app.js가 .pmodal.on 감지해 토글 */
 /* FE-088: iOS 길게 누르기 콜아웃(이미지 저장/복사) 억제 — 어필리에이트 이미지·버튼 보호 */
 img,button{-webkit-touch-callout:none}
 img{-webkit-user-select:none;user-select:none}

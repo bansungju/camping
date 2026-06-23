@@ -61,6 +61,15 @@ async function _sha256Hex(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
+// FE-085: crypto.randomUUID는 iOS 15.4+에서만 지원. 배포타깃 15.0이라 15.0~15.3에서 미정의 → 호출 시 TypeError 크래시.
+//   getRandomValues 기반 RFC4122 v4 폴백으로 가드(Apple 로그인 nonce/state는 충분한 랜덤이면 됨).
+function _uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID()
+  const b = crypto.getRandomValues(new Uint8Array(16))
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80
+  const h = Array.from(b, x => x.toString(16).padStart(2, '0'))
+  return `${h[0]}${h[1]}${h[2]}${h[3]}-${h[4]}${h[5]}-${h[6]}${h[7]}-${h[8]}${h[9]}-${h[10]}${h[11]}${h[12]}${h[13]}${h[14]}${h[15]}`
+}
 
 export async function signInWithApple() {
   // 네이티브 주입 플러그인 우선 — CDN ESM import는 별도 @capacitor/core 인스턴스라
@@ -68,9 +77,9 @@ export async function signInWithApple() {
   const SignInWithApple = window.Capacitor?.Plugins?.SignInWithApple
     || (await import('https://cdn.jsdelivr.net/npm/@capacitor-community/apple-sign-in@7/dist/esm/index.js')).SignInWithApple
   if (!SignInWithApple) return { error: { message: 'Apple 로그인 모듈을 불러오지 못했습니다.' } }
-  const rawNonce = crypto.randomUUID()
+  const rawNonce = _uuid()   // FE-085: iOS 15.0~15.3 randomUUID 미지원 크래시 가드
   const hashedNonce = await _sha256Hex(rawNonce)
-  const state = crypto.randomUUID()
+  const state = _uuid()
   // BE-073/FE-AUTH: authorize()는 사용자가 시트를 취소하면 reject한다. try/catch가 없으면
   //   예외가 호출부(account.html)로 전파돼 버튼 복구 코드가 실행되지 않고 "로그인 중…"이 영구 고착된다.
   let response
