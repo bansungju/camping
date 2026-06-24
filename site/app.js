@@ -719,7 +719,7 @@ function showToast(msg, duration) {
     t._shown = true;
     requestAnimationFrame(() => { t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)"; });
   }
-  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; t.style.pointerEvents = "none"; t._shown = false; }, duration || 2400);  // M-208/M-327: fade 후 포인터 이벤트 차단 유지
+  t._tid = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(20px)"; t.style.pointerEvents = "none"; t._shown = false; }, duration || Math.min(6000, Math.max(2400, (msg ? msg.length : 0) * 90)));  // M-208/M-327: fade 후 포인터 차단 / UXUI-021: 미지정 시 메시지 길수록 오래(2.4~6초)
 }
 /* UXUI-019(cluster B): window.confirm()은 iOS WKWebView/PWA에서 차단되어 무응답 → Promise<boolean> 커스텀 모달로 대체.
    alert/confirm 치환 공통 유틸로 재사용. ESC·백드롭=취소, 포커스 트랩·복귀 포함(_trapTab 재사용). */

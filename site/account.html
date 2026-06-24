@@ -31,7 +31,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
 <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=683abe6e">
+<link rel="stylesheet" href="style.css?v=0aa69c0d">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -131,14 +131,14 @@
 
   <!-- 로그아웃·계정삭제 — 로그인 후 페이지 최하단에 작게 표시 -->
   <div id="bottom-actions" style="display:none;margin-top:56px;padding:18px 0 12px;border-top:1px solid var(--line);text-align:center">
-    <button id="btn-delete-account" type="button" style="background:none;border:none;cursor:pointer;font-size:12px;color:#c0392b;opacity:.55;padding:5px 14px;border-radius:6px">계정 삭제</button>
+    <button id="btn-delete-account" type="button" style="background:none;border:none;cursor:pointer;font-size:12px;color:#c0392b;opacity:.8;padding:5px 14px;border-radius:6px">계정 삭제</button>
     <p id="delete-hint" style="color:var(--muted);font-size:11.5px;text-align:center;margin:6px 4px 0;display:none">삭제 시 프로필·찜·세트가 익명화·삭제되며, 작성한 글은 작성자 표시 없이 보존됩니다. 탈퇴 후 30일간 재가입할 수 없습니다.</p>
   </div>
 </main>
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=c37b3a26"></script>
+<script src="app.js?v=4f0ce0d9"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -628,7 +628,7 @@ function renderProfile(profile) {
       if (!confirm('이 작업은 되돌릴 수 없습니다. 계속할까요?')) return
       btnDelete.disabled = true; btnDelete.textContent = '삭제 중…'; btnDelete.style.opacity = '.4'
       // try/catch — deleteAccount(Edge Function invoke)가 타임아웃·오프라인으로 reject해도 '삭제 중…' 고착 방지(2.1a 부류).
-      const _restoreDelete = () => { btnDelete.disabled = false; btnDelete.textContent = '계정 삭제'; btnDelete.style.opacity = '.55' }
+      const _restoreDelete = () => { btnDelete.disabled = false; btnDelete.textContent = '계정 삭제'; btnDelete.style.opacity = '.8' }  // UXUI-087: 비활성 오인 방지
       let delResult
       try {
         delResult = await deleteAccount()

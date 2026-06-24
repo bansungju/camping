@@ -471,6 +471,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
 .pli:hover{transform:translateY(-2px);box-shadow:var(--shadow-h);border-color:#e0e0e0}
 .pli:active{transform:translateY(0)}
+@media(hover:none){.pli:active{background:var(--card2)}}  /* UXUI-140: 터치 기기 탭 피드백(hover 없는 환경) */
 .pli-thumb{flex:0 0 auto;width:74px;height:74px;border-radius:11px;object-fit:contain;
   background:#fafafa;border:1px solid var(--line)}
 .pli-noimg{flex:0 0 auto;width:74px;height:74px;border-radius:11px;display:flex;flex-direction:column;
@@ -625,7 +626,8 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .hot-rank-cnt{font-size:11px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* 스켈레톤 로딩 */
 @keyframes skel-pulse{0%,100%{opacity:.5}50%{opacity:1}}
-.skel-thumb,.skel-line{background:var(--card2);border-radius:6px;animation:skel-pulse 1.4s ease-in-out infinite}
+@keyframes skel-shimmer{0%{background-position:-150px 0}100%{background-position:calc(150px + 100%) 0}}
+.skel-thumb,.skel-line{background:linear-gradient(90deg,var(--card2) 25%,var(--line) 50%,var(--card2) 75%);background-size:150px 100%;border-radius:6px;animation:skel-shimmer 1.3s linear infinite}  /* UXUI-092: opacity 펄스 → shimmer 그라데이션 */
 .skel-thumb{width:64px;height:64px;border-radius:10px;flex-shrink:0}
 .pli-skel{pointer-events:none}
 .hot-name{font-size:13px}
