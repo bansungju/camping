@@ -140,7 +140,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 /* 카테고리 네비게이션 */
 .catnav-wrap{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:calc(59px + var(--banner-h,0px));z-index:9;overflow:hidden}
 .catnav-wrap::after{content:"";position:absolute;top:0;right:0;width:48px;height:100%;background:linear-gradient(to right,transparent,var(--card));pointer-events:none;z-index:1}
-.catnav{display:flex;gap:6px;overflow-x:auto;padding:9px 48px 9px 0;scrollbar-width:thin}
+.catnav{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:9px 48px 9px 0;scrollbar-width:thin}  /* UXUI-065: iOS 모멘텀 스크롤 */
 .catnav::-webkit-scrollbar{height:5px}
 .catnav::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .navchip{flex:0 0 auto;font-size:13px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);
@@ -172,6 +172,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmspecs{display:flex;flex-direction:column;gap:1px;border-top:1px solid var(--line)}
 .pmspec{display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+@media(hover:hover){.pmspec:hover{background:var(--card2);border-radius:6px}}  /* UXUI-145: 데스크탑 스펙 행 hover 강조(모바일 hover 무효라 제외) */
 .pml{color:var(--muted)}
 .pmv{font-variant-numeric:tabular-nums;text-align:right}
 /* 구매 버튼(현재 비활성 — 기능 준비중) */
@@ -245,7 +246,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pmrv-list.pmrv-grid{column-count:2;column-gap:8px}
 .pmrv-empty{font-size:13px;color:var(--muted);padding:6px 0}
 .pmrv-card{display:block;width:100%;text-align:left;border:0;background:none;padding:0;margin:0 0 8px;cursor:pointer;break-inside:avoid;-webkit-column-break-inside:avoid}
-.pmrv-photowrap{position:relative;display:block;border-radius:11px;overflow:hidden;background:var(--card2)}
+.pmrv-photowrap{position:relative;display:block;border-radius:11px;overflow:hidden;background:var(--card2);min-height:120px}  /* FE-128: 로드 전 최소 높이로 메이슨리(column) CLS 완화 */
 .pmrv-photo{width:100%;display:block;object-fit:cover}
 .pmrv-more{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px}
 .pmrv-card.textcard .pmrv-q{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:13px;line-height:1.55;color:var(--fg)}
@@ -287,7 +288,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .pcard .pn{font-size:16px;font-weight:700;margin-top:6px;letter-spacing:-.2px}
 .pcard .pt{font-size:12.5px;color:var(--muted)}
 /* 스타일 전환 칩(추천 페이지) */
-.pswitch{display:flex;gap:8px;overflow-x:auto;padding:4px 0 14px;scrollbar-width:thin}
+.pswitch{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 14px;scrollbar-width:thin}  /* UXUI-065 */
 .pchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;
   padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
 .pchip:hover{border-color:var(--accent);color:var(--txt)}
@@ -408,7 +409,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   border:1px solid var(--line);border-radius:10px;padding:8px 16px}
 .cat-error-link:hover{background:var(--card2)}
 .recent:empty{display:none}
-.recent-row{display:flex;gap:12px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:thin;margin-bottom:14px}
+.recent-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 10px;scrollbar-width:thin;margin-bottom:14px}  /* UXUI-065 */
 .recent-row::-webkit-scrollbar{height:5px}
 .recent-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .recard-wrap{flex:0 0 auto;width:130px;position:relative}
@@ -922,8 +923,9 @@ a.ssb-cell:hover{border-color:var(--accent);color:var(--accent)}
 @media print{
   .top,.tabbar,.bottom-nav,.toolbar,.catnav-wrap,.cmp-bar,.filterbar,.filter-aside,.cat-aside,
   .skip-link,.back-link,.item-wish,.item-buy,.item-buynote,.item-set-btn,.item-log-btn,
-  .scroll-top,.sresbox,.pmodal-overlay,.toast{display:none!important}
+  .scroll-top,.sresbox,.pmodal-overlay,.toast,.pli-wish,.set-goal-set{display:none!important}
   .pmodal,.pmodal-inner,.item-hero,.spec-table,.related-section{box-shadow:none!important;border:none!important}
+  .acc-set,.pli{break-inside:avoid;page-break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important}  /* UXUI-129: 세트·상품 목록 인쇄 시 카드 경계 유지·페이지 중간 분할 방지 */
   body{background:#fff!important;color:#000!important}
   a{color:#000!important;text-decoration:none!important}
 }

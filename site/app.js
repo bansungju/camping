@@ -861,14 +861,22 @@ async function openSetModal(item) {
     modal._addTid = setTimeout(() => { close(); showSetConfirm(btn.dataset.sid); }, 400);  // L-364: 타이머 id 저장 → close()에서 취소 가능
   });
   const inp = modal.querySelector(".sm-input");
+  inp.value = "새 세트 " + new Date().toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });  // UXUI-048: 빈 입력 방지 위한 이름 자동 제안(수정 가능)
   modal.querySelector(".sm-create").onclick = () => {
     // L-345: .trim()은 NBSP( )는 제거하나 zero-width(ZWSP/ZWNJ/ZWJ/BOM)는 못 지움 → 보이지 않는 빈 이름 통과 방지
     const t = inp.value.replace(/[​-‍﻿]/g, "").trim(); if (!t) { inp.focus(); return; }
     const type = modal.querySelector(".sm-type-select")?.dataset.value || DEFAULT_SET_TYPE;
-    const s = newSet(t, type); const _r = addToSet(s.id, item);  // M-175/M-302: 반환값 검사
+    // FE-192: 같은 이름 세트가 이미 있으면 새로 만들지 않고 그 세트에 담기(중복 생성 방지)
+    const dup = getSets().find(x => (x.title || "").trim() === t);
+    const s = dup || newSet(t, type); const _r = addToSet(s.id, item);  // M-175/M-302: 반환값 검사
     close();
     if (_r.status === "added") showSetConfirm(s.id);
-    else showToast("담기에 실패했어요 — 슬롯 한도를 확인해 주세요.");
+    else {
+      // FE-191: 새로 만든 빈 세트인데 담기 실패 시 롤백(유령 세트 방지)
+      if (!dup) saveSets(getSets().filter(x => x.id !== s.id));
+      if (_r.status === "cap" && _r.slot) openReplaceModal(s.id, item, _r.slot);
+      else showToast("담기에 실패했어요 — 슬롯 한도를 확인해 주세요.");
+    }
   };
   inp.onkeydown = e => { if (e.key === "Enter") modal.querySelector(".sm-create").click(); };
   modal.querySelector(".pmx").focus();
@@ -2453,9 +2461,10 @@ function openProduct(m) {
        ${m.coupang_url
          ? `<div class="pmbuynote">이 링크는 쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를 제공받습니다.</div>
        <button class="pmbuy pmbuy-active" type="button" data-url="${esc(m.coupang_url)}">🛒 쿠팡에서 구매하기</button>`
-         : `<div class="pmbuynote">구매 링크를 준비 중입니다.</div>
-       <button class="pmbuy" type="button" disabled aria-disabled="true">구매하기</button>`
+         : `<div class="pmbuynote">아직 쿠팡 구매 링크가 없어요. 아래 네이버 검색으로 찾아보세요.</div>
+       <button class="pmbuy" type="button" disabled aria-disabled="true">링크 준비 중</button>`
        }
+       <a class="pmlink pmlink-naver" href="https://search.shopping.naver.com/search/all?query=${encodeURIComponent(m.brand + ' ' + m.model)}" target="_blank" rel="noopener nofollow">🔍 네이버 최저가 검색 ›</a>
        <button class="pmset" type="button">＋ 장비 꾸러미에 담기</button>
        <a class="pmlink" href="brand.html?b=${encodeURIComponent(m.brand)}">${esc(m.brand)} 다른 제품 보기 ›</a>
        ${STATE.slug && mIdx >= 0 ? `<a class="pmlink" href="/item/${STATE.slug}/item-${mIdx}.html" style="font-size:12px;color:var(--muted)">🔗 상세 페이지 (공유·즐겨찾기용)</a>` : ""}
@@ -2489,6 +2498,8 @@ function openProduct(m) {
           coupang_url: url, session_id: sessionId
         });
       } catch (_) {}
+      // UXUI-035/090: 웹은 새 탭으로 외부 이동 후 모달이 뒤에 잔류 → 닫기(네이티브 인앱브라우저는 복귀 시 유지). click_events insert 뒤에 닫아 STATE.slug 보존.
+      if (!window.Capacitor?.isNativePlatform?.()) close();
     };
   }
   const wbtn = modal.querySelector(".pmwish");
@@ -2530,6 +2541,7 @@ function openProduct(m) {
   const prevFocus = document.activeElement;   // 닫을 때 원래 위치로 포커스 복귀(접근성)
   const close = () => {
     modal.classList.remove("on");
+    if (typeof modal._reviewReset === "function") modal._reviewReset();  // FE-170: 미제출 후기폼의 Blob URL 정리(메모리 누수 방지)
     document.removeEventListener("keydown", onKey);
     const tb = document.getElementById("spec-tip-bubble"); if (tb) tb.style.display = "none";  // M-425: 모달 닫힌 후 툴팁 잔류 방지
     if (prevFocus && prevFocus.focus) prevFocus.focus();
@@ -2752,6 +2764,7 @@ function wireReviews(modal, m, pcode) {
     formbox.querySelectorAll("img").forEach(img => { if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src); });   // L-159: Blob URL 누수 방지
     formbox.hidden = true; formbox.innerHTML = ""; open = false; addBtn.textContent = "✍️ 후기 남기기";
   };
+  modal._reviewReset = reset;  // FE-170: openProduct close()에서 호출해 미제출 후기폼의 Blob URL 정리(메모리 누수 방지)
   addBtn.onclick = async () => {
     if (open) { reset(); return; }
     // 공용 게이트(FE-AUTH-01 §B): 폼 열기 전 로그인 확인
@@ -2764,10 +2777,10 @@ function wireReviews(modal, m, pcode) {
       </div>
       <div class="pmrv-photos">
         <div class="pmrv-thumbs"></div>
-        <label class="pmrv-addphoto">📷 사진 추가 <span class="pmrv-photohint">(최대 ${REVIEW_MAX_PHOTOS}장)</span>
+        <label class="pmrv-addphoto">📷 사진 추가 <span class="pmrv-photohint">(최대 ${REVIEW_MAX_PHOTOS}장 · 각 5MB 이하 · 이미지 파일)</span>
           <input type="file" accept="image/*" multiple hidden></label>
       </div>
-      <textarea class="pmrv-ta" rows="3" minlength="10" maxlength="2000" placeholder="제품을 사용한 솔직한 후기를 남겨주세요 (10자 이상)"></textarea>
+      <textarea class="pmrv-ta" rows="3" minlength="10" maxlength="2000" placeholder="제품을 사용한 솔직한 후기를 남겨주세요 (10자 이상)&#10;예) 무게감·설치 난이도·방수 성능·사용 계절 등"></textarea>
       <div class="pmrv-form-foot"><span class="pmrv-ta-cnt">0 / 2000</span><button type="submit" class="pmrv-submit">등록</button></div>
     </form>`;
     formbox.hidden = false; open = true; addBtn.textContent = "닫기";
@@ -2810,7 +2823,7 @@ function wireReviews(modal, m, pcode) {
       for (const f of fileInput.files) {
         if (photos.length >= REVIEW_MAX_PHOTOS) { showToast(`사진은 최대 ${REVIEW_MAX_PHOTOS}장까지 가능해요`); break; }
         if (!f.type.startsWith("image/")) { showToast("이미지 파일만 추가할 수 있어요"); continue; }
-        if (f.size > 5 * 1024 * 1024) { showToast("이미지는 5MB 이하만 가능해요"); continue; }
+        if (f.size > 5 * 1024 * 1024) { showToast(`${f.name} (${(f.size/1024/1024).toFixed(1)}MB)은 5MB 이하만 가능해요`); continue; }  // UXUI-023: 파일명·실제 크기 안내
         photos.push(f);
       }
       fileInput.value = "";
@@ -3775,7 +3788,8 @@ function renderAccount() {
       wishEmptyEl.innerHTML = `<div style="font-size:32px;margin-bottom:10px">🔖</div>
         <div>아직 찜한 상품이 없어요</div>
         <div style="font-size:12px;margin-top:6px">상품 카드의 🔖 버튼으로 추가해보세요</div>
-        ${!isLoggedIn ? `<a href="account.html#auth-section" style="display:inline-block;margin-top:14px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">로그인하고 기기 간 동기화</a>` : ""}`;
+        <div style="margin-top:14px"><a href="index.html" style="display:inline-block;padding:8px 18px;background:var(--accent);color:#fff;border-radius:20px;font-size:13px;font-weight:600">🔍 상품 탐색 시작하기</a></div>
+        ${!isLoggedIn ? `<a href="account.html#auth-section" style="display:inline-block;margin-top:10px;padding:7px 16px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:20px;font-size:12px">로그인하고 기기 간 동기화</a>` : ""}`;
       wishEmptyEl.style.display = "block";
     } else {
       if (wishEmptyEl) wishEmptyEl.style.display = "none";
@@ -3800,6 +3814,7 @@ function renderAccount() {
         </div>
         <div class="pli-side">
           <div class="pli-price">${priceLabeled(x.p)}</div>
+          ${x.coupang_url ? `<a href="${esc(x.coupang_url)}" target="_blank" rel="noopener nofollow" onclick="event.stopPropagation()" aria-label="쿠팡에서 구매" style="display:inline-block;font-size:11px;padding:3px 9px;background:var(--accent);color:#fff;border-radius:12px;text-decoration:none;margin-top:4px">🛒 구매</a>` : ""}
           <span class="pli-chev" aria-hidden="true">›</span>
         </div></div>`;
     }).join("");
