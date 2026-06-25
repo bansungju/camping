@@ -85,6 +85,64 @@ if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
   }, { passive: true });
 })();
 
+// FE-193: 안드로이드 하드웨어 백버튼 — 루트(메인)에서 종료 확인 다이얼로그.
+//   @capacitor/app backButton 리스너 미등록 시 기본 동작이 루트에서 즉시 종료/무반응 → uiConfirm으로 표준화.
+//   (iOS는 하드웨어 백·exitApp 개념이 없어 이 이벤트가 발생하지 않음 — 안드로이드 전용으로 동작.)
+if (window.Capacitor?.isNativePlatform?.()) {
+  (async () => {
+    try {
+      const { App } = await import('https://cdn.jsdelivr.net/npm/@capacitor/app@8/dist/esm/index.js');
+      App.addListener('backButton', async ({ canGoBack }) => {
+        // 모달/필터시트 열림 → 페이지 이동 대신 먼저 닫기(edgeSwipeBack과 동일 규칙)
+        if (document.querySelector(".pmodal.on") || document.body.classList.contains("filter-sheet-lock")) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          return;
+        }
+        if (canGoBack) { window.history.back(); return; }
+        // 루트(메인) — 더 뒤로 갈 곳 없음 → 종료 확인
+        if (await uiConfirm("앱을 종료하시겠어요?", { ok: "종료", cancel: "취소" })) App.exitApp();
+      });
+    } catch (e) { console.warn("[backButton] @capacitor/app 로드 실패:", e); }
+  })();
+}
+
+// FE-194: 콘텐츠 좌우 스와이프로 페이지 주 네비 칩 이동(가장자리 백 제스처와 별개).
+//   recommend=스타일(pswitch), 그 외(category/brand)=카테고리(catnav). 활성 칩 기준 prev/next로 전환.
+(function swipeNav() {
+  const navSel = location.pathname.includes("recommend") ? "#pswitch" : "#catnav";
+  const EDGE = 32;    // 왼쪽 가장자리(백 제스처 영역=30px)에서 시작한 스와이프는 양보
+  const DIST = 64;    // 칩 전환 최소 가로 이동(px)
+  const SLOPE = 0.5;  // 세로 스크롤과 구분(|dy| ≤ dx*SLOPE)
+  let sx = 0, sy = 0, track = false;
+
+  window.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) { track = false; return; }
+    const t = e.touches[0];
+    // 가로 스크롤 가능한 요소(카테고리바·스타일바·가로 카드열) 위에서 시작하면 네이티브 스크롤에 양보
+    if (e.target.closest(".catnav, .pswitch, .recent-row, .hot-card-row, input, textarea, select")) { track = false; return; }
+    sx = t.clientX; sy = t.clientY;
+    track = sx > EDGE;
+  }, { passive: true });
+
+  window.addEventListener("touchend", (e) => {
+    if (!track) return; track = false;
+    if (document.querySelector(".pmodal.on") || document.body.classList.contains("filter-sheet-lock")) return;
+    const nav = document.querySelector(navSel);
+    if (!nav) return;
+    const chips = [...nav.querySelectorAll("a")];
+    if (chips.length < 2) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < DIST || Math.abs(dy) > Math.abs(dx) * SLOPE) return;  // 수평 스와이프 아님
+    const cur = chips.findIndex(a => a.classList.contains("on") || a.getAttribute("aria-current") === "page");
+    if (cur < 0) return;  // 현재 위치 불명(예: brand.html 카테고리 미선택) → 무동작
+    const idx = cur + (dx < 0 ? 1 : -1);  // 왼쪽 스와이프=다음 칩 / 오른쪽=이전 칩
+    if (idx < 0 || idx >= chips.length) return;  // 양끝에서 정지(순환 안 함)
+    const href = chips[idx].getAttribute("href");
+    if (href) location.href = href;
+  }, { passive: true });
+})();
+
 // Phase 4: Capacitor 네이티브 UX — StatusBar·SplashScreen
 if (window.Capacitor?.isNativePlatform?.()) {
   // 웹 스플래시 오버레이: 네이티브 스플래시 숨기기 전 동적 애니메이션
@@ -122,7 +180,8 @@ if (window.Capacitor?.isNativePlatform?.()) {
     } catch (e) { console.warn('[splash] Capacitor 플러그인 로드 실패:', e) }
     try { await SplashScreen?.hide() } catch (e) { console.warn('[splash] SplashScreen.hide 실패:', e) }
     // FE-070: 스플래시(녹색) 이후엔 실제 테마에 맞춰 상태바 동기화(부팅 1회 Dark 고정 해소)
-    syncStatusBar(localStorage.getItem('theme') === 'dark');
+    // FE-195: auto(미선택)면 시스템 설정으로 해석 — 저장값 단순비교는 auto+다크시스템에서 상태바 불일치.
+    syncStatusBar(_resolveTheme() === 'dark');
     // 최소 0.8초 보여준 뒤 페이드 아웃
     setTimeout(() => window.__hideSplash?.(), 800);
   })()
@@ -154,19 +213,39 @@ async function syncStatusBar(dark) {
   } catch (_) {}
 }
 
-// 테마: 기본 라이트. 다크는 '내 정보 > 설정'에서 명시적으로 켤 때만 적용(prefers-dark 자동 추종 안 함).
-// 헤더 토글 버튼은 제거됨(.theme-toggle CSS도 display:none). 토글 UI는 account.html 설정 섹션이 담당.
-(function initTheme() {
-  const saved = localStorage.getItem("theme");
-  document.documentElement.setAttribute("data-theme", saved === "dark" ? "dark" : "light");
-}());
-// 설정 토글에서 호출 — 테마 적용 + 영속화
-window.setTheme = function (mode) {
-  const dark = mode === "dark";
-  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-  try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) {}
-  syncStatusBar(dark);   // FE-070: 테마 토글 시 상태바도 즉시 동기화
+// FE-195: 테마 기본값 = 시스템 설정 따르기(auto). 저장값이 'light'/'dark'면 명시 선택(우선),
+//   그 외(미선택)는 prefers-color-scheme 추종. 토글 UI는 account.html 설정(시스템/라이트/다크 3선택).
+function _resolveTheme() {  // 실제 적용할 테마('light'|'dark')로 해석
+  const t = localStorage.getItem("theme");
+  if (t === "light" || t === "dark") return t;
+  return (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+}
+window.themePref = function () {  // 사용자 선호('auto'|'light'|'dark') — 설정 UI 하이라이트용
+  const t = localStorage.getItem("theme");
+  return (t === "light" || t === "dark") ? t : "auto";
 };
+function _applyTheme(syncBar) {
+  const eff = _resolveTheme();
+  document.documentElement.setAttribute("data-theme", eff);
+  if (syncBar) syncStatusBar(eff === "dark");
+  return eff;
+}
+(function initTheme() { _applyTheme(false); }());  // 상태바는 splash 블록(L183)·setTheme가 담당 — init은 동기 적용만
+// 설정에서 호출 — 'auto'|'light'|'dark'. auto면 저장키 제거(시스템 추종), 그 외 영속화.
+window.setTheme = function (mode) {
+  try {
+    if (mode === "light" || mode === "dark") localStorage.setItem("theme", mode);
+    else localStorage.removeItem("theme");
+  } catch (e) {}
+  _applyTheme(true);   // FE-070: 테마 변경 시 상태바도 즉시 동기화
+};
+// FE-195: 사용자가 auto일 때 시스템 다크/라이트 전환을 실시간 반영(명시 선택 시엔 무시).
+try {
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    const t = localStorage.getItem("theme");
+    if (t !== "light" && t !== "dark") _applyTheme(true);
+  });
+} catch (e) {}
 
 // PWA 설치 유도 배너
 let _pwaPrompt = null;
@@ -260,7 +339,7 @@ async function requireLogin({ action, returnTo, params } = {}) {
       returnTo: returnTo ?? location.href
     }));
   } catch (_) {}
-  _showAuthGateModal();
+  _showAuthGateModal(action);
   return false;
 }
 
@@ -274,8 +353,15 @@ function _trapTab(e, container) {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
-function _showAuthGateModal() {
+function _showAuthGateModal(action) {
   document.getElementById('auth-gate-modal')?.remove();
+  // UXUI-075: 액션별 맥락 메시지(찜=가격알림 등)로 로그인 동기를 명확히 — 범용 안내보다 전환율↑
+  const _agmSub = {
+    toggleWish: '찜하면 가격이 떨어질 때 알려드려요',
+    openSetModal: '로그인하면 장비 꾸러미가 기기 간 저장돼요',
+    openReviewForm: '로그인하면 후기를 남길 수 있어요',
+    openLogModal: '로그인하면 캠핑 로그를 기록할 수 있어요',
+  }[action] || '로그인하면 기기 간 동기화돼요';
   const m = document.createElement('div');
   m.id = 'auth-gate-modal';
   m.className = 'pmodal on';
@@ -283,7 +369,7 @@ function _showAuthGateModal() {
   m.innerHTML = `<div class="pmbox agm-box" role="dialog" aria-modal="true" aria-labelledby="agm-title">
     <p class="agm-ico">🔒</p>
     <p id="agm-title" class="agm-title">이 기능은 로그인이 필요해요</p>
-    <p class="agm-sub">로그인하면 기기 간 동기화돼요</p>
+    <p class="agm-sub">${_agmSub}</p>
     <a href="/account.html" class="agm-btn">로그인하기</a>
     <button type="button" class="agm-cancel">취소</button>
   </div>`;
@@ -638,7 +724,7 @@ function _execToggleWish(item) {
 function toggleWish(item) {
   function _gate() {
     try { sessionStorage.setItem('auth-intent', JSON.stringify({action:'toggleWish',params:item,returnTo:location.href})); } catch(_){}
-    _showAuthGateModal();
+    _showAuthGateModal('toggleWish');
   }
   if (window._gAuthReady) {
     if (!window.isLoggedIn()) { _gate(); return inWish(item.key); }
@@ -4779,17 +4865,23 @@ function openLogModal(presetSetIndex) {
   };
 
   modal.classList.add("on");
+  const _prevFocus = document.activeElement;   // FE-135: 닫을 때 포커스 원위치 복귀(접근성)
   const close = () => {
     if (imgThumb.src.startsWith("blob:")) URL.revokeObjectURL(imgThumb.src);
     modal.classList.remove("on");
     document.removeEventListener("keydown", onEsc);
+    if (_prevFocus && _prevFocus.focus) _prevFocus.focus();   // FE-135: 트리거 요소로 포커스 복귀
   };
-  const onEsc = e => { if (e.key === "Escape") close(); };
+  const onEsc = e => {   // FE-135: ESC 닫기 + Tab 포커스 트랩(배경 이탈 방지)
+    if (e.key === "Escape") { close(); return; }
+    if (e.key === "Tab") _trapTab(e, modal);
+  };
   if (modal._onEsc) document.removeEventListener("keydown", modal._onEsc);  // FE-004: 재호출 시 이전 onEsc 누적 방지
   modal._onEsc = onEsc;
   document.addEventListener("keydown", onEsc);
   modal.onclick = e => { if (e.target === modal) close(); };
   modal.querySelector(".pmx").onclick = close;
+  modal.querySelector(".pmx").focus();   // FE-135: 모달 열 때 초기 포커스(키보드 진입점)
 }
 
 // ── auth intent 재개 (FE-AUTH-01 §D) ───────────────────────────────────────

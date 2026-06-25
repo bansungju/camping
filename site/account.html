@@ -30,8 +30,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="장비의 숲">
-<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')</script>
-<link rel="stylesheet" href="style.css?v=961f2a8f">
+<script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark')t=(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}})()</script>
+<link rel="stylesheet" href="style.css?v=788f26af">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -85,12 +85,14 @@
     <h2 class="sec">⚙️ 설정</h2>
     <div class="set-row">
       <div class="set-row-label">
-        <span class="set-row-title">다크 모드</span>
-        <span class="set-row-desc">어두운 테마로 전환합니다</span>
+        <span class="set-row-title">테마</span>
+        <span class="set-row-desc">시스템 설정을 따르거나 직접 선택합니다</span>
       </div>
-      <button id="theme-switch" type="button" class="switch" role="switch" aria-checked="false" aria-label="다크 모드">
-        <span class="switch-knob"></span>
-      </button>
+      <div id="theme-seg" class="seg" role="group" aria-label="테마 선택">
+        <button type="button" class="seg-btn" data-theme-mode="auto" aria-pressed="false">시스템</button>
+        <button type="button" class="seg-btn" data-theme-mode="light" aria-pressed="false">라이트</button>
+        <button type="button" class="seg-btn" data-theme-mode="dark" aria-pressed="false">다크</button>
+      </div>
     </div>
     <!-- L-20: 닉네임 변경 -->
     <div class="set-row" id="nick-settings-row" style="display:none">
@@ -138,7 +140,7 @@
 
 <footer><div class="wrap">측정값 기반 정직비교 · 로그인하면 찜 목록이 계정에 저장됩니다.</div></footer>
 
-<script src="app.js?v=1d90c556"></script>
+<script src="app.js?v=74c2c52d"></script>
 <script>
   // L-63: 스크린리더 알림 헬퍼 — app.js와 account.html 양쪽에서 호출 가능
   window.accAnnounce = function(msg) {
@@ -188,18 +190,24 @@
     }
   })();
 
-  // 설정 > 다크 모드 토글 (app.js의 window.setTheme 사용)
-  (function initThemeSwitch() {
-    const sw = document.getElementById('theme-switch');
-    if (!sw) return;
+  // FE-195: 설정 > 테마 선택(시스템/라이트/다크). app.js의 window.setTheme(mode)·window.themePref() 사용.
+  (function initThemeSeg() {
+    const seg = document.getElementById('theme-seg');
+    if (!seg) return;
+    const btns = [...seg.querySelectorAll('.seg-btn')];
     const sync = () => {
-      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-      sw.setAttribute('aria-checked', dark ? 'true' : 'false');
+      const pref = (window.themePref && window.themePref()) || 'auto';
+      btns.forEach(b => {
+        const on = b.dataset.themeMode === pref;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
     };
     sync();
-    sw.addEventListener('click', () => {
-      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-      if (window.setTheme) window.setTheme(dark ? 'light' : 'dark');
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('.seg-btn');
+      if (!b) return;
+      if (window.setTheme) window.setTheme(b.dataset.themeMode);
       sync();
     });
   })();
