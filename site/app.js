@@ -1,7 +1,16 @@
 /* 장비의 숲 — 정적 프론트엔드 (DB→data/*.json) */
 /* PWA: Capacitor 앱 환경에서는 SW 불필요(업데이트 방해) — 웹 전용으로만 등록 */
 if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));  // L-85: 절대경로 — item 서브경로에서 sw.js 404 방지
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").then(reg => {  // L-85: 절대경로 — item 서브경로에서 sw.js 404 방지
+    // UXUI-061/133: 새 SW 버전 설치 감지 시 새로고침 유도 토스트(기존 controller 있을 때 = 업데이트, 첫 설치엔 안 뜸)
+    if (!reg) return;
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing; if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        if (nw.state === "installed" && navigator.serviceWorker.controller && typeof showToast === "function") showToast("새 버전이 준비됐어요. 새로고침하면 적용됩니다.", 6000);
+      });
+    });
+  }).catch(() => {}));
 }
 
 // FE-086: body:has(.pmodal.on) 스크롤잠금은 :has()(Safari 15.4+)에 의존 → iOS 15.0~15.3에서 모달 뒤 배경이 스크롤됨.
@@ -1070,6 +1079,9 @@ async function renderCatNav(activeSlug) {
     el.innerHTML = m.categories.map(c =>
       `<a class="navchip${c.slug === activeSlug ? " on" : ""}"${c.slug === activeSlug ? ' aria-current="page"' : ""} href="category.html?cat=${c.slug}"
          title="${c.name}"><span class="ni">${catIcon(c.name)}</span>${c.name}${OPS ? `<i>${GRADE_CLASS[c.grade] || ""}</i>` : ""}</a>`).join("");
+    // UXUI-013: 선택 카테고리 칩을 가로 중앙으로(catnav 내부 scrollLeft만 조정 — 페이지 스크롤 영향 없음)
+    const _activeChip = el.querySelector(".navchip.on");
+    if (_activeChip) el.scrollLeft = _activeChip.offsetLeft - el.clientWidth / 2 + _activeChip.clientWidth / 2;
   } catch (e) { /* noop */ }
 }
 
@@ -2621,6 +2633,20 @@ function _reviewDate(iso) {
 }
 
 // image_urls 컬럼은 마이그(020) 적용 전이면 없을 수 있다 → 있으면 쓰고, 없으면 우아하게 제외(기존 후기 안 깨짐).
+/* FE-191 (App Store 가이드라인 1.2 — 부적절 사용자 차단): 후기 작성자 차단.
+   서버/DB 변경 없이 localStorage로 차단 user_id를 관리하고 fetch 결과를 필터링한다.
+   terms.html §3의 '차단' 명시와 일치시켜 약관-실제 불일치를 해소한다. */
+const BLOCKED_RV_KEY = "gf_blocked_reviewers";
+function _blockedReviewers() { try { return JSON.parse(localStorage.getItem(BLOCKED_RV_KEY) || "[]"); } catch (_) { return []; } }
+function _blockedReviewerIds() { return _blockedReviewers().map(b => b.id); }
+function _saveBlockedReviewers(list) { try { localStorage.setItem(BLOCKED_RV_KEY, JSON.stringify(list)); } catch (_) {} }
+function blockReviewer(id, nick) {
+  if (!id) return;
+  const list = _blockedReviewers();
+  if (!list.some(b => b.id === id)) { list.push({ id, nick: nick || "사용자" }); _saveBlockedReviewers(list); }
+}
+function unblockReviewer(id) { _saveBlockedReviewers(_blockedReviewers().filter(b => b.id !== id)); }
+
 async function _fetchReviews(supabase, pcode) {
   const base = "id, rating, body, created_at, user_id, profiles(nickname)";
   let res = await supabase.from("reviews").select(base + ", image_urls")
@@ -2630,7 +2656,9 @@ async function _fetchReviews(supabase, pcode) {
       .eq("product_pcode", pcode).order("created_at", { ascending: false }).limit(40);
   }
   if (res.error) throw res.error;
-  return (res.data || []).map(r => ({ ...r, image_urls: Array.isArray(r.image_urls) ? r.image_urls : [] }));
+  const rows = (res.data || []).map(r => ({ ...r, image_urls: Array.isArray(r.image_urls) ? r.image_urls : [] }));
+  const blocked = _blockedReviewerIds();  // FE-191: 차단 사용자 후기 제외(목록·카운트·평균 일관)
+  return blocked.length ? rows.filter(r => !blocked.includes(r.user_id)) : rows;
 }
 
 function _reviewCard(r, i) {
@@ -2658,13 +2686,15 @@ function openReviewDetail(r) {
   const me = window.currentUser ? window.currentUser() : null;
   const isMine = me && r.user_id && me.id === r.user_id;
   const reportBtn = isMine ? "" : `<button type="button" class="rv-report">🚩 신고</button>`;
+  const blockBtn = (isMine || !r.user_id) ? "" : `<button type="button" class="rv-block">🙈 이 사용자 차단</button>`;  // FE-191
+  const rvActions = (reportBtn || blockBtn) ? `<div class="rv-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${reportBtn}${blockBtn}</div>` : "";
   ov.innerHTML = `<div class="pmbox pmrvd-box" role="dialog" aria-modal="true" aria-label="${nick}님의 후기">
     <button type="button" class="pmx" aria-label="닫기">✕</button>
     ${imgs ? `<div class="pmrvd-imgs">${imgs}</div>` : ""}
     <div class="pmrvd-body">
       <div class="pmrvd-meta"><span class="pmrv-nick">${nick}</span><span class="pmrv-stars">${stars(r.rating)}</span><span class="pmrv-date">${_reviewDate(r.created_at)}</span></div>
       <div class="pmrv-fulltext">${esc(r.body)}</div>
-      ${reportBtn}
+      ${rvActions}
     </div></div>`;
   ov.classList.add("on");
   const prevFocus = document.activeElement;
@@ -2688,7 +2718,7 @@ function openReviewDetail(r) {
     rform.innerHTML = `<input class="rv-report-inp lf-input" type="text" maxlength="100" placeholder="신고 사유 (5자 이상)" style="flex:1;font-size:13px;padding:7px 10px">
       <button type="button" class="rv-report-submit achip" style="font-size:13px">신고</button>
       <button type="button" class="rv-report-cancel achip clear" style="font-size:13px">취소</button>`;
-    rbtn.insertAdjacentElement("afterend", rform);
+    (ov.querySelector(".rv-actions") || rbtn).insertAdjacentElement("afterend", rform);  // FE-191: 신고 폼은 액션 영역(신고+차단) 아래로
     const inp = rform.querySelector(".rv-report-inp");
     const submitBtn2 = rform.querySelector(".rv-report-submit");
     rform.querySelector(".rv-report-cancel").onclick = () => { rform.remove(); rbtn.style.display = ""; };
@@ -2711,6 +2741,17 @@ function openReviewDetail(r) {
       } catch (e) { showToast("신고 중 오류가 발생했어요"); submitBtn2.disabled = false; submitBtn2.textContent = "신고"; }
     };
   };
+  // FE-191: 후기 작성자 차단 — 클라이언트 측 숨김(가이드라인 1.2). 로그인 불필요(내 기기에서만 숨김).
+  const blkBtn = ov.querySelector(".rv-block");
+  if (blkBtn) blkBtn.onclick = async () => {
+    const who = r.profiles?.nickname || "이 사용자";
+    const ok = await uiConfirm(`${who}님의 후기를 모두 숨길까요?\n차단하면 이 사용자가 쓴 후기가 목록에서 보이지 않아요.`, { ok: "차단", cancel: "취소", danger: true });
+    if (!ok) return;
+    blockReviewer(r.user_id, r.profiles?.nickname);
+    showToast("이 사용자의 후기를 숨겼어요. 후기 목록 위 ‘차단한 사용자’에서 해제할 수 있어요.");
+    close();
+    if (typeof window._pmrvReload === "function") window._pmrvReload();
+  };
   // M-120: capture+stopImmediatePropagation — ESC가 하위 상품모달 onKey까지 전파돼 동시에 닫히는 것 방지
   // L-122: Tab 포커스 트랩
   const onKey = e => {
@@ -2731,6 +2772,7 @@ function openReviewDetail(r) {
 let _rvGen = 0;  // FE-034: loadReviews 동시 호출 경합 가드(스테일 응답이 신규 후기를 덮어쓰는 문제)
 async function loadReviews(modal, pcode) {
   const gen = ++_rvGen;
+  window._pmrvReload = () => loadReviews(modal, pcode);  // FE-191: 차단/해제 후 목록 즉시 갱신
   const listEl = modal.querySelector("#pmrv-list");
   const cntEl = modal.querySelector("#pmrv-cnt");
   const ratingEl = modal.querySelector("#pm-userrating");
@@ -2748,6 +2790,7 @@ async function loadReviews(modal, pcode) {
       }
     }
     if (!listEl) return;
+    _renderBlockBar(modal);  // FE-191: 차단한 사용자 관리 바(차단자 있을 때만)
     if (!rv.length) {
       listEl.className = "pmrv-list";
       listEl.innerHTML = `<div class="pmrv-empty">아직 후기가 없어요. 사진과 함께 첫 후기를 남겨보세요! 📷</div>`;
@@ -2762,6 +2805,58 @@ async function loadReviews(modal, pcode) {
     if (ratingEl) ratingEl.innerHTML = `<span class="nd">—</span>`;
     if (listEl) { listEl.className = "pmrv-list"; listEl.innerHTML = `<div class="pmrv-empty">후기를 불러오지 못했어요.</div>`; }
   }
+}
+
+// FE-191: 후기 목록 위 '차단한 사용자 N명 · 관리' 바. 차단자가 있을 때만 노출.
+function _renderBlockBar(modal) {
+  const listEl = modal.querySelector("#pmrv-list");
+  if (!listEl) return;
+  const old = modal.querySelector(".pmrv-blockbar");
+  if (old) old.remove();
+  const blocked = _blockedReviewers();
+  if (!blocked.length) return;
+  const bar = document.createElement("button");
+  bar.type = "button";
+  bar.className = "pmrv-blockbar";
+  bar.style.cssText = "display:flex;align-items:center;gap:6px;width:100%;margin:0 0 10px;padding:8px 12px;border:1px solid var(--line,#e2e2e2);border-radius:12px;background:var(--card,#fff);color:var(--sub,#666);font-size:12.5px;cursor:pointer";
+  bar.textContent = `🙈 차단한 사용자 ${blocked.length}명 · 관리`;
+  bar.onclick = () => openBlockedManager(modal);
+  listEl.insertAdjacentElement("beforebegin", bar);
+}
+
+// FE-191: 차단 목록 관리(해제) 모달.
+function openBlockedManager(modal) {
+  const m = document.createElement("div");
+  m.className = "pmodal on";
+  m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "차단한 사용자 관리");
+  const prevFocus = document.activeElement;
+  const close = () => { m.remove(); document.removeEventListener("keydown", onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  const render = () => {
+    const list = _blockedReviewers();
+    const rows = list.length
+      ? list.map(b => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line,#eee)">
+          <span style="font-size:14px">${esc(b.nick || "사용자")}</span>
+          <button type="button" class="achip clear unblk" data-id="${esc(b.id)}" style="font-size:13px;padding:6px 12px">차단 해제</button></div>`).join("")
+      : `<p style="font-size:14px;color:var(--sub,#666);margin:8px 0 0">차단한 사용자가 없어요.</p>`;
+    m.innerHTML = `<div class="pmbox" style="max-width:340px;width:100%;padding:22px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <strong style="font-size:15px">차단한 사용자</strong>
+        <button type="button" class="pmx" aria-label="닫기" style="background:none;border:none;font-size:18px;line-height:1;cursor:pointer">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--sub,#666);margin:0 0 8px">차단을 해제하면 해당 사용자의 후기가 다시 보여요.</p>
+      ${rows}</div>`;
+    m.querySelector(".pmx").onclick = close;
+    m.querySelectorAll(".unblk").forEach(btn => btn.onclick = () => {
+      unblockReviewer(btn.dataset.id);
+      render();
+      if (typeof window._pmrvReload === "function") window._pmrvReload();
+    });
+  };
+  m.onclick = e => { if (e.target === m) close(); };
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(m);
+  render();
 }
 
 function wireReviews(modal, m, pcode) {

@@ -97,9 +97,9 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.5px}
 .stars .e{color:#e2e2e4}
 /* 배지 */
 .b{font-size:10px;padding:1px 5px;border-radius:5px;border:1px solid var(--line);width:max-content}
-.b.확정{color:var(--ok);border-color:#bbe6cf}
+.b.확정{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 30%,transparent)}  /* FE-166: 하드코딩 라이트색→변수 기반(다크모드 대비) */
 .b.참고{color:var(--ref)}
-.b.외형기준{color:var(--outer);border-color:#f0e2b0}
+.b.외형기준{color:var(--outer);border-color:color-mix(in srgb,var(--outer) 30%,transparent)}  /* FE-166 */
 .b.데이터부족{color:var(--faint);font-style:italic}
 .nd{color:var(--faint);font-style:italic;font-size:12px}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 max(22px,env(safe-area-inset-bottom)) 0;color:var(--muted);font-size:12px}  /* FE-095: 푸터 하단 안전영역 */
