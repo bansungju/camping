@@ -356,6 +356,7 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
 .filtoggle{display:none;width:100%;background:var(--accent);border:none;color:#fff;
   padding:11px 16px;border-radius:9px;font-size:14px;font-weight:700;margin:4px 0 10px;cursor:pointer;letter-spacing:.01em}
 .filtoggle:active{filter:brightness(.92)}
+.filt-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;background:#fff;color:var(--accent);border-radius:9px;font-size:11px;font-weight:700;vertical-align:middle}  /* UXUI-026/096: 필터 활성 개수 배지 */
 /* 카테고리 데스크톱 사이드바 2단 레이아웃 (M-33) */
 #cat-layout{display:flex;align-items:flex-start;gap:24px}
 #cat-aside{flex:0 0 220px;max-width:220px;position:sticky;top:110px;
@@ -771,9 +772,10 @@ h2.sec{font-size:16px;color:var(--muted);margin:30px 0 10px;font-weight:600}
   .fsheet-x{background:none;border:none;font-size:18px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:8px}
   .fsheet-x:hover{color:var(--txt)}
   /* 시트 푸터(결과 보기), 하단 고정 */
-  .fsheet-foot{display:block;position:sticky;bottom:0;background:var(--card);
+  .fsheet-foot{display:flex;gap:8px;position:sticky;bottom:0;background:var(--card);
     padding:10px 0 14px;margin-top:8px;border-top:1px solid var(--line)}
-  .fsheet-apply{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+  .fsheet-reset{flex:0 0 auto;padding:12px 18px;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}  /* UXUI-052: 필터 초기화 */
+  .fsheet-apply{flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
   .fsheet-apply:hover{filter:brightness(1.05)}
   /* 백드롭 + 본문 스크롤 잠금 */
   .filter-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:299;

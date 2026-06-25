@@ -2097,11 +2097,11 @@ function buildFilters(d, star) {
   const catBody = document.getElementById("cat-body");
   if (catBody && aside && !document.getElementById("filtoggle")) {
     catBody.insertAdjacentHTML("afterbegin",
-      `<button id="filtoggle" class="filtoggle" type="button" aria-controls="cat-aside" aria-expanded="false">🎛️ 필터</button>`);
+      `<button id="filtoggle" class="filtoggle" type="button" aria-controls="cat-aside" aria-expanded="false">🎛️ 필터<span class="filt-badge" id="filt-badge" hidden></span></button>`);
     aside.insertAdjacentHTML("afterbegin",
       `<div class="fsheet-head"><span class="fsheet-title">필터</span><button type="button" class="fsheet-x" aria-label="필터 닫기">✕</button></div>`);
     aside.insertAdjacentHTML("beforeend",
-      `<div class="fsheet-foot"><button type="button" class="fsheet-apply">결과 보기</button></div>`);
+      `<div class="fsheet-foot"><button type="button" class="fsheet-reset">초기화</button><button type="button" class="fsheet-apply">결과 보기</button></div>`);
     let backdrop = document.getElementById("filter-backdrop");
     if (!backdrop) {
       backdrop = document.createElement("div");
@@ -2115,6 +2115,7 @@ function buildFilters(d, star) {
     backdrop.onclick = closeSheet;
     aside.querySelector(".fsheet-x").onclick = closeSheet;
     aside.querySelector(".fsheet-apply").onclick = closeSheet;   // 필터는 실시간 적용(draw) — 닫기만
+    const _fr = aside.querySelector(".fsheet-reset"); if (_fr) _fr.onclick = clearAllFilters;  // UXUI-052: 필터 시트 초기화 버튼
     // H-64: buildFilters 재호출 시 익명 리스너가 누적되지 않도록 이전 핸들러 제거 후 재등록
     if (document._filterSheetKeyHandler) document.removeEventListener("keydown", document._filterSheetKeyHandler);
     document._filterSheetKeyHandler = e => {  // FE-147: Esc 닫기 + Tab 포커스 트랩(배경 요소 이탈 방지)
@@ -2298,6 +2299,15 @@ function renderActiveFilters() {
 }
 
 // 모든 필터 초기화(활성칩 '전체 해제' + 빈 상태 버튼 공용)
+// UXUI-026/096: 활성 필터 개수 — 필터 버튼 배지용(검색어 q는 별도 입력이라 제외)
+function activeFilterCount() {
+  let n = 0;
+  if (STATE.cap) n++;
+  if (STATE.brands && STATE.brands.size) n += STATE.brands.size;
+  if (STATE.range) n += Object.keys(STATE.range).length;
+  if (STATE.campStyle) n++;
+  return n;
+}
 function clearAllFilters() {
   STATE.cap = ""; STATE.brands.clear(); STATE.range = {}; STATE.qExclude = false; STATE.q = "";
   STATE.campStyle = "";   // H-63: 스타일 칩(.on)·URL style 파라미터 잔류 방지(clearPresetFilters와 동일)
@@ -3011,6 +3021,9 @@ function draw() {
   if (!d) return;  // H-127: STATE.data stale 시 metrics.filter() TypeError 방지
   const star = d.metrics.filter(m => m.is_star);
   renderActiveFilters();
+  // UXUI-026/096: 필터 버튼 활성 개수 배지 갱신
+  const _fb = document.getElementById("filt-badge");
+  if (_fb) { const _fn = activeFilterCount(); _fb.textContent = _fn || ""; _fb.hidden = !_fn; }
   let rows = d.models.filter(m =>
     (!STATE.cap || String(m.capacity) === STATE.cap) &&
     (!STATE.brands.size || STATE.brands.has(m.brand)) &&
